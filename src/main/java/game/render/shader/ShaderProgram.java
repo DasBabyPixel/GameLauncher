@@ -2,7 +2,8 @@ package game.render.shader;
 
 import static org.lwjgl.opengl.GL20.*;
 
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ShaderProgram {
 
@@ -40,7 +41,7 @@ public class ShaderProgram {
 		private final int id;
 
 		public Shader(Shader.Type type, String source) {
-			id = glCreateShader(type.id);
+			id = glCreateShader(type.getId());
 			glShaderSource(id, source);
 			glCompileShader(id);
 			if (glGetShaderi(id, GL_COMPILE_STATUS) != 1) {

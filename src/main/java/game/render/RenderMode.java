@@ -2,6 +2,6 @@ package game.render;
 
 public enum RenderMode {
 
-	CONTINUOUSLY, ON_UPDATE
+	CONTINUOUSLY, ON_UPDATE, MANUAL
 
 }

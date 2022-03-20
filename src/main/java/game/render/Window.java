@@ -3,14 +3,28 @@ package game.render;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-import java.util.concurrent.locks.*;
-import java.util.function.*;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.UnaryOperator;
 
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.*;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
+import org.lwjgl.glfw.GLFWKeyCallbackI;
+import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
+import org.lwjgl.glfw.GLFWWindowPosCallbackI;
+import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
+import org.lwjgl.opengl.GL;
 
 public class Window {
 
@@ -44,22 +58,20 @@ public class Window {
 		RenderThread thread = renderThread.get();
 		if (thread != null) {
 			return thread.later(runnable);
-		} else {
-			CompletableFuture<Void> f = new CompletableFuture<>();
-			renderThreadFutures.offer(new Future(f, runnable));
-			return f;
 		}
+		CompletableFuture<Void> f = new CompletableFuture<>();
+		renderThreadFutures.offer(new Future(f, runnable));
+		return f;
 	}
 
 	public CompletableFuture<Void> later(Runnable runnable) {
 		WindowThread thread = windowThread.get();
 		if (thread != null) {
 			return thread.later(runnable);
-		} else {
-			CompletableFuture<Void> f = new CompletableFuture<>();
-			windowThreadFutures.offer(new Future(f, runnable));
-			return f;
 		}
+		CompletableFuture<Void> f = new CompletableFuture<>();
+		windowThreadFutures.offer(new Future(f, runnable));
+		return f;
 	}
 
 	public boolean isClosed() {
@@ -182,7 +194,9 @@ public class Window {
 		RenderThread thread = renderThread.getAndSet(null);
 		if (thread != null) {
 			thread.close.set(true);
-			thread.interrupt();
+			thread.shouldDrawLock.lock();
+			thread.shouldDrawCondition.signalAll();
+			thread.shouldDrawLock.unlock();
 			try {
 				thread.closeFuture.get();
 			} catch (InterruptedException e) {
@@ -215,14 +229,16 @@ public class Window {
 	private class RenderThread extends Thread {
 
 		private final AtomicBoolean shouldDraw = new AtomicBoolean(false);
-		private final AtomicReference<CountDownLatch> shouldDrawLatch = new AtomicReference<>(newLatch());
-		private final AtomicReference<CompletableFuture<Void>> drawFuture = new AtomicReference<>(
-				new CompletableFuture<>());
+		private final Lock shouldDrawLock = new ReentrantLock(true);
+		private final Condition shouldDrawCondition = shouldDrawLock.newCondition();
 		private final AtomicBoolean close = new AtomicBoolean(false);
 		private final AtomicBoolean viewportChanged = new AtomicBoolean(true);
 		private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
-		private final Lock lock = new ReentrantLock(true);
 		private final FrameCounter frameCounter = new FrameCounter();
+		private final Phaser drawPhaser = new Phaser();
+		private final AtomicBoolean hasContext = new AtomicBoolean(false);
+		private final Lock hasContextLock = new ReentrantLock(true);
+		private final Condition hasContextCondition = hasContextLock.newCondition();
 
 		@Override
 		public void run() {
@@ -233,28 +249,81 @@ public class Window {
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
+			drawPhaser.register();
 			glfwMakeContextCurrent(id.get());
 			GL.createCapabilities();
-			frame();
+			hasContext.set(true);
+			glfwSwapInterval(0);
 			scheduleDraw();
 			while (!close.get()) {
 				workQueue();
+				if (!hasContext.get()) {
+					hasContextLock.lock();
+					hasContextCondition.awaitUninterruptibly();
+					hasContextLock.unlock();
+					continue;
+				}
 				if (shouldDraw()) {
 					frame();
 				} else {
-					waitFor(shouldDrawLatch.get());
+					shouldDrawLock.lock();
+					if (shouldDraw()) {
+						shouldDrawLock.unlock();
+						continue;
+					}
+					shouldDrawCondition.awaitUninterruptibly();
+					shouldDrawLock.unlock();
 				}
 			}
 			closeFuture.complete(null);
 		}
 
+		public void bindContext() {
+			try {
+				CompletableFuture<Void> f = later(() -> {
+					hasContext.set(false);
+					glfwMakeContextCurrent(0);
+					GL.setCapabilities(null);
+				});
+				f.get();
+				glfwMakeContextCurrent(id.get());
+				GL.createCapabilities();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			} catch (ExecutionException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		public void releaseContext() {
+			try {
+				glfwMakeContextCurrent(0);
+				GL.setCapabilities(null);
+				CompletableFuture<Void> f = later(() -> {
+					glfwMakeContextCurrent(id.get());
+					GL.createCapabilities();
+					hasContext.set(true);
+				});
+				hasContextLock.lock();
+				hasContextCondition.signalAll();
+				hasContextLock.unlock();
+				f.get();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			} catch (ExecutionException ex) {
+				ex.printStackTrace();
+			}
+		}
+
 		public void scheduleDraw() {
+			shouldDrawLock.lock();
 			shouldDraw.set(true);
-			shouldDrawLatch.getAndSet(newLatch()).countDown();
+			shouldDrawCondition.signalAll();
+			shouldDrawLock.unlock();
 		}
 
 		private void frame() {
-			lock.lock();
+			shouldDrawLock.lock();
 			shouldDraw.set(false);
 			if (viewportChanged.compareAndSet(true, false)) {
 				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
@@ -262,14 +331,29 @@ public class Window {
 			FrameRenderer fr = frameRenderer.get();
 			if (fr != null) {
 				fr.renderFrame(Window.this);
-				drawFuture.getAndSet(new CompletableFuture<>()).complete(null);
 			}
-			lock.unlock();
-			frameCounter.frame();
+
+			drawPhaser.arrive();
+
+			shouldDrawLock.unlock();
+			if (hasContext.get()) {
+				frameCounter.frame();
+			} else {
+				frameCounter.frameNoWait();
+			}
 		}
 
 		private boolean shouldDraw() {
-			return shouldDraw.get() || renderMode.get() == RenderMode.CONTINUOUSLY;
+			shouldDrawLock.lock();
+			try {
+				RenderMode mode = renderMode.get();
+				if (mode == RenderMode.CONTINUOUSLY) {
+					return true;
+				}
+				return shouldDraw.get();
+			} finally {
+				shouldDrawLock.unlock();
+			}
 		}
 
 		private CountDownLatch newLatch() {
@@ -299,7 +383,9 @@ public class Window {
 		public CompletableFuture<Void> later(Runnable r) {
 			CompletableFuture<Void> f = new CompletableFuture<>();
 			renderThreadFutures.offer(new Future(f, r));
-			glfwPostEmptyEvent();
+			shouldDrawLock.lock();
+			shouldDrawCondition.signalAll();
+			shouldDrawLock.unlock();
 			return f;
 		}
 	}
@@ -315,12 +401,15 @@ public class Window {
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
-			int[] xpos = new int[1];
-			int[] ypos = new int[1];
-			glfwGetWindowPos(id, xpos, ypos);
+			int[] a0 = new int[1];
+			int[] a1 = new int[1];
+			glfwGetWindowPos(id, a0, a1);
 			Window.this.id.set(id);
-			x.set(xpos[0]);
-			y.set(ypos[0]);
+			x.set(a0[0]);
+			y.set(a1[0]);
+			glfwGetFramebufferSize(id, a0, a1);
+			framebufferWidth.set(a0[0]);
+			framebufferHeight.set(a1[0]);
 
 			windowThreadCreateFuture.get().complete(this);
 
@@ -335,7 +424,6 @@ public class Window {
 				public void invoke(long window, int w, int h) {
 					width.set(w);
 					height.set(h);
-					System.out.printf("New Size: %s %s%n", w, h);
 				}
 			});
 			glfwSetWindowPosCallback(id, new GLFWWindowPosCallbackI() {
@@ -343,12 +431,23 @@ public class Window {
 				public void invoke(long window, int xpos, int ypos) {
 					x.set(xpos);
 					y.set(ypos);
-					System.out.printf("New Pos: %s %s%n", xpos, ypos);
 				}
 			});
 			glfwSetKeyCallback(id, new GLFWKeyCallbackI() {
 				@Override
 				public void invoke(long window, int key, int scancode, int action, int mods) {
+					if (action == GLFW_RELEASE) {
+						return;
+					} else if (key == GLFW_KEY_UP) {
+						getFrameCounter().get().limit(getFrameCounter().get().limit() + 1);
+					} else if (key == GLFW_KEY_DOWN) {
+						getFrameCounter().get().limit(getFrameCounter().get().limit() - 1);
+					} else if (action != GLFW_PRESS) {
+						return;
+					}
+					if (key == GLFW_KEY_ENTER) {
+						scheduleDraw();
+					}
 				}
 			});
 			glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
@@ -356,26 +455,20 @@ public class Window {
 				public void invoke(long window, int width, int height) {
 					framebufferWidth.set(width);
 					framebufferHeight.set(height);
-					System.out.printf("New FBSize: %s %s%n", width, height);
-					try {
-						RenderThread rt = renderThread.get();
-						if (rt != null) {
-							rt.viewportChanged.set(true);
-							rt.scheduleDraw();
-							rt.drawFuture.get().get();
+					RenderThread rt = renderThread.get();
+					if (rt != null) {
+						rt.viewportChanged.set(true);
+						if (renderMode.get() != RenderMode.MANUAL) {
+							rt.bindContext();
+							rt.frame();
+							rt.releaseContext();
 						}
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (ExecutionException e) {
-						e.printStackTrace();
 					}
 				}
 			});
 
 			while (!close.get()) {
 				glfwWaitEventsTimeout(1.0);
-//				glfwFocusWindow(id);
-//				glfwMaximizeWindow(id);
 				glfwPollEvents();
 				Future f;
 				while ((f = windowThreadFutures.poll()) != null) {
