@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -353,22 +352,6 @@ public class Window {
 				return shouldDraw.get();
 			} finally {
 				shouldDrawLock.unlock();
-			}
-		}
-
-		private CountDownLatch newLatch() {
-			return new CountDownLatch(1);
-		}
-
-		private void waitFor(CountDownLatch latch) {
-			while (latch.getCount() != 0L) {
-				try {
-					latch.await();
-				} catch (InterruptedException e) {
-					if (close.get())
-						return;
-					e.printStackTrace();
-				}
 			}
 		}
 
