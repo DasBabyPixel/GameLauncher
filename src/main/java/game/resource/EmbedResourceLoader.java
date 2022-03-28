@@ -18,20 +18,27 @@ public class EmbedResourceLoader extends ResourceLoader {
 
 	@Override
 	protected Resource loadResource(ResourcePath path) {
-		return new EmbedResource(() -> cl.getResourceAsStream(path.getPath()));
+		if (path.getPath().endsWith("/")) {
+			return new EmbedResource(() -> null, path, true);
+		}
+		return new EmbedResource(() -> cl.getResourceAsStream(path.getPath()), path, false);
 	}
 
 	private static class EmbedResource implements Resource {
 
 		private final Supplier<InputStream> sup;
+		private final ResourcePath path;
+		private final boolean directory;
 
-		public EmbedResource(Supplier<InputStream> sup) {
+		public EmbedResource(Supplier<InputStream> sup, ResourcePath path, boolean directory) {
 			this.sup = sup;
+			this.path = path;
+			this.directory = directory;
 		}
 
 		@Override
 		public ResourceStream newResourceStream() {
-			return new ResourceStream(sup.get(), null);
+			return new ResourceStream(path, directory, sup.get(), null);
 		}
 	}
 }

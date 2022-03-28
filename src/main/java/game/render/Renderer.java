@@ -1,7 +1,14 @@
 package game.render;
 
-public interface Renderer {
+public abstract class Renderer {
 
-	void render(Window window);
-	
+	public abstract void render(Window window) throws RenderException;
+
+	@SuppressWarnings("unused")
+	public void init() throws RenderException {
+	}
+
+	@SuppressWarnings("unused")
+	public void close() throws RenderException {
+	}
 }

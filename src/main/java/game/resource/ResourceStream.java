@@ -7,12 +7,19 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import game.render.shader.ShaderProgram;
+import game.render.shader.ShaderProgram.Shader;
+
 public class ResourceStream implements AutoCloseable {
 
+	private final ResourcePath path;
+	private final boolean directory;
 	private final InputStream in;
 	private final OutputStream out;
 
-	public ResourceStream(InputStream in, OutputStream out) {
+	public ResourceStream(ResourcePath path, boolean directory, InputStream in, OutputStream out) {
+		this.path = path;
+		this.directory = directory;
 		this.in = in;
 		this.out = out;
 	}
@@ -43,6 +50,33 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	public ShaderProgram loadProgram() {
+		if (!isDirectory()) {
+			throw new UnsupportedOperationException("Cant load a ShaderProgram from a file!");
+		}
+		Shader vertex = null;
+		Shader fragment = null;
+		try {
+			ResourceStream stream = new ResourcePath(getPath().getPath().concat("vertex.glsl")).newResourceStream();
+			vertex = stream.loadShader(Shader.Type.VERTEX);
+			stream.close();
+			stream = new ResourcePath(getPath().getPath().concat("fragment.glsl")).newResourceStream();
+			fragment = stream.loadShader(Shader.Type.FRAGMENT);
+			stream.close();
+			ShaderProgram program = new ShaderProgram(vertex, fragment);
+			vertex.delete();
+			fragment.delete();
+			return program;
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
+	public Shader loadShader(Shader.Type type) throws IOException {
+		return new Shader(type, readUTF8Fully());
+	}
+
 	public String readUTF8(int length) throws IOException {
 		return new String(readBytes(length), StandardCharsets.UTF_8);
 	}
@@ -69,5 +103,13 @@ public class ResourceStream implements AutoCloseable {
 		byte[] bytes = new byte[length];
 		length = readBytes(bytes);
 		return Arrays.copyOf(bytes, length);
+	}
+
+	public boolean isDirectory() {
+		return directory;
+	}
+
+	public ResourcePath getPath() {
+		return path;
 	}
 }

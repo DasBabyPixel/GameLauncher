@@ -17,7 +17,7 @@ public class ResourcePath {
 	public ResourceStream newResourceStream() {
 		return ResourceLoader.getInstance().getResource(this).newResourceStream();
 	}
-
+	
 	@Override
 	public String toString() {
 		return path;
