@@ -2,9 +2,9 @@ package game.settings;
 
 public interface SettingSection extends Setting<SettingSection> {
 
-	SettingSection getSubSection(SettingPath<SettingSection> path);
+	SettingSection getSubSection(SettingPath path);
 	
-	<T> Setting<T> getSetting(SettingPath<T> path);
+	<T> Setting<T> getSetting(SettingPath path);
 	
 	@Override
 	default SettingSection getValue() {

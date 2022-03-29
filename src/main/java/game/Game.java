@@ -2,21 +2,34 @@ package game;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 
 import game.render.RenderMode;
 import game.render.Renderer;
 import game.render.Window;
 import game.resource.EmbedResourceLoader;
+import game.settings.MainSettingSection;
+import game.settings.SettingSection;
 import game.util.logging.Logger;
 
 public class Game {
 
 	public Window window;
+	public final SettingSection settings = new MainSettingSection();
+	public final Path gameDirectory = Paths.get("labyrinth");
+	public final Path settingsFile = gameDirectory.resolve("settings");
+	public final Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
 	public final GameRenderer gameRenderer = new GameRenderer();
 
-	public void start() {
+	public void start() throws IOException {
 		if (window != null) {
 			return;
 		}
@@ -25,15 +38,19 @@ public class Game {
 
 		Logger logger = Logger.getLogger(Game.class);
 		System.setOut(logger.createPrintStream());
-		Object[] o = new Object[] {
-				"t1", 4, "s5"
-		};
-		List<String> list = new ArrayList<>();
-		list.add("t1");
-		list.add("t5");
-		list.add("t9");
-		logger.info(o);
-		logger.info(list);
+		Files.createDirectories(gameDirectory);
+		if (!Files.exists(settingsFile)) {
+			Files.createFile(settingsFile);
+			settings.setDefaultValue();
+			saveSettings();
+		} else {
+			byte[] bytes = Files.readAllBytes(settingsFile);
+			String json = new String(bytes, StandardCharsets.UTF_8);
+			JsonElement element = settingsGson.fromJson(json, JsonElement.class);
+			settings.deserialize(element);
+		}
+		settings.getSetting(MainSettingSection.TEST).setValue("test2");
+		saveSettings();
 
 		window = new Window(400, 400, "Game");
 		gameRenderer.setRenderer(new Renderer() {
@@ -78,5 +95,10 @@ public class Game {
 				ex.printStackTrace();
 			}
 		}
+	}
+
+	public void saveSettings() throws IOException {
+		byte[] bytes = settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8);
+		Files.write(settingsFile, bytes);
 	}
 }
