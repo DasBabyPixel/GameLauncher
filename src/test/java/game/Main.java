@@ -8,5 +8,4 @@ public class Main {
 		GameLauncher game = new GameLauncher();
 		game.start();
 	}
-	
 }
