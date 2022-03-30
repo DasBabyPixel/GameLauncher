@@ -1,6 +1,6 @@
 /target/
-/bin/
-/run/
+bin/
+run/
 .classpath
 .project
 .settings/
