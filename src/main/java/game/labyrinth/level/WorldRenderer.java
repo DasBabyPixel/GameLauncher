@@ -1,13 +1,13 @@
-package game.level;
+package game.labyrinth.level;
 
 import java.io.IOException;
 
-import game.render.RenderException;
-import game.render.Renderer;
-import game.render.Window;
-import game.render.shader.ShaderProgram;
-import game.resource.ResourcePath;
-import game.resource.ResourceStream;
+import game.engine.render.RenderException;
+import game.engine.render.Renderer;
+import game.engine.render.Window;
+import game.engine.render.shader.ShaderProgram;
+import game.engine.resource.ResourcePath;
+import game.engine.resource.ResourceStream;
 
 public class WorldRenderer extends Renderer {
 

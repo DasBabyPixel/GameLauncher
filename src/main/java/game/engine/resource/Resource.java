@@ -1,4 +1,4 @@
-package game.resource;
+package game.engine.resource;
 
 public interface Resource {
 

@@ -4,10 +4,10 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import game.render.FrameRenderer;
-import game.render.RenderException;
-import game.render.Renderer;
-import game.render.Window;
+import game.engine.render.FrameRenderer;
+import game.engine.render.RenderException;
+import game.engine.render.Renderer;
+import game.engine.render.Window;
 
 public class GameRenderer extends FrameRenderer {
 

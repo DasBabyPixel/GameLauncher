@@ -1,13 +1,19 @@
-package game.level;
+package game.labyrinth.level;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.google.gson.*;
-import com.google.gson.reflect.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 
-import game.render.*;
-import game.util.*;
+import game.engine.render.DrawContext;
+import game.engine.render.Drawable;
+import game.util.Color;
+import game.util.Serializable;
 
 public class World implements Serializable, Drawable {
 

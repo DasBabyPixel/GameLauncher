@@ -1,4 +1,4 @@
-package game.resource;
+package game.engine.resource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -7,8 +7,8 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import game.render.shader.ShaderProgram;
-import game.render.shader.ShaderProgram.Shader;
+import game.engine.render.shader.ShaderProgram;
+import game.engine.render.shader.ShaderProgram.Shader;
 
 public class ResourceStream implements AutoCloseable {
 

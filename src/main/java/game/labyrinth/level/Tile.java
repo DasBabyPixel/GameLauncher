@@ -1,9 +1,11 @@
-package game.level;
+package game.labyrinth.level;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import game.render.*;
-import game.util.*;
+import game.engine.render.DrawContext;
+import game.engine.render.Drawable;
+import game.util.Color;
 
 public class Tile implements Drawable {
 

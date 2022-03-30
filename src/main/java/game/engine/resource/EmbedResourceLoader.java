@@ -1,4 +1,4 @@
-package game.resource;
+package game.engine.resource;
 
 import java.io.InputStream;
 import java.util.function.Supplier;

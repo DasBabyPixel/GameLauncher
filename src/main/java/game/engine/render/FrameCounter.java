@@ -1,4 +1,4 @@
-package game.render;
+package game.engine.render;
 
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;

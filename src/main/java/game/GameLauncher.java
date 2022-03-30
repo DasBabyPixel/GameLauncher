@@ -12,19 +12,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
-import game.render.RenderMode;
-import game.render.Renderer;
-import game.render.Window;
-import game.resource.EmbedResourceLoader;
+import game.engine.render.RenderMode;
+import game.engine.render.Renderer;
+import game.engine.render.Window;
+import game.engine.resource.EmbedResourceLoader;
 import game.settings.MainSettingSection;
 import game.settings.SettingSection;
 import game.util.logging.Logger;
 
-public class Game {
+public class GameLauncher {
 
 	public Window window;
+	public static final String NAME = "GameLauncher";
 	public final SettingSection settings = new MainSettingSection();
-	public final Path gameDirectory = Paths.get("labyrinth");
+	public final Path gameDirectory = Paths.get(NAME);
 	public final Path settingsFile = gameDirectory.resolve("settings");
 	public final Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
 	public final GameRenderer gameRenderer = new GameRenderer();
@@ -36,7 +37,7 @@ public class Game {
 
 		new EmbedResourceLoader().set();
 
-		Logger logger = Logger.getLogger(Game.class);
+		Logger logger = Logger.getLogger(GameLauncher.class);
 		System.setOut(logger.createPrintStream());
 		Files.createDirectories(gameDirectory);
 		if (!Files.exists(settingsFile)) {

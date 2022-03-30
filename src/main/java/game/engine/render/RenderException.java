@@ -1,4 +1,4 @@
-package game.render;
+package game.engine.render;
 
 public class RenderException extends Exception {
 
