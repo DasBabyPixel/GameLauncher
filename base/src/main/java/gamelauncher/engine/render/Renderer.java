@@ -1,14 +1,16 @@
 package gamelauncher.engine.render;
 
+import gamelauncher.engine.GameException;
+
 public abstract class Renderer {
 
-	public abstract void render(Window window) throws RenderException;
+	public abstract void render(Window window, DrawContext context) throws GameException;
 
 	@SuppressWarnings("unused")
-	public void init() throws RenderException {
+	public void init() throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	public void close() throws RenderException {
+	public void close() throws GameException {
 	}
 }

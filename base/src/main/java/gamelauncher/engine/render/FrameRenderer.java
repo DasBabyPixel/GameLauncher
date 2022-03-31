@@ -1,13 +1,8 @@
 package gamelauncher.engine.render;
 
-public abstract class FrameRenderer {
+import gamelauncher.engine.GameException;
 
-	public void renderFrame(Window window) {
-		renderFrame0(window);
-		swapBuffers(window);
-	}
+public interface FrameRenderer {
 
-	protected abstract void renderFrame0(Window window);
-
-	protected abstract void swapBuffers(Window window);
+	void renderFrame(Window window) throws GameException;
 }

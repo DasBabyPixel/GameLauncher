@@ -8,4 +8,6 @@ public interface DrawContext {
 
 	DrawContext translate(double x, double y, double z);
 	
+	DrawContext scale(double x, double y, double z);
+	
 }

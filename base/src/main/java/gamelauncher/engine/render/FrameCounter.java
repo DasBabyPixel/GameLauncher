@@ -1,9 +1,13 @@
 package gamelauncher.engine.render;
 
+import java.util.Collection;
 import java.util.Deque;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 public class FrameCounter {
 
@@ -12,6 +16,8 @@ public class FrameCounter {
 	private final Deque<Long> frames = new ConcurrentLinkedDeque<>();
 	private final AtomicLong limit = new AtomicLong(0);
 	private final AtomicLong frameNanos = new AtomicLong(0);
+	private final AtomicInteger lastFps = new AtomicInteger(0);
+	private final Collection<Consumer<Integer>> updateListeners = ConcurrentHashMap.newKeySet();
 
 	private void removeOldFrames() {
 		long compareTo = System.nanoTime() - second;
@@ -25,16 +31,31 @@ public class FrameCounter {
 		}
 	}
 
-	public void frameNoWait() {
+	public Collection<Consumer<Integer>> getUpdateListeners() {
+		return updateListeners;
+	}
+
+	public void addUpdateListener(Consumer<Integer> fpsConsumer) {
+		updateListeners.add(fpsConsumer);
+	}
+
+	private void offer(long nanos) {
 		removeOldFrames();
-		frames.offer(System.nanoTime());
+		frames.offer(nanos);
+		int fps = frames.size();
+		if (lastFps.getAndSet(fps) != fps) {
+			updateListeners.forEach(l -> l.accept(fps));
+		}
+	}
+
+	public void frameNoWait() {
+		offer(System.nanoTime());
 	}
 
 	public void frame() {
 		long limit = this.limit();
 		if (limit == 0) {
-			removeOldFrames();
-			frames.offer(System.nanoTime());
+			offer(System.nanoTime());
 		} else {
 			boolean offer = false;
 			long timeOffer = 0;
@@ -48,13 +69,24 @@ public class FrameCounter {
 					timeOffer = nextFrame;
 				}
 			}
-			removeOldFrames();
-			frames.offer(offer ? timeOffer : System.nanoTime());
+			offer(offer ? timeOffer : System.nanoTime());
 		}
 	}
 
 	private void sleepUntil(long nanos) {
+		boolean millis = true;
 		while (System.nanoTime() - nanos < 0) {
+			if (millis) {
+				long mls = TimeUnit.NANOSECONDS.toMillis(nanos - System.nanoTime());
+				if (mls > 1) {
+					try {
+						Thread.sleep(mls - 1);
+					} catch (InterruptedException ex) {
+						ex.printStackTrace();
+					}
+				}
+				millis = false;
+			}
 			Thread.yield();
 		}
 	}
