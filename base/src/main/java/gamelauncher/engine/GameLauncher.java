@@ -18,14 +18,17 @@ import gamelauncher.engine.util.logging.Logger;
 public abstract class GameLauncher {
 
 	public static final String NAME = "GameLauncher";
-	public static final Logger logger = Logger.getLogger(GameLauncher.class);
+//	public static final Logger LOGGER = Logger.getLogger(GameLauncher.class);
 	private Window window;
 	private FileSystem fileSystem;
 	private Path gameDirectory;
 	private Path settingsFile;
 	private SettingSection settings = new MainSettingSection();
 	private GameRenderer gameRenderer;
+	private ResourceLoader resourceLoader;
+	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
+	private final Logger logger = Logger.getLogger(getClass());
 
 	protected void setFileSystem(FileSystem fileSystem) {
 		this.fileSystem = fileSystem;
@@ -34,7 +37,24 @@ public abstract class GameLauncher {
 	}
 
 	protected void setResourceLoader(ResourceLoader loader) {
+		this.resourceLoader = loader;
 		loader.set();
+	}
+	
+	public Logger getLogger() {
+		return logger;
+	}
+
+	public ResourceLoader getResourceLoader() {
+		return resourceLoader;
+	}
+
+	public boolean isDebugMode() {
+		return debugMode;
+	}
+
+	public void setDebugMode(boolean debugMode) {
+		this.debugMode = debugMode;
 	}
 
 	protected void setGameRenderer(GameRenderer renderer) {

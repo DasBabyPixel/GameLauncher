@@ -54,6 +54,12 @@ public class ResourceStream implements AutoCloseable {
 	public String readUTF8Fully() throws IOException {
 		return new String(readAllBytes(), StandardCharsets.UTF_8);
 	}
+	
+	public String readUTF8FullyClose() throws IOException {
+		String utf8 = readUTF8Fully();
+		close();
+		return utf8;
+	}
 
 	public int readBytes(byte[] bytes) throws IOException {
 		return in.read(bytes);

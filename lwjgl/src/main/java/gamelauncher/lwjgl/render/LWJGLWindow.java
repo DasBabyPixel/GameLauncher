@@ -65,7 +65,7 @@ public class LWJGLWindow implements Window {
 	public void setFrameRenderer(FrameRenderer renderer) {
 		this.frameRenderer.set(renderer);
 	}
-	
+
 	@Override
 	public DrawContext getContext() {
 		return context;
@@ -301,6 +301,14 @@ public class LWJGLWindow implements Window {
 					shouldDrawLock.unlock();
 				}
 			}
+			if (lastFrameRenderer != null) {
+				try {
+					lastFrameRenderer.close();
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
+				lastFrameRenderer = null;
+			}
 			closeFuture.complete(null);
 		}
 
@@ -348,6 +356,8 @@ public class LWJGLWindow implements Window {
 			shouldDrawLock.unlock();
 		}
 
+		private FrameRenderer lastFrameRenderer = null;
+
 		private void frame() {
 			shouldDrawLock.lock();
 			shouldDraw.set(false);
@@ -356,6 +366,23 @@ public class LWJGLWindow implements Window {
 			}
 			FrameRenderer fr = frameRenderer.get();
 			if (fr != null) {
+				if (lastFrameRenderer != fr) {
+					if (lastFrameRenderer != null) {
+						try {
+							lastFrameRenderer.close();
+						} catch (GameException ex) {
+							ex.printStackTrace();
+						}
+					}
+					lastFrameRenderer = fr;
+					if (fr != null) {
+						try {
+							fr.init();
+						} catch (GameException ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
 				try {
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (GameException ex) {
@@ -413,6 +440,10 @@ public class LWJGLWindow implements Window {
 		public void run() {
 			glfwDefaultWindowHints();
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+//			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+//			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
 			int[] a0 = new int[1];

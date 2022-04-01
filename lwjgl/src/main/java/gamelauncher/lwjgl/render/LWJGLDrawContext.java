@@ -28,6 +28,11 @@ public class LWJGLDrawContext implements DrawContext {
 	}
 
 	@Override
+	public void drawTriangle(double x1, double y1, double x2, double y2, double x3, double y3, Color color) {
+		
+	}
+
+	@Override
 	public DrawContext translate(double x, double y, double z) {
 		return new LWJGLDrawContext(tx + x, ty + y, tz + z, sx, sy, sz);
 	}

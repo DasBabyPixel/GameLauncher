@@ -14,14 +14,14 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	public LWJGLGameLauncher() {
 		setFileSystem(new LWJGLFileSystem());
-		setGameRenderer(new LWJGLGameRenderer());
+		setGameRenderer(new LWJGLGameRenderer(this));
 	}
 
 	@Override
 	protected void start0() throws GameException {
 		setResourceLoader(new EmbedResourceLoader());
 		LWJGLWindow window = new LWJGLWindow(400, 400, NAME);
-		this.setWindow(window);
+		setWindow(window);
 		window.renderLater(() -> {
 			glClearColor(.2F, .2F, .2F, .8F);
 		});
@@ -33,7 +33,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.getFrameCounter().ifPresent(f -> {
 			f.limit(60);
 			f.addUpdateListener(fps -> {
-				logger.info("FPS: " + fps);
+				getLogger().info("FPS: " + fps);
 			});
 		});
 	}
