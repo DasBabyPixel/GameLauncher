@@ -26,7 +26,6 @@ import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 import org.lwjgl.opengl.GL;
 
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
@@ -53,7 +52,7 @@ public class LWJGLWindow implements Window {
 	private final AtomicReference<RenderThread> renderThread = new AtomicReference<>(null);
 	private final Queue<Future> windowThreadFutures = new ConcurrentLinkedQueue<>();
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
-	private final DrawContext context = new LWJGLDrawContext();
+	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 
 	public LWJGLWindow(int width, int height, String title) {
 		this.width.set(width);
@@ -67,7 +66,7 @@ public class LWJGLWindow implements Window {
 	}
 
 	@Override
-	public DrawContext getContext() {
+	public LWJGLDrawContext getContext() {
 		return context;
 	}
 
@@ -303,7 +302,7 @@ public class LWJGLWindow implements Window {
 			}
 			if (lastFrameRenderer != null) {
 				try {
-					lastFrameRenderer.close();
+					lastFrameRenderer.close(LWJGLWindow.this);
 				} catch (GameException ex) {
 					ex.printStackTrace();
 				}
@@ -369,23 +368,23 @@ public class LWJGLWindow implements Window {
 				if (lastFrameRenderer != fr) {
 					if (lastFrameRenderer != null) {
 						try {
-							lastFrameRenderer.close();
-						} catch (GameException ex) {
+							lastFrameRenderer.close(LWJGLWindow.this);
+						} catch (Exception ex) {
 							ex.printStackTrace();
 						}
 					}
 					lastFrameRenderer = fr;
 					if (fr != null) {
 						try {
-							fr.init();
-						} catch (GameException ex) {
+							fr.init(LWJGLWindow.this);
+						} catch (Exception ex) {
 							ex.printStackTrace();
 						}
 					}
 				}
 				try {
 					fr.renderFrame(LWJGLWindow.this);
-				} catch (GameException ex) {
+				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
 			}

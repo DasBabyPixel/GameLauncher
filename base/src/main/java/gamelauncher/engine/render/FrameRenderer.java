@@ -6,7 +6,7 @@ public interface FrameRenderer {
 
 	void renderFrame(Window window) throws GameException;
 
-	void init() throws GameException;
+	void init(Window window) throws GameException;
 
-	void close() throws GameException;
+	void close(Window window) throws GameException;
 }

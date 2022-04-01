@@ -29,7 +29,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.createWindow();
 		window.startRendering();
 		window.show();
-		window.setFloating(true);
 		window.getFrameCounter().ifPresent(f -> {
 			f.limit(60);
 			f.addUpdateListener(fps -> {

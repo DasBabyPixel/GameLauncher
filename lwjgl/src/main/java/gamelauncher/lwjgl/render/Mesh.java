@@ -9,6 +9,8 @@ import static org.lwjgl.system.MemoryUtil.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import gamelauncher.engine.render.Model;
+
 public class Mesh {
 	private final int vaoId;
 	private final int vboId;
@@ -44,9 +46,19 @@ public class Mesh {
 		glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_STATIC_DRAW);
 		memFree(verticesBuffer);
 		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-		
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		
+
+		glBindVertexArray(0);
+	}
+	
+	public void render() {
+		glBindVertexArray(getVaoId());
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glDrawElements(GL_TRIANGLES, getVertexCount(), GL_UNSIGNED_INT, 0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 	}
 
@@ -65,5 +77,18 @@ public class Mesh {
 		glDeleteBuffers(idxVboId);
 		// Delete the VAO
 		glDeleteVertexArrays(vaoId);
+	}
+
+	public static class MeshModel implements Model {
+		public final Mesh mesh;
+
+		public MeshModel(Mesh mesh) {
+			this.mesh = mesh;
+		}
+
+		@Override
+		public void cleanup() {
+			mesh.cleanup();
+		}
 	}
 }

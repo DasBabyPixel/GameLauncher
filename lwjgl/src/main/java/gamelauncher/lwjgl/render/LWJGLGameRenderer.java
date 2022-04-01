@@ -1,28 +1,26 @@
 package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.GameRenderer;
+import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Renderer;
+import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.resource.ResourcePath;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
 	private final AtomicReference<Renderer> renderer = new AtomicReference<>();
 	private Renderer crenderer;
-	private ShaderProgram shaderProgram;
 	private GameLauncher launcher;
 
-	private Mesh mesh;
+	private Model model;
+	private GameItem item;
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
 		this.launcher = launcher;
@@ -39,39 +37,45 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	@Override
-	public void init() throws GameException {
+	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
-		mesh = new Mesh(new float[] {
-				-0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f,
+		Mesh mesh = new Mesh(new float[] {
+				-0.5f, 0.5f, -1.55f, -0.5f, -0.5f, -1.55f, 0.5f, -0.5f, -1.55f, 0.5f, 0.5f, -1.55f,
 		}, new float[] {
 				0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f,
 		}, new int[] {
 				0, 1, 3, 3, 1, 2,
 		});
-		shaderProgram = new ShaderProgram(launcher);
-		try {
-			shaderProgram.createVertexShader(launcher.getResourceLoader()
-					.getResource(new ResourcePath("shaders/basic/vertex"))
-					.newResourceStream()
-					.readUTF8FullyClose());
-			shaderProgram.createFragmentShader(launcher.getResourceLoader()
-					.getResource(new ResourcePath("shaders/basic/fragment"))
-					.newResourceStream()
-					.readUTF8FullyClose());
-		} catch (IOException ex) {
-			throw new GameException(ex);
-		}
+		item = new GameItem(mesh);
+		model = new GameItem.GameItemModel(item);
+
+		ShaderProgram shaderProgram = new ShaderProgram(launcher);
+		shaderProgram.createVertexShader(launcher.getResourceLoader()
+				.getResource(new ResourcePath("shaders/basic/vertex"))
+				.newResourceStream()
+				.readUTF8FullyClose());
+		shaderProgram.createFragmentShader(launcher.getResourceLoader()
+				.getResource(new ResourcePath("shaders/basic/fragment"))
+				.newResourceStream()
+				.readUTF8FullyClose());
 		shaderProgram.link();
 		shaderProgram.deleteVertexShader();
 		shaderProgram.deleteFragmentShader();
+		shaderProgram.createUniform("projectionMatrix");
+		shaderProgram.createUniform("transformationMatrix");
+
+		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
+		context.setProgram(shaderProgram);
+		context.setProjectionMatrix(
+				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
 	@Override
-	public void close() throws GameException {
+	public void close(Window window) throws GameException {
 		launcher.getLogger().info("Cleaning up RenderEngine");
-		mesh.cleanup();
-		shaderProgram.cleanup();
+		model.cleanup();
+		((LWJGLDrawContext) window.getContext()).getProgram().cleanup();
 		launcher.getLogger().info("RenderEngine cleaned up");
 	}
 
@@ -92,6 +96,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 	@Override
 	public void renderFrame(Window window) throws GameException {
 		window.beginFrame();
+
+		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, 0);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer renderer = this.renderer.get();
 		if (renderer != crenderer) {
@@ -102,15 +109,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 		if (renderer != null) {
 			renderer.render(window, window.getContext());
 		}
-		shaderProgram.bind();
-		glBindVertexArray(mesh.getVaoId());
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glDrawElements(GL_TRIANGLES, mesh.getVertexCount(), GL_UNSIGNED_INT, 0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(0);
-		glBindVertexArray(0);
-		shaderProgram.unbind();
+
+		window.getContext().drawModel(model, 0, 0, 0);
+
 		window.endFrame();
 	}
 }

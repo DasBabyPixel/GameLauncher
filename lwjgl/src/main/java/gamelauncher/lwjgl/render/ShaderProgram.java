@@ -1,6 +1,13 @@
-package gamelauncher.lwjgl.render.shader;
+package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL20.*;
+
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.joml.Matrix4f;
+import org.lwjgl.system.MemoryStack;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
@@ -13,9 +20,11 @@ public class ShaderProgram {
 
 	private int fragmentShaderId;
 	private final GameLauncher launcher;
+	private final Map<String, Integer> uniforms;
 
 	public ShaderProgram(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
+		this.uniforms = new HashMap<>();
 		programId = glCreateProgram();
 		if (programId == 0) {
 			throw new GameException("Could not create Shader");
@@ -29,11 +38,32 @@ public class ShaderProgram {
 	public void createFragmentShader(String shaderCode) throws GameException {
 		fragmentShaderId = createShader(shaderCode, GL_FRAGMENT_SHADER);
 	}
-	
+
+	public void createUniform(String uniformName) throws GameException {
+		int uniformLocation = glGetUniformLocation(programId, uniformName);
+		if (uniformLocation < 0) {
+			throw new GameException("Could not find uniform:" + uniformName);
+		}
+		uniforms.put(uniformName, uniformLocation);
+	}
+
+	public void setUniform(String uniformName, Matrix4f value) throws GameException {
+		// Dump the matrix into a float buffer
+		if(!uniforms.containsKey(uniformName)) {
+			throw new GameException("No Uniform with name " + uniformName + " present");
+		}
+		int uniform = uniforms.get(uniformName);
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			FloatBuffer fb = stack.mallocFloat(16);
+			value.get(fb);
+			glUniformMatrix4fv(uniform, false, fb);
+		}
+	}
+
 	public void deleteVertexShader() {
 		glDeleteShader(vertexShaderId);
 	}
-	
+
 	public void deleteFragmentShader() {
 		glDeleteShader(fragmentShaderId);
 	}
