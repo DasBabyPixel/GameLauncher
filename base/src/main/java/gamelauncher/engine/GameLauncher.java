@@ -1,6 +1,7 @@
 package gamelauncher.engine;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutionException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,7 +19,8 @@ import gamelauncher.engine.util.logging.Logger;
 public abstract class GameLauncher {
 
 	public static final String NAME = "GameLauncher";
-//	public static final Logger LOGGER = Logger.getLogger(GameLauncher.class);
+	public static final int MAX_TPS = 20;
+	private GameThread gameThread;
 	private Window window;
 	private FileSystem fileSystem;
 	private Path gameDirectory;
@@ -40,7 +42,11 @@ public abstract class GameLauncher {
 		this.resourceLoader = loader;
 		loader.set();
 	}
-	
+
+	public void handleError(Throwable throwable) {
+		throwable.printStackTrace();
+	}
+
 	public Logger getLogger() {
 		return logger;
 	}
@@ -96,8 +102,25 @@ public abstract class GameLauncher {
 			settings.deserialize(element);
 		}
 
-		start0();
+		gameThread = new GameThread(this);
+		gameThread.runLater(() -> start0());
+		gameThread.start();
+
 	}
+	
+	public int getCurrentTick() {
+		return gameThread.getCurrentTick();
+	}
+
+	public void stop() throws GameException {
+		try {
+			gameThread.exit().get();
+		} catch (InterruptedException | ExecutionException ex) {
+			throw new GameException(ex);
+		}
+	}
+
+	protected abstract void tick() throws GameException;
 
 	protected abstract void start0() throws GameException;
 }

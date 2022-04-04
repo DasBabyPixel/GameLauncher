@@ -20,6 +20,7 @@ import java.util.function.UnaryOperator;
 
 import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
 import org.lwjgl.glfw.GLFWKeyCallbackI;
+import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
 import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.glfw.GLFWWindowPosCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
@@ -30,6 +31,7 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
+import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 
 public class LWJGLWindow implements Window {
 
@@ -53,6 +55,13 @@ public class LWJGLWindow implements Window {
 	private final Queue<Future> windowThreadFutures = new ConcurrentLinkedQueue<>();
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
+	private final LWJGLInput input = new LWJGLInput(this);
+	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
+		@Override
+		public void close() {
+			windowThread.get().close.set(true);
+		}
+	});
 
 	public LWJGLWindow(int width, int height, String title) {
 		this.width.set(width);
@@ -68,6 +77,19 @@ public class LWJGLWindow implements Window {
 	@Override
 	public LWJGLDrawContext getContext() {
 		return context;
+	}
+
+	@Override
+	public LWJGLInput getInput() {
+		return input;
+	}
+	
+	public CloseCallback getCloseCallback() {
+		return closeCallback.get();
+	}
+	
+	public void setCloseCallback(CloseCallback closeCallback) {
+		this.closeCallback.set(closeCallback);
 	}
 
 	public CompletableFuture<Void> renderLater(Runnable runnable) {
@@ -460,7 +482,11 @@ public class LWJGLWindow implements Window {
 			glfwSetWindowCloseCallback(id, new GLFWWindowCloseCallbackI() {
 				@Override
 				public void invoke(long window) {
-					close.set(true);
+					try {
+						closeCallback.get().close();
+					} catch (GameException ex) {
+						ex.printStackTrace();
+					}
 				}
 			});
 			glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
@@ -477,20 +503,36 @@ public class LWJGLWindow implements Window {
 					y.set(ypos);
 				}
 			});
+			glfwSetMouseButtonCallback(id, new GLFWMouseButtonCallbackI() {
+				@Override
+				public void invoke(long window, int button, int action, int mods) {
+					switch (action) {
+					case GLFW_PRESS:
+						input.press(button, DeviceType.MOUSE);
+						break;
+					case GLFW_RELEASE:
+						input.release(button, DeviceType.MOUSE);
+						break;
+					default:
+						break;
+					}
+				}
+			});
 			glfwSetKeyCallback(id, new GLFWKeyCallbackI() {
 				@Override
 				public void invoke(long window, int key, int scancode, int action, int mods) {
-					if (action == GLFW_RELEASE) {
-						return;
-					} else if (key == GLFW_KEY_UP) {
-						getFrameCounter().get().limit(getFrameCounter().get().limit() + 1);
-					} else if (key == GLFW_KEY_DOWN) {
-						getFrameCounter().get().limit(getFrameCounter().get().limit() - 1);
-					} else if (action != GLFW_PRESS) {
-						return;
-					}
-					if (key == GLFW_KEY_ENTER) {
-						scheduleDraw();
+					switch (action) {
+					case GLFW_PRESS:
+						input.press(key, DeviceType.KEYBOARD);
+						break;
+					case GLFW_RELEASE:
+						input.release(key, DeviceType.KEYBOARD);
+						break;
+					case GLFW_REPEAT:
+						input.repeat(key, DeviceType.KEYBOARD);
+						break;
+					default:
+						break;
 					}
 				}
 			});
@@ -535,6 +577,10 @@ public class LWJGLWindow implements Window {
 			glfwPostEmptyEvent();
 			return f;
 		}
+	}
+
+	public static interface CloseCallback {
+		void close() throws GameException;
 	}
 
 	private static class Future {

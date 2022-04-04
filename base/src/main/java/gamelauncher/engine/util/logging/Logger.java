@@ -11,16 +11,32 @@ public abstract class Logger {
 		log(LogLevel.INFO, message);
 	}
 
+	public void infof(String message, Object... args) {
+		log(LogLevel.INFO, String.format(message, args));
+	}
+
 	public void error(Object message) {
 		log(LogLevel.ERROR, message);
+	}
+
+	public void errorf(String message, Object... args) {
+		log(LogLevel.INFO, String.format(message, args));
 	}
 
 	public void debug(Object message) {
 		log(LogLevel.DEBUG, message);
 	}
 
+	public void debugf(String message, Object... args) {
+		log(LogLevel.INFO, String.format(message, args));
+	}
+
 	public void warn(Object message) {
 		log(LogLevel.WARN, message);
+	}
+
+	public void warnf(String message, Object... args) {
+		log(LogLevel.INFO, String.format(message, args));
 	}
 
 	public abstract boolean shouldDisplay(LogLevel level);

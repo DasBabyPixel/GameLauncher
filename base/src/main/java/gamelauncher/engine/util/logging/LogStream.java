@@ -65,7 +65,9 @@ public class LogStream extends OutputStream {
 			} else if (message instanceof Collection<?>) {
 				logCollection(level, (Collection<?>) message);
 			} else {
-				logString(level, Objects.toString(message));
+				for (String s : Objects.toString(message).split("\\n")) {
+					logString(level, s);
+				}
 			}
 		}
 		lock.unlock();
