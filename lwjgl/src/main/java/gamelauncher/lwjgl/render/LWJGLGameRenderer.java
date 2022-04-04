@@ -40,11 +40,38 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Mesh mesh = new Mesh(new float[] {
-				-0.5f, 0.5f, -1.55f, -0.5f, -0.5f, -1.55f, 0.5f, -0.5f, -1.55f, 0.5f, 0.5f, -1.55f,
+				// VO
+				-0.5f, 0.5f, 0.5f,
+				// V1
+				-0.5f, -0.5f, 0.5f,
+				// V2
+				0.5f, -0.5f, 0.5f,
+				// V3
+				0.5f, 0.5f, 0.5f,
+				// V4
+				-0.5f, 0.5f, -0.5f,
+				// V5
+				0.5f, 0.5f, -0.5f,
+				// V6
+				-0.5f, -0.5f, -0.5f,
+				// V7
+				0.5f, -0.5f, -0.5f,
 		}, new float[] {
-				0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f,
+				0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f,
+				0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f,
 		}, new int[] {
+				// Front face
 				0, 1, 3, 3, 1, 2,
+				// Top Face
+				4, 0, 3, 5, 4, 3,
+				// Right face
+				3, 2, 7, 5, 3, 7,
+				// Left face
+				6, 1, 0, 6, 0, 4,
+				// Bottom face
+				2, 1, 6, 2, 6, 7,
+				// Back face
+				7, 6, 4, 7, 4, 5,
 		});
 		item = new GameItem(mesh);
 		model = new GameItem.GameItemModel(item);
@@ -68,6 +95,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 		context.setProgram(shaderProgram);
 		context.setProjectionMatrix(
 				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
+
+		glEnable(GL_DEPTH_TEST);
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
@@ -97,7 +126,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void renderFrame(Window window) throws GameException {
 		window.beginFrame();
 
-		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, 0);
+		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3);
+		item.setRotation((System.currentTimeMillis() / 28)%360, (System.currentTimeMillis() / 25)%360,
+				(System.currentTimeMillis() / 20)%360);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer renderer = this.renderer.get();

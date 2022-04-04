@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.GameException;
 
 public class ResourceStream implements AutoCloseable {
@@ -46,6 +47,14 @@ public class ResourceStream implements AutoCloseable {
 		}
 		if (out != null) {
 			out.close();
+		}
+	}
+	
+	public PNGDecoder newPNGDecoder() throws GameException {
+		try {
+			return new PNGDecoder(in);
+		} catch (IOException ex) {
+			throw new GameException(ex);
 		}
 	}
 
