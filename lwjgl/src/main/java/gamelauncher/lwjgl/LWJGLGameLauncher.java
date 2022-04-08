@@ -9,7 +9,6 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.EmbedResourceLoader;
 import gamelauncher.lwjgl.file.LWJGLFileSystem;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLInput;
 import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 import gamelauncher.lwjgl.render.LWJGLInput.InputType;
 import gamelauncher.lwjgl.render.LWJGLInput.Listener;
@@ -36,7 +35,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.createWindow();
 		window.startRendering();
-		window.show();
 		window.getInput().addListener(new Listener() {
 			@Override
 			public void handle(InputType inputType, DeviceType deviceType, int key) {
@@ -69,6 +67,15 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.getFrameCounter().ifPresent(f -> {
 			f.limit(60);
 		});
+		System.out.println("Wait 1");
+		window.waitForFrame();
+		System.out.println("Wait 2");
+		window.waitForFrame();
+		System.out.println("Wait 3");
+		window.waitForFrame();
+		System.out.println("Wait Done");
+		window.show();
+
 	}
 
 	public LWJGLWindow getWindow() {
@@ -78,9 +85,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 	@Override
 	protected void tick() {
 		window.getInput().handleInput();
-		if (getCurrentTick() % GameLauncher.MAX_TPS == 0) {
-			LWJGLInput input = window.getInput();
-			getLogger().infof("%s %s", input.qentrysize.get(), input.entrysize.get());
-		}
+//		if (getCurrentTick() % GameLauncher.MAX_TPS == 0) {
+//			LWJGLInput input = window.getInput();
+//			getLogger().infof("%s %s", input.qentrysize.get(), input.entrysize.get());
+//		}
 	}
 }

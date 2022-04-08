@@ -57,13 +57,14 @@ public class LWJGLWindow implements Window {
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 	private final LWJGLInput input = new LWJGLInput(this);
 	private final LWJGLCamera camera = new LWJGLCamera();
+	private final Phaser drawPhaser = new Phaser();
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
 		@Override
 		public void close() {
 			windowThread.get().close.set(true);
 		}
 	});
-	
+
 	public LWJGLCamera getCamera() {
 		return camera;
 	}
@@ -88,11 +89,11 @@ public class LWJGLWindow implements Window {
 	public LWJGLInput getInput() {
 		return input;
 	}
-	
+
 	public CloseCallback getCloseCallback() {
 		return closeCallback.get();
 	}
-	
+
 	public void setCloseCallback(CloseCallback closeCallback) {
 		this.closeCallback.set(closeCallback);
 	}
@@ -259,6 +260,10 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	public void waitForFrame() {
+		drawPhaser.awaitAdvance(drawPhaser.getPhase());
+	}
+
 	public Optional<FrameCounter> getFrameCounter() {
 		RenderThread rt = renderThread.get();
 		if (rt != null) {
@@ -287,7 +292,6 @@ public class LWJGLWindow implements Window {
 		private final AtomicBoolean viewportChanged = new AtomicBoolean(true);
 		private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
 		private final FrameCounter frameCounter = new FrameCounter();
-		private final Phaser drawPhaser = new Phaser();
 		private final AtomicBoolean hasContext = new AtomicBoolean(false);
 		private final Lock hasContextLock = new ReentrantLock(true);
 		private final Condition hasContextCondition = hasContextLock.newCondition();
@@ -441,7 +445,7 @@ public class LWJGLWindow implements Window {
 		}
 
 		private void workQueue() {
-			if(renderThreadFutures.isEmpty()) {
+			if (renderThreadFutures.isEmpty()) {
 				return;
 			}
 			Future f;
@@ -565,7 +569,7 @@ public class LWJGLWindow implements Window {
 			while (!close.get()) {
 				glfwWaitEventsTimeout(1.0);
 				glfwPollEvents();
-				if(windowThreadFutures.isEmpty()) {
+				if (windowThreadFutures.isEmpty()) {
 					continue;
 				}
 				Future f;
