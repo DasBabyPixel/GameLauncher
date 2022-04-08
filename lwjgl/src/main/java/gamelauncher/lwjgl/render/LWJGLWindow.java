@@ -56,12 +56,17 @@ public class LWJGLWindow implements Window {
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 	private final LWJGLInput input = new LWJGLInput(this);
+	private final LWJGLCamera camera = new LWJGLCamera();
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
 		@Override
 		public void close() {
 			windowThread.get().close.set(true);
 		}
 	});
+	
+	public LWJGLCamera getCamera() {
+		return camera;
+	}
 
 	public LWJGLWindow(int width, int height, String title) {
 		this.width.set(width);
@@ -405,6 +410,7 @@ public class LWJGLWindow implements Window {
 					}
 				}
 				try {
+					context.update(camera);
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (Exception ex) {
 					ex.printStackTrace();
@@ -435,6 +441,9 @@ public class LWJGLWindow implements Window {
 		}
 
 		private void workQueue() {
+			if(renderThreadFutures.isEmpty()) {
+				return;
+			}
 			Future f;
 			while ((f = renderThreadFutures.poll()) != null) {
 				f.r.run();
@@ -556,6 +565,9 @@ public class LWJGLWindow implements Window {
 			while (!close.get()) {
 				glfwWaitEventsTimeout(1.0);
 				glfwPollEvents();
+				if(windowThreadFutures.isEmpty()) {
+					continue;
+				}
 				Future f;
 				while ((f = windowThreadFutures.poll()) != null) {
 					try {

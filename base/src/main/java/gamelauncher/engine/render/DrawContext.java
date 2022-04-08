@@ -13,9 +13,14 @@ public interface DrawContext {
 
 	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz) throws GameException;
 
+	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy,
+			double sz) throws GameException;
+
 	void drawModel(Model model, double x, double y, double z) throws GameException;
 
 	void setProjectionMatrix(Transformations.Projection projection) throws GameException;
+	
+	void update(Camera camera) throws GameException;
 
 //	void setViewMatrix(Transformations.Transformation view) throws GameException;
 

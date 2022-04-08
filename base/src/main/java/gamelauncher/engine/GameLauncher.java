@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
 import gamelauncher.engine.render.GameRenderer;
+import gamelauncher.engine.render.ModelLoader;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
@@ -19,7 +20,7 @@ import gamelauncher.engine.util.logging.Logger;
 public abstract class GameLauncher {
 
 	public static final String NAME = "GameLauncher";
-	public static final int MAX_TPS = 20;
+	public static final int MAX_TPS = 30;
 	private GameThread gameThread;
 	private Window window;
 	private FileSystem fileSystem;
@@ -27,6 +28,7 @@ public abstract class GameLauncher {
 	private Path settingsFile;
 	private SettingSection settings = new MainSettingSection();
 	private GameRenderer gameRenderer;
+	private ModelLoader modelLoader;
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
@@ -42,6 +44,10 @@ public abstract class GameLauncher {
 		this.resourceLoader = loader;
 		loader.set();
 	}
+	
+	protected void setModelLoader(ModelLoader loader) {
+		this.modelLoader = loader;
+	}
 
 	public void handleError(Throwable throwable) {
 		throwable.printStackTrace();
@@ -49,6 +55,10 @@ public abstract class GameLauncher {
 
 	public Logger getLogger() {
 		return logger;
+	}
+	
+	public ModelLoader getModelLoader() {
+		return modelLoader;
 	}
 
 	public ResourceLoader getResourceLoader() {

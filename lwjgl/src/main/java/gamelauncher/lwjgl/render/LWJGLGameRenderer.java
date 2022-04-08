@@ -20,7 +20,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	private GameLauncher launcher;
 
 	private Model model;
-	private GameItem item;
+//	private GameItem item;
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
 		this.launcher = launcher;
@@ -57,8 +57,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 				// V7
 				0.5f, -0.5f, -0.5f,
 		}, new float[] {
-				0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.5f,
-				0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f,
+				0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0
 		}, new int[] {
 				// Front face
 				0, 1, 3, 3, 1, 2,
@@ -72,9 +71,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 				2, 1, 6, 2, 6, 7,
 				// Back face
 				7, 6, 4, 7, 4, 5,
-		});
-		item = new GameItem(mesh);
-		model = new GameItem.GameItemModel(item);
+		}, new LWJGLTexture(new ResourcePath("cube.png")));
+		model = new Mesh.MeshModel(mesh);
 
 		ShaderProgram shaderProgram = new ShaderProgram(launcher);
 		shaderProgram.createVertexShader(launcher.getResourceLoader()
@@ -89,7 +87,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 		shaderProgram.deleteVertexShader();
 		shaderProgram.deleteFragmentShader();
 		shaderProgram.createUniform("projectionMatrix");
-		shaderProgram.createUniform("transformationMatrix");
+		shaderProgram.createUniform("modelViewMatrix");
+		shaderProgram.createUniform("texture_sampler");
 
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context.setProgram(shaderProgram);
@@ -122,13 +121,15 @@ public class LWJGLGameRenderer implements GameRenderer {
 		renderer.init();
 	}
 
+	private float rx, ry, rz;
+
 	@Override
 	public void renderFrame(Window window) throws GameException {
 		window.beginFrame();
 
-		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3);
-		item.setRotation((System.currentTimeMillis() / 28)%360, (System.currentTimeMillis() / 25)%360,
-				(System.currentTimeMillis() / 20)%360);
+//		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3);
+//		item.setRotation((System.currentTimeMillis() / 28) % 360, (System.currentTimeMillis() / 25) % 360,
+//				(System.currentTimeMillis() / 20) % 360);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer renderer = this.renderer.get();
@@ -140,8 +141,18 @@ public class LWJGLGameRenderer implements GameRenderer {
 		if (renderer != null) {
 			renderer.render(window, window.getContext());
 		}
+		rx += 1/2;
+		ry += 1.3/2;
+		rz += 0.6/2;
 
-		window.getContext().drawModel(model, 0, 0, 0);
+		window.getContext()
+				.drawModel(model, // (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3,
+						0, 0, 0, rx, ry, rz
+//						,
+//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
+//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
+//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1);
+				);
 
 		window.endFrame();
 	}

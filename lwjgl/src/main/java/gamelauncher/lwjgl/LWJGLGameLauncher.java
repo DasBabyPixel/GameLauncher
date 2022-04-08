@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl;
 
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 import gamelauncher.engine.GameException;
@@ -8,6 +9,7 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.EmbedResourceLoader;
 import gamelauncher.lwjgl.file.LWJGLFileSystem;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
+import gamelauncher.lwjgl.render.LWJGLInput;
 import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 import gamelauncher.lwjgl.render.LWJGLInput.InputType;
 import gamelauncher.lwjgl.render.LWJGLInput.Listener;
@@ -38,7 +40,22 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.getInput().addListener(new Listener() {
 			@Override
 			public void handle(InputType inputType, DeviceType deviceType, int key) {
-				System.out.printf("%s %s %s%n", inputType, deviceType, key);
+				if (inputType == InputType.HELD) {
+					if (key == GLFW_KEY_W) {
+						window.getCamera().getPosition().z -= 0.02;
+					} else if (key == GLFW_KEY_S) {
+						window.getCamera().getPosition().z += 0.02;
+					} else if (key == GLFW_KEY_A) {
+						window.getCamera().getPosition().x -= 0.02;
+					} else if (key == GLFW_KEY_D) {
+						window.getCamera().getPosition().x += 0.02;
+					} else if (key == GLFW_KEY_SPACE) {
+						window.getCamera().getPosition().y += 0.02;
+					} else if (key == GLFW_KEY_LEFT_SHIFT) {
+						window.getCamera().getPosition().y -= 0.02;
+					}
+				}
+//				System.out.printf("%s %s %s%n", inputType, deviceType, key);
 			}
 		});
 		CloseCallback oldCloseCallback = window.getCloseCallback();
@@ -51,9 +68,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		});
 		window.getFrameCounter().ifPresent(f -> {
 			f.limit(60);
-			f.addUpdateListener(fps -> {
-//				getLogger().info("FPS: " + fps);
-			});
 		});
 	}
 
@@ -65,7 +79,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 	protected void tick() {
 		window.getInput().handleInput();
 		if (getCurrentTick() % GameLauncher.MAX_TPS == 0) {
-			getLogger().info("Tick " + System.currentTimeMillis() % 1000);
+			LWJGLInput input = window.getInput();
+			getLogger().infof("%s %s", input.qentrysize.get(), input.entrysize.get());
 		}
 	}
 }

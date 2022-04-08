@@ -1,6 +1,7 @@
 package gamelauncher.engine.render;
 
 public interface Transformations {
+	
 	public static interface Projection {
 
 		public static class Projection3D implements Projection {
@@ -10,6 +11,17 @@ public interface Transformations {
 				this.fov = fov;
 				this.zNear = zNear;
 				this.zFar = zFar;
+			}
+		}
+	}
+
+	public static interface View {
+		
+		public static class CameraView implements View {
+			public final Camera camera;
+
+			public CameraView(Camera camera) {
+				this.camera = camera;
 			}
 		}
 	}

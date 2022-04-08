@@ -50,6 +50,14 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 	
+	public void cleanup() throws GameException {
+		try {
+			close();
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		}
+	}
+	
 	public PNGDecoder newPNGDecoder() throws GameException {
 		try {
 			return new PNGDecoder(in);

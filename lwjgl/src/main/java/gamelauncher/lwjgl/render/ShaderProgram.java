@@ -47,17 +47,25 @@ public class ShaderProgram {
 		uniforms.put(uniformName, uniformLocation);
 	}
 
+	public void setUniform(String uniformName, int value) throws GameException {
+		glUniform1i(getUniform(uniformName), value);
+	}
+
 	public void setUniform(String uniformName, Matrix4f value) throws GameException {
 		// Dump the matrix into a float buffer
-		if(!uniforms.containsKey(uniformName)) {
-			throw new GameException("No Uniform with name " + uniformName + " present");
-		}
-		int uniform = uniforms.get(uniformName);
+		int uniform = getUniform(uniformName);
 		try (MemoryStack stack = MemoryStack.stackPush()) {
 			FloatBuffer fb = stack.mallocFloat(16);
 			value.get(fb);
 			glUniformMatrix4fv(uniform, false, fb);
 		}
+	}
+	
+	private int getUniform(String uniformName) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			throw new GameException("No Uniform with name " + uniformName + " present");
+		}
+		return uniforms.get(uniformName);
 	}
 
 	public void deleteVertexShader() {
