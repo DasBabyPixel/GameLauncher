@@ -1,6 +1,9 @@
 package gamelauncher.lwjgl.render;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +15,12 @@ import gamelauncher.engine.input.Input;
 public class LWJGLInput implements Input {
 
 	private final LWJGLWindow window;
+<<<<<<< HEAD
 	private final LWJGLMouse mouse;
 	private final Collection<Entry> pressed = ConcurrentHashMap.newKeySet();
+=======
+	private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
 	private final Collection<Listener> listeners = ConcurrentHashMap.newKeySet();
 
@@ -39,13 +46,11 @@ public class LWJGLInput implements Input {
 				pressed.add(qe.entry);
 				break;
 			case RELEASED:
-				pressed.remove(qe.entry);
-				qe.entry.next = qe.entry;
-				lentry.next = qe.entry;
-				lentry = lentry.next;
-				entrysize.incrementAndGet();
-				break;
+				int index = pressed.indexOf(qe.entry);
+				Entry inPressed = pressed.remove(index);
+				freeEntry(inPressed);
 			default:
+				freeEntry(qe.entry);
 				break;
 			}
 			qe.next = qe;
@@ -56,6 +61,13 @@ public class LWJGLInput implements Input {
 		for (Entry entry : pressed) {
 			event(entry.type, InputType.HELD, entry.key);
 		}
+	}
+
+	private void freeEntry(Entry entry) {
+		entry.next = entry;
+		lentry.next = entry;
+		lentry = entry;
+		entrysize.incrementAndGet();
 	}
 
 	public void addListener(Listener listener) {

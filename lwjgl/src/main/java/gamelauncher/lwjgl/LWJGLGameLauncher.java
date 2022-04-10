@@ -36,7 +36,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.createWindow();
 		window.startRendering();
-		window.show();
 		window.getInput().addListener(new Listener() {
 			@Override
 			public void handle(InputType inputType, DeviceType deviceType, int key) {
@@ -68,6 +67,15 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.getFrameCounter().ifPresent(f -> {
 			f.limit(60);
 		});
+		System.out.println("Wait 1");
+		window.waitForFrame();
+		System.out.println("Wait 2");
+		window.waitForFrame();
+		System.out.println("Wait 3");
+		window.waitForFrame();
+		System.out.println("Wait Done");
+		window.show();
+
 	}
 
 	public LWJGLWindow getWindow() {
@@ -82,5 +90,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 			getLogger().infof("%s %s %s", m.getX(), m.getY(), m.isInWindow());
 			
 		}
+		
 	}
 }
