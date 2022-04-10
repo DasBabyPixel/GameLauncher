@@ -15,12 +15,8 @@ import gamelauncher.engine.input.Input;
 public class LWJGLInput implements Input {
 
 	private final LWJGLWindow window;
-<<<<<<< HEAD
 	private final LWJGLMouse mouse;
-	private final Collection<Entry> pressed = ConcurrentHashMap.newKeySet();
-=======
 	private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
->>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
 	private final Collection<Listener> listeners = ConcurrentHashMap.newKeySet();
 
