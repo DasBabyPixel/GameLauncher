@@ -18,6 +18,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 
+import org.lwjgl.glfw.GLFWCursorEnterCallbackI;
+import org.lwjgl.glfw.GLFWCursorPosCallbackI;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
 import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
@@ -43,6 +45,7 @@ public class LWJGLWindow implements Window {
 	public final AtomicInteger x = new AtomicInteger();
 	public final AtomicInteger y = new AtomicInteger();
 	public final AtomicReference<String> title = new AtomicReference<>();
+	public final LWJGLMouse mouse = new LWJGLMouse(this);
 	private final AtomicReference<FrameRenderer> frameRenderer = new AtomicReference<>(null);
 	private final AtomicBoolean floating = new AtomicBoolean(false);
 	private final AtomicBoolean decorated = new AtomicBoolean(true);
@@ -63,7 +66,7 @@ public class LWJGLWindow implements Window {
 			windowThread.get().close.set(true);
 		}
 	});
-	
+
 	public LWJGLCamera getCamera() {
 		return camera;
 	}
@@ -88,11 +91,11 @@ public class LWJGLWindow implements Window {
 	public LWJGLInput getInput() {
 		return input;
 	}
-	
+
 	public CloseCallback getCloseCallback() {
 		return closeCallback.get();
 	}
-	
+
 	public void setCloseCallback(CloseCallback closeCallback) {
 		this.closeCallback.set(closeCallback);
 	}
@@ -441,7 +444,7 @@ public class LWJGLWindow implements Window {
 		}
 
 		private void workQueue() {
-			if(renderThreadFutures.isEmpty()) {
+			if (renderThreadFutures.isEmpty()) {
 				return;
 			}
 			Future f;
@@ -470,10 +473,6 @@ public class LWJGLWindow implements Window {
 		public void run() {
 			glfwDefaultWindowHints();
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-//			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-//			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-//			glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
 			int[] a0 = new int[1];
@@ -496,6 +495,18 @@ public class LWJGLWindow implements Window {
 					} catch (GameException ex) {
 						ex.printStackTrace();
 					}
+				}
+			});
+			glfwSetCursorEnterCallback(id, new GLFWCursorEnterCallbackI() {
+				@Override
+				public void invoke(long window, boolean entered) {
+					mouse.setInWindow(entered);
+				}
+			});
+			glfwSetCursorPosCallback(id, new GLFWCursorPosCallbackI() {
+				@Override
+				public void invoke(long window, double xpos, double ypos) {
+					mouse.setPosition(xpos, ypos);
 				}
 			});
 			glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
@@ -565,7 +576,7 @@ public class LWJGLWindow implements Window {
 			while (!close.get()) {
 				glfwWaitEventsTimeout(1.0);
 				glfwPollEvents();
-				if(windowThreadFutures.isEmpty()) {
+				if (windowThreadFutures.isEmpty()) {
 					continue;
 				}
 				Future f;

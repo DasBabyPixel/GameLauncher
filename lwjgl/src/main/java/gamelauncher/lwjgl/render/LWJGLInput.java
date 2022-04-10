@@ -12,6 +12,7 @@ import gamelauncher.engine.input.Input;
 public class LWJGLInput implements Input {
 
 	private final LWJGLWindow window;
+	private final LWJGLMouse mouse;
 	private final Collection<Entry> pressed = ConcurrentHashMap.newKeySet();
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
 	private final Collection<Listener> listeners = ConcurrentHashMap.newKeySet();
@@ -25,6 +26,7 @@ public class LWJGLInput implements Input {
 
 	public LWJGLInput(LWJGLWindow window) {
 		this.window = window;
+		this.mouse = this.window.mouse;
 	}
 
 	@Override
@@ -133,15 +135,8 @@ public class LWJGLInput implements Input {
 		private QueueEntry next = this;
 
 		public QueueEntry(Entry entry, InputType type) {
-			System.out.println("new qe");
 			this.entry = entry;
 			this.type = type;
-		}
-		
-		@Override
-		protected void finalize() throws Throwable {
-			System.out.println("finalize qe");
-			super.finalize();
 		}
 
 		@Override
@@ -172,13 +167,6 @@ public class LWJGLInput implements Input {
 		public Entry(int key, DeviceType type) {
 			this.key = key;
 			this.type = type;
-			System.out.println("new e");
-		}
-		
-		@Override
-		protected void finalize() throws Throwable {
-			System.out.println("finalize e");
-			super.finalize();
 		}
 
 		@Override

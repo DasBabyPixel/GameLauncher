@@ -9,10 +9,10 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.EmbedResourceLoader;
 import gamelauncher.lwjgl.file.LWJGLFileSystem;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLInput;
 import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 import gamelauncher.lwjgl.render.LWJGLInput.InputType;
 import gamelauncher.lwjgl.render.LWJGLInput.Listener;
+import gamelauncher.lwjgl.render.LWJGLMouse;
 import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
 
@@ -55,7 +55,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 						window.getCamera().getPosition().y -= 0.02;
 					}
 				}
-//				System.out.printf("%s %s %s%n", inputType, deviceType, key);
 			}
 		});
 		CloseCallback oldCloseCallback = window.getCloseCallback();
@@ -79,8 +78,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 	protected void tick() {
 		window.getInput().handleInput();
 		if (getCurrentTick() % GameLauncher.MAX_TPS == 0) {
-			LWJGLInput input = window.getInput();
-			getLogger().infof("%s %s", input.qentrysize.get(), input.entrysize.get());
+			LWJGLMouse m = window.mouse;
+			getLogger().infof("%s %s %s", m.getX(), m.getY(), m.isInWindow());
+			
 		}
 	}
 }
