@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import gamelauncher.engine.input.Input;
 
@@ -27,6 +28,9 @@ public class LWJGLInput implements Input {
 	private volatile Entry lentry = fentry;
 	public final AtomicInteger entrysize = new AtomicInteger();
 
+	private final KeyboardEventListener keyboardEventListener = new KeyboardEventListener();
+	private final MouseEventListener mouseEventListener = new MouseEventListener();
+
 	public LWJGLInput(LWJGLWindow window) {
 		this.window = window;
 		this.mouse = this.window.mouse;
@@ -36,13 +40,17 @@ public class LWJGLInput implements Input {
 	public void handleInput() {
 		QueueEntry qe;
 		while ((qe = queue.poll()) != null) {
-			event(qe.entry.type, qe.type, qe.entry.key);
+			event(qe.entry, qe.type);
 			switch (qe.type) {
 			case PRESSED:
 				pressed.add(qe.entry);
 				break;
 			case RELEASED:
 				int index = pressed.indexOf(qe.entry);
+				if (index == -1) {
+					freeEntry(qe.entry);
+					break;
+				}
 				Entry inPressed = pressed.remove(index);
 				freeEntry(inPressed);
 			default:
@@ -55,7 +63,18 @@ public class LWJGLInput implements Input {
 			qentrysize.incrementAndGet();
 		}
 		for (Entry entry : pressed) {
-			event(entry.type, InputType.HELD, entry.key);
+			event(entry, InputType.HELD);
+		}
+	}
+
+	private void event(Entry entry, InputType input) {
+		switch (entry.type) {
+		case KEYBOARD:
+			keyEvent(input, entry.key);
+			break;
+		case MOUSE:
+			mouseEvent(input, entry.key, entry.mx, entry.my);
+			break;
 		}
 	}
 
@@ -74,22 +93,52 @@ public class LWJGLInput implements Input {
 		listeners.remove(listener);
 	}
 
-	private void event(DeviceType deviceType, InputType inputType, int key) {
-		for (Listener listener : listeners) {
-			listener.handle(inputType, deviceType, key);
+	private void event(Consumer<Listener> consumer) {
+		for (Listener l : listeners) {
+			consumer.accept(l);
 		}
 	}
 
-	public void repeat(int key, DeviceType type) {
-		queue.add(newQueueEntry(newEntry(key, type), InputType.REPEAT));
+	private void mouseEvent(InputType inputType, int mouseButton, double mx, double my) {
+		mouseEventListener.input = inputType;
+		mouseEventListener.mouseButton = mouseButton;
+		mouseEventListener.mx = mx;
+		mouseEventListener.my = my;
+		event(mouseEventListener);
 	}
 
-	public void press(int key, DeviceType type) {
-		queue.add(newQueueEntry(newEntry(key, type), InputType.PRESSED));
+	private void keyEvent(InputType inputType, int key) {
+		keyboardEventListener.input = inputType;
+		keyboardEventListener.key = key;
+		event(keyboardEventListener);
 	}
 
-	public void release(int key, DeviceType type) {
-		queue.add(newQueueEntry(newEntry(key, type), InputType.RELEASED));
+	public void scroll(double xoffset, double yoffset) {
+		mouseEvent(InputType.SCROLL, 0, xoffset, yoffset);
+	}
+
+	public void mouseMove(double mx, double my) {
+		queue.add(newQueueEntry(newEntry(-1, mx, my), InputType.MOVE));
+	}
+
+	public void mousePress(int key, double mx, double my) {
+		queue.add(newQueueEntry(newEntry(key, mx, my), InputType.PRESSED));
+	}
+
+	public void mouseRelease(int key, double mx, double my) {
+		queue.add(newQueueEntry(newEntry(key, mx, my), InputType.RELEASED));
+	}
+
+	public void keyRepeat(int key) {
+		queue.add(newQueueEntry(newEntry(key, DeviceType.KEYBOARD), InputType.REPEAT));
+	}
+
+	public void keyPress(int key) {
+		queue.add(newQueueEntry(newEntry(key, DeviceType.KEYBOARD), InputType.PRESSED));
+	}
+
+	public void keyRelease(int key) {
+		queue.add(newQueueEntry(newEntry(key, DeviceType.KEYBOARD), InputType.RELEASED));
 	}
 
 	private Entry newEntry(int key, DeviceType deviceType) {
@@ -105,6 +154,25 @@ public class LWJGLInput implements Input {
 		} else {
 			e.key = key;
 			e.type = deviceType;
+		}
+		return e;
+	}
+
+	private Entry newEntry(int key, double mx, double my) {
+		Entry e = null;
+		if (fentry != lentry) {
+			e = fentry;
+			fentry = fentry.next;
+			e.next = e;
+			entrysize.decrementAndGet();
+		}
+		if (e == null) {
+			e = new Entry(key, DeviceType.MOUSE, mx, my);
+		} else {
+			e.key = key;
+			e.type = DeviceType.MOUSE;
+			e.mx = mx;
+			e.my = my;
 		}
 		return e;
 	}
@@ -132,7 +200,9 @@ public class LWJGLInput implements Input {
 	}
 
 	public static interface Listener {
-		void handle(InputType inputType, DeviceType deviceType, int key);
+		void handleKeyboard(InputType inputType, int key);
+
+		void handleMouse(InputType inputType, int mouseButton, double mouseX, double mouseY);
 	}
 
 	private static class QueueEntry {
@@ -169,12 +239,25 @@ public class LWJGLInput implements Input {
 
 		private int key;
 		private DeviceType type;
+		private double mx, my;
 
 		private Entry next = this;
 
 		public Entry(int key, DeviceType type) {
 			this.key = key;
 			this.type = type;
+		}
+
+		public Entry(int key, DeviceType type, double mx, double my) {
+			this.key = key;
+			this.type = type;
+			this.mx = mx;
+			this.my = my;
+		}
+
+		@Override
+		public String toString() {
+			return "Entry [key=" + key + ", type=" + type + ", mx=" + mx + ", my=" + my + "]";
 		}
 
 		@Override
@@ -195,8 +278,31 @@ public class LWJGLInput implements Input {
 		}
 	}
 
+	private static class MouseEventListener implements Consumer<Listener> {
+
+		private InputType input;
+		private int mouseButton;
+		private double mx, my;
+
+		@Override
+		public void accept(Listener t) {
+			t.handleMouse(input, mouseButton, mx, my);
+		}
+	}
+
+	private static class KeyboardEventListener implements Consumer<Listener> {
+
+		private InputType input;
+		private int key;
+
+		@Override
+		public void accept(Listener t) {
+			t.handleKeyboard(input, key);
+		}
+	}
+
 	public static enum InputType {
-		PRESSED, HELD, RELEASED, REPEAT
+		PRESSED, HELD, RELEASED, REPEAT, MOVE, SCROLL
 	}
 
 	public static enum DeviceType {

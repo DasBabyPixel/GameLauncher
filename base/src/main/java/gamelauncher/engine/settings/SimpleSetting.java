@@ -21,9 +21,18 @@ public class SimpleSetting<T> implements Setting<T> {
 		this.gson = new GsonBuilder().setPrettyPrinting().create();
 	}
 
+	public SimpleSetting(Type type, T defaultValue) {
+		this(type, () -> defaultValue);
+	}
+
 	@Override
 	public T getValue() {
-		return this.value.get();
+		T val = this.value.get();
+		if (val == null) {
+			val = this.defaultSupplier.get();
+			this.value.set(val);
+		}
+		return val;
 	}
 
 	@Override

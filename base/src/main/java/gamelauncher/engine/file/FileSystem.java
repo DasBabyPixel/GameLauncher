@@ -15,5 +15,7 @@ public interface FileSystem {
 	byte[] readAllBytes(Path path) throws GameException;
 	
 	void write(Path path, byte[] bytes) throws GameException;
+	
+	void move(Path path, Path to) throws GameException;
 
 }

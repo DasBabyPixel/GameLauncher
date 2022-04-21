@@ -6,13 +6,14 @@ import org.joml.Vector3f;
 import gamelauncher.engine.render.Model;
 
 public class GameItem {
-	private final Mesh mesh;
+
+	private final Model model;
 	private final Vector3f position;
 	private final Vector3f scale;
 	private final Vector3f rotation;
 
-	public GameItem(Mesh mesh) {
-		this.mesh = mesh;
+	public GameItem(Model model) {
+		this.model = model;
 		position = new Vector3f(0, 0, 0);
 		scale = new Vector3f(1, 1, 1);
 		rotation = new Vector3f(0, 0, 0);
@@ -52,19 +53,19 @@ public class GameItem {
 		this.rotation.z = z;
 	}
 
-	public Mesh getMesh() {
-		return mesh;
+	public Model getModel() {
+		return model;
 	}
-	
+
 	public void cleanup() {
-		mesh.cleanup();
+		model.cleanup();
 	}
 
 	public void applyToTransformationMatrix(Matrix4f transformationMatrix) {
 		transformationMatrix.translate(position.x, position.y, position.z);
-		transformationMatrix.rotateX((float) Math.toRadians(rotation.x));
-		transformationMatrix.rotateY((float) Math.toRadians(rotation.y));
-		transformationMatrix.rotateZ((float) Math.toRadians(rotation.z));
+		transformationMatrix.rotateX((float) Math.toRadians(-rotation.x));
+		transformationMatrix.rotateY((float) Math.toRadians(-rotation.y));
+		transformationMatrix.rotateZ((float) Math.toRadians(-rotation.z));
 		transformationMatrix.scale(scale.x, scale.y, scale.z);
 	}
 

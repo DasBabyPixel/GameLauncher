@@ -65,8 +65,10 @@ public class LogStream extends OutputStream {
 			} else if (message instanceof Collection<?>) {
 				logCollection(level, (Collection<?>) message);
 			} else {
-				for (String s : Objects.toString(message).split("\\n")) {
-					logString(level, s);
+				for (String s1 : Objects.toString(message).split(System.lineSeparator())) {
+					for (String s : s1.split("\\n")) {
+						logString(level, s);
+					}
 				}
 			}
 		}

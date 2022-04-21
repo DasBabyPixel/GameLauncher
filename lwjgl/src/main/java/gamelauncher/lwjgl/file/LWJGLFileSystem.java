@@ -2,6 +2,7 @@ package gamelauncher.lwjgl.file;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.file.FileSystem;
@@ -18,7 +19,7 @@ public class LWJGLFileSystem implements FileSystem {
 	public void createDirectories(Path path) throws GameException {
 		try {
 			Files.createDirectories(nio(path));
-		} catch (IOException | GameException ex) {
+		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
 	}
@@ -32,7 +33,7 @@ public class LWJGLFileSystem implements FileSystem {
 	public void createFile(Path path) throws GameException {
 		try {
 			Files.createFile(nio(path));
-		} catch (IOException | GameException ex) {
+		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
 	}
@@ -41,7 +42,7 @@ public class LWJGLFileSystem implements FileSystem {
 	public byte[] readAllBytes(Path path) throws GameException {
 		try {
 			return Files.readAllBytes(nio(path));
-		} catch (IOException | GameException ex) {
+		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
 	}
@@ -50,7 +51,16 @@ public class LWJGLFileSystem implements FileSystem {
 	public void write(Path path, byte[] bytes) throws GameException {
 		try {
 			Files.write(nio(path), bytes);
-		} catch (IOException | GameException ex) {
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		}
+	}
+
+	@Override
+	public void move(Path path, Path to) throws GameException {
+		try {
+			Files.move(nio(path), nio(to), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
 	}

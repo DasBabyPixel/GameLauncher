@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 
 import gamelauncher.engine.GameException;
@@ -51,6 +53,14 @@ public class ShaderProgram {
 		glUniform1i(getUniform(uniformName), value);
 	}
 
+	public void setUniform(String uniformName, Vector3f value) throws GameException {
+		glUniform3f(getUniform(uniformName), value.x, value.y, value.z);
+	}
+
+	public void setUniform(String uniformName, Vector4f value) throws GameException {
+		glUniform4f(getUniform(uniformName), value.x, value.y, value.z, value.w);
+	}
+
 	public void setUniform(String uniformName, Matrix4f value) throws GameException {
 		// Dump the matrix into a float buffer
 		int uniform = getUniform(uniformName);
@@ -60,7 +70,7 @@ public class ShaderProgram {
 			glUniformMatrix4fv(uniform, false, fb);
 		}
 	}
-	
+
 	private int getUniform(String uniformName) throws GameException {
 		if (!uniforms.containsKey(uniformName)) {
 			throw new GameException("No Uniform with name " + uniformName + " present");

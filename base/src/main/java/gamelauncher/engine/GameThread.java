@@ -101,7 +101,7 @@ public class GameThread extends Thread {
 		tick.incrementAndGet();
 		try {
 			gameLauncher.tick();
-		} catch (GameException ex) {
+		} catch (Throwable ex) {
 			gameLauncher.handleError(ex);
 		}
 		workQueue();

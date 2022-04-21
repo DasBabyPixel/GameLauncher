@@ -12,31 +12,57 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joml.Vector4f;
+
 import gamelauncher.engine.render.Model;
 
 public class Mesh {
 
+	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);
+
 	private final List<Integer> vbos = new ArrayList<>();
 	private final int vaoId;
 	private final int vertexCount;
-	private final LWJGLTexture texture;
+	private LWJGLTexture texture;
+	private Vector4f color = emptyColor;
+	private final int vaoSize;
 
-	public Mesh(float[] positions, float[] textCoords, int[] indices, LWJGLTexture texture) {
-		this.texture = texture;
+	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
 		vertexCount = indices.length;
 
 		vaoId = glGenVertexArrays();
 		glBindVertexArray(vaoId);
 
 		createBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices);
-		
+
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, positions);
 		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, textCoords);
 		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
+		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, normals);
+		glVertexAttribPointer(2, 3, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, false, 0, 0);
+
+		vaoSize = 3;
+
 		glBindVertexArray(0);
+	}
+
+	public Vector4f getColor() {
+		return color;
+	}
+
+	public LWJGLTexture getTexture() {
+		return texture;
+	}
+
+	public void setColor(Vector4f color) {
+		this.color = color == null ? emptyColor : color;
+	}
+
+	public void setTexture(LWJGLTexture texture) {
+		this.texture = texture;
 	}
 
 	private int createBuffer(int target, int usage, int[] array) {
@@ -73,15 +99,19 @@ public class Mesh {
 	}
 
 	public void render() {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
-		
+		if (texture != null) {
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
+		}
+
 		glBindVertexArray(getVaoId());
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
+		for (int i = 0; i < vaoSize; i++) {
+			glEnableVertexAttribArray(i);
+		}
 		glDrawElements(GL_TRIANGLES, getVertexCount(), GL_UNSIGNED_INT, 0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(0);
+		for (int i = 0; i < vaoSize; i++) {
+			glDisableVertexAttribArray(i);
+		}
 		glBindVertexArray(0);
 	}
 
@@ -114,5 +144,9 @@ public class Mesh {
 		public void cleanup() {
 			mesh.cleanup();
 		}
+	}
+
+	public boolean hasTexture() {
+		return texture != null;
 	}
 }

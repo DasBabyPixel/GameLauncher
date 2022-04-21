@@ -1,12 +1,18 @@
 package gamelauncher.engine;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.SignStyle;
+import java.time.temporal.ChronoField;
 import java.util.concurrent.ExecutionException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
 import gamelauncher.engine.render.GameRenderer;
@@ -20,19 +26,27 @@ import gamelauncher.engine.util.logging.Logger;
 public abstract class GameLauncher {
 
 	public static final String NAME = "GameLauncher";
-	public static final int MAX_TPS = 30;
+	public static final int MAX_TPS = 120;
+	private final EventManager eventManager;
+	private final Logger logger;
 	private GameThread gameThread;
 	private Window window;
 	private FileSystem fileSystem;
 	private Path gameDirectory;
 	private Path settingsFile;
-	private SettingSection settings = new MainSettingSection();
+	private SettingSection settings;
 	private GameRenderer gameRenderer;
 	private ModelLoader modelLoader;
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
-	private final Logger logger = Logger.getLogger(getClass());
+
+	public GameLauncher() {
+		this.logger = Logger.getLogger(getClass());
+		this.eventManager = new EventManager();
+		registerSettingInsertions();
+		this.settings = new MainSettingSection(eventManager);
+	}
 
 	protected void setFileSystem(FileSystem fileSystem) {
 		this.fileSystem = fileSystem;
@@ -44,7 +58,7 @@ public abstract class GameLauncher {
 		this.resourceLoader = loader;
 		loader.set();
 	}
-	
+
 	protected void setModelLoader(ModelLoader loader) {
 		this.modelLoader = loader;
 	}
@@ -53,10 +67,14 @@ public abstract class GameLauncher {
 		throwable.printStackTrace();
 	}
 
+	public EventManager getEventManager() {
+		return eventManager;
+	}
+
 	public Logger getLogger() {
 		return logger;
 	}
-	
+
 	public ModelLoader getModelLoader() {
 		return modelLoader;
 	}
@@ -93,6 +111,9 @@ public abstract class GameLauncher {
 		fileSystem.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
 
+	protected void registerSettingInsertions() {
+	}
+
 	public final void start() throws GameException {
 		if (window != null) {
 			return;
@@ -110,6 +131,28 @@ public abstract class GameLauncher {
 			String json = new String(bytes, StandardCharsets.UTF_8);
 			JsonElement element = settingsGson.fromJson(json, JsonElement.class);
 			settings.deserialize(element);
+			JsonElement serialized = settingsGson.toJsonTree(settings.serialize());
+			if (!serialized.equals(element)) {
+				getLogger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+						.appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+						.appendLiteral('-')
+						.appendValue(ChronoField.MONTH_OF_YEAR, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.DAY_OF_MONTH, 2)
+						.appendLiteral('_')
+						.appendValue(ChronoField.HOUR_OF_DAY, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+						.toFormatter();
+				fileSystem.move(settingsFile,
+						settingsFile.getParent()
+								.resolve(String.format("backup-settings-%s.json",
+										formatter.format(LocalDateTime.now()).replace(':', '-'))));
+				saveSettings();
+			}
 		}
 
 		gameThread = new GameThread(this);
@@ -117,7 +160,7 @@ public abstract class GameLauncher {
 		gameThread.start();
 
 	}
-	
+
 	public int getCurrentTick() {
 		return gameThread.getCurrentTick();
 	}

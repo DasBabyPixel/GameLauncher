@@ -3,26 +3,35 @@ package gamelauncher.lwjgl;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.joml.Vector3f;
+
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.EmbedResourceLoader;
+import gamelauncher.engine.util.Math;
 import gamelauncher.lwjgl.file.LWJGLFileSystem;
+import gamelauncher.lwjgl.render.LWJGLCamera;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 import gamelauncher.lwjgl.render.LWJGLInput.InputType;
 import gamelauncher.lwjgl.render.LWJGLInput.Listener;
-import gamelauncher.lwjgl.render.LWJGLMouse;
+import gamelauncher.lwjgl.render.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
+import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
 
 public class LWJGLGameLauncher extends GameLauncher {
 
 	private LWJGLWindow window;
+	private boolean mouseMovement = false;
+	private float mouseSensivity = 1.0F;
 
 	public LWJGLGameLauncher() {
 		setFileSystem(new LWJGLFileSystem());
 		setGameRenderer(new LWJGLGameRenderer(this));
+		setModelLoader(new LWJGLModelLoader());
 	}
 
 	@Override
@@ -36,24 +45,57 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.createWindow();
 		window.startRendering();
+		AtomicBoolean boost = new AtomicBoolean(false);
 		window.getInput().addListener(new Listener() {
+			
+			private final double moveSpeed = 1.0 / MAX_TPS;
+
 			@Override
-			public void handle(InputType inputType, DeviceType deviceType, int key) {
+			public void handleKeyboard(InputType inputType, int key) {
+				float moveSpeed = (float) (boost.get() ? 2.0 * this.moveSpeed : this.moveSpeed);
 				if (inputType == InputType.HELD) {
 					if (key == GLFW_KEY_W) {
-						window.getCamera().getPosition().z -= 0.02;
+						window.getCamera().movePosition(0, 0, -moveSpeed);
 					} else if (key == GLFW_KEY_S) {
-						window.getCamera().getPosition().z += 0.02;
+						window.getCamera().movePosition(0, 0, moveSpeed);
 					} else if (key == GLFW_KEY_A) {
-						window.getCamera().getPosition().x -= 0.02;
+						window.getCamera().movePosition(-moveSpeed, 0, 0);
 					} else if (key == GLFW_KEY_D) {
-						window.getCamera().getPosition().x += 0.02;
+						window.getCamera().movePosition(moveSpeed, 0, 0);
 					} else if (key == GLFW_KEY_SPACE) {
-						window.getCamera().getPosition().y += 0.02;
+						window.getCamera().movePosition(0, moveSpeed, 0);
 					} else if (key == GLFW_KEY_LEFT_SHIFT) {
-						window.getCamera().getPosition().y -= 0.02;
+						window.getCamera().movePosition(0, -moveSpeed, 0);
+					}
+				} else if (inputType == InputType.PRESSED) {
+					if (key == GLFW_KEY_LEFT_CONTROL) {
+						boost.set(true);
+					} else if (key == GLFW_KEY_ESCAPE) {
+						mouseMovement(!mouseMovement);
+					}
+				} else if (inputType == InputType.RELEASED) {
+					if (key == GLFW_KEY_LEFT_CONTROL) {
+						boost.set(false);
 					}
 				}
+			}
+
+			@Override
+			public void handleMouse(InputType inputType, int mouseButton, double mouseX, double mouseY) {
+				if (inputType == InputType.SCROLL) {
+					if (mouseY != 0) {
+						float v = Math.pow(0.9F, Math.abs((float) mouseY));
+						if (mouseY < 0) {
+							mouseSensivity *= v;
+						} else {
+							mouseSensivity /= v;
+						}
+					}
+					if (mouseX != 0) {
+						window.getCamera().getRotation().z += mouseX * 3;
+					}
+				}
+//				getLogger().infof("MouseEvent[%s %s %s %s]", inputType, mouseButton, mouseX, mouseY);
 			}
 		});
 		CloseCallback oldCloseCallback = window.getCloseCallback();
@@ -64,18 +106,33 @@ public class LWJGLGameLauncher extends GameLauncher {
 				LWJGLGameLauncher.this.stop();
 			}
 		});
-		window.getFrameCounter().ifPresent(f -> {
-			f.limit(60);
+		window.getFrameCounter().ifPresent(fc -> {
+			fc.addUpdateListener(fps -> {
+//				getLogger().infof("FPS: %s", fps);
+			});
 		});
-		System.out.println("Wait 1");
 		window.waitForFrame();
-		System.out.println("Wait 2");
-		window.waitForFrame();
-		System.out.println("Wait 3");
-		window.waitForFrame();
-		System.out.println("Wait Done");
 		window.show();
+		window.setFloating(true);
+		window.setFloating(false);
+		mouseMovement(false);
+	}
 
+	@Override
+	protected void registerSettingInsertions() {
+		new MouseSensivityInsertion().register(this);
+	}
+
+	private void mouseMovement(boolean movement) {
+		window.mouse.grabbed(movement).thenRun(() -> {
+			if (!movement) {
+				glfwSetCursorPos(window.id.get(), window.width.get() / 2, window.height.get() / 2);
+			} else {
+				window.mouse.getDeltaX();
+				window.mouse.getDeltaY();
+			}
+		});
+		this.mouseMovement = movement;
 	}
 
 	public LWJGLWindow getWindow() {
@@ -84,12 +141,18 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick() {
+//		double speed = 30D / MAX_TPS;
+//		LWJGLGameRenderer.rx += 1 * speed;
+//		LWJGLGameRenderer.ry += 1.3 * speed;
+//		LWJGLGameRenderer.rz += 0.6 * speed;
 		window.getInput().handleInput();
-		if (getCurrentTick() % GameLauncher.MAX_TPS == 0) {
-			LWJGLMouse m = window.mouse;
-			getLogger().infof("%s %s %s", m.getX(), m.getY(), m.isInWindow());
-			
+		if (mouseMovement) {
+			LWJGLCamera cam = window.getCamera();
+			Vector3f rot = cam.getRotation();
+			float dy = (float) (window.mouse.getDeltaX() * 0.4) * mouseSensivity;
+			float dx = (float) (window.mouse.getDeltaY() * 0.4) * mouseSensivity;
+			rot.x = Math.clamp(rot.x + dx, -90F, 90F);
+			rot.y = rot.y + dy;
 		}
-		
 	}
 }

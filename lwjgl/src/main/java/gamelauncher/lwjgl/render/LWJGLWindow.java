@@ -23,6 +23,7 @@ import org.lwjgl.glfw.GLFWCursorPosCallbackI;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
 import org.lwjgl.glfw.GLFWKeyCallbackI;
 import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
+import org.lwjgl.glfw.GLFWScrollCallbackI;
 import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.glfw.GLFWWindowPosCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
@@ -33,7 +34,6 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
-import gamelauncher.lwjgl.render.LWJGLInput.DeviceType;
 
 public class LWJGLWindow implements Window {
 
@@ -167,6 +167,13 @@ public class LWJGLWindow implements Window {
 
 	public CompletableFuture<Void> show() {
 		return later(() -> glfwShowWindow(id.get()));
+	}
+
+	public CompletableFuture<Void> forceFocus() {
+		return later(() -> {
+			glfwRequestWindowAttention(id.get());
+			glfwFocusWindow(id.get());
+		});
 	}
 
 	public CompletableFuture<Void> hide() {
@@ -420,6 +427,11 @@ public class LWJGLWindow implements Window {
 					context.update(camera);
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (Exception ex) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException ex1) {
+						ex1.printStackTrace();
+					}
 					ex.printStackTrace();
 				}
 			}
@@ -491,6 +503,12 @@ public class LWJGLWindow implements Window {
 
 			windowThreadCreateFuture.get().complete(this);
 
+			glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
+				@Override
+				public void invoke(long window, double xoffset, double yoffset) {
+					input.scroll(xoffset, yoffset);
+				}
+			});
 			glfwSetWindowCloseCallback(id, new GLFWWindowCloseCallbackI() {
 				@Override
 				public void invoke(long window) {
@@ -511,6 +529,7 @@ public class LWJGLWindow implements Window {
 				@Override
 				public void invoke(long window, double xpos, double ypos) {
 					mouse.setPosition(xpos, ypos);
+					input.mouseMove(xpos, ypos);
 				}
 			});
 			glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
@@ -532,10 +551,10 @@ public class LWJGLWindow implements Window {
 				public void invoke(long window, int button, int action, int mods) {
 					switch (action) {
 					case GLFW_PRESS:
-						input.press(button, DeviceType.MOUSE);
+						input.mousePress(button, mouse.getX(), mouse.getY());
 						break;
 					case GLFW_RELEASE:
-						input.release(button, DeviceType.MOUSE);
+						input.mouseRelease(button, mouse.getX(), mouse.getY());
 						break;
 					default:
 						break;
@@ -547,13 +566,13 @@ public class LWJGLWindow implements Window {
 				public void invoke(long window, int key, int scancode, int action, int mods) {
 					switch (action) {
 					case GLFW_PRESS:
-						input.press(key, DeviceType.KEYBOARD);
+						input.keyPress(key);
 						break;
 					case GLFW_RELEASE:
-						input.release(key, DeviceType.KEYBOARD);
+						input.keyRelease(key);
 						break;
 					case GLFW_REPEAT:
-						input.repeat(key, DeviceType.KEYBOARD);
+						input.keyRepeat(key);
 						break;
 					default:
 						break;

@@ -80,13 +80,19 @@ public class LWJGLDrawContext implements DrawContext {
 	public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
 			double sy, double sz) throws GameException {
 		modelViewMatrix.identity();
+		pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz);
+	}
+
+	private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
+			double sy, double sz) throws GameException {
 		Mesh mesh = null;
 		if (model instanceof MeshModel) {
 			mesh = ((MeshModel) model).mesh;
 		} else if (model instanceof GameItemModel) {
 			GameItem item = ((GameItemModel) model).gameItem;
 			item.applyToTransformationMatrix(modelViewMatrix);
-			mesh = item.getMesh();
+			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz);
+			return;
 		}
 		modelViewMatrix.translate((float) (x + this.tx), (float) (y + this.ty), (float) (z + this.tz));
 		modelViewMatrix.rotateXYZ((float) Math.toRadians(-rx), (float) Math.toRadians(-ry),
@@ -124,7 +130,8 @@ public class LWJGLDrawContext implements DrawContext {
 	public void loadViewMatrix(Camera camera) {
 		viewMatrix.identity();
 		viewMatrix.rotate((float) Math.toRadians(camera.getRotX()), X_AXIS)
-				.rotate((float) Math.toRadians(camera.getRotY()), Y_AXIS);
+				.rotate((float) Math.toRadians(camera.getRotY()), Y_AXIS)
+				.rotate((float) Math.toRadians(camera.getRotZ()), Z_AXIS);
 		viewMatrix.translate(-camera.getX(), -camera.getY(), -camera.getZ());
 	}
 
@@ -135,6 +142,8 @@ public class LWJGLDrawContext implements DrawContext {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
 		shaderProgram.setUniform("modelViewMatrix", tempMatrix);
+		shaderProgram.setUniform("color", mesh.getColor());
+		shaderProgram.setUniform("useColor", mesh.hasTexture() ? 0 : 1);
 		mesh.render();
 		shaderProgram.unbind();
 	}

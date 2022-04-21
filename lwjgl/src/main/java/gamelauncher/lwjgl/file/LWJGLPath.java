@@ -19,6 +19,16 @@ public class LWJGLPath implements Path {
 	}
 
 	@Override
+	public Path getParent() {
+		int index = path.lastIndexOf(Path.SEPERATOR);
+		if (index == -1) {
+			return null;
+		}
+		String p = path.substring(0, index);
+		return new LWJGLPath(p, nio.getParent());
+	}
+
+	@Override
 	public Path resolve(String path) {
 		return new LWJGLPath(this.path + Path.SEPERATOR + path, nio.resolve(path));
 	}

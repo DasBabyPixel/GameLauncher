@@ -1,5 +1,6 @@
 package gamelauncher.engine.settings;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -8,16 +9,24 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import gamelauncher.engine.event.EventManager;
+import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
+import gamelauncher.engine.util.logging.Logger;
+
 public abstract class AbstractSettingSection implements SettingSection {
 
 	protected final Lock lock = new ReentrantLock(false);
 	protected final Map<SettingPath, Setting<?>> settings = new ConcurrentHashMap<>();
+	protected final Logger logger = Logger.getLogger(SettingSection.class);
 
-	public AbstractSettingSection() {
-		addSettings();
+	public AbstractSettingSection(EventManager eventManager) {
+		addSettings(eventManager);
+		SettingSectionConstructor constructor = new SettingSectionConstructor(this, eventManager);
+		eventManager.post(new SettingSectionConstructEvent(constructor));
+		settings.putAll(constructor.settings);
 	}
 
-	protected abstract void addSettings();
+	protected abstract void addSettings(EventManager eventManager);
 
 	protected void addSetting(SettingPath path, Setting<?> setting) {
 		settings.put(path, setting);
@@ -44,7 +53,12 @@ public abstract class AbstractSettingSection implements SettingSection {
 		JsonObject o = json.getAsJsonObject();
 		for (Map.Entry<String, JsonElement> entry : o.entrySet()) {
 			SettingPath path = new SettingPath(entry.getKey());
-			getSetting(path).deserialize(o.get(path.getPath()));
+			Setting<?> setting = getSetting(path);
+			if (setting != null) {
+				setting.deserialize(o.get(path.getPath()));
+			} else {
+				logger.warnf("SettingSection key missing: %s%n -> %s", entry.getKey(), entry.getValue().toString());
+			}
 		}
 	}
 
@@ -74,6 +88,30 @@ public abstract class AbstractSettingSection implements SettingSection {
 			return (Setting<T>) setting;
 		} finally {
 			lock.unlock();
+		}
+	}
+
+	public static class SettingSectionConstructor {
+
+		private final Map<SettingPath, Setting<?>> settings = new HashMap<>();
+		private final AbstractSettingSection section;
+		private final EventManager eventManager;
+
+		public SettingSectionConstructor(AbstractSettingSection section, EventManager eventManager) {
+			this.section = section;
+			this.eventManager = eventManager;
+		}
+
+		public void addSetting(SettingPath path, Setting<?> setting) {
+			settings.put(path, setting);
+		}
+		
+		public AbstractSettingSection getSection() {
+			return section;
+		}
+
+		public EventManager getEventManager() {
+			return eventManager;
 		}
 	}
 }

@@ -2,6 +2,8 @@ package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.GameException;
@@ -12,6 +14,7 @@ import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.resource.ResourcePath;
+import gamelauncher.lwjgl.render.Mesh.MeshModel;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
@@ -19,7 +22,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	private Renderer crenderer;
 	private GameLauncher launcher;
 
-	private Model model;
+	private Collection<Model> models = new HashSet<>();
 //	private GameItem item;
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
@@ -39,40 +42,18 @@ public class LWJGLGameRenderer implements GameRenderer {
 	@Override
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
-		Mesh mesh = new Mesh(new float[] {
-				// VO
-				-0.5f, 0.5f, 0.5f,
-				// V1
-				-0.5f, -0.5f, 0.5f,
-				// V2
-				0.5f, -0.5f, 0.5f,
-				// V3
-				0.5f, 0.5f, 0.5f,
-				// V4
-				-0.5f, 0.5f, -0.5f,
-				// V5
-				0.5f, 0.5f, -0.5f,
-				// V6
-				-0.5f, -0.5f, -0.5f,
-				// V7
-				0.5f, -0.5f, -0.5f,
-		}, new float[] {
-				0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0
-		}, new int[] {
-				// Front face
-				0, 1, 3, 3, 1, 2,
-				// Top Face
-				4, 0, 3, 5, 4, 3,
-				// Right face
-				3, 2, 7, 5, 3, 7,
-				// Left face
-				6, 1, 0, 6, 0, 4,
-				// Bottom face
-				2, 1, 6, 2, 6, 7,
-				// Back face
-				7, 6, 4, 7, 4, 5,
-		}, new LWJGLTexture(new ResourcePath("cube.png")));
-		model = new Mesh.MeshModel(mesh);
+		Model model = launcher.getModelLoader()
+				.loadModel(launcher.getResourceLoader().getResource(new ResourcePath("cube.obj")));
+		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
+		((MeshModel)model).mesh.setTexture(texture);
+		GameItem gameItem;
+		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
+		gameItem.setPosition(1, 0, 0);
+		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
+		gameItem.setPosition(2, 1, 0);
+		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
+		gameItem.setPosition(1, -1, 1);
+		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
 
 		ShaderProgram shaderProgram = new ShaderProgram(launcher);
 		shaderProgram.createVertexShader(launcher.getResourceLoader()
@@ -89,6 +70,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 		shaderProgram.createUniform("projectionMatrix");
 		shaderProgram.createUniform("modelViewMatrix");
 		shaderProgram.createUniform("texture_sampler");
+		shaderProgram.createUniform("color");
+		shaderProgram.createUniform("useColor");
 
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context.setProgram(shaderProgram);
@@ -96,13 +79,16 @@ public class LWJGLGameRenderer implements GameRenderer {
 				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
 
 		glEnable(GL_DEPTH_TEST);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
 	@Override
 	public void close(Window window) throws GameException {
 		launcher.getLogger().info("Cleaning up RenderEngine");
-		model.cleanup();
+		for (Model model : models) {
+			model.cleanup();
+		}
 		((LWJGLDrawContext) window.getContext()).getProgram().cleanup();
 		launcher.getLogger().info("RenderEngine cleaned up");
 	}
@@ -121,15 +107,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 		renderer.init();
 	}
 
-	private float rx, ry, rz;
+	public static float rx, ry, rz;
 
 	@Override
 	public void renderFrame(Window window) throws GameException {
 		window.beginFrame();
-
-//		item.setPosition((float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3);
-//		item.setRotation((System.currentTimeMillis() / 28) % 360, (System.currentTimeMillis() / 25) % 360,
-//				(System.currentTimeMillis() / 20) % 360);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer renderer = this.renderer.get();
@@ -141,18 +123,17 @@ public class LWJGLGameRenderer implements GameRenderer {
 		if (renderer != null) {
 			renderer.render(window, window.getContext());
 		}
-		rx += 1/2;
-		ry += 1.3/2;
-		rz += 0.6/2;
 
-		window.getContext()
-				.drawModel(model, // (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3,
-						0, 0, 0, rx, ry, rz
+		for (Model model : models) {
+			window.getContext()
+					.drawModel(model, // (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3,
+							0, 0, 0, rx, ry, rz
 //						,
 //						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
 //						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
 //						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1);
-				);
+					);
+		}
 
 		window.endFrame();
 	}
