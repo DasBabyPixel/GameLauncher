@@ -17,9 +17,9 @@ import gamelauncher.lwjgl.render.LWJGLCamera;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
 import gamelauncher.lwjgl.render.LWJGLInput.InputType;
 import gamelauncher.lwjgl.render.LWJGLInput.Listener;
-import gamelauncher.lwjgl.render.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
+import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
 
 public class LWJGLGameLauncher extends GameLauncher {
@@ -28,10 +28,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 	private boolean mouseMovement = false;
 	private float mouseSensivity = 1.0F;
 
-	public LWJGLGameLauncher() {
+	public LWJGLGameLauncher() throws GameException {
 		setFileSystem(new LWJGLFileSystem());
 		setGameRenderer(new LWJGLGameRenderer(this));
-		setModelLoader(new LWJGLModelLoader());
+		setModelLoader(new LWJGLModelLoader(this));
 	}
 
 	@Override

@@ -33,6 +33,7 @@ public abstract class GameLauncher {
 	private Window window;
 	private FileSystem fileSystem;
 	private Path gameDirectory;
+	private Path dataDirectory;
 	private Path settingsFile;
 	private SettingSection settings;
 	private GameRenderer gameRenderer;
@@ -51,6 +52,7 @@ public abstract class GameLauncher {
 	protected void setFileSystem(FileSystem fileSystem) {
 		this.fileSystem = fileSystem;
 		this.gameDirectory = fileSystem.getPath("run").resolve(NAME);
+		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
 	}
 
@@ -103,6 +105,18 @@ public abstract class GameLauncher {
 		this.window.setFrameRenderer(gameRenderer);
 	}
 
+	public Path getDataDirectory() {
+		return dataDirectory;
+	}
+	
+	public FileSystem getFileSystem() {
+		return fileSystem;
+	}
+
+	public Path getGameDirectory() {
+		return gameDirectory;
+	}
+
 	public GameRenderer getGameRenderer() {
 		return gameRenderer;
 	}
@@ -122,6 +136,7 @@ public abstract class GameLauncher {
 		logger.info("Starting " + NAME);
 
 		fileSystem.createDirectories(gameDirectory);
+		fileSystem.createDirectories(dataDirectory);
 		if (!fileSystem.exists(settingsFile)) {
 			fileSystem.createFile(settingsFile);
 			settings.setDefaultValue();

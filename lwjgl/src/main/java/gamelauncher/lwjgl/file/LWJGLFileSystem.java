@@ -1,6 +1,8 @@
 package gamelauncher.lwjgl.file;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
@@ -60,6 +62,24 @@ public class LWJGLFileSystem implements FileSystem {
 	public void move(Path path, Path to) throws GameException {
 		try {
 			Files.move(nio(path), nio(to), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		}
+	}
+
+	@Override
+	public InputStream createInputStream(Path path) throws GameException {
+		try {
+			return Files.newInputStream(nio(path));
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		}
+	}
+
+	@Override
+	public OutputStream createOutputStream(Path path) throws GameException {
+		try {
+			return Files.newOutputStream(nio(path));
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}

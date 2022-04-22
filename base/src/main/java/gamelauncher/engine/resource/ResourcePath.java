@@ -13,11 +13,19 @@ public class ResourcePath {
 	public String getPath() {
 		return path;
 	}
-	
+
 	public ResourceStream newResourceStream() {
 		return ResourceLoader.getInstance().getResource(this).newResourceStream();
 	}
-	
+
+	public String getFileName() {
+		int index = path.lastIndexOf('/');
+		if (index == -1) {
+			return path;
+		}
+		return path.substring(index, path.length());
+	}
+
 	@Override
 	public String toString() {
 		return path;
