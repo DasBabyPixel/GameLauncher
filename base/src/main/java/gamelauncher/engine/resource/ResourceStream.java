@@ -12,11 +12,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.file.Path;
 import gamelauncher.engine.util.GameFunction;
 
 public class ResourceStream implements AutoCloseable {
 
-	private final ResourcePath path;
+	private final Path path;
 	private final boolean directory;
 	private final InputStream in;
 	private final OutputStream out;
@@ -24,7 +25,9 @@ public class ResourceStream implements AutoCloseable {
 	private final Lock bufLock = new ReentrantLock(true);
 	private final ByteBuffer buf = ByteBuffer.allocate(4);
 
-	public ResourceStream(ResourcePath path, boolean directory, InputStream in, OutputStream out) {
+	private static final int NULL = -1;
+
+	public ResourceStream(Path path, boolean directory, InputStream in, OutputStream out) {
 		this.path = path;
 		this.directory = directory;
 		this.in = in;
@@ -95,6 +98,69 @@ public class ResourceStream implements AutoCloseable {
 		return new String(readAllBytes(), StandardCharsets.UTF_8);
 	}
 
+	public void swriteUTF8(String string) throws GameException {
+		if (string == null) {
+			swriteBytes(null);
+		} else {
+			swriteBytes(string.getBytes(StandardCharsets.UTF_8));
+		}
+	}
+
+	public String sreadUTF8() throws GameException {
+		byte[] b = sreadBytes();
+		if (b == null)
+			return null;
+		return new String(b, StandardCharsets.UTF_8);
+	}
+
+	public void swriteFloats(float[] floats) throws GameException {
+		if (floats == null) {
+			writeInt(NULL);
+		} else {
+			writeInt(floats.length);
+			writeFloats(floats);
+		}
+	}
+
+	public float[] sreadFloats() throws GameException {
+		int len = readInt();
+		if (len == NULL)
+			return null;
+		return readFloats(len);
+	}
+
+	public void swriteInts(int[] ints) throws GameException {
+		if (ints == null) {
+			writeInt(NULL);
+		} else {
+			writeInt(ints.length);
+			writeInts(ints);
+		}
+	}
+
+	public int[] sreadInts() throws GameException {
+		int len = readInt();
+		if (len == NULL)
+			return null;
+		return readInts(len);
+	}
+
+	public void swriteBytes(byte[] bytes) throws GameException {
+		if (bytes == null) {
+			writeInt(NULL);
+		} else {
+			writeInt(bytes.length);
+			writeBytes(bytes);
+		}
+	}
+
+	public byte[] sreadBytes() throws GameException {
+		int len = readInt();
+		if (len == NULL)
+			return null;
+		return readBytes(len);
+	}
+
 	public String readUTF8FullyClose() throws GameException {
 		String utf8 = readUTF8Fully();
 		try {
@@ -157,13 +223,6 @@ public class ResourceStream implements AutoCloseable {
 			buf.rewind();
 			return buf.getInt();
 		});
-//		bufLock.lock();
-//		buf.rewind();
-//		buf.put(readBytes(4));
-//		buf.rewind();
-//		int i = buf.getInt();
-//		bufLock.unlock();
-//		return i;
 	}
 
 	public void writeInt(int i) throws GameException {
@@ -173,12 +232,6 @@ public class ResourceStream implements AutoCloseable {
 			writeBytes(buf.array());
 			return null;
 		});
-//		bufLock.lock();
-//		buf.rewind();
-//		buf.putInt(i);
-//		buf.rewind();
-//		writeBytes(buf.array());
-//		bufLock.unlock();
 	}
 
 	public float readFloat() throws GameException {
@@ -187,13 +240,6 @@ public class ResourceStream implements AutoCloseable {
 			buf.rewind();
 			return buf.getFloat();
 		});
-//		bufLock.lock();
-//		buf.rewind();
-//		buf.put(readBytes(4));
-//		buf.rewind();
-//		float f = buf.getFloat();
-//		bufLock.unlock();
-//		return f;
 	}
 
 	public void writeFloat(float f) throws GameException {
@@ -203,12 +249,34 @@ public class ResourceStream implements AutoCloseable {
 			writeBytes(buf.array());
 			return null;
 		});
-//		bufLock.lock();
-//		buf.rewind();
-//		buf.putFloat(f);
-//		buf.rewind();
-//		writeBytes(buf.array());
-//		bufLock.unlock();
+	}
+
+	public void writeFloats(float[] floats) throws GameException {
+		for (float f : floats) {
+			writeFloat(f);
+		}
+	}
+
+	public float[] readFloats(int length) throws GameException {
+		float[] floats = new float[length];
+		for (int i = 0; i < floats.length; i++) {
+			floats[i] = readFloat();
+		}
+		return floats;
+	}
+
+	public void writeInts(int[] ints) throws GameException {
+		for (int f : ints) {
+			writeInt(f);
+		}
+	}
+
+	public int[] readInts(int length) throws GameException {
+		int[] ints = new int[length];
+		for (int i = 0; i < ints.length; i++) {
+			ints[i] = readInt();
+		}
+		return ints;
 	}
 
 	private <T> T byteBuffer(GameFunction<ByteBuffer, T> function) throws GameException {
@@ -229,7 +297,7 @@ public class ResourceStream implements AutoCloseable {
 		return directory;
 	}
 
-	public ResourcePath getPath() {
+	public Path getPath() {
 		return path;
 	}
 }

@@ -32,6 +32,7 @@ public abstract class GameLauncher {
 	private GameThread gameThread;
 	private Window window;
 	private FileSystem fileSystem;
+	private FileSystem embedFileSystem;
 	private Path gameDirectory;
 	private Path dataDirectory;
 	private Path settingsFile;
@@ -49,9 +50,10 @@ public abstract class GameLauncher {
 		this.settings = new MainSettingSection(eventManager);
 	}
 
-	protected void setFileSystem(FileSystem fileSystem) {
+	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
 		this.fileSystem = fileSystem;
-		this.gameDirectory = fileSystem.getPath("run").resolve(NAME);
+		this.embedFileSystem = embedFileSystem;
+		this.gameDirectory = fileSystem.getPath(NAME);
 		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
 	}
@@ -71,6 +73,10 @@ public abstract class GameLauncher {
 
 	public EventManager getEventManager() {
 		return eventManager;
+	}
+	
+	public FileSystem getEmbedFileSystem() {
+		return embedFileSystem;
 	}
 
 	public Logger getLogger() {
@@ -108,7 +114,7 @@ public abstract class GameLauncher {
 	public Path getDataDirectory() {
 		return dataDirectory;
 	}
-	
+
 	public FileSystem getFileSystem() {
 		return fileSystem;
 	}

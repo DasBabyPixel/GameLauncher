@@ -2,43 +2,24 @@ package gamelauncher.lwjgl.file;
 
 import java.nio.file.Paths;
 
-import gamelauncher.engine.file.Path;
+import gamelauncher.engine.file.AbstractPath;
+import gamelauncher.engine.file.FileSystem;
 
-public class LWJGLPath implements Path {
+public class LWJGLPath extends AbstractPath {
 
-	private final String path;
 	private final java.nio.file.Path nio;
 
-	public LWJGLPath(String path) {
-		this(path, Paths.get(path));
-	}
-
-	public LWJGLPath(String path, java.nio.file.Path nio) {
-		this.path = path;
-		this.nio = nio;
-	}
-
-	@Override
-	public Path getParent() {
-		int index = path.lastIndexOf(Path.SEPERATOR);
-		if (index == -1) {
-			return null;
-		}
-		String p = path.substring(0, index);
-		return new LWJGLPath(p, nio.getParent());
-	}
-
-	@Override
-	public Path resolve(String path) {
-		return new LWJGLPath(this.path + Path.SEPERATOR + path, nio.resolve(path));
-	}
-
-	@Override
-	public String getPath() {
-		return path;
+	LWJGLPath(FileSystem fileSystem, boolean root, String path) {
+		super(fileSystem, root, path);
+		this.nio = Paths.get(path);
 	}
 
 	public java.nio.file.Path getNio() {
 		return nio;
+	}
+
+	@Override
+	protected AbstractPath newInstance(boolean root, String path) {
+		return new LWJGLPath(getFileSystem(), root, path);
 	}
 }

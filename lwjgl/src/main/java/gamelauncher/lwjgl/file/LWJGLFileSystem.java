@@ -9,12 +9,23 @@ import java.nio.file.StandardCopyOption;
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
+import gamelauncher.engine.resource.ResourceStream;
 
 public class LWJGLFileSystem implements FileSystem {
 
 	@Override
 	public Path getPath(String path) {
-		return new LWJGLPath(path);
+		return new LWJGLPath(this, false, path);
+	}
+
+	@Override
+	public ResourceStream createInputResourceStream(Path path) throws GameException {
+		return new ResourceStream(path, false, createInputStream(path), null);
+	}
+	
+	@Override
+	public ResourceStream createOutputResourceStream(Path path) throws GameException {
+		return new ResourceStream(path, false, null, createOutputStream(path));
 	}
 
 	@Override
@@ -89,6 +100,6 @@ public class LWJGLFileSystem implements FileSystem {
 		if (path instanceof LWJGLPath) {
 			return ((LWJGLPath) path).getNio();
 		}
-		throw new GameException("Invalid path object. Not of type LWJGLPath");
+		throw new GameException("Invalid path object. Not of type " + LWJGLPath.class.getName());
 	}
 }

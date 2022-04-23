@@ -13,19 +13,26 @@ import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.ModelLoader;
 import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.lwjgl.file.EmbedPath;
+import gamelauncher.lwjgl.render.LWJGLTexture;
+import gamelauncher.lwjgl.render.Mesh;
+import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 
 public class LWJGLModelLoader implements ModelLoader {
 
+	private static final Logger logger = Logger.getLogger(LWJGLModelLoader.class);
 	private final Map<ModelType, ModelSubLoader> loaders = new HashMap<>();
 	private final GameLauncher launcher;
 	private final Path modelDirectory;
+	private final String version = "0.0.10";
 
 	public LWJGLModelLoader(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
 		this.modelDirectory = this.launcher.getDataDirectory().resolve("models");
 		this.launcher.getFileSystem().createDirectories(this.modelDirectory);
 
-		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader());
+		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader(launcher));
 	}
 
 	@Override
@@ -33,14 +40,23 @@ public class LWJGLModelLoader implements ModelLoader {
 		ResourceStream stream = resource.newResourceStream();
 		String hash = hash(stream.readAllBytes());
 		stream.cleanup();
-		Path file = modelDirectory.resolve(stream.getPath().getPath() + ".bin");
+		String p = stream.getPath() instanceof EmbedPath ? stream.getPath().getPath().substring(1)
+				: stream.getPath().getPath();
+		Path file = modelDirectory.resolve(p + ".bin");
 		boolean hasSavedFile = false;
 		if (launcher.getFileSystem().exists(file)) {
 			stream = new ResourceStream(null, false, launcher.getFileSystem().createInputStream(file), null);
+			String version = stream.readUTF8(stream.readInt());
 			String savedHash = stream.readUTF8(stream.readInt());
 
 			if (savedHash.equals(hash)) {
 				hasSavedFile = true;
+			} else {
+				logger.infof("Model changed");
+			}
+			if (!version.equals(this.version)) {
+				logger.infof("New Version for Model: %s (Old: %s)", this.version, version);
+				hasSavedFile = false;
 			}
 		}
 		if (hasSavedFile) {
@@ -50,28 +66,51 @@ public class LWJGLModelLoader implements ModelLoader {
 		}
 		ModelType type = ModelType.WAVEFRONT;
 		ModelSubLoader loader = loaders.get(type);
+		stream = resource.newResourceStream();
 		byte[] bytes = loader.convertModel(stream);
 		stream.cleanup();
-		launcher.getFileSystem().createFile(file);
-		stream = new ResourceStream(null, false, null, launcher.getFileSystem().createOutputStream(file));
+		if (!launcher.getFileSystem().exists(file)) {
+			launcher.getFileSystem().createFile(file);
+		}
+		stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes),
+				launcher.getFileSystem().createOutputStream(file));
 		saveConvertedModel(hash, bytes, stream);
-		stream.cleanup();
-		stream = new ResourceStream(null, false, new ByteArrayInputStream(bytes), null);
 		Model model = loadConvertedModel(stream);
 		stream.cleanup();
 		return model;
 	}
 
 	private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream) throws GameException {
+		stream.writeInt(this.version.length());
+		stream.writeUTF8(this.version);
 		stream.writeInt(hash.length());
 		stream.writeUTF8(hash);
 		stream.writeBytes(bytes);
 	}
 
 	private Model loadConvertedModel(ResourceStream stream) throws GameException {
-		byte[] bytes = stream.readAllBytes();
+		float[] vertices = stream.sreadFloats();
+		float[] texCoords = stream.sreadFloats();
+		float[] normals = stream.sreadFloats();
+		int[] indices = stream.sreadInts();
+		MaterialList materialList = new MaterialList();
+		materialList.read(stream);
+
 		stream.cleanup();
-		return null;
+		Mesh mesh = new Mesh(vertices, texCoords, normals, indices);
+		for (Material mat : materialList.materials) {
+			byte[] tex = mat.diffuseColor.texture;
+			if (tex != null) {
+				ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
+				LWJGLTexture lt = new LWJGLTexture(st);
+				st.cleanup();
+				if (mesh.getTexture() != null) {
+					mesh.getTexture().cleanup();
+				}
+				mesh.setTexture(lt);
+			}
+		}
+		return new Mesh.MeshModel(mesh);
 	}
 
 	private static String hash(byte[] bytes) throws GameException {

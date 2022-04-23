@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.resource.ResourceStream;
 
 public interface FileSystem {
 
@@ -14,15 +15,19 @@ public interface FileSystem {
 	boolean exists(Path path) throws GameException;
 
 	void createFile(Path path) throws GameException;
-	
+
 	byte[] readAllBytes(Path path) throws GameException;
-	
+
 	InputStream createInputStream(Path path) throws GameException;
-	
+
 	OutputStream createOutputStream(Path path) throws GameException;
+
+	ResourceStream createInputResourceStream(Path path) throws GameException;
 	
+	ResourceStream createOutputResourceStream(Path path) throws GameException;
+
 	void write(Path path, byte[] bytes) throws GameException;
-	
+
 	void move(Path path, Path to) throws GameException;
 
 }

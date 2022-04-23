@@ -93,6 +93,13 @@ public class LWJGLWindow implements Window {
 		return input;
 	}
 
+	public CompletableFuture<Void> setTitle(String title) {
+		return later(() -> {
+			glfwSetWindowTitle(id.get(), title);
+			LWJGLWindow.this.title.set(title);
+		});
+	}
+
 	public CloseCallback getCloseCallback() {
 		return closeCallback.get();
 	}

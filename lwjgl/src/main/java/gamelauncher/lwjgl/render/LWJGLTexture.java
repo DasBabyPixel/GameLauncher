@@ -10,18 +10,16 @@ import java.nio.ByteBuffer;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.resource.ResourcePath;
 import gamelauncher.engine.resource.ResourceStream;
 
 public class LWJGLTexture {
 
 	private final int textureId;
 
-	public LWJGLTexture(ResourcePath pngResource) throws GameException {
+	public LWJGLTexture(ResourceStream stream) throws GameException {
 		textureId = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureId);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		ResourceStream stream = pngResource.newResourceStream();
 		PNGDecoder decoder = stream.newPNGDecoder();
 		ByteBuffer buf = memAlloc(4 * decoder.getWidth() * decoder.getHeight());
 		try {
@@ -36,6 +34,10 @@ public class LWJGLTexture {
 		glGenerateMipmap(GL_TEXTURE_2D);
 		stream.cleanup();
 		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	
+	public void cleanup() {
+		glDeleteTextures(textureId);
 	}
 
 	public int getTextureId() {

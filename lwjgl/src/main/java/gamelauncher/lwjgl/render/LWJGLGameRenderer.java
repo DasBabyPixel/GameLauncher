@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.GameException;
@@ -13,8 +14,6 @@ import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
-import gamelauncher.engine.resource.ResourcePath;
-import gamelauncher.lwjgl.render.Mesh.MeshModel;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
@@ -43,25 +42,27 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Model model = launcher.getModelLoader()
-				.loadModel(launcher.getResourceLoader().getResource(new ResourcePath("cube.obj")));
-		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
-		((MeshModel)model).mesh.setTexture(texture);
-		GameItem gameItem;
-		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
-		gameItem.setPosition(1, 0, 0);
-		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
-		gameItem.setPosition(2, 1, 0);
-		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
-		gameItem.setPosition(1, -1, 1);
-		models.add(new GameItem.GameItemModel(gameItem = new GameItem(model)));
+				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("cube.obj")));
+//		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
+//		((MeshModel) model).mesh.setTexture(texture);
+		Random r = new Random();
+		int count = 3000;
+		float density = 0.05F;
+		float width = (float) Math.pow(count / density, 1D / 3D);
+		for (int i = 0; i < count; i++) {
+			GameItem item = new GameItem(model);
+			item.setPosition(r.nextFloat() * width - width / 2F, r.nextFloat() * width - width / 2F,
+					r.nextFloat() * width - width / 2F);
+			models.add(new GameItem.GameItemModel(item));
+		}
 
 		ShaderProgram shaderProgram = new ShaderProgram(launcher);
 		shaderProgram.createVertexShader(launcher.getResourceLoader()
-				.getResource(new ResourcePath("shaders/basic/vertex"))
+				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/vertex"))
 				.newResourceStream()
 				.readUTF8FullyClose());
 		shaderProgram.createFragmentShader(launcher.getResourceLoader()
-				.getResource(new ResourcePath("shaders/basic/fragment"))
+				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/fragment"))
 				.newResourceStream()
 				.readUTF8FullyClose());
 		shaderProgram.link();
@@ -79,7 +80,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
 
 		glEnable(GL_DEPTH_TEST);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
