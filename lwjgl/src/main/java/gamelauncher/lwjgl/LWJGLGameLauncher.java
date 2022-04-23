@@ -54,7 +54,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 			@Override
 			public void handleKeyboard(InputType inputType, int key) {
-				float moveSpeed = (float) (boost.get() ? 2.0 * this.moveSpeed : this.moveSpeed);
+				float moveSpeed = (float) (boost.get() ? 4.0 * this.moveSpeed : this.moveSpeed);
 				if (inputType == InputType.HELD) {
 					if (key == GLFW_KEY_W) {
 						window.getCamera().movePosition(0, 0, -moveSpeed);
@@ -116,6 +116,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 		});
 		window.getFrameCounter().ifPresent(fc -> {
+			fc.limit(60);
 			fc.addUpdateListener(fps -> {
 				getLogger().infof("FPS: %s", fps);
 			});
