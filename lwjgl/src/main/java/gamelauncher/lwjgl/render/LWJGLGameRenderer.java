@@ -2,8 +2,10 @@ package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,10 +51,23 @@ public class LWJGLGameRenderer implements GameRenderer {
 		int count = 300;
 		float density = 0.05F;
 		float width = (float) Math.pow(count / density, 1D / 3D);
+		List<GameItem> items = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
 			GameItem item = new GameItem(model);
-			item.setPosition(r.nextFloat() * width - width / 2F, r.nextFloat() * width - width / 2F,
-					r.nextFloat() * width - width / 2F);
+			boolean f;
+			do {
+				f = false;
+				item.setPosition(r.nextFloat() * width - width / 2F, r.nextFloat() * width - width / 2F,
+						r.nextFloat() * width - width / 2F);
+				item.setRotation(r.nextFloat() * 360, r.nextFloat() * 360, r.nextFloat() * 360);
+				for (GameItem it : items) {
+					if (it.getPosition().distance(item.getPosition()) < 1.5) {
+						f = true;
+						break;
+					}
+				}
+			} while (f);
+			items.add(item);
 			models.add(new GameItem.GameItemModel(item));
 		}
 
