@@ -18,11 +18,13 @@ public interface DrawContext {
 
 	void drawModel(Model model, double x, double y, double z) throws GameException;
 
-	void setProjectionMatrix(Transformations.Projection projection) throws GameException;
+	void setProjection(Transformations.Projection projection) throws GameException;
+	
+	Transformations.Projection getProjection();
+	
+	void reloadProjectionMatrix() throws GameException;
 	
 	void update(Camera camera) throws GameException;
-
-//	void setViewMatrix(Transformations.Transformation view) throws GameException;
 
 	DrawContext translate(double x, double y, double z) throws GameException;
 

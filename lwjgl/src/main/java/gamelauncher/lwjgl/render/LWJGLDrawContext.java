@@ -11,6 +11,7 @@ import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Transformations;
+import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.lwjgl.render.GameItem.GameItemModel;
 import gamelauncher.lwjgl.render.Mesh.MeshModel;
 
@@ -28,17 +29,20 @@ public class LWJGLDrawContext implements DrawContext {
 	private final Matrix4f viewMatrix;
 	private final Matrix4f tempMatrix = new Matrix4f();
 	private final AtomicReference<ShaderProgram> shaderProgram;
+	private final AtomicReference<Projection> projection;
 
 	public LWJGLDrawContext(LWJGLWindow window) {
 		this(window, 0, 0, 0, 1, 1, 1);
 	}
 
 	private LWJGLDrawContext(LWJGLWindow window, double tx, double ty, double tz, double sx, double sy, double sz) {
-		this(window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f());
+		this(window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(),
+				new AtomicReference<>());
 	}
 
 	private LWJGLDrawContext(LWJGLWindow window, double tx, double ty, double tz, double sx, double sy, double sz,
-			AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix, Matrix4f viewMatrix) {
+			AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix, Matrix4f viewMatrix,
+			AtomicReference<Projection> projection) {
 		this.window = window;
 		this.tx = tx;
 		this.ty = ty;
@@ -49,10 +53,24 @@ public class LWJGLDrawContext implements DrawContext {
 		this.shaderProgram = shaderProgram;
 		this.projectionMatrix = projectionMatrix;
 		this.viewMatrix = viewMatrix;
+		this.projection = projection;
 	}
 
 	@Override
-	public void setProjectionMatrix(Transformations.Projection projection) throws GameException {
+	public void setProjection(Transformations.Projection projection) throws GameException {
+		if (this.projection.getAndSet(projection) != projection) {
+			reloadProjectionMatrix();
+		}
+	}
+	
+	@Override
+	public Projection getProjection() {
+		return projection.get();
+	}
+
+	@Override
+	public void reloadProjectionMatrix() throws GameException {
+		Projection projection = this.projection.get();
 		if (projection instanceof Transformations.Projection.Projection3D) {
 			Transformations.Projection.Projection3D p3d = (Transformations.Projection.Projection3D) projection;
 			float aspectRatio = (float) window.framebufferWidth.get() / (float) window.framebufferHeight.get();
@@ -104,13 +122,13 @@ public class LWJGLDrawContext implements DrawContext {
 	@Override
 	public DrawContext translate(double x, double y, double z) {
 		return new LWJGLDrawContext(window, tx + x, ty + y, tz + z, sx, sy, sz, shaderProgram, projectionMatrix,
-				viewMatrix);
+				viewMatrix, projection);
 	}
 
 	@Override
 	public DrawContext scale(double x, double y, double z) {
 		return new LWJGLDrawContext(window, tx, ty, tz, sx * x, sy * y, sz * z, shaderProgram, projectionMatrix,
-				viewMatrix);
+				viewMatrix, projection);
 	}
 
 	@Override

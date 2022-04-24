@@ -91,8 +91,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context.setProgram(shaderProgram);
-		context.setProjectionMatrix(
-				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
+		context.setProjection(new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
 
 		glEnable(GL_DEPTH_TEST);
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -141,14 +140,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 		}
 
 		for (Model model : models) {
-			window.getContext()
-					.drawModel(model, // (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)), 0, -3,
-							0, 0, 0, rx, ry, rz
-//						,
-//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
-//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1,
-//						(float) Math.sin(Math.toRadians(System.currentTimeMillis() / 20D)) + 1.1);
-					);
+			window.getContext().drawModel(model, 0, 0, 0, rx, ry, rz);
 		}
 
 		window.endFrame();

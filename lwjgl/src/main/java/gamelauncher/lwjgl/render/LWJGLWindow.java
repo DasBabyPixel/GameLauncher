@@ -410,6 +410,12 @@ public class LWJGLWindow implements Window {
 			shouldDraw.set(false);
 			if (viewportChanged.compareAndSet(true, false)) {
 				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
+				try {
+					context.reloadProjectionMatrix();
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
+//				context.setProjectionMatrix(new Projection.Projection3D(FOV, 0.01, 1000));
 			}
 			FrameRenderer fr = frameRenderer.get();
 			if (fr != null) {
@@ -434,11 +440,6 @@ public class LWJGLWindow implements Window {
 					context.update(camera);
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (Exception ex) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException ex1) {
-						ex1.printStackTrace();
-					}
 					ex.printStackTrace();
 				}
 			}
