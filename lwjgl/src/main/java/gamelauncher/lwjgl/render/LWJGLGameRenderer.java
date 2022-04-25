@@ -44,7 +44,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Model model = launcher.getModelLoader()
-				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("cube.obj")));
+				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("Pickle.obj")));
 //		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
 //		((MeshModel) model).mesh.setTexture(texture);
 		Random r = new Random(1);
