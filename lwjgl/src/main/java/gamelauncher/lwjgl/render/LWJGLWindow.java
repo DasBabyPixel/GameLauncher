@@ -499,6 +499,7 @@ public class LWJGLWindow implements Window {
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
+			glfwSetWindowSizeLimits(id, 10, 10, GLFW_DONT_CARE, GLFW_DONT_CARE);
 			int[] a0 = new int[1];
 			int[] a1 = new int[1];
 			glfwGetWindowPos(id, a0, a1);
