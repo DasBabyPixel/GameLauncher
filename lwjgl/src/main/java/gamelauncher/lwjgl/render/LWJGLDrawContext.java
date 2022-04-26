@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Camera;
@@ -14,6 +15,7 @@ import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.lwjgl.render.GameItem.GameItemModel;
 import gamelauncher.lwjgl.render.Mesh.MeshModel;
+import gamelauncher.lwjgl.render.light.PointLight;
 
 public class LWJGLDrawContext implements DrawContext {
 
@@ -30,6 +32,10 @@ public class LWJGLDrawContext implements DrawContext {
 	private final Matrix4f tempMatrix = new Matrix4f();
 	private final AtomicReference<ShaderProgram> shaderProgram;
 	private final AtomicReference<Projection> projection;
+
+	public PointLight pointLight;
+	public float specularPower = 10;
+	public Vector3f ambientLight = new Vector3f(0.3F, 0.3F, 0.3F);
 
 	public LWJGLDrawContext(LWJGLWindow window) {
 		this(window, 0, 0, 0, 1, 1, 1);
@@ -62,7 +68,7 @@ public class LWJGLDrawContext implements DrawContext {
 			reloadProjectionMatrix();
 		}
 	}
-	
+
 	@Override
 	public Projection getProjection() {
 		return projection.get();
@@ -141,8 +147,18 @@ public class LWJGLDrawContext implements DrawContext {
 		loadViewMatrix(camera);
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
-		shaderProgram.setUniform("texture_sampler", 0);
 		shaderProgram.setUniform("projectionMatrix", projectionMatrix);
+
+		shaderProgram.setUniform("texture_sampler", 0);
+		shaderProgram.setUniform("ambientLight", ambientLight);
+		shaderProgram.setUniform("specularPower", specularPower);
+		
+		PointLight cl = new PointLight(this.pointLight);
+		Vector4f v4 = new Vector4f(cl.position, 1);
+		v4.mul(viewMatrix);
+		shaderProgram.setUniform("pointLight", cl);
+		
+		
 	}
 
 	public void loadViewMatrix(Camera camera) {
@@ -160,8 +176,7 @@ public class LWJGLDrawContext implements DrawContext {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
 		shaderProgram.setUniform("modelViewMatrix", tempMatrix);
-		shaderProgram.setUniform("color", mesh.getColor());
-		shaderProgram.setUniform("useColor", mesh.hasTexture() ? 0 : 1);
+		shaderProgram.setUniform("material", mesh.getMaterial());
 		mesh.render();
 		shaderProgram.unbind();
 	}

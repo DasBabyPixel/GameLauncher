@@ -98,18 +98,30 @@ public class LWJGLModelLoader implements ModelLoader {
 
 		stream.cleanup();
 		Mesh mesh = new Mesh(vertices, texCoords, normals, indices);
+		gamelauncher.lwjgl.render.light.Material lm = new gamelauncher.lwjgl.render.light.Material();
+
 		for (Material mat : materialList.materials) {
 			byte[] tex = mat.diffuseColor.texture;
 			if (tex != null) {
-				ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
-				LWJGLTexture lt = new LWJGLTexture(st);
-				st.cleanup();
-				if (mesh.getTexture() != null) {
-					mesh.getTexture().cleanup();
+				if (lm.texture != null) {
+					ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
+					LWJGLTexture lt = new LWJGLTexture(st);
+					lm.texture = lt;
+					st.cleanup();
 				}
-				mesh.setTexture(lt);
+				break;
 			}
 		}
+		if (lm.texture == null) {
+			for (Material mat : materialList.materials) {
+				lm.diffuse = mat.diffuseColor.color;
+				lm.ambient = mat.ambientColor.color;
+				lm.specular = mat.specularColor.color;
+				lm.reflectance = 0.1F;
+				break;
+			}
+		}
+		mesh.setMaterial(lm);
 		return new Mesh.MeshModel(mesh);
 	}
 

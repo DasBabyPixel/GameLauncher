@@ -13,6 +13,8 @@ import org.lwjgl.system.MemoryStack;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.lwjgl.render.light.Material;
+import gamelauncher.lwjgl.render.light.PointLight;
 
 public class ShaderProgram {
 
@@ -44,13 +46,52 @@ public class ShaderProgram {
 	public void createUniform(String uniformName) throws GameException {
 		int uniformLocation = glGetUniformLocation(programId, uniformName);
 		if (uniformLocation < 0) {
-			throw new GameException("Could not find uniform:" + uniformName);
+			throw new GameException("Could not find uniform: " + uniformName);
 		}
 		uniforms.put(uniformName, uniformLocation);
 	}
 
+	public void createPointLightUniform(String uniformName) throws GameException {
+		createUniform(uniformName + ".color");
+		createUniform(uniformName + ".position");
+		createUniform(uniformName + ".intensity");
+		createUniform(uniformName + ".att.constant");
+		createUniform(uniformName + ".att.linear");
+		createUniform(uniformName + ".att.exponent");
+	}
+
+	public void createMaterialUniform(String uniformName) throws GameException {
+		createUniform(uniformName + ".ambient");
+		createUniform(uniformName + ".diffuse");
+		createUniform(uniformName + ".specular");
+		createUniform(uniformName + ".hasTexture");
+		createUniform(uniformName + ".reflectance");
+	}
+
+	public void setUniform(String uniformName, PointLight pointLight) throws GameException {
+		setUniform(uniformName + ".color", pointLight.color);
+		setUniform(uniformName + ".position", pointLight.position);
+		setUniform(uniformName + ".intensity", pointLight.intensity);
+		PointLight.Attenuation att = pointLight.att;
+		setUniform(uniformName + ".att.constant", att.constant);
+		setUniform(uniformName + ".att.exponent", att.exponent);
+		setUniform(uniformName + ".att.linear", att.linear);
+	}
+
+	public void setUniform(String uniformName, Material material) throws GameException {
+		setUniform(uniformName + ".ambient", material.ambient);
+		setUniform(uniformName + ".diffuse", material.diffuse);
+		setUniform(uniformName + ".reflectance", material.reflectance);
+		setUniform(uniformName + ".specular", material.specular);
+		setUniform(uniformName + ".hasTexture", material.texture != null ? 1 : 0);
+	}
+
 	public void setUniform(String uniformName, int value) throws GameException {
 		glUniform1i(getUniform(uniformName), value);
+	}
+
+	public void setUniform(String uniformName, float value) throws GameException {
+		glUniform1f(getUniform(uniformName), value);
 	}
 
 	public void setUniform(String uniformName, Vector3f value) throws GameException {

@@ -15,6 +15,7 @@ import java.util.List;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.render.Model;
+import gamelauncher.lwjgl.render.light.Material;
 
 public class Mesh {
 
@@ -23,8 +24,9 @@ public class Mesh {
 	private final List<Integer> vbos = new ArrayList<>();
 	private final int vaoId;
 	private final int vertexCount;
-	private LWJGLTexture texture;
-	private Vector4f color = emptyColor;
+//	private LWJGLTexture texture;
+//	private Vector4f color = emptyColor;
+	private Material material;
 	private final int vaoSize;
 
 	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
@@ -49,20 +51,28 @@ public class Mesh {
 		glBindVertexArray(0);
 	}
 
-	public Vector4f getColor() {
-		return color;
+//	public Vector4f getColor() {
+//		return color;
+//	}
+//
+//	public LWJGLTexture getTexture() {
+//		return texture;
+//	}
+//
+//	public void setColor(Vector4f color) {
+//		this.color = color == null ? emptyColor : color;
+//	}
+//
+//	public void setTexture(LWJGLTexture texture) {
+//		this.texture = texture;
+//	}
+
+	public Material getMaterial() {
+		return material;
 	}
 
-	public LWJGLTexture getTexture() {
-		return texture;
-	}
-
-	public void setColor(Vector4f color) {
-		this.color = color == null ? emptyColor : color;
-	}
-
-	public void setTexture(LWJGLTexture texture) {
-		this.texture = texture;
+	public void setMaterial(Material material) {
+		this.material = material;
 	}
 
 	private int createBuffer(int target, int usage, int[] array) {
@@ -99,9 +109,9 @@ public class Mesh {
 	}
 
 	public void render() {
-		if (texture != null) {
+		if (material.texture != null) {
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
+			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
 		glBindVertexArray(getVaoId());
@@ -146,7 +156,7 @@ public class Mesh {
 		}
 	}
 
-	public boolean hasTexture() {
-		return texture != null;
-	}
+//	public boolean hasTexture() {
+//		return texture != null;
+//	}
 }
