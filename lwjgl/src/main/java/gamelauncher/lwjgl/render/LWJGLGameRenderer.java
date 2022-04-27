@@ -44,8 +44,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Model model = launcher.getModelLoader()
-				.loadModel(
-						launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("Pickle2.obj")));
+				.loadModel(launcher.getResourceLoader()
+						.getResource(launcher.getEmbedFileSystem().getPath("Labyrinth3D_PlayerIco_Textured.obj")));
 
 //		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
 //		((MeshModel) model).mesh.setTexture(texture);
@@ -91,7 +91,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 //		shaderProgram.createUniform("objectColorDiffuse");
 //		shaderProgram.createUniform("objectHasTexture");
 //		shaderProgram.createUniform("lightPos");
-		
+
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context.setProgram(shaderProgram);
 		context.setProjection(new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
