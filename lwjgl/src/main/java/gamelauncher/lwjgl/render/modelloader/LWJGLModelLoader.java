@@ -25,7 +25,7 @@ public class LWJGLModelLoader implements ModelLoader {
 	private final Map<ModelType, ModelSubLoader> loaders = new HashMap<>();
 	private final GameLauncher launcher;
 	private final Path modelDirectory;
-	private final String version = "0.0.10";
+	private final String version = "0.0.11";
 
 	public LWJGLModelLoader(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
@@ -98,7 +98,7 @@ public class LWJGLModelLoader implements ModelLoader {
 
 		stream.cleanup();
 		Mesh mesh = new Mesh(vertices, texCoords, normals, indices);
-		gamelauncher.lwjgl.render.light.Material lm = new gamelauncher.lwjgl.render.light.Material();
+		Mesh.Material lm = mesh.getMaterial();
 
 		for (Material mat : materialList.materials) {
 			byte[] tex = mat.diffuseColor.texture;
@@ -121,7 +121,6 @@ public class LWJGLModelLoader implements ModelLoader {
 				break;
 			}
 		}
-		mesh.setMaterial(lm);
 		return new Mesh.MeshModel(mesh);
 	}
 

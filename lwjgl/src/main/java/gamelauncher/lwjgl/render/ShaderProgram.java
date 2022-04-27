@@ -1,8 +1,10 @@
 package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.system.MemoryStack.*;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,8 +15,6 @@ import org.lwjgl.system.MemoryStack;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.lwjgl.render.light.Material;
-import gamelauncher.lwjgl.render.light.PointLight;
 
 public class ShaderProgram {
 
@@ -43,66 +43,38 @@ public class ShaderProgram {
 		fragmentShaderId = createShader(shaderCode, GL_FRAGMENT_SHADER);
 	}
 
-	public void createUniform(String uniformName) throws GameException {
-		int uniformLocation = glGetUniformLocation(programId, uniformName);
-		if (uniformLocation < 0) {
-			throw new GameException("Could not find uniform: " + uniformName);
-		}
-		uniforms.put(uniformName, uniformLocation);
-	}
-
-	public void createPointLightUniform(String uniformName) throws GameException {
-		createUniform(uniformName + ".color");
-		createUniform(uniformName + ".position");
-		createUniform(uniformName + ".intensity");
-		createUniform(uniformName + ".att.constant");
-		createUniform(uniformName + ".att.linear");
-		createUniform(uniformName + ".att.exponent");
-	}
-
-	public void createMaterialUniform(String uniformName) throws GameException {
-		createUniform(uniformName + ".ambient");
-		createUniform(uniformName + ".diffuse");
-		createUniform(uniformName + ".specular");
-		createUniform(uniformName + ".hasTexture");
-		createUniform(uniformName + ".reflectance");
-	}
-
-	public void setUniform(String uniformName, PointLight pointLight) throws GameException {
-		setUniform(uniformName + ".color", pointLight.color);
-		setUniform(uniformName + ".position", pointLight.position);
-		setUniform(uniformName + ".intensity", pointLight.intensity);
-		PointLight.Attenuation att = pointLight.att;
-		setUniform(uniformName + ".att.constant", att.constant);
-		setUniform(uniformName + ".att.exponent", att.exponent);
-		setUniform(uniformName + ".att.linear", att.linear);
-	}
-
-	public void setUniform(String uniformName, Material material) throws GameException {
-		setUniform(uniformName + ".ambient", material.ambient);
-		setUniform(uniformName + ".diffuse", material.diffuse);
-		setUniform(uniformName + ".reflectance", material.reflectance);
-		setUniform(uniformName + ".specular", material.specular);
-		setUniform(uniformName + ".hasTexture", material.texture != null ? 1 : 0);
-	}
-
 	public void setUniform(String uniformName, int value) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			return;
+		}
 		glUniform1i(getUniform(uniformName), value);
 	}
 
 	public void setUniform(String uniformName, float value) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			return;
+		}
 		glUniform1f(getUniform(uniformName), value);
 	}
 
 	public void setUniform(String uniformName, Vector3f value) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			return;
+		}
 		glUniform3f(getUniform(uniformName), value.x, value.y, value.z);
 	}
 
 	public void setUniform(String uniformName, Vector4f value) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			return;
+		}
 		glUniform4f(getUniform(uniformName), value.x, value.y, value.z, value.w);
 	}
 
 	public void setUniform(String uniformName, Matrix4f value) throws GameException {
+		if (!uniforms.containsKey(uniformName)) {
+			return;
+		}
 		// Dump the matrix into a float buffer
 		int uniform = getUniform(uniformName);
 		try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -161,9 +133,21 @@ public class ShaderProgram {
 		if (launcher.isDebugMode()) {
 			glValidateProgram(programId);
 			if (glGetProgrami(programId, GL_VALIDATE_STATUS) == 0) {
-				System.err.println("Warning validating Shader code: " + glGetProgramInfoLog(programId, 1024));
+				launcher.getLogger().warnf("Warning validating Shader code: %s", glGetProgramInfoLog(programId, 1024));
 			}
 		}
+
+		int count = glGetProgrami(programId, GL_ACTIVE_UNIFORMS);
+		stackPush();
+		IntBuffer uniformSize = stackMallocInt(1);
+		IntBuffer uniformType = stackMallocInt(1);
+		for (int i = 0; i < count; i++) {
+			String uniformName = glGetActiveUniform(programId, i, uniformSize, uniformType);
+			uniforms.put(uniformName, i);
+		}
+		stackPop();
+		launcher.getLogger().infof("Uniforms (%s): %n%s", count, uniforms);
+
 	}
 
 	public void bind() {

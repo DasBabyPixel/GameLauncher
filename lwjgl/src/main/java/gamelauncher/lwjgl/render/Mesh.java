@@ -15,7 +15,6 @@ import java.util.List;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.render.Model;
-import gamelauncher.lwjgl.render.light.Material;
 
 public class Mesh {
 
@@ -26,7 +25,7 @@ public class Mesh {
 	private final int vertexCount;
 //	private LWJGLTexture texture;
 //	private Vector4f color = emptyColor;
-	private Material material;
+	private final Material material = new Material();
 	private final int vaoSize;
 
 	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
@@ -44,7 +43,7 @@ public class Mesh {
 		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, normals);
-		glVertexAttribPointer(2, 3, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, false, 0, 0);
+		glVertexAttribPointer(2, 3, GL_FLOAT, false, 0, 0);
 
 		vaoSize = 3;
 
@@ -66,13 +65,9 @@ public class Mesh {
 //	public void setTexture(LWJGLTexture texture) {
 //		this.texture = texture;
 //	}
-
+	
 	public Material getMaterial() {
 		return material;
-	}
-
-	public void setMaterial(Material material) {
-		this.material = material;
 	}
 
 	private int createBuffer(int target, int usage, int[] array) {
@@ -141,6 +136,14 @@ public class Mesh {
 		vbos.clear();
 		// Delete the VAO
 		glDeleteVertexArrays(vaoId);
+	}
+	
+	public static class Material {
+		public LWJGLTexture texture;
+		public Vector4f diffuse;
+		public Vector4f ambient;
+		public Vector4f specular;
+		public float reflectance;
 	}
 
 	public static class MeshModel implements Model {

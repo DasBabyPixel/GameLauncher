@@ -2,6 +2,7 @@ package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryUtil.*;
 
 import java.util.Optional;
 import java.util.Queue;
@@ -499,6 +500,11 @@ public class LWJGLWindow implements Window {
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
+			if (id == NULL) {
+				System.err.println("Failed to create GLFW Window");
+				System.exit(-1);
+				return;
+			}
 			glfwSetWindowSizeLimits(id, 10, 10, GLFW_DONT_CARE, GLFW_DONT_CARE);
 			int[] a0 = new int[1];
 			int[] a1 = new int[1];

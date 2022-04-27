@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.joml.Vector3f;
-
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.GameRenderer;
@@ -18,7 +16,6 @@ import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
-import gamelauncher.lwjgl.render.light.PointLight;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
@@ -27,7 +24,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 	private GameLauncher launcher;
 
 	private Collection<Model> models = new HashSet<>();
-	private PointLight light = new PointLight();
 //	private GameItem item;
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
@@ -50,14 +46,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 		Model model = launcher.getModelLoader()
 				.loadModel(
 						launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("Pickle2.obj")));
-
-		light.color = new Vector3f(1, 1, 1);
-		light.intensity = 1;
-		light.position = new Vector3f(2, 2, 2);
-		light.att = new PointLight.Attenuation();
-		light.att.constant = 1;
-		light.att.exponent = 0;
-		light.att.linear = 0;
 
 //		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
 //		((MeshModel) model).mesh.setTexture(texture);
@@ -97,19 +85,16 @@ public class LWJGLGameRenderer implements GameRenderer {
 		shaderProgram.link();
 		shaderProgram.deleteVertexShader();
 		shaderProgram.deleteFragmentShader();
-		shaderProgram.createUniform("projectionMatrix");
-		shaderProgram.createUniform("modelViewMatrix");
-		shaderProgram.createUniform("texture_sampler");
+//		shaderProgram.createUniform("projectionMatrix");
+//		shaderProgram.createUniform("modelViewMatrix");
+//		shaderProgram.createUniform("texture_sampler");
+//		shaderProgram.createUniform("objectColorDiffuse");
+//		shaderProgram.createUniform("objectHasTexture");
+//		shaderProgram.createUniform("lightPos");
 		
-		shaderProgram.createMaterialUniform("material");
-		shaderProgram.createUniform("specularPower");
-		shaderProgram.createUniform("ambientLight");
-		shaderProgram.createPointLightUniform("pointLight");
-
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context.setProgram(shaderProgram);
 		context.setProjection(new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
-		context.pointLight = light;
 
 		glEnable(GL_DEPTH_TEST);
 //		glEnable(GL_CULL_FACE);

@@ -6,79 +6,34 @@ in vec3 mvVertexPos;
 
 out vec4 fragColor;
 
-struct Attenuation {
-	float constant;
-	float linear;
-	float exponent;
-};
-
-struct PointLight {
-	vec3 color;
-	// Light position is assumed to be in view coordinates
-	vec3 position;
-	float intensity;
-	Attenuation att;
-};
-
-struct Material {
-	vec4 ambient;
-	vec4 diffuse;
-	vec4 specular;
-	int hasTexture;
-	float reflectance;
-};
-
+// Object color provider
 uniform sampler2D texture_sampler;
-uniform vec3 ambientLight;
-uniform float specularPower;
-uniform Material material;
-uniform PointLight pointLight;
+uniform vec4 objectColorDiffuse;
+uniform int objectHasTexture;
 
-vec4 ambientC;
-vec4 diffuseC;
-vec4 speculrC;
+uniform vec3 lightColor;
 
-vec4 calcPointLight(PointLight light, vec3 position, vec3 normal) {
-	vec4 diffuseColor = vec4(0, 0, 0, 0);
-	vec4 specColor = vec4(0, 0, 0, 0);
-	
-	// Diffuse Light
-	vec3 light_direction = light.position - position;
-	vec3 to_light_source = normalize(light_direction);
-	float diffuseFactor = max(dot(normal, to_light_source), 0.0);
-	diffuseColor = diffuseC * vec4(light.color, 1.0) * light.intensity * diffuseFactor;
-	
-	// Specular Light
-	vec3 camera_direction = normalize(-position);
-	vec3 from_light_source = -to_light_source;
-	vec3 reflected_light = normalize(reflect(from_light_source, normal));
-	float specularFactor = max(dot(camera_direction, reflected_light), 0.0);
-	specularFactor = pow(specularFactor, specularPower);
-	specColor = speculrC * specularFactor * material.reflectance * vec4(light.color, 1.0);
-	
-	// Attenuation
-	float distance = length(light_direction);
-	float attenuationInv = light.att.constant + light.att.linear * distance + light.att.exponent * distance * distance;
-	return (diffuseColor + specColor) / attenuationInv;
-}
-
-void setupColors(Material material, vec2 texCoord) {
-	if(material.hasTexture == 1) {
-		ambientC = texture(texture_sampler, outTexCoord);
-		diffuseC = ambientC;
-		speculrC = ambientC;
-	} else {
-		ambientC = material.ambient;
-		diffuseC = material.diffuse;
-		speculrC = material.specular;
-	}
-}
-
+uniform vec3 lightPos;
 
 void main() {
-	//setupColors(material, outTexCoord);
+	// Find correct color for object
+	vec4 oColor = objectColorDiffuse;
+	if (objectHasTexture == 1) {
+		oColor = texture(texture_sampler, outTexCoord);
+	}
 	
-	//vec4 diffuseSpecularComp = calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
-	fragColor = texture(texture_sampler, outTexCoord);
-	//fragColor = ambientC * vec4(ambientLight, 1.0) + diffuseSpecularComp;
+	// Ambient
+	float ambientStrength = 0.2;
+	vec3 ambient = ambientStrength * lightColor;
+
+	// Diffuse Lighting
+	vec3 norm = mvVertexNormal;
+	vec3 lightDir = normalize(lightPos - mvVertexPos);
+	
+	float diff = max(dot(norm, lightDir), 0.0);
+	
+	vec3 diffuse = diff * lightColor;
+
+	vec3 lighting = diffuse;//ambient + diffuse;
+	fragColor = vec4(lighting, 1.0) * oColor;
 }
