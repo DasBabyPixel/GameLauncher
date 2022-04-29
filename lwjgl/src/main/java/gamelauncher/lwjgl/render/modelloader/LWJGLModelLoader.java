@@ -114,10 +114,9 @@ public class LWJGLModelLoader implements ModelLoader {
 		}
 		if (lm.texture == null) {
 			for (Material mat : materialList.materials) {
-				lm.diffuse = mat.diffuseColor.color;
-				lm.ambient = mat.ambientColor.color;
-				lm.specular = mat.specularColor.color;
-				lm.reflectance = 0.1F;
+				lm.diffuseColour = mat.diffuseColor.color;
+				lm.ambientColour = mat.ambientColor.color;
+				lm.specularColour = mat.specularColor.color;
 				break;
 			}
 		}

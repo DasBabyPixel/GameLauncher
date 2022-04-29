@@ -15,6 +15,8 @@ import org.lwjgl.system.MemoryStack;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.lwjgl.render.Mesh.Material;
+import gamelauncher.lwjgl.render.light.PointLight;
 
 public class ShaderProgram {
 
@@ -33,6 +35,24 @@ public class ShaderProgram {
 		if (programId == 0) {
 			throw new GameException("Could not create Shader");
 		}
+	}
+
+	public void setUniform(String uniformName, PointLight pointLight) throws GameException {
+		setUniform(uniformName + ".color", pointLight.color);
+		setUniform(uniformName + ".position", pointLight.position);
+		setUniform(uniformName + ".intensity", pointLight.intensity);
+		PointLight.Attenuation att = pointLight.att;
+		setUniform(uniformName + ".att.constant", att.constant);
+		setUniform(uniformName + ".att.linear", att.linear);
+		setUniform(uniformName + ".att.exponent", att.exponent);
+	}
+
+	public void setUniform(String uniformName, Material material) throws GameException {
+		setUniform(uniformName + ".ambient", material.ambientColour);
+		setUniform(uniformName + ".diffuse", material.diffuseColour);
+		setUniform(uniformName + ".specular", material.specularColour);
+		setUniform(uniformName + ".hasTexture", material.texture != null ? 1 : 0);
+		setUniform(uniformName + ".reflectance", material.reflectance);
 	}
 
 	public void createVertexShader(String shaderCode) throws GameException {

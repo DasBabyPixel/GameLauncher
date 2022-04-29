@@ -65,7 +65,7 @@ public class Mesh {
 //	public void setTexture(LWJGLTexture texture) {
 //		this.texture = texture;
 //	}
-	
+
 	public Material getMaterial() {
 		return material;
 	}
@@ -137,13 +137,43 @@ public class Mesh {
 		// Delete the VAO
 		glDeleteVertexArrays(vaoId);
 	}
-	
+
 	public static class Material {
-		public LWJGLTexture texture;
-		public Vector4f diffuse;
-		public Vector4f ambient;
-		public Vector4f specular;
+		private static final Vector4f DEFAULT_COLOUR = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
+		public Vector4f ambientColour;
+		public Vector4f diffuseColour;
+		public Vector4f specularColour;
 		public float reflectance;
+		public LWJGLTexture texture;
+
+		public Material() {
+			this.ambientColour = DEFAULT_COLOUR;
+			this.diffuseColour = DEFAULT_COLOUR;
+			this.specularColour = DEFAULT_COLOUR;
+			this.texture = null;
+			this.reflectance = 0;
+		}
+
+		public Material(Vector4f colour, float reflectance) {
+			this(colour, colour, colour, null, reflectance);
+		}
+
+		public Material(LWJGLTexture texture) {
+			this(DEFAULT_COLOUR, DEFAULT_COLOUR, DEFAULT_COLOUR, texture, 0);
+		}
+
+		public Material(LWJGLTexture texture, float reflectance) {
+			this(DEFAULT_COLOUR, DEFAULT_COLOUR, DEFAULT_COLOUR, texture, reflectance);
+		}
+
+		public Material(Vector4f ambientColour, Vector4f diffuseColour, Vector4f specularColour, LWJGLTexture texture,
+				float reflectance) {
+			this.ambientColour = ambientColour;
+			this.diffuseColour = diffuseColour;
+			this.specularColour = specularColour;
+			this.texture = texture;
+			this.reflectance = reflectance;
+		}
 	}
 
 	public static class MeshModel implements Model {

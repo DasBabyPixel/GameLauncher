@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Camera;
@@ -14,6 +15,7 @@ import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.lwjgl.render.GameItem.GameItemModel;
 import gamelauncher.lwjgl.render.Mesh.MeshModel;
+import gamelauncher.lwjgl.render.light.PointLight;
 
 public class LWJGLDrawContext implements DrawContext {
 
@@ -30,9 +32,6 @@ public class LWJGLDrawContext implements DrawContext {
 	private final Matrix4f tempMatrix = new Matrix4f();
 	private final AtomicReference<ShaderProgram> shaderProgram;
 	private final AtomicReference<Projection> projection;
-
-	public float specularPower = 10;
-	public Vector3f ambientLight = new Vector3f(0.3F, 0.3F, 0.3F);
 
 	public LWJGLDrawContext(LWJGLWindow window) {
 		this(window, 0, 0, 0, 1, 1, 1);
@@ -139,6 +138,15 @@ public class LWJGLDrawContext implements DrawContext {
 		drawModel(model, x, y, z, 0, 0, 0);
 	}
 
+	float reflectance = 5F;
+	float lightIntensity = 400F;
+	Vector3f ambientLight = new Vector3f(.001F);
+	Vector3f lightPosition = new Vector3f(2, 2, 2);
+	Vector3f lightColor = new Vector3f(1, 1, 1);
+	float specularPower = 200;
+	PointLight pointLight = new PointLight(lightColor, lightPosition, lightIntensity,
+			new PointLight.Attenuation(0, 0, 1));
+
 	@Override
 	public void update(Camera camera) throws GameException {
 		loadViewMatrix(camera);
@@ -148,16 +156,19 @@ public class LWJGLDrawContext implements DrawContext {
 
 		shaderProgram.setUniform("texture_sampler", 0);
 
-		shaderProgram.setUniform("lightColor", new Vector3f(.8F, .8F, .8F));
-		shaderProgram.setUniform("lightPos", new Vector3f(2, 2, 2));
-	}
+		float pow = (float) (Math.sin(System.currentTimeMillis() / 1000D) + 1) * 200;
+		System.out.println(pow);
+		shaderProgram.setUniform("specularPower", pow);
+		shaderProgram.setUniform("ambientLight", ambientLight);
 
-	public void loadViewMatrix(Camera camera) {
-		viewMatrix.identity();
-		viewMatrix.rotate((float) Math.toRadians(camera.getRotX()), X_AXIS)
-				.rotate((float) Math.toRadians(camera.getRotY()), Y_AXIS)
-				.rotate((float) Math.toRadians(camera.getRotZ()), Z_AXIS);
-		viewMatrix.translate(-camera.getX(), -camera.getY(), -camera.getZ());
+		PointLight cPointLight = new PointLight(pointLight);
+		Vector3f lightPos = cPointLight.position;
+		Vector4f aux = new Vector4f(lightPos, 1);
+		aux.mul(viewMatrix);
+		lightPos.x = aux.x;
+		lightPos.y = aux.y;
+		lightPos.z = aux.z;
+		shaderProgram.setUniform("pointLight", cPointLight);
 	}
 
 	private void drawMesh(Mesh mesh) throws GameException {
@@ -168,10 +179,18 @@ public class LWJGLDrawContext implements DrawContext {
 		shaderProgram.bind();
 		shaderProgram.setUniform("modelViewMatrix", tempMatrix);
 		Mesh.Material mat = mesh.getMaterial();
-		shaderProgram.setUniform("objectColorDiffuse", mat.diffuse);
-		shaderProgram.setUniform("objectHasTexture", mat.texture == null ? 0 : 1);
+		shaderProgram.setUniform("material", mat);
+
 		mesh.render();
 		shaderProgram.unbind();
+	}
+
+	public void loadViewMatrix(Camera camera) {
+		viewMatrix.identity();
+		viewMatrix.rotate((float) Math.toRadians(camera.getRotX()), X_AXIS)
+				.rotate((float) Math.toRadians(camera.getRotY()), Y_AXIS)
+				.rotate((float) Math.toRadians(camera.getRotZ()), Z_AXIS);
+		viewMatrix.translate(-camera.getX(), -camera.getY(), -camera.getZ());
 	}
 
 	public void setProgram(ShaderProgram program) {

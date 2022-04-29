@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -20,7 +19,7 @@ import gamelauncher.engine.resource.ResourceStream;
 public class WaveFrontModelLoader implements ModelSubLoader {
 
 	private final GameLauncher launcher;
-	private final Random random = new Random();
+//	private final Random random = new Random();
 
 	public WaveFrontModelLoader(GameLauncher launcher) {
 		this.launcher = launcher;
@@ -164,11 +163,11 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 	}
 
 	private void addRandomMinimals(float[] a) {
-		for (int i = 0; i < a.length; i++) {
-			float r = random.nextFloat() - 0.5F;
-			r = r / 10000F;
-			a[i] += r;
-		}
+//		for (int i = 0; i < a.length; i++) {
+//			float r = random.nextFloat() - 0.5F;
+//			r = r / 10000F;
+//			a[i] += r;
+//		}
 	}
 
 	private static class Face {

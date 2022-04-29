@@ -45,13 +45,13 @@ public class LWJGLGameRenderer implements GameRenderer {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Model model = launcher.getModelLoader()
 				.loadModel(launcher.getResourceLoader()
-						.getResource(launcher.getEmbedFileSystem().getPath("Labyrinth3D_PlayerIco_Textured.obj")));
+						.getResource(launcher.getEmbedFileSystem().getPath("Pickle2.obj")));
 
 //		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
 //		((MeshModel) model).mesh.setTexture(texture);
 		Random r = new Random(1);
-		int count = 1;
-		float density = 0.1F;
+		int count = 10;
+		float density = 0.002F;
 		float width = (float) Math.pow(count / density, 1D / 3D);
 		List<GameItem> items = new ArrayList<>();
 		for (int i = 0; i < count; i++) {
