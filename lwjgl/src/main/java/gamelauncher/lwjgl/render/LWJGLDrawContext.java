@@ -140,7 +140,7 @@ public class LWJGLDrawContext implements DrawContext {
 
 	float reflectance = 5F;
 	float lightIntensity = 400F;
-	Vector3f ambientLight = new Vector3f(.001F);
+	Vector3f ambientLight = new Vector3f(.3F);
 	Vector3f lightPosition = new Vector3f(2, 2, 2);
 	Vector3f lightColor = new Vector3f(1, 1, 1);
 	float specularPower = 200;
@@ -157,9 +157,7 @@ public class LWJGLDrawContext implements DrawContext {
 		shaderProgram.setUniform("texture_sampler", 0);
 
 		float pow = (float) (Math.sin(System.currentTimeMillis() / 1000D) + 1) * 200;
-		System.out.println(pow);
 		shaderProgram.setUniform("specularPower", pow);
-		shaderProgram.setUniform("ambientLight", ambientLight);
 
 		PointLight cPointLight = new PointLight(pointLight);
 		Vector3f lightPos = cPointLight.position;
@@ -178,6 +176,7 @@ public class LWJGLDrawContext implements DrawContext {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
 		shaderProgram.setUniform("modelViewMatrix", tempMatrix);
+		shaderProgram.setUniform("ambientLight", ambientLight);
 		Mesh.Material mat = mesh.getMaterial();
 		shaderProgram.setUniform("material", mat);
 

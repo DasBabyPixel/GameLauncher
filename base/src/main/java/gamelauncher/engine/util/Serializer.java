@@ -1,5 +1,6 @@
 package gamelauncher.engine.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 
 import com.google.gson.Gson;
@@ -18,10 +19,10 @@ public class Serializer {
 	public static <T extends Serializable> T deserialize(byte[] bytes, Class<T> clazz) throws DeserializerException {
 		T t;
 		try {
-			(t = clazz.newInstance())
+			(t = clazz.getDeclaredConstructor().newInstance())
 					.deserialize(GSON, GSON.fromJson(new String(bytes, StandardCharsets.UTF_8), JsonElement.class));
 			return t;
-		} catch (JsonSyntaxException | InstantiationException | IllegalAccessException e) {
+		} catch (JsonSyntaxException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
 			throw new DeserializerException(e);
 		}
 	}

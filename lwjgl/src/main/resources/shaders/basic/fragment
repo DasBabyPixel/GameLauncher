@@ -74,7 +74,7 @@ vec4 calcPointLight(PointLight light, vec3 position, vec3 normal) {
 
 
 void main() {
-	setupColours(material, outTexCoord);
-	vec4 diffuseSpecularComp = calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
-	fragColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
+	//setupColours(material, outTexCoord);
+	//vec4 diffuseSpecularComp = calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
+	fragColor = vec4(ambientLight, 1) ;//+ diffuseSpecularComp;
 }
