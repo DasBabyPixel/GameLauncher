@@ -60,7 +60,7 @@ public class LWJGLWindow implements Window {
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 	private final LWJGLInput input = new LWJGLInput(this);
-	private final LWJGLCamera camera = new LWJGLCamera();
+	private final LWJGLCamera camera = new LWJGLCamera(this);
 	private final Phaser drawPhaser = new Phaser();
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
 		@Override

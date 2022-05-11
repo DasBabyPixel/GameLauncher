@@ -44,7 +44,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.renderLater(() -> {
 			glClearColor(.2F, .2F, .2F, .8F);
 		});
-		window.setRenderMode(RenderMode.CONTINUOUSLY);
+		window.setRenderMode(RenderMode.ON_UPDATE);
 		window.createWindow();
 		window.startRendering();
 		AtomicBoolean boost = new AtomicBoolean(false);
@@ -116,7 +116,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 		});
 		window.getFrameCounter().ifPresent(fc -> {
-			fc.limit(60);
+//			fc.limit(60);
 			fc.addUpdateListener(fps -> {
 				getLogger().infof("FPS: %s", fps);
 			});
@@ -164,8 +164,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 				break mouse;
 			}
 			Vector3f rot = cam.getRotation();
-			rot.x = Math.clamp(rot.x + dx, -90F, 90F);
-			rot.y = rot.y + dy;
+			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
 		}
 	}
 }

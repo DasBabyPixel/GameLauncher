@@ -103,17 +103,21 @@ public class ShaderProgram {
 		});
 	}
 
+	public boolean hasUniform(String uniformName) {
+		return uniforms.containsKey(uniformName);
+	}
+
 	private void setUniform(String uniformName, GameRunnable run)
 					throws GameException {
-		if (!uniforms.containsKey(uniformName)) {
+		if (!hasUniform(uniformName)) {
 			return;
 		}
-		System.out.println("Set " + uniformName);
+//		System.out.println("Set " + uniformName);
 		run.run();
 	}
 
 	private int getUniform(String uniformName) throws GameException {
-		if (!uniforms.containsKey(uniformName)) {
+		if (!hasUniform(uniformName)) {
 			throw new GameException(
 							"No Uniform with name " + uniformName + " present");
 		}
@@ -176,7 +180,7 @@ public class ShaderProgram {
 		IntBuffer uniformType = stackMallocInt(1);
 		for (int i = 0; i < count; i++) {
 			String uniformName = glGetActiveUniform(programId, i, uniformSize, uniformType);
-			uniforms.put(uniformName, i);
+			uniforms.put(uniformName, glGetUniformLocation(programId, uniformName));
 		}
 		stackPop();
 		launcher.getLogger().infof("Uniforms (%s): %n%s", count, uniforms);
