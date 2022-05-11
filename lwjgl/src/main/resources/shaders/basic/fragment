@@ -19,6 +19,12 @@ struct PointLight {
 	Attenuation att;
 };
 
+struct DirectionalLight {
+	vec3 color;
+	vec3 direction;
+	float intensity;
+};
+
 struct Material {
 	vec4 ambient;
 	vec4 diffuse;
@@ -34,6 +40,7 @@ uniform float specularPower;
 uniform Material material;
 uniform PointLight pointLight;
 uniform vec3 camera_pos;
+uniform DirectionalLight directionalLight;
 
 vec4 ambientC;
 vec4 diffuseC;

@@ -50,8 +50,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 //		LWJGLTexture texture = new LWJGLTexture(new ResourcePath("cube.png"));
 //		((MeshModel) model).mesh.setTexture(texture);
 		Random r = new Random(1);
-		int count = 10;
-		float density = 0.002F;
+		int count = 100;
+		float density = 0.02F;
 		float width = (float) Math.pow(count / density, 1D / 3D);
 		List<GameItem> items = new ArrayList<>();
 		for (int i = 0; i < count; i++) {

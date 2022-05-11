@@ -26,7 +26,7 @@ import gamelauncher.engine.util.logging.Logger;
 public abstract class GameLauncher {
 
 	public static final String NAME = "GameLauncher";
-	public static final int MAX_TPS = 120;
+	public static final int MAX_TPS = 240;
 	private final EventManager eventManager;
 	private final Logger logger;
 	private GameThread gameThread;

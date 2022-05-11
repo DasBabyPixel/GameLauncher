@@ -409,6 +409,8 @@ public class LWJGLWindow implements Window {
 		private void frame() {
 			shouldDrawLock.lock();
 			shouldDraw.set(false);
+			shouldDrawLock.unlock();
+			
 			if (viewportChanged.compareAndSet(true, false)) {
 				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
 				try {
@@ -446,8 +448,6 @@ public class LWJGLWindow implements Window {
 			}
 
 			drawPhaser.arrive();
-
-			shouldDrawLock.unlock();
 			if (hasContext.get()) {
 				frameCounter.frame();
 			} else {
