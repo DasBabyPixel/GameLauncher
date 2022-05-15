@@ -97,7 +97,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 		context.setProjection(new Transformations.Projection.Projection3D((float) Math.toRadians(70.0f), 0.01F, 1000F));
 
 		glEnable(GL_DEPTH_TEST);
-//		glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 //		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		launcher.getLogger().info("RenderEngine initialized");
 	}

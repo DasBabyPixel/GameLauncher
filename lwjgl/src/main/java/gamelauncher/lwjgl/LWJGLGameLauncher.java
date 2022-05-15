@@ -44,7 +44,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.renderLater(() -> {
 			glClearColor(.2F, .2F, .2F, .8F);
 		});
-		window.setRenderMode(RenderMode.ON_UPDATE);
+		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.createWindow();
 		window.startRendering();
 		AtomicBoolean boost = new AtomicBoolean(false);
@@ -116,7 +116,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 		});
 		window.getFrameCounter().ifPresent(fc -> {
-//			fc.limit(60);
+			fc.limit(60);
 			fc.addUpdateListener(fps -> {
 				getLogger().infof("FPS: %s", fps);
 			});
