@@ -62,6 +62,11 @@ public class LWJGLDrawContext implements DrawContext {
 		this.projectionMatrix = projectionMatrix;
 		this.viewMatrix = viewMatrix;
 		this.projection = projection;
+		try {
+			this.skybox = new ShaderProgram(this.shaderProgram.get().getLauncher());
+		} catch (GameException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	@Override
@@ -163,6 +168,7 @@ public class LWJGLDrawContext implements DrawContext {
 	DirectionalLight directionalLight = new DirectionalLight(
 					new Vector3f(1, 1, 1), new Vector3f(0, -1, 0), 1);
 	float lightAngle = 0;
+	ShaderProgram skybox;
 
 	@Override
 	public void update(Camera camera) throws GameException {

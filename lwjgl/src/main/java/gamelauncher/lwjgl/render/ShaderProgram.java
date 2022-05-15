@@ -106,6 +106,10 @@ public class ShaderProgram {
 	public boolean hasUniform(String uniformName) {
 		return uniforms.containsKey(uniformName);
 	}
+	
+	public GameLauncher getLauncher() {
+		return launcher;
+	}
 
 	private void setUniform(String uniformName, GameRunnable run) throws GameException {
 		if (!hasUniform(uniformName)) {
