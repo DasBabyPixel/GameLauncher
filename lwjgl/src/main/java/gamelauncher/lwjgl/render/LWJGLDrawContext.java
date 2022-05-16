@@ -62,11 +62,11 @@ public class LWJGLDrawContext implements DrawContext {
 		this.projectionMatrix = projectionMatrix;
 		this.viewMatrix = viewMatrix;
 		this.projection = projection;
-		try {
-			this.skybox = new ShaderProgram(this.shaderProgram.get().getLauncher());
-		} catch (GameException ex) {
-			ex.printStackTrace();
-		}
+//		try {
+//			this.skybox = new ShaderProgram(this.shaderProgram.get().getLauncher());
+//		} catch (GameException ex) {
+//			ex.printStackTrace();
+//		}
 	}
 
 	@Override
