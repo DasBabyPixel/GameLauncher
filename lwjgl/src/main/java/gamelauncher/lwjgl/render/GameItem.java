@@ -7,16 +7,20 @@ import gamelauncher.engine.render.Model;
 
 public class GameItem {
 
-	private final Model model;
+	protected Model model;
 	private final Vector3f position;
 	private final Vector3f scale;
 	private final Vector3f rotation;
 
-	public GameItem(Model model) {
-		this.model = model;
+	public GameItem() {
 		position = new Vector3f(0, 0, 0);
 		scale = new Vector3f(1, 1, 1);
 		rotation = new Vector3f(0, 0, 0);
+	}
+
+	public GameItem(Model model) {
+		this();
+		this.model = model;
 	}
 
 	public Vector3f getPosition() {
