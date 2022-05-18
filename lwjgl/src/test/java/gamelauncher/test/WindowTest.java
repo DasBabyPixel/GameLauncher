@@ -10,6 +10,7 @@ public class WindowTest {
 	public static void main(String[] args) {
 		glfwInit();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		long w = glfwCreateWindow(400, 400, "test", 0, 0);
 		glfwMakeContextCurrent(w);
 		GL.createCapabilities();
@@ -20,10 +21,12 @@ public class WindowTest {
 		GL11.glVertex2d(0.5, 0.7);
 		GL11.glEnd();
 		
-		glfwSwapBuffers(w);
-
 		glfwShowWindow(w);
+
+		glfwSwapBuffers(w);
+		
 		while (!glfwWindowShouldClose(w)) {
+			
 			glfwWaitEvents();
 			glfwPollEvents();
 		}

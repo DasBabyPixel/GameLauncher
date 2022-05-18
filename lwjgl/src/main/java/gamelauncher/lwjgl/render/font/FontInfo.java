@@ -41,7 +41,7 @@ public class FontInfo {
 		this.context = this.dummyGraphics.getFontRenderContext();
 	}
 
-	public void load(String text) {
+	public void load(String text) throws GameException {
 		for (char c : text.toCharArray()) {
 			CharacterReserveInfo ci = characters.get(c);
 			if (ci == null) {

@@ -132,8 +132,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 	public void renderFrame(Window window) throws GameException {
 		window.beginFrame();
 
-		System.out.println("Frame");
-		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Renderer renderer = this.renderer.get();
 		if (renderer != crenderer) {

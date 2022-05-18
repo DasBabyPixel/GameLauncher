@@ -118,6 +118,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 				LWJGLGameLauncher.this.stop();
 			}
 		});
+		window.swapBuffers.set(false);
 		window.getFrameCounter().ifPresent(fc -> {
 			fc.limit(60);
 			fc.addUpdateListener(fps -> {
@@ -125,9 +126,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 			});
 		});
 		window.scheduleDrawAndWaitForFrame();
-		window.show().thenAccept(v -> {
-//			window.scheduleDrawAndWaitForFrame();
-		});
+		window.swapBuffers.set(true);
+		window.showAndEndFrame();
 		window.setFloating(true);
 		window.setFloating(false);
 		mouseMovement(false);
@@ -144,6 +144,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 				glfwSetCursorPos(window.id.get(), window.width.get()
 								/ 2, window.height.get() / 2);
 			} else {
+				glfwSetCursorPos(window.id.get(), 0, 0);
 				ignoreNextMovement = true;
 			}
 		});

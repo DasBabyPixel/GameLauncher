@@ -66,6 +66,7 @@ public class LWJGLWindow implements Window {
 	private final LWJGLInput input = new LWJGLInput(this);
 	private final LWJGLCamera camera = new LWJGLCamera(this);
 	private final Phaser drawPhaser = new Phaser();
+	public final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(
 					new CloseCallback() {
 						@Override
@@ -151,7 +152,23 @@ public class LWJGLWindow implements Window {
 
 	@Override
 	public void endFrame() {
-		glfwSwapBuffers(id.get());
+		if (swapBuffers.get()) {
+			glfwSwapBuffers(id.get());
+		}
+	}
+
+	public CompletableFuture<Void> showAndEndFrame() {
+		return later(() -> {
+			RenderThread rt = renderThread.get();
+			if (rt != null) {
+				rt.bindContext();
+			}
+			glfwShowWindow(id.get());
+			if (rt != null) {
+				glfwSwapBuffers(id.get());
+				rt.releaseContext();
+			}
+		});
 	}
 
 	public boolean isDecorated() {
@@ -429,7 +446,6 @@ public class LWJGLWindow implements Window {
 
 			if (viewportChanged.compareAndSet(true, false)) {
 				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
-				System.out.println("viewport");
 				try {
 					context.reloadProjectionMatrix();
 				} catch (GameException ex) {
@@ -530,7 +546,6 @@ public class LWJGLWindow implements Window {
 			x.set(a0[0]);
 			y.set(a1[0]);
 			glfwGetFramebufferSize(id, a0, a1);
-			System.out.printf("%s %s%n", a0[0], a1[0]);
 			framebufferWidth.set(a0[0]);
 			framebufferHeight.set(a1[0]);
 
@@ -679,4 +694,5 @@ public class LWJGLWindow implements Window {
 	static {
 		glfwInit();
 	}
+
 }
