@@ -10,11 +10,10 @@ import static org.lwjgl.system.MemoryUtil.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.joml.Vector4f;
-
-import gamelauncher.engine.render.Model;
 
 public class Mesh {
 
@@ -23,16 +22,16 @@ public class Mesh {
 	private final List<Integer> vbos = new ArrayList<>();
 	private final int vaoId;
 	private final int vertexCount;
-//	private LWJGLTexture texture;
-//	private Vector4f color = emptyColor;
 	private final Material material = new Material();
 	private final int vaoSize;
+	private final int renderType;
 
-	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
+	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices, int renderType) {
 		vertexCount = indices.length;
+		this.renderType = renderType;
 
 		vaoId = glGenVertexArrays();
-		glBindVertexArray(vaoId);
+		GlStates.bindVertexArray(vaoId);
 
 		createBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices);
 
@@ -47,24 +46,12 @@ public class Mesh {
 
 		vaoSize = 3;
 
-		glBindVertexArray(0);
+		GlStates.bindVertexArray(0);
 	}
 
-//	public Vector4f getColor() {
-//		return color;
-//	}
-//
-//	public LWJGLTexture getTexture() {
-//		return texture;
-//	}
-//
-//	public void setColor(Vector4f color) {
-//		this.color = color == null ? emptyColor : color;
-//	}
-//
-//	public void setTexture(LWJGLTexture texture) {
-//		this.texture = texture;
-//	}
+	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
+		this(positions, textCoords, normals, indices, GL_TRIANGLES);
+	}
 
 	public Material getMaterial() {
 		return material;
@@ -84,7 +71,7 @@ public class Mesh {
 
 	private int createBuffer(int target) {
 		int id = glGenBuffers();
-		glBindBuffer(target, id);
+		GlStates.bindBuffer(target, id);
 		vbos.add(id);
 		return id;
 	}
@@ -105,19 +92,19 @@ public class Mesh {
 
 	public void render() {
 		if (material.texture != null) {
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
+			GlStates.activeTexture(GL_TEXTURE0);
+			GlStates.bindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
+//			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
-		glBindVertexArray(getVaoId());
+		GlStates.bindVertexArray(getVaoId());
 		for (int i = 0; i < vaoSize; i++) {
 			glEnableVertexAttribArray(i);
 		}
-		glDrawElements(GL_TRIANGLES, getVertexCount(), GL_UNSIGNED_INT, 0);
+		glDrawElements(this.renderType, getVertexCount(), GL_UNSIGNED_INT, 0);
 		for (int i = 0; i < vaoSize; i++) {
 			glDisableVertexAttribArray(i);
 		}
-		glBindVertexArray(0);
 	}
 
 	public int getVaoId() {
@@ -174,19 +161,19 @@ public class Mesh {
 			this.texture = texture;
 			this.reflectance = reflectance;
 		}
-	}
 
-	public static class MeshModel implements Model {
-		public final Mesh mesh;
-
-		public MeshModel(Mesh mesh) {
-			this.mesh = mesh;
-		}
-
-		@Override
-		public void cleanup() {
-			mesh.cleanup();
-		}
+		public static final Comparator<Material> COMPARATOR = new Comparator<Mesh.Material>() {
+			@Override
+			public int compare(Material o1, Material o2) {
+				if (o1.texture != null) {
+					if (o2.texture == null) {
+						return 1;
+					}
+					return Integer.compare(o1.texture.hashCode(), o2.texture.hashCode());
+				}
+				return 0;
+			}
+		};
 	}
 
 //	public boolean hasTexture() {

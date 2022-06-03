@@ -17,6 +17,7 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.file.EmbedPath;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 import gamelauncher.lwjgl.render.Mesh;
+import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 
 public class LWJGLModelLoader implements ModelLoader {
@@ -128,7 +129,7 @@ public class LWJGLModelLoader implements ModelLoader {
 				break;
 			}
 		}
-		return new Mesh.MeshModel(mesh);
+		return new MeshModel(mesh);
 	}
 
 	private static String hash(byte[] bytes) throws GameException {

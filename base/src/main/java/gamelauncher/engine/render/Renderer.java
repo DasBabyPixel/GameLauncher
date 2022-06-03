@@ -4,7 +4,7 @@ import gamelauncher.engine.GameException;
 
 public abstract class Renderer {
 
-	public abstract void render(Window window, DrawContext context) throws GameException;
+	public abstract void render(Window window) throws GameException;
 
 	@SuppressWarnings("unused")
 	public void init() throws GameException {

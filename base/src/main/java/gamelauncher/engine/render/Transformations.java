@@ -13,6 +13,10 @@ public interface Transformations {
 				this.zFar = zFar;
 			}
 		}
+		
+		public static class Projection2D implements Projection {
+			
+		}
 	}
 
 	public static interface View {

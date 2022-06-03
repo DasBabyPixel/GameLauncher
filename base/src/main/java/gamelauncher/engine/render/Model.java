@@ -1,7 +1,9 @@
 package gamelauncher.engine.render;
 
+import gamelauncher.engine.GameException;
+
 public interface Model {
 
-	void cleanup();
+	void cleanup() throws GameException;
 	
 }

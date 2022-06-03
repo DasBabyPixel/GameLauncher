@@ -447,7 +447,7 @@ public class LWJGLWindow implements Window {
 			if (viewportChanged.compareAndSet(true, false)) {
 				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
 				try {
-					context.reloadProjectionMatrix();
+					context.invalidateProjectionMatrix();
 				} catch (GameException ex) {
 					ex.printStackTrace();
 				}
@@ -473,7 +473,6 @@ public class LWJGLWindow implements Window {
 					}
 				}
 				try {
-					context.update(camera);
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (Exception ex) {
 					ex.printStackTrace();

@@ -97,13 +97,13 @@ vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal) {
 	vec3 from_light_dir  = -to_light_dir;
 	float spot_alfa = dot(from_light_dir, normalize(light.conedir));
 
-	vec4 colour = vec4(0, 0, 0, 0);
+	vec4 color = vec4(0, 0, 0, 0);
 
 	if ( spot_alfa > light.cutoff ) {
-		colour = calcPointLight(light.pl, position, normal);
-		colour *= (1.0 - (1.0 - spot_alfa)/(1.0 - light.cutoff));
+		color = calcPointLight(light.pl, position, normal);
+		color *= (1.0 - (1.0 - spot_alfa)/(1.0 - light.cutoff));
 	}
-	return colour;
+	return color;
 }
 
 vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal) {

@@ -24,6 +24,9 @@ public class EmbedPath extends AbstractPath {
 		if (path == null) {
 			return null;
 		}
+		if(path.startsWith(prefix)) {
+			return path;
+		}
 		return prefix + path;
 	}
 }

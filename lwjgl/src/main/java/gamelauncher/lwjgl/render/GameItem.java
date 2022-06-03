@@ -3,6 +3,7 @@ package gamelauncher.lwjgl.render;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Model;
 
 public class GameItem {
@@ -61,7 +62,7 @@ public class GameItem {
 		return model;
 	}
 
-	public void cleanup() {
+	public void cleanup() throws GameException {
 		model.cleanup();
 	}
 
@@ -81,7 +82,7 @@ public class GameItem {
 		}
 
 		@Override
-		public void cleanup() {
+		public void cleanup() throws GameException {
 			gameItem.cleanup();
 		}
 	}

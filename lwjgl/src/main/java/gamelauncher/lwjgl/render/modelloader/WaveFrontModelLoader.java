@@ -134,7 +134,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 			normals[i * 3 + 2] = v3f.z;
 			i++;
 		}
-		addRandomMinimals(vertices);
+//		addRandomMinimals(vertices);
 		List<Integer> indexList = new ArrayList<>();
 		for (Face face : faces) {
 			for (int groupId = 0; groupId < face.idxGroups.length; groupId++) {
@@ -162,13 +162,13 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 		}
 	}
 
-	private void addRandomMinimals(float[] a) {
+//	private void addRandomMinimals(float[] a) {
 //		for (int i = 0; i < a.length; i++) {
 //			float r = random.nextFloat() - 0.5F;
 //			r = r / 10000F;
 //			a[i] += r;
 //		}
-	}
+//	}
 
 	private static class Face {
 

@@ -106,7 +106,7 @@ public class ShaderProgram {
 	public boolean hasUniform(String uniformName) {
 		return uniforms.containsKey(uniformName);
 	}
-	
+
 	public GameLauncher getLauncher() {
 		return launcher;
 	}
@@ -181,16 +181,16 @@ public class ShaderProgram {
 			uniforms.put(uniformName, glGetUniformLocation(programId, uniformName));
 		}
 		stackPop();
-		launcher.getLogger().infof("Uniforms (%s): %n%s", count, uniforms);
+//		launcher.getLogger().infof("Uniforms (%s): %n%s", count, uniforms);
 
 	}
 
 	public void bind() {
-		glUseProgram(programId);
+		GlStates.useProgram(programId);
 	}
 
 	public void unbind() {
-		glUseProgram(0);
+		GlStates.useProgram(0);
 	}
 
 	public void cleanup() {

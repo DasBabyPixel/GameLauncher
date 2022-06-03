@@ -54,8 +54,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 			@Override
 			public void handleKeyboard(InputType inputType, int key) {
-				float moveSpeed = (float) (boost.get() ? 4.0 * this.moveSpeed
-								: this.moveSpeed);
+				float moveSpeed = (float) (boost.get() ? 4.0 * this.moveSpeed : this.moveSpeed);
 				if (inputType == InputType.HELD) {
 					if (key == GLFW_KEY_W) {
 						window.getCamera().movePosition(0, 0, -moveSpeed);
@@ -84,8 +83,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 
 			@Override
-			public void handleMouse(InputType inputType, int mouseButton,
-							double mouseX, double mouseY) {
+			public void handleMouse(InputType inputType, int mouseButton, double mouseX, double mouseY) {
 				if (inputType == InputType.SCROLL) {
 					if (mouseY != 0) {
 						float v = Math.pow(0.9F, Math.abs((float) mouseY));
@@ -103,8 +101,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 						boolean pin = !window.isFloating();
 						window.setFloating(pin);
 						window.setTitle(pin ? window.title.get() + " - pinned"
-										: window.title.get().substring(0, window.title.get().length()
-														- " - pinned".length()));
+								: window.title.get().substring(0, window.title.get().length() - " - pinned".length()));
 					}
 				}
 //				getLogger().infof("MouseEvent[%s %s %s %s]", inputType, mouseButton, mouseX, mouseY);
@@ -120,7 +117,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		});
 		window.swapBuffers.set(false);
 		window.getFrameCounter().ifPresent(fc -> {
-			fc.limit(60);
+//			fc.limit(60);
 			fc.addUpdateListener(fps -> {
 				getLogger().infof("FPS: %s", fps);
 			});
@@ -141,8 +138,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	private void mouseMovement(boolean movement) {
 		window.mouse.grabbed(movement).thenRun(() -> {
 			if (!movement) {
-				glfwSetCursorPos(window.id.get(), window.width.get()
-								/ 2, window.height.get() / 2);
+				glfwSetCursorPos(window.id.get(), window.width.get() / 2, window.height.get() / 2);
 			} else {
 				glfwSetCursorPos(window.id.get(), 0, 0);
 				ignoreNextMovement = true;
@@ -164,17 +160,14 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.getInput().handleInput();
 		mouse: if (mouseMovement) {
 			LWJGLCamera cam = window.getCamera();
-			float dy = (float) (window.mouse.getDeltaX() * 0.4)
-							* mouseSensivity;
-			float dx = (float) (window.mouse.getDeltaY() * 0.4)
-							* mouseSensivity;
+			float dy = (float) (window.mouse.getDeltaX() * 0.4) * mouseSensivity;
+			float dx = (float) (window.mouse.getDeltaY() * 0.4) * mouseSensivity;
 			if ((dx != 0 || dy != 0) && ignoreNextMovement) {
 				ignoreNextMovement = false;
 				break mouse;
 			}
 			Vector3f rot = cam.getRotation();
-			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y
-							+ dy, rot.z);
+			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
 		}
 	}
 }
