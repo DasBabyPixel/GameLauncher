@@ -13,8 +13,9 @@ import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameResource;
 
-public class LWJGLTexture {
+public class LWJGLTexture implements GameResource {
 
 	private final int textureId;
 
@@ -54,11 +55,29 @@ public class LWJGLTexture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	public LWJGLTexture() {
+		this(glGenTextures());
+	}
+
 	public LWJGLTexture(int textureId) {
 		this.textureId = textureId;
 	}
 
-	public void cleanup() {
+	public void allocate(int width, int height) {
+		bind();
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA16F, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+	}
+
+	public void bind() {
+		GlStates.bindTexture(GL_TEXTURE_2D, textureId);
+	}
+
+	public void unbind() {
+		GlStates.bindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	@Override
+	public void cleanup() throws GameException {
 		glDeleteTextures(textureId);
 	}
 

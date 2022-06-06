@@ -15,7 +15,7 @@ public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 	private final Random random = new Random(163478519);
 
 	@Override
-	public boolean addGlyph(int id, GlyphEntry glyph) {
+	public boolean addGlyph(int id, GlyphEntry glyph) throws GameException {
 		if (map.containsKey(id)) {
 			return true;
 		}
@@ -37,20 +37,20 @@ public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 	}
 
 	@Override
-	public void removeGlyph(int id) {
+	public void removeGlyph(int id) throws GameException {
 		DynamicSizeTextureAtlas a = map.remove(id);
 		a.removeGlyph(id);
 		if (a.isEmpty()) {
 			atlases.remove(a);
-			a.delete();
+			a.cleanup();
 		}
 		super.removeGlyph(id);
 	}
 
-	@SuppressWarnings("unused")
+	@Override
 	public void cleanup() throws GameException {
 		for (DynamicSizeTextureAtlas atlas : atlases) {
-			atlas.delete();
+			atlas.cleanup();
 		}
 	}
 }

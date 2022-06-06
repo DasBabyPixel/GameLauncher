@@ -2,7 +2,7 @@ package gamelauncher.lwjgl.render.model;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.lwjgl.render.Mesh;
-import gamelauncher.lwjgl.render.ShaderProgram;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class MeshArrayModel implements MeshLikeModel {
 
@@ -13,7 +13,7 @@ public class MeshArrayModel implements MeshLikeModel {
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup() throws GameException {
 		for (Mesh mesh : meshes) {
 			mesh.cleanup();
 		}

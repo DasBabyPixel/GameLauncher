@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.render.shader;
 
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.system.MemoryStack.*;
@@ -16,11 +16,13 @@ import org.lwjgl.system.MemoryStack;
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.GameThread.GameRunnable;
+import gamelauncher.engine.util.GameResource;
+import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.Mesh.Material;
 import gamelauncher.lwjgl.render.light.DirectionalLight;
 import gamelauncher.lwjgl.render.light.PointLight;
 
-public class ShaderProgram {
+public class ShaderProgram implements GameResource {
 
 	private final int programId;
 
@@ -33,8 +35,8 @@ public class ShaderProgram {
 	public ShaderProgram(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
 		this.uniforms = new HashMap<>();
-		programId = glCreateProgram();
-		if (programId == 0) {
+		this.programId = glCreateProgram();
+		if (this.programId == 0) {
 			throw new GameException("Could not create Shader");
 		}
 	}
@@ -193,6 +195,7 @@ public class ShaderProgram {
 		GlStates.useProgram(0);
 	}
 
+	@Override
 	public void cleanup() {
 		unbind();
 		if (programId != 0) {

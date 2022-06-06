@@ -10,6 +10,10 @@ public interface Window {
 
 	DrawContext getContext();
 	
+	int getFramebufferWidth();
+	
+	int getFramebufferHeight();
+	
 	Input getInput();
 	
 	void setFrameRenderer(FrameRenderer renderer);

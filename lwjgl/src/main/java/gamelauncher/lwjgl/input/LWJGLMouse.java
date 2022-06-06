@@ -1,10 +1,12 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.input;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import gamelauncher.lwjgl.render.LWJGLWindow;
 
 public class LWJGLMouse {
 

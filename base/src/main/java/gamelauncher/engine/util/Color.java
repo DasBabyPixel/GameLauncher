@@ -16,4 +16,8 @@ public class Color {
 		this.b = b;
 		this.a = a;
 	}
+
+	public Color withAlpha(float alpha) {
+		return new Color(r, g, b, alpha);
+	}
 }

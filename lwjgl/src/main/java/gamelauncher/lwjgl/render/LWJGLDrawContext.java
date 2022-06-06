@@ -20,7 +20,9 @@ import gamelauncher.engine.util.GameConsumer;
 import gamelauncher.lwjgl.render.GameItem.GameItemModel;
 import gamelauncher.lwjgl.render.light.DirectionalLight;
 import gamelauncher.lwjgl.render.light.PointLight;
+import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
 import gamelauncher.lwjgl.render.model.MeshLikeModel;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class LWJGLDrawContext implements DrawContext {
 
@@ -120,10 +122,12 @@ public class LWJGLDrawContext implements DrawContext {
 		}
 		if (projection instanceof Transformations.Projection.Projection3D) {
 			Transformations.Projection.Projection3D p3d = (Transformations.Projection.Projection3D) projection;
-			float aspectRatio = (float) window.framebufferWidth.get() / (float) window.framebufferHeight.get();
+			float aspectRatio = (float) window.getFramebufferWidth() / (float) window.getFramebufferHeight();
 			projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
-			projectionMatrix.setOrtho2D(0, window.framebufferWidth.get(), 0, window.framebufferHeight.get());
+			projectionMatrix.identity();
+			projectionMatrix.ortho(0, window.getFramebufferWidth(), 0, window.getFramebufferHeight(), -10000, 10000);
+//			projectionMatrix.setOrtho2D(0, window.framebufferWidth.get(), 0, window.framebufferHeight.get());
 		}
 	}
 
@@ -137,18 +141,24 @@ public class LWJGLDrawContext implements DrawContext {
 	public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
 			double sy, double sz) throws GameException {
 		modelMatrix.identity();
-		pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz);
+		pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, new Vector4f(1, 1, 1, 1));
 	}
 
 	private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
-			double sy, double sz) throws GameException {
-		if (model instanceof MeshLikeModel) {
-			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
-			drawMesh((MeshLikeModel) model);
-		} else if (model instanceof GameItemModel) {
+			double sy, double sz, Vector4f colorMultiplier) throws GameException {
+		if (model instanceof ColorMultiplierModel) {
+			colorMultiplier.mul(((ColorMultiplierModel) model).getColor());
+		}
+		if (model instanceof GameItemModel) {
 			GameItem item = ((GameItemModel) model).gameItem;
 			item.applyToTransformationMatrix(modelMatrix);
-			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz);
+			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier);
+		} else if (model instanceof MeshLikeModel) {
+			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
+			drawMesh((MeshLikeModel) model, colorMultiplier);
+		} else {
+			throw new GameException(
+					"Cant Draw Model: " + model.toString() + " (Class: " + model.getClass().getName() + ")");
 		}
 	}
 
@@ -189,7 +199,7 @@ public class LWJGLDrawContext implements DrawContext {
 		drawModel(model, x, y, z, 0, 0, 0);
 	}
 
-	private void drawMesh(MeshLikeModel model) throws GameException {
+	private void drawMesh(MeshLikeModel model, Vector4f colorMultiplier) throws GameException {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
 		shaderProgram.setUniform("modelMatrix", modelMatrix);
@@ -197,6 +207,7 @@ public class LWJGLDrawContext implements DrawContext {
 			viewMatrix.mul(modelMatrix, tempMatrix4f);
 			shaderProgram.setUniform("modelViewMatrix", tempMatrix4f);
 		}
+		shaderProgram.setUniform("color", colorMultiplier);
 		model.render(shaderProgram);
 	}
 

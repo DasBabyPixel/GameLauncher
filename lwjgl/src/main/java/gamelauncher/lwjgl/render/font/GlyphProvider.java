@@ -33,8 +33,9 @@ import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Model;
 import gamelauncher.engine.util.Color;
 import gamelauncher.lwjgl.render.GlStates;
-import gamelauncher.lwjgl.render.ShaderProgram;
+import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
 import gamelauncher.lwjgl.render.model.MeshLikeModel;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class GlyphProvider {
 
@@ -73,6 +74,8 @@ public class GlyphProvider {
 		Set<GlyphsMesh> meshes = new HashSet<>();
 
 		float xpos = 0;
+		float z = 0;
+//		float zincrease = -0.1F;
 		for (Entry<DynamicSizeTextureAtlas, List<GlyphEntry>> entry : entries.entrySet()) {
 
 			List<IndexGroup> groups = new ArrayList<>();
@@ -101,10 +104,15 @@ public class GlyphProvider {
 				float pl = xpos + e.glyphData.bearingX;
 				float pr = pl + e.glyphData.width;
 
-				Vector3f vtl = new Vector3f(pl, pt, 0);
-				Vector3f vtr = new Vector3f(pr, pt, 0);
-				Vector3f vbl = new Vector3f(pl, pb, 0);
-				Vector3f vbr = new Vector3f(pr, pb, 0);
+				Vector3f vtl = new Vector3f(pl, pt, z);
+				Vector3f vtr = new Vector3f(pr, pt, z);
+				Vector3f vbl = new Vector3f(pl, pb, z);
+				Vector3f vbr = new Vector3f(pr, pb, z);
+
+//				z += zincrease;
+
+				System.out.println(Character.getName(e.key.codepoint));
+
 				Vector2f ttl = new Vector2f(tl, tt);
 				Vector2f ttr = new Vector2f(tr, tt);
 				Vector2f tbl = new Vector2f(tl, tb);
@@ -202,7 +210,11 @@ public class GlyphProvider {
 		}
 	}
 
-	public class GlyphsMesh implements MeshLikeModel {
+	public class GlyphsMesh implements MeshLikeModel, ColorMultiplierModel {
+
+		private final Color textureAddColor = Color.white.withAlpha(0F);
+		private final Vector4f vectorTextureAddColor = new Vector4f(textureAddColor.r, textureAddColor.g,
+				textureAddColor.g, textureAddColor.a);
 
 		private final int vao;
 		private final int posbuffer;
@@ -247,13 +259,18 @@ public class GlyphProvider {
 			glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 		}
+		
+		@Override
+		public Vector4f getColor() {
+			return color;
+		}
 
 		@Override
 		public void render(ShaderProgram program) throws GameException {
 			GlStates.activeTexture(GL_TEXTURE0);
 			GlStates.bindTexture(GL_TEXTURE_2D, texture.getTexture().getTextureId());
 
-			program.setUniform("color", color);
+			program.setUniform("textureAddColor", vectorTextureAddColor);
 
 			GlStates.bindVertexArray(vao);
 			glEnableVertexAttribArray(0);
@@ -261,6 +278,8 @@ public class GlyphProvider {
 			glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 			glDisableVertexAttribArray(0);
 			glDisableVertexAttribArray(1);
+			
+			program.setUniform("textureAddColor", new Vector4f());
 		}
 
 		@Override
@@ -311,7 +330,7 @@ public class GlyphProvider {
 		return e;
 	}
 
-	private void releaseGlyphKey(GlyphKey key) {
+	private void releaseGlyphKey(GlyphKey key) throws GameException {
 		if (key.required.decrementAndGet() == 0) {
 			entries.remove(key);
 			textures.removeGlyph(getId(key));

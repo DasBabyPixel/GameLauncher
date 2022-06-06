@@ -29,13 +29,13 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	private final int maxSize;
 	private final GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix;
 
-	public DynamicSizeTextureAtlas(int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix) {
+	public DynamicSizeTextureAtlas(int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix) throws GameException {
 		this.fileSuffixAppendix = fileSuffixAppendix;
 		maxSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
 		resizeTexture(initialSize);
 	}
 
-	private void resizeTexture(int newSize) {
+	private void resizeTexture(int newSize) throws GameException {
 		lock.lock();
 		int id = glGenTextures();
 		GlStates.bindTexture(GL_TEXTURE_2D, id);
@@ -54,7 +54,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	}
 
 	@Override
-	public boolean addGlyph(int id, GlyphEntry glyph) {
+	public boolean addGlyph(int id, GlyphEntry glyph) throws GameException {
 		Rectangle rect = new Rectangle(glyph.glyphData.width, glyph.glyphData.height);
 		while (true) {
 			boolean suc = findFit(rect);
@@ -100,7 +100,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		return pixels;
 	}
 
-	public void delete() {
+	@Override
+	public void cleanup() throws GameException {
 
 		ByteBuffer pixels = getBufferedImageBuffer();
 		new Thread(() -> {
@@ -126,7 +127,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		texture.cleanup();
 	}
 
-	private boolean scaleUp() {
+	private boolean scaleUp() throws GameException {
 		lock.lock();
 		int newSize = size * 2;
 		if (newSize > maxSize) {
@@ -180,7 +181,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	}
 
 	@Override
-	public void removeGlyph(int id) {
+	public void removeGlyph(int id) throws GameException {
 		glyphBounds.remove(id);
 		super.removeGlyph(id);
 	}

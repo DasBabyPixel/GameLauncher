@@ -14,10 +14,10 @@ import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.Math;
 import gamelauncher.lwjgl.file.EmbedFileSystem;
 import gamelauncher.lwjgl.file.LWJGLFileSystem;
+import gamelauncher.lwjgl.input.LWJGLInput.InputType;
+import gamelauncher.lwjgl.input.LWJGLInput.Listener;
 import gamelauncher.lwjgl.render.LWJGLCamera;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLInput.InputType;
-import gamelauncher.lwjgl.render.LWJGLInput.Listener;
 import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
@@ -44,7 +44,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.renderLater(() -> {
 			glClearColor(.2F, .2F, .2F, .8F);
 		});
-		window.setRenderMode(RenderMode.ON_UPDATE);
+		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.createWindow();
 		window.startRendering();
 		AtomicBoolean boost = new AtomicBoolean(false);
@@ -54,7 +54,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 			@Override
 			public void handleKeyboard(InputType inputType, int key) {
-				float moveSpeed = (float) (boost.get() ? 4.0 * this.moveSpeed : this.moveSpeed);
+				float moveSpeed = (float) (boost.get() ? 200.0 * this.moveSpeed : this.moveSpeed);
 				if (inputType == InputType.HELD) {
 					if (key == GLFW_KEY_W) {
 						window.getCamera().movePosition(0, 0, -moveSpeed);
@@ -116,6 +116,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 		});
 		window.swapBuffers.set(false);
+//		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.getFrameCounter().ifPresent(fc -> {
 //			fc.limit(60);
 			fc.addUpdateListener(fps -> {
@@ -153,10 +154,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick() {
-//		double speed = 30D / MAX_TPS;
-//		LWJGLGameRenderer.rx += 1 * speed;
-//		LWJGLGameRenderer.ry += 1.3 * speed;
-//		LWJGLGameRenderer.rz += 0.6 * speed;
 		window.getInput().handleInput();
 		mouse: if (mouseMovement) {
 			LWJGLCamera cam = window.getCamera();

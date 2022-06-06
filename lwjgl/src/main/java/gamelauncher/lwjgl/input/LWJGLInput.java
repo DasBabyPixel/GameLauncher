@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.input;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import gamelauncher.engine.input.Input;
+import gamelauncher.lwjgl.render.LWJGLWindow;
 
 public class LWJGLInput implements Input {
 

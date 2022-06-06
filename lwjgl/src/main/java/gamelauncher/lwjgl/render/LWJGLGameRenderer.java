@@ -17,6 +17,8 @@ import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.lwjgl.render.font.Font;
 import gamelauncher.lwjgl.render.font.GlyphProvider;
+import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
@@ -32,6 +34,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	private LWJGLDrawContext contexthud;
 	private ShaderProgram shader3d;
 	private LWJGLDrawContext context3d;
+	private BasicFramebuffer mainFramebuffer;
 //	private GameItem item;
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
@@ -58,12 +61,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 		Font font = new Font(launcher.getResourceLoader()
 				.getResource(launcher.getEmbedFileSystem().getPath("fonts").resolve("cinzel_regular.ttf"))
 				.newResourceStream());
-		long millis = System.currentTimeMillis();
-		model = gprovider.loadStaticModel(font, "AVtqe y", 500);
-		System.out.println(System.currentTimeMillis() - millis);
+		model = gprovider.loadStaticModel(font, "TestQr+", 500);
 
 		GameItem ii = new GameItem(model);
 		ii.setPosition(30, 100, 0);
+		ii.setRotation(90, 0, 0);
 		models.add(new GameItem.GameItemModel(ii));
 
 		hud.add(new GameItem.GameItemModel(ii));
@@ -98,19 +100,19 @@ public class LWJGLGameRenderer implements GameRenderer {
 		context3d = context.duplicate();
 		context3d.setProgram(shader3d);
 		context3d.setProjection(
-				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0F), 0.01F, 1000F));
+				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0F), 0.01F, 10000F));
 
 		contexthud = context.duplicate();
 		contexthud.setProgram(shaderhud);
 		contexthud.setProjection(new Transformations.Projection.Projection2D());
 
 		glEnable(GL_DEPTH_TEST);
-//		glEnable(GL_CULL_FACE);
+		glDepthFunc(GL_LEQUAL);
 		glEnable(GL_BLEND);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		mainFramebuffer = new BasicFramebuffer(window.getFramebufferWidth(), window.getFramebufferHeight());
+
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
@@ -123,21 +125,13 @@ public class LWJGLGameRenderer implements GameRenderer {
 		gprovider.cleanup();
 		shader3d.cleanup();
 		shaderhud.cleanup();
+		mainFramebuffer.cleanup();
 		launcher.getLogger().info("RenderEngine cleaned up");
 	}
 
-	private void cleanup(Renderer renderer) throws GameException {
-		if (renderer == null) {
-			return;
-		}
-		renderer.close();
-	}
-
-	private void init(Renderer renderer) throws GameException {
-		if (renderer == null) {
-			return;
-		}
-		renderer.init();
+	@Override
+	public void windowSizeChanged(Window window) throws GameException {
+		mainFramebuffer.resize(window.getFramebufferWidth(), window.getFramebufferHeight());
 	}
 
 	@Override
@@ -157,9 +151,24 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		Camera camera = ((LWJGLWindow) window).getCamera();
 		render3d(camera);
+		glClear(GL_DEPTH_BUFFER_BIT);
 		renderHud(camera);
 
 		window.endFrame();
+	}
+
+	private void cleanup(Renderer renderer) throws GameException {
+		if (renderer == null) {
+			return;
+		}
+		renderer.close();
+	}
+
+	private void init(Renderer renderer) throws GameException {
+		if (renderer == null) {
+			return;
+		}
+		renderer.init();
 	}
 
 	private void render3d(Camera camera) throws GameException {

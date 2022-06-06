@@ -47,6 +47,8 @@ uniform Material material;
 uniform PointLight pointLight;
 uniform vec3 camera_pos;
 uniform DirectionalLight directionalLight;
+uniform vec4 color;
+uniform vec4 textureAddColor;
 
 vec4 ambientC;
 vec4 diffuseC;
@@ -54,7 +56,7 @@ vec4 speculrC;
 
 void setupColors(Material material, vec2 textCoord) {
 	if (material.hasTexture == 1) {
-		ambientC = texture(texture_sampler, textCoord);
+		ambientC = textureAddColor + texture(texture_sampler, textCoord);
 		diffuseC = ambientC;
 		speculrC = ambientC;
 	} else {
@@ -97,13 +99,13 @@ vec4 calcSpotLight(SpotLight light, vec3 position, vec3 normal) {
 	vec3 from_light_dir  = -to_light_dir;
 	float spot_alfa = dot(from_light_dir, normalize(light.conedir));
 
-	vec4 color = vec4(0, 0, 0, 0);
+	vec4 vcolor = vec4(0, 0, 0, 0);
 
 	if ( spot_alfa > light.cutoff ) {
-		color = calcPointLight(light.pl, position, normal);
-		color *= (1.0 - (1.0 - spot_alfa)/(1.0 - light.cutoff));
+		vcolor = calcPointLight(light.pl, position, normal);
+		vcolor *= (1.0 - (1.0 - spot_alfa)/(1.0 - light.cutoff));
 	}
-	return color;
+	return vcolor;
 }
 
 vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal) {
@@ -114,5 +116,10 @@ void main() {
 	setupColors(material, outTexCoord);
 	vec4 diffuseSpecularComp = calcDirectionalLight(directionalLight, mvVertexPos, mvVertexNormal);
 	diffuseSpecularComp += calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
-	fragColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
+	vec4 fColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
+	
+	//if(fColor.w == 0) {
+	//	discard;
+	//}
+	fragColor = color * fColor;
 }

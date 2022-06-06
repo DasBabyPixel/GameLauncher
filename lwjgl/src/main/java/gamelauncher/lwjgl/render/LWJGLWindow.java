@@ -35,14 +35,16 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
+import gamelauncher.lwjgl.input.LWJGLInput;
+import gamelauncher.lwjgl.input.LWJGLMouse;
 
 public class LWJGLWindow implements Window {
 
 	public final AtomicLong id = new AtomicLong();
 	public final AtomicInteger width = new AtomicInteger();
 	public final AtomicInteger height = new AtomicInteger();
-	public final AtomicInteger framebufferWidth = new AtomicInteger();
-	public final AtomicInteger framebufferHeight = new AtomicInteger();
+	private final AtomicInteger framebufferWidth = new AtomicInteger();
+	private final AtomicInteger framebufferHeight = new AtomicInteger();
 	public final AtomicInteger x = new AtomicInteger();
 	public final AtomicInteger y = new AtomicInteger();
 	public final AtomicReference<String> title = new AtomicReference<>();
@@ -135,6 +137,16 @@ public class LWJGLWindow implements Window {
 		return f;
 	}
 
+	@Override
+	public int getFramebufferHeight() {
+		return framebufferHeight.get();
+	}
+	
+	@Override
+	public int getFramebufferWidth() {
+		return framebufferWidth.get();
+	}
+	
 	public boolean isClosed() {
 		WindowThread t = windowThread.get();
 		if (t == null)
@@ -444,15 +456,6 @@ public class LWJGLWindow implements Window {
 			shouldDraw.set(false);
 			shouldDrawLock.unlock();
 
-			if (viewportChanged.compareAndSet(true, false)) {
-				glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
-				try {
-					context.invalidateProjectionMatrix();
-				} catch (GameException ex) {
-					ex.printStackTrace();
-				}
-//				context.setProjectionMatrix(new Projection.Projection3D(FOV, 0.01, 1000));
-			}
 			FrameRenderer fr = frameRenderer.get();
 			if (fr != null) {
 				if (lastFrameRenderer != fr) {
@@ -472,6 +475,17 @@ public class LWJGLWindow implements Window {
 						}
 					}
 				}
+
+				if (viewportChanged.compareAndSet(true, false)) {
+					glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
+					try {
+						fr.windowSizeChanged(LWJGLWindow.this);
+						context.invalidateProjectionMatrix();
+					} catch (GameException ex) {
+						ex.printStackTrace();
+					}
+				}
+				
 				try {
 					fr.renderFrame(LWJGLWindow.this);
 				} catch (Exception ex) {

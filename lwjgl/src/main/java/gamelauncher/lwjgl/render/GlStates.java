@@ -15,9 +15,27 @@ public class GlStates {
 
 	private static final Map<Integer, Integer> bindTexture = new ConcurrentHashMap<>();
 	private static final Map<Integer, Integer> bindBuffer = new ConcurrentHashMap<>();
+	private static final Map<Integer, Integer> bindFramebuffer = new ConcurrentHashMap<>();
+	private static final Map<Integer, Integer> bindRenderbuffer = new ConcurrentHashMap<>();
 	private static final Collection<Integer> activeTexture = ConcurrentHashMap.newKeySet();
 	private static final AtomicInteger bindVertexArray = new AtomicInteger();
 	private static final AtomicInteger useProgram = new AtomicInteger();
+
+	public static void bindFramebuffer(int target, int framebuffer) {
+		if (bindFramebuffer.put(target, framebuffer) != Integer.valueOf(framebuffer)) {
+			glBindFramebuffer(target, framebuffer);
+		}
+	}
+	
+	public static void deleteTextures(int texture) {
+		
+	}
+
+	public static void bindRenderbuffer(int target, int renderbuffer) {
+		if (bindRenderbuffer.put(target, renderbuffer) != Integer.valueOf(renderbuffer)) {
+			glBindRenderbuffer(target, renderbuffer);
+		}
+	}
 
 	public static void bindVertexArray(int vao) {
 		if (bindVertexArray.getAndSet(vao) != vao) {

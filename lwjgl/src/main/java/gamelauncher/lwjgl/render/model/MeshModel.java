@@ -2,7 +2,7 @@ package gamelauncher.lwjgl.render.model;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.lwjgl.render.Mesh;
-import gamelauncher.lwjgl.render.ShaderProgram;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class MeshModel implements MeshLikeModel {
 
@@ -19,8 +19,9 @@ public class MeshModel implements MeshLikeModel {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
-		if (mesh.getMaterial() != null)
+		if (mesh.getMaterial() != null) {
 			program.setUniform("material", mesh.getMaterial());
+		}
 		mesh.render();
 	}
 }

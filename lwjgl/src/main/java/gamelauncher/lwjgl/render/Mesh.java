@@ -15,7 +15,10 @@ import java.util.List;
 
 import org.joml.Vector4f;
 
-public class Mesh {
+import gamelauncher.engine.GameException;
+import gamelauncher.engine.util.GameResource;
+
+public class Mesh implements GameResource {
 
 	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);
 
@@ -115,7 +118,8 @@ public class Mesh {
 		return vertexCount;
 	}
 
-	public void cleanup() {
+	@Override
+	public void cleanup() throws GameException {
 		// Delete the VBOs
 		for (int vbo : vbos) {
 			glDeleteBuffers(vbo);
