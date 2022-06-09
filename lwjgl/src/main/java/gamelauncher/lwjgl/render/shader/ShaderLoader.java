@@ -28,7 +28,6 @@ public class ShaderLoader {
 			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream().readUTF8FullyClose();
 			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
 			ShaderProgram program = new ShaderProgram(launcher);
-			
 		} catch (JsonSyntaxException ex) {
 			throw new GameException("Invalid Json File", ex);
 		}
