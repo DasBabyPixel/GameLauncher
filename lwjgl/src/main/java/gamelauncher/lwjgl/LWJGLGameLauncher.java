@@ -44,7 +44,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.renderLater(() -> {
 			glClearColor(.2F, .2F, .2F, .8F);
 		});
-		window.setRenderMode(RenderMode.CONTINUOUSLY);
+		window.setRenderMode(RenderMode.ON_UPDATE);
 		window.createWindow();
 		window.startRendering();
 		AtomicBoolean boost = new AtomicBoolean(false);
@@ -54,7 +54,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 			@Override
 			public void handleKeyboard(InputType inputType, int key) {
-				float moveSpeed = (float) (boost.get() ? 200.0 * this.moveSpeed : this.moveSpeed);
+				float moveSpeed = (float) (boost.get() ? 2.0 * this.moveSpeed : this.moveSpeed);
 				if (inputType == InputType.HELD) {
 					if (key == GLFW_KEY_W) {
 						window.getCamera().movePosition(0, 0, -moveSpeed);

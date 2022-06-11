@@ -97,6 +97,7 @@ public class Mesh implements GameResource {
 		if (material.texture != null) {
 			GlStates.activeTexture(GL_TEXTURE0);
 			GlStates.bindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
+			System.out.println("bind");
 //			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
