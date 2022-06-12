@@ -20,8 +20,9 @@ public class MeshModel implements MeshLikeModel {
 	@Override
 	public void render(ShaderProgram program) throws GameException {
 		if (mesh.getMaterial() != null) {
-			program.setUniform("material", mesh.getMaterial());
+			program.umaterial.set(mesh.getMaterial());
 		}
+		program.uploadUniforms();
 		mesh.render();
 	}
 }

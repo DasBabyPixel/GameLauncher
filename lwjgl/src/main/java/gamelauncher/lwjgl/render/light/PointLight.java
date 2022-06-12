@@ -2,7 +2,10 @@ package gamelauncher.lwjgl.render.light;
 
 import org.joml.Vector3f;
 
-public class PointLight {
+import gamelauncher.lwjgl.render.shader.ProgramObject;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
+
+public class PointLight implements ProgramObject {
 
 	public Vector3f color;
 	public Vector3f position;
@@ -25,7 +28,15 @@ public class PointLight {
 		this(new Vector3f(pointLight.color), new Vector3f(pointLight.position), pointLight.intensity, pointLight.att);
 	}
 
-	public static class Attenuation {
+	@Override
+	public void upload(ShaderProgram program, String name) {
+		program.uniformMap.get(name + ".color").set(color).upload();
+		program.uniformMap.get(name + ".position").set(position).upload();
+		program.uniformMap.get(name + ".intensity").set(intensity).upload();
+		program.uniformMap.get(name + ".att").set(att).upload();
+	}
+
+	public static class Attenuation implements ProgramObject {
 		public float constant;
 		public float linear;
 		public float exponent;
@@ -39,5 +50,11 @@ public class PointLight {
 			this.exponent = exponent;
 		}
 
+		@Override
+		public void upload(ShaderProgram program, String name) {
+			program.uniformMap.get(name + ".constant").set(constant).upload();
+			program.uniformMap.get(name + ".linear").set(linear).upload();
+			program.uniformMap.get(name + ".exponent").set(exponent).upload();
+		}
 	}
 }

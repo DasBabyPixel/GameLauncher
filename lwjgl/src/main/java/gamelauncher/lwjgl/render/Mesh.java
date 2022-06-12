@@ -17,6 +17,8 @@ import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.util.GameResource;
+import gamelauncher.lwjgl.render.shader.ProgramObject;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class Mesh implements GameResource {
 
@@ -97,7 +99,6 @@ public class Mesh implements GameResource {
 		if (material.texture != null) {
 			GlStates.activeTexture(GL_TEXTURE0);
 			GlStates.bindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
-			System.out.println("bind");
 //			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
@@ -130,7 +131,7 @@ public class Mesh implements GameResource {
 		glDeleteVertexArrays(vaoId);
 	}
 
-	public static class Material {
+	public static class Material implements ProgramObject {
 		private static final Vector4f DEFAULT_COLOUR = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 		public Vector4f ambientColour;
 		public Vector4f diffuseColour;
@@ -165,6 +166,15 @@ public class Mesh implements GameResource {
 			this.specularColour = specularColour;
 			this.texture = texture;
 			this.reflectance = reflectance;
+		}
+
+		@Override
+		public void upload(ShaderProgram program, String name) {
+			program.uniformMap.get(name + ".ambient").set(ambientColour).upload();
+			program.uniformMap.get(name + ".diffuse").set(diffuseColour).upload();
+			program.uniformMap.get(name + ".specular").set(specularColour).upload();
+			program.uniformMap.get(name + ".reflectance").set(reflectance).upload();
+			program.uniformMap.get(name + ".hasTexture").set(texture == null ? 0 : 1).upload();
 		}
 
 		public static final Comparator<Material> COMPARATOR = new Comparator<Mesh.Material>() {

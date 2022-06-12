@@ -1,0 +1,11 @@
+{
+	"vertexShader": "vertex",
+	"fragmentShader": "fragment",
+	"uniforms": {
+		"modelMatrix": "mat4",
+		"projectionMatrix": "mat4",
+		"texture_sampler": "sampler2D",
+		"color": "vec4",
+		"textureAddColor": "vec4"
+	}
+}

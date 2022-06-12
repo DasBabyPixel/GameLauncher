@@ -18,6 +18,7 @@ import gamelauncher.engine.render.Window;
 import gamelauncher.lwjgl.render.font.Font;
 import gamelauncher.lwjgl.render.font.GlyphProvider;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
+import gamelauncher.lwjgl.render.shader.ShaderLoader;
 import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class LWJGLGameRenderer implements GameRenderer {
@@ -56,6 +57,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 		launcher.getLogger().info("Initializing RenderEngine");
 		Model model = launcher.getModelLoader()
 				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("cube.obj")));
+//		GameItem g1 = new GameItem(model);
+//		g1.setPosition(-2, 0, 0);
+//		models.add(new GameItem.GameItemModel(g1));
 		models.add(model);
 		gprovider = new GlyphProvider();
 		Font font = new Font(launcher.getResourceLoader()
@@ -66,35 +70,40 @@ public class LWJGLGameRenderer implements GameRenderer {
 		GameItem ii = new GameItem(model);
 		ii.setPosition(30, 100, 0);
 		ii.setRotation(90, 0, 0);
-		models.add(new GameItem.GameItemModel(ii));
+		GameItem modelg = new GameItem(model);
+		modelg.setPosition(2, 0, 0);
+		modelg.setScale(.001F);
+//		models.add(new GameItem.GameItemModel(modelg));
 
 		hud.add(new GameItem.GameItemModel(ii));
 
-		shader3d = new ShaderProgram(launcher);
-		shader3d.createVertexShader(launcher.getResourceLoader()
-				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/vertex"))
-				.newResourceStream()
-				.readUTF8FullyClose());
-		shader3d.createFragmentShader(launcher.getResourceLoader()
-				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/fragment"))
-				.newResourceStream()
-				.readUTF8FullyClose());
-		shader3d.link();
-		shader3d.deleteVertexShader();
-		shader3d.deleteFragmentShader();
+//		shader3d = new ShaderProgram(launcher);
+//		shader3d.createVertexShader(launcher.getResourceLoader()
+//				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/vertex"))
+//				.newResourceStream()
+//				.readUTF8FullyClose());
+//		shader3d.createFragmentShader(launcher.getResourceLoader()
+//				.getResource(launcher.getEmbedFileSystem().getPath("shaders/basic/fragment"))
+//				.newResourceStream()
+//				.readUTF8FullyClose());
+//		shader3d.link();
+//		shader3d.deleteVertexShader();
+//		shader3d.deleteFragmentShader();
+		shader3d = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/basic/basic.json"));
 
-		shaderhud = new ShaderProgram(launcher);
-		shaderhud.createVertexShader(launcher.getResourceLoader()
-				.getResource(launcher.getEmbedFileSystem().getPath("shaders/hud/vertex"))
-				.newResourceStream()
-				.readUTF8FullyClose());
-		shaderhud.createFragmentShader(launcher.getResourceLoader()
-				.getResource(launcher.getEmbedFileSystem().getPath("shaders/hud/fragment"))
-				.newResourceStream()
-				.readUTF8FullyClose());
-		shaderhud.link();
-		shaderhud.deleteVertexShader();
-		shaderhud.deleteFragmentShader();
+		shaderhud = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/hud/hud.json"));
+//		shaderhud = new ShaderProgram(launcher);
+//		shaderhud.createVertexShader(launcher.getResourceLoader()
+//				.getResource(launcher.getEmbedFileSystem().getPath("shaders/hud/vertex"))
+//				.newResourceStream()
+//				.readUTF8FullyClose());
+//		shaderhud.createFragmentShader(launcher.getResourceLoader()
+//				.getResource(launcher.getEmbedFileSystem().getPath("shaders/hud/fragment"))
+//				.newResourceStream()
+//				.readUTF8FullyClose());
+//		shaderhud.link();
+//		shaderhud.deleteVertexShader();
+//		shaderhud.deleteFragmentShader();
 
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
 		context3d = context.duplicate();
@@ -151,8 +160,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		Camera camera = ((LWJGLWindow) window).getCamera();
 		render3d(camera);
+		shader3d.clearUniforms();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		renderHud(camera);
+		shaderhud.clearUniforms();
+
 
 		window.endFrame();
 	}

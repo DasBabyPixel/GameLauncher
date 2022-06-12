@@ -1,0 +1,117 @@
+{
+	"vertexShader": "vertex",
+	"fragmentShader": "fragment",
+	"structs": [
+		{
+			"name": "Attenuation",
+			"variables": [
+				{
+					"name": "constant",
+					"type": "float"
+				},
+				{
+					"name": "linear",
+					"type": "float"
+				},
+				{
+					"name": "exponent",
+					"type": "float"
+				}
+			]
+		},
+		{
+			"name": "PointLight",
+			"variables": [
+				{
+					"name": "color",
+					"type": "vec3"
+				},
+				{
+					"name": "position",
+					"type": "vec3"
+				},
+				{
+					"name": "intensity",
+					"type": "float"
+				},
+				{
+					"name": "att",
+					"type": "Attenuation"
+				}
+			]
+		},
+		{
+			"name": "SpotLight",
+			"variables": [
+				{
+					"name": "pl",
+					"type": "PointLight"
+				},
+				{
+					"name": "conedir",
+					"type": "vec3"
+				},
+				{
+					"name": "cutoff",
+					"type": "float"
+				}
+			]
+		},
+		{
+			"name": "DirectionalLight",
+			"variables": [
+				{
+					"name": "color",
+					"type": "vec3"
+				},
+				{
+					"name": "direction",
+					"type": "vec3"
+				},
+				{
+					"name": "intensity",
+					"type": "float"
+				}
+			]
+		},
+		{
+			"name": "Material",
+			"variables": [
+				{
+					"name": "ambient",
+					"type": "vec4"
+				},
+				{
+					"name": "diffuse",
+					"type": "vec4"
+				},
+				{
+					"name": "specular",
+					"type": "vec4"
+				},
+				{
+					"name": "hasTexture",
+					"type": "int"
+				},
+				{
+					"name": "reflectance",
+					"type": "float"
+				}
+			]
+		}
+	],
+	"uniforms": {
+		"texture_sampler": "sampler2D",
+		"ambientLight": "vec3",
+		"specularPower": "float",
+		"material": "Material",
+		"pointLight": "PointLight",
+		"camera_pos": "vec3",
+		"directionalLight": "DirectionalLight",
+		"color": "vec4",
+		"textureAddColor": "vec4",
+		"modelMatrix": "mat4",
+		"viewMatrix": "mat4",
+		"projectionMatrix": "mat4"
+	}
+}

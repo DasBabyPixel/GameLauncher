@@ -259,7 +259,7 @@ public class GlyphProvider {
 			glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 		}
-		
+
 		@Override
 		public Vector4f getColor() {
 			return color;
@@ -270,7 +270,8 @@ public class GlyphProvider {
 			GlStates.activeTexture(GL_TEXTURE0);
 			GlStates.bindTexture(GL_TEXTURE_2D, texture.getTexture().getTextureId());
 
-			program.setUniform("textureAddColor", vectorTextureAddColor);
+			program.utextureAddColor.set(vectorTextureAddColor);
+			program.uploadUniforms();
 
 			GlStates.bindVertexArray(vao);
 			glEnableVertexAttribArray(0);
@@ -278,8 +279,8 @@ public class GlyphProvider {
 			glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 			glDisableVertexAttribArray(0);
 			glDisableVertexAttribArray(1);
-			
-			program.setUniform("textureAddColor", new Vector4f());
+
+			program.utextureAddColor.set(new Vector4f());
 		}
 
 		@Override

@@ -11,73 +11,83 @@ public class ObjectUniform implements Uniform {
 
 	private final AtomicReference<ProgramObject> value = new AtomicReference<>();
 	private final ShaderProgram program;
+	private final String name;
 
-	public ObjectUniform(ShaderProgram program) {
+	public ObjectUniform(ShaderProgram program, String name) {
 		this.program = program;
+		this.name = name;
 	}
 
 	@Override
-	public void upload() {
+	public Uniform upload() {
 		ProgramObject object = this.value.get();
 		if (object == null) {
-			return;
+			return this;
 		}
-		object.upload(program);
+		object.upload(program, name);
+		return this;
 	}
 
 	@Override
-	public void set(ProgramObject object) {
+	public Uniform set(ProgramObject object) {
 		this.value.set(object);
+		return this;
 	}
 
 	@Override
-	public void set(float f1) {
+	public Uniform set(int i) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(float f1, float f2) {
+	public Uniform set(float f1) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(float f1, float f2, float f3) {
+	public Uniform set(float f1, float f2) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(float f1, float f2, float f3, float f4) {
+	public Uniform set(float f1, float f2, float f3) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20,
-			float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
+	public Uniform set(float f1, float f2, float f3, float f4) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(Matrix4f m) {
+	public Uniform set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13,
+			float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(Vector2f vec) {
+	public Uniform set(Matrix4f m) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(Vector3f vec) {
+	public Uniform set(Vector2f vec) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(Vector4f vec) {
+	public Uniform set(Vector3f vec) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void clear() {
+	public Uniform set(Vector4f vec) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Uniform clear() {
 		this.value.set(null);
+		return this;
 	}
 }

@@ -2,7 +2,10 @@ package gamelauncher.lwjgl.render.light;
 
 import org.joml.Vector3f;
 
-public class DirectionalLight {
+import gamelauncher.lwjgl.render.shader.ProgramObject;
+import gamelauncher.lwjgl.render.shader.ShaderProgram;
+
+public class DirectionalLight implements ProgramObject {
 
 	public Vector3f color;
 	public Vector3f direction;
@@ -18,4 +21,10 @@ public class DirectionalLight {
 		this(new Vector3f(other.color), new Vector3f(other.direction), other.intensity);
 	}
 
+	@Override
+	public void upload(ShaderProgram program, String name) {
+		program.uniformMap.get(name + ".color").set(color).upload();
+		program.uniformMap.get(name + ".direction").set(direction).upload();
+		program.uniformMap.get(name + ".intensity").set(intensity).upload();
+	}
 }

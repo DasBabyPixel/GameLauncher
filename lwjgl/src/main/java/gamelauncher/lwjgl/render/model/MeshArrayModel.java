@@ -21,9 +21,12 @@ public class MeshArrayModel implements MeshLikeModel {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
+		program.uploadUniforms();
 		for (Mesh mesh : meshes) {
-			if (mesh.getMaterial() != null)
-				program.setUniform("material", mesh.getMaterial());
+			if (mesh.getMaterial() != null) {
+				program.umaterial.set(mesh.getMaterial());
+			}
+			program.umaterial.upload();
 			mesh.render();
 		}
 	}

@@ -202,12 +202,12 @@ public class LWJGLDrawContext implements DrawContext {
 	private void drawMesh(MeshLikeModel model, Vector4f colorMultiplier) throws GameException {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
-		shaderProgram.setUniform("modelMatrix", modelMatrix);
+		shaderProgram.umodelMatrix.set(modelMatrix);
 		if (shaderProgram.hasUniform("modelViewMatrix")) {
 			viewMatrix.mul(modelMatrix, tempMatrix4f);
-			shaderProgram.setUniform("modelViewMatrix", tempMatrix4f);
+			shaderProgram.umodelViewMatrix.set(tempMatrix4f);
 		}
-		shaderProgram.setUniform("color", colorMultiplier);
+		shaderProgram.ucolor.set(colorMultiplier);
 		model.render(shaderProgram);
 	}
 
@@ -232,15 +232,15 @@ public class LWJGLDrawContext implements DrawContext {
 		loadViewMatrix(camera);
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
-		shaderProgram.setUniform("viewMatrix", viewMatrix);
-		shaderProgram.setUniform("projectionMatrix", projectionMatrix);
-		shaderProgram.setUniform("camera_pos", tempVector3f.set(camera.getX(), camera.getY(), camera.getZ()));
-		shaderProgram.setUniform("ambientLight", ambientLight);
+		shaderProgram.uviewMatrix.set(viewMatrix);
+		shaderProgram.uprojectionMatrix.set(projectionMatrix);
+		shaderProgram.ucamera_pos.set(camera.getX(), camera.getY(), camera.getZ());
+		shaderProgram.uambientLight.set(ambientLight);
 
-		shaderProgram.setUniform("texture_sampler", 0);
+		shaderProgram.utexture_sampler.set(0);
 
 		float pow = (float) (Math.sin(System.currentTimeMillis() / 1000D) + 1) * 200;
-		shaderProgram.setUniform("specularPower", pow);
+		shaderProgram.uspecularPower.set(pow);
 
 		PointLight cPointLight = new PointLight(pointLight);
 		Vector3f lightPos = cPointLight.position;
@@ -249,13 +249,13 @@ public class LWJGLDrawContext implements DrawContext {
 		lightPos.x = aux.x;
 		lightPos.y = aux.y;
 		lightPos.z = aux.z;
-		shaderProgram.setUniform("pointLight", cPointLight);
+		shaderProgram.upointLight.set(cPointLight);
 
 		DirectionalLight currDirLight = new DirectionalLight(directionalLight);
 		Vector4f dir = new Vector4f(currDirLight.direction, 0);
 		dir.mul(viewMatrix);
 		currDirLight.direction = new Vector3f(dir.x, dir.y, dir.z);
-		shaderProgram.setUniform("directionalLight", currDirLight);
+		shaderProgram.udirectionalLight.set(currDirLight);
 
 	}
 
