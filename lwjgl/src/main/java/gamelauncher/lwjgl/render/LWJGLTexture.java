@@ -78,7 +78,8 @@ public class LWJGLTexture implements GameResource {
 
 	@Override
 	public void cleanup() throws GameException {
-		glDeleteTextures(textureId);
+		GlStates.deleteTextures(textureId);
+//		glDeleteTextures(textureId);
 	}
 
 	public int getTextureId() {

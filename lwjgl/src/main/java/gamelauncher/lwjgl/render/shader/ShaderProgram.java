@@ -37,6 +37,7 @@ public class ShaderProgram implements GameResource {
 	public Uniform upointLight = EmptyUniform.instance;
 	public Uniform udirectionalLight = EmptyUniform.instance;
 	public Uniform utextureAddColor = EmptyUniform.instance;
+	public Uniform uapplyLighting = EmptyUniform.instance;
 
 	public ShaderProgram(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;

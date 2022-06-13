@@ -66,7 +66,8 @@ public class LWJGLWindow implements Window {
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 	private final LWJGLInput input = new LWJGLInput(this);
-	private final LWJGLCamera camera = new LWJGLCamera(this);
+	private final CompletableFuture<Window> closeFuture = new CompletableFuture<>();
+//	private final BasicCamera camera = new BasicCamera(this);
 	private final Phaser drawPhaser = new Phaser();
 	public final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(
@@ -77,9 +78,9 @@ public class LWJGLWindow implements Window {
 						}
 					});
 
-	public LWJGLCamera getCamera() {
-		return camera;
-	}
+//	public LWJGLCamera getCamera() {
+//		return camera;
+//	}
 
 	public LWJGLWindow(int width, int height, String title) {
 		this.width.set(width);
@@ -100,6 +101,11 @@ public class LWJGLWindow implements Window {
 	@Override
 	public LWJGLInput getInput() {
 		return input;
+	}
+	
+	@Override
+	public CompletableFuture<Window> windowCloseFuture() {
+		return closeFuture;
 	}
 
 	public CompletableFuture<Void> setTitle(String title) {
@@ -402,6 +408,8 @@ public class LWJGLWindow implements Window {
 				}
 				lastFrameRenderer = null;
 			}
+			glfwMakeContextCurrent(0L);
+			GL.setCapabilities(null);
 			closeFuture.complete(null);
 		}
 
@@ -677,6 +685,10 @@ public class LWJGLWindow implements Window {
 				}
 			}
 			stopRendering();
+			glfwMakeContextCurrent(id);
+			GL.createCapabilities();
+			LWJGLWindow.this.closeFuture.complete(null);
+			
 			glfwDestroyWindow(id);
 			closeFuture.complete(null);
 		}

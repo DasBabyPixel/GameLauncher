@@ -31,25 +31,29 @@ import org.lwjgl.stb.STBTTFontinfo;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Model;
+import gamelauncher.engine.render.font.Font;
+import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.util.Color;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
 import gamelauncher.lwjgl.render.model.MeshLikeModel;
 import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
-public class GlyphProvider {
+public class BasicGlyphProvider implements GlyphProvider {
 
 	private final Map<GlyphKey, GlyphEntry> entries = new ConcurrentHashMap<>();
 	private final DynamicSizeTextureAtlasArray textures;
 
-	public GlyphProvider() {
+	public BasicGlyphProvider() {
 		textures = new DynamicSizeTextureAtlasArray();
 	}
 
+	@Override
 	public void cleanup() throws GameException {
 		textures.cleanup();
 	}
 
+	@Override
 	public Model loadStaticModel(Font font, String text, int pixelHeight) throws GameException {
 		STBTTFontinfo finfo = STBTTFontinfo.malloc();
 		if (!stbtt_InitFont(finfo, font.data())) {

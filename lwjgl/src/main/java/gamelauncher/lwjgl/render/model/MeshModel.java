@@ -22,6 +22,7 @@ public class MeshModel implements MeshLikeModel {
 		if (mesh.getMaterial() != null) {
 			program.umaterial.set(mesh.getMaterial());
 		}
+		program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0);
 		program.uploadUniforms();
 		mesh.render();
 	}

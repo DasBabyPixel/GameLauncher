@@ -191,6 +191,10 @@ public class Mesh implements GameResource {
 		};
 	}
 
+	public boolean applyLighting() {
+		return true;
+	}
+
 //	public boolean hasTexture() {
 //		return texture != null;
 //	}

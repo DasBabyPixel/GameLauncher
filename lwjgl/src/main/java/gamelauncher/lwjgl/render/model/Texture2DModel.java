@@ -32,8 +32,8 @@ public class Texture2DModel implements MeshLikeModel {
 		idxbuffer = glGenBuffers();
 		IntBuffer ibuffer = memAllocInt(6);
 		ibuffer.put(new int[] {
-				0, 1, 2,
-				0, 3, 1
+				0, 2, 1,
+				0, 3, 2
 		}).flip();
 		vertexCount = 6;
 		GlStates.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
@@ -69,9 +69,15 @@ public class Texture2DModel implements MeshLikeModel {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
+		program.uapplyLighting.set(0).upload();
 		GlStates.activeTexture(GL_TEXTURE0);
 		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
-		
+		GlStates.bindVertexArray(vao);
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glDrawElements(GL_TRIANGLES, this.vertexCount, GL_UNSIGNED_INT, 0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 	}
 
 	@Override

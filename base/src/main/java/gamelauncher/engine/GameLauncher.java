@@ -15,9 +15,11 @@ import com.google.gson.JsonElement;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
+import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.ModelLoader;
 import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
@@ -39,6 +41,8 @@ public abstract class GameLauncher {
 	private SettingSection settings;
 	private GameRenderer gameRenderer;
 	private ModelLoader modelLoader;
+	private GlyphProvider glyphProvider;
+	private Camera camera;
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
@@ -67,14 +71,30 @@ public abstract class GameLauncher {
 		this.modelLoader = loader;
 	}
 
+	public GlyphProvider getGlyphProvider() {
+		return glyphProvider;
+	}
+
+	public void setGlyphProvider(GlyphProvider glyphProvider) {
+		this.glyphProvider = glyphProvider;
+	}
+
 	public void handleError(Throwable throwable) {
 		throwable.printStackTrace();
+	}
+
+	public Camera getCamera() {
+		return camera;
+	}
+
+	public void setCamera(Camera camera) {
+		this.camera = camera;
 	}
 
 	public EventManager getEventManager() {
 		return eventManager;
 	}
-	
+
 	public FileSystem getEmbedFileSystem() {
 		return embedFileSystem;
 	}
@@ -177,7 +197,11 @@ public abstract class GameLauncher {
 		}
 
 		gameThread = new GameThread(this);
-		gameThread.runLater(() -> start0());
+		gameThread.runLater(() -> {
+			start0();
+			
+			
+		});
 		gameThread.start();
 
 	}

@@ -1,6 +1,8 @@
 package gamelauncher.engine.render;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.file.Path;
 
 public interface DrawContext {
 
@@ -18,6 +20,8 @@ public interface DrawContext {
 	DrawContext duplicate() throws GameException;
 	
 	Transformations.Projection getProjection();
+	
+	DrawContext withProgram(GameLauncher launcher, Path path) throws GameException;
 	
 	void reloadProjectionMatrix() throws GameException;
 	

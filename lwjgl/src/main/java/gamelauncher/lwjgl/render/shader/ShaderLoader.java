@@ -73,6 +73,7 @@ public class ShaderLoader {
 		loadUniform(p, structs, uniforms, "pointLight", u -> p.upointLight = u);
 		loadUniform(p, structs, uniforms, "directionalLight", u -> p.udirectionalLight = u);
 		loadUniform(p, structs, uniforms, "textureAddColor", u -> p.utextureAddColor = u);
+		loadUniform(p, structs, uniforms, "applyLighting", u -> p.uapplyLighting = u);
 	}
 
 	private static Uniform loadUniform(ShaderProgram program, String uniform, Struct struct) {

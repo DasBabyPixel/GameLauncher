@@ -24,7 +24,8 @@ public class BasicFramebuffer extends Framebuffer {
 		resizeColorTexture();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
 		depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRenderbuffer.getId());
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
+				depthStencilRenderbuffer.getId());
 		checkComplete();
 		unbind();
 	}
@@ -37,6 +38,22 @@ public class BasicFramebuffer extends Framebuffer {
 		this.height = height;
 		resizeColorTexture();
 		resizeDepthStencilRenderbuffer();
+	}
+
+	public LWJGLTexture getColorTexture() {
+		return colorTexture;
+	}
+
+	public Renderbuffer getDepthStencilRenderbuffer() {
+		return depthStencilRenderbuffer;
+	}
+
+	public int getHeight() {
+		return height;
+	}
+
+	public int getWidth() {
+		return width;
 	}
 
 	private void resizeDepthStencilRenderbuffer() {

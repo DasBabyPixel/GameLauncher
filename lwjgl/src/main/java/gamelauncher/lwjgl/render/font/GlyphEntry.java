@@ -2,7 +2,8 @@ package gamelauncher.lwjgl.render.font;
 
 import java.nio.ByteBuffer;
 
-import gamelauncher.lwjgl.render.font.GlyphProvider.GlyphKey;
+import gamelauncher.engine.render.font.Font;
+import gamelauncher.lwjgl.render.font.BasicGlyphProvider.GlyphKey;
 
 public class GlyphEntry {
 

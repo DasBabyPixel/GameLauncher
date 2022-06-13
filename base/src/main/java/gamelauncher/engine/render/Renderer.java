@@ -7,10 +7,10 @@ public abstract class Renderer {
 	public abstract void render(Window window) throws GameException;
 
 	@SuppressWarnings("unused")
-	public void init() throws GameException {
+	public void init(Window window) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	public void close() throws GameException {
+	public void close(Window window) throws GameException {
 	}
 }

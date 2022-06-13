@@ -11,6 +11,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.file.Path;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Model;
@@ -22,6 +24,7 @@ import gamelauncher.lwjgl.render.light.DirectionalLight;
 import gamelauncher.lwjgl.render.light.PointLight;
 import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
 import gamelauncher.lwjgl.render.model.MeshLikeModel;
+import gamelauncher.lwjgl.render.shader.ShaderLoader;
 import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class LWJGLDrawContext implements DrawContext {
@@ -184,6 +187,12 @@ public class LWJGLDrawContext implements DrawContext {
 	public LWJGLDrawContext withProgram(ShaderProgram program) {
 		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<ShaderProgram>(program),
 				projectionMatrix, viewMatrix, projection);
+	}
+	
+	@Override
+	public DrawContext withProgram(GameLauncher launcher, Path path) throws GameException {
+		ShaderProgram program = ShaderLoader.loadShader(launcher, path);
+		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program), projectionMatrix, viewMatrix, projection);
 	}
 
 	@Override

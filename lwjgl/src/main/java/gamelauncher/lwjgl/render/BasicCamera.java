@@ -4,14 +4,15 @@ import org.joml.Vector3f;
 
 import gamelauncher.engine.render.Camera;
 
-public class LWJGLCamera implements Camera {
+public class BasicCamera implements Camera {
 
-	private final LWJGLWindow window;
+	private final Runnable scheduleDraw;
 	private final Vector3f position = new Vector3f();
 	private final Vector3f rotation = new Vector3f();
 
-	public LWJGLCamera(LWJGLWindow window) {
-		this.window = window;
+	public BasicCamera(Runnable scheduleDraw) {
+		this.scheduleDraw = scheduleDraw == null ? () -> {
+		} : scheduleDraw;
 	}
 
 	@Override
@@ -24,19 +25,15 @@ public class LWJGLCamera implements Camera {
 	@Override
 	public void movePosition(float offsetX, float offsetY, float offsetZ) {
 		if (offsetZ != 0) {
-			position.x += (float) Math.sin(Math.toRadians(rotation.y)) * -1.0f
-							* offsetZ;
-			position.z += (float) Math.cos(Math.toRadians(rotation.y))
-							* offsetZ;
+			position.x += (float) Math.sin(Math.toRadians(rotation.y)) * -1.0f * offsetZ;
+			position.z += (float) Math.cos(Math.toRadians(rotation.y)) * offsetZ;
 		}
 		if (offsetX != 0) {
-			position.x += (float) Math.sin(Math.toRadians(rotation.y - 90))
-							* -1.0f * offsetX;
-			position.z += (float) Math.cos(Math.toRadians(rotation.y - 90))
-							* offsetX;
+			position.x += (float) Math.sin(Math.toRadians(rotation.y - 90)) * -1.0f * offsetX;
+			position.z += (float) Math.cos(Math.toRadians(rotation.y - 90)) * offsetX;
 		}
 		position.y += offsetY;
-		window.scheduleDraw();
+		scheduleDraw.run();
 	}
 
 	public Vector3f getPosition() {
@@ -79,20 +76,33 @@ public class LWJGLCamera implements Camera {
 
 	@Override
 	public void setRotation(float rx, float ry, float rz) {
-		boolean change = rotation.x != rx || rotation.y != ry
-						|| rotation.z != rz;
+		boolean change = rotation.x != rx || rotation.y != ry || rotation.z != rz;
 		if (!change)
 			return;
 		rotation.x = rx;
 		rotation.y = ry;
 		rotation.z = rz;
-		window.scheduleDraw();
+		scheduleDraw.run();
 	}
 
 	@Override
 	public void moveRotation(float offsetX, float offsetY, float offsetZ) {
-		setRotation(rotation.x + offsetX, rotation.y + offsetY, rotation.z
-						+ offsetZ);
+		setRotation(rotation.x + offsetX, rotation.y + offsetY, rotation.z + offsetZ);
+	}
+
+	@Override
+	public void setRotX(float rx) {
+		rotation.x = rx;
+	}
+
+	@Override
+	public void setRotY(float ry) {
+		rotation.y = ry;
+	}
+
+	@Override
+	public void setRotZ(float rz) {
+		rotation.z = rz;
 	}
 
 }

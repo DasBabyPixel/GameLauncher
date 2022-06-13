@@ -27,6 +27,7 @@ public class MeshArrayModel implements MeshLikeModel {
 				program.umaterial.set(mesh.getMaterial());
 			}
 			program.umaterial.upload();
+			program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0).upload();
 			mesh.render();
 		}
 	}
