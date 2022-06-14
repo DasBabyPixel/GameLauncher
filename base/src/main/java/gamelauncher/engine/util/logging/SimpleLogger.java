@@ -15,7 +15,11 @@ public class SimpleLogger extends Logger {
 		while (out instanceof CallerPrintStream) {
 			out = ((CallerPrintStream) out).parent;
 		}
-		this.logStream = new LogStream(this, new PrintStream(out, false));
+		OutputStream err = System.err;
+		while (err instanceof CallerPrintStream) {
+			err = ((CallerPrintStream) err).parent;
+		}
+		this.logStream = new LogStream(this, new PrintStream(out, false), new PrintStream(err, false));
 	}
 
 	@Override

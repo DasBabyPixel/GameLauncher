@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class LogStream extends OutputStream {
 
 	private final PrintStream out;
+	private final PrintStream err;
 	private final Logger logger;
 	private final Lock lock = new ReentrantLock(true);
 	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
@@ -21,8 +22,9 @@ public class LogStream extends OutputStream {
 	private boolean newLine = true;
 	private boolean nextNewLine = false;
 
-	public LogStream(Logger logger, PrintStream out) {
+	public LogStream(Logger logger, PrintStream out, PrintStream err) {
 		this.logger = logger;
+		this.err = err;
 		this.out = out;
 	}
 
