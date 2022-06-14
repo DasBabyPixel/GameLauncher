@@ -7,10 +7,14 @@ import java.util.Locale;
 public class CallerPrintStream extends PrintStream {
 
 	public final Logger logger;
+	public final OutputStream parent;
+	public final LogLevel level;
 	private StackTraceElement caller = null;
 
-	public CallerPrintStream(Logger logger, OutputStream out) {
+	public CallerPrintStream(LogLevel level, Logger logger, OutputStream out) {
 		super(out, true);
+		this.level = level;
+		this.parent = out;
 		this.logger = logger;
 	}
 
@@ -33,6 +37,7 @@ public class CallerPrintStream extends PrintStream {
 		}
 		this.caller = caller;
 		logger.setCaller(caller);
+		logger.setCallerLevel(level);
 		return true;
 	}
 

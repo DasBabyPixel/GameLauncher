@@ -39,8 +39,10 @@ public class LogStream extends OutputStream {
 		if (newLine == true) {
 			newLine = false;
 			printNewLine();
+			out.flush();
 			StackTraceElement t = logger.getCaller();
 			if (t != null) {
+				out.printf("[%s] ", logger.getCallerLevel().getName());
 				out.printf("[%s.%s:%s] ", t.getClassName(), t.getMethodName(), t.getLineNumber());
 			}
 		}
@@ -108,6 +110,7 @@ public class LogStream extends OutputStream {
 	private void logString(LogLevel level, String message) {
 		printNewLine();
 		printLoggerName();
+		printThread();
 		printLevel(level);
 		println(message);
 	}

@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
+import gamelauncher.engine.plugins.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.ModelLoader;
@@ -23,6 +24,7 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
+import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 
 public abstract class GameLauncher {
@@ -38,11 +40,13 @@ public abstract class GameLauncher {
 	private Path gameDirectory;
 	private Path dataDirectory;
 	private Path settingsFile;
+	private Path pluginsDirectory;
 	private SettingSection settings;
 	private GameRenderer gameRenderer;
 	private ModelLoader modelLoader;
 	private GlyphProvider glyphProvider;
 	private Camera camera;
+	private PluginManager pluginManager;
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
@@ -52,14 +56,20 @@ public abstract class GameLauncher {
 		this.eventManager = new EventManager();
 		registerSettingInsertions();
 		this.settings = new MainSettingSection(eventManager);
+		this.pluginManager = new PluginManager();
 	}
 
 	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
 		this.fileSystem = fileSystem;
 		this.embedFileSystem = embedFileSystem;
-		this.gameDirectory = fileSystem.getPath(NAME);
+		this.gameDirectory = this.fileSystem.getPath(NAME);
 		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
+		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+	}
+
+	public PluginManager getPluginManager() {
+		return pluginManager;
 	}
 
 	protected void setResourceLoader(ResourceLoader loader) {
@@ -143,6 +153,10 @@ public abstract class GameLauncher {
 		return gameDirectory;
 	}
 
+	public Path getPluginsDirectory() {
+		return pluginsDirectory;
+	}
+
 	public GameRenderer getGameRenderer() {
 		return gameRenderer;
 	}
@@ -155,14 +169,17 @@ public abstract class GameLauncher {
 	}
 
 	public final void start() throws GameException {
+
 		if (window != null) {
 			return;
 		}
-		System.setOut(logger.createPrintStream());
+		System.setOut(logger.createPrintStream(LogLevel.STDOUT));
+		System.setErr(logger.createPrintStream(LogLevel.STDERR));
 		logger.info("Starting " + NAME);
 
 		fileSystem.createDirectories(gameDirectory);
 		fileSystem.createDirectories(dataDirectory);
+		fileSystem.createDirectories(pluginsDirectory);
 		if (!fileSystem.exists(settingsFile)) {
 			fileSystem.createFile(settingsFile);
 			settings.setDefaultValue();
@@ -199,10 +216,12 @@ public abstract class GameLauncher {
 		gameThread = new GameThread(this);
 		gameThread.runLater(() -> {
 			start0();
-			
-			
+
 		});
 		gameThread.start();
+
+		this.pluginManager.loadPlugin(this.getEmbedFileSystem().getPath("orbits-0.0.1-SNAPSHOT.jar"));
+		new Exception().printStackTrace();
 
 	}
 

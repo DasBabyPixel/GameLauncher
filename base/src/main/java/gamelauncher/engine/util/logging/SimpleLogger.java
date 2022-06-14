@@ -1,5 +1,6 @@
 package gamelauncher.engine.util.logging;
 
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 public class SimpleLogger extends Logger {
@@ -10,7 +11,11 @@ public class SimpleLogger extends Logger {
 
 	public SimpleLogger(String name) {
 		this.name = name;
-		this.logStream = new LogStream(this, System.out);
+		OutputStream out = System.out;
+		while (out instanceof CallerPrintStream) {
+			out = ((CallerPrintStream) out).parent;
+		}
+		this.logStream = new LogStream(this, new PrintStream(out, false));
 	}
 
 	@Override
@@ -27,7 +32,12 @@ public class SimpleLogger extends Logger {
 
 	@Override
 	public PrintStream createPrintStream() {
-		return new CallerPrintStream(this, logStream);
+		return createPrintStream(LogLevel.STDOUT);
+	}
+
+	@Override
+	public PrintStream createPrintStream(LogLevel level) {
+		return new CallerPrintStream(level, this, logStream);
 	}
 
 	@Override
