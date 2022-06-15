@@ -40,7 +40,10 @@ import gamelauncher.lwjgl.input.LWJGLMouse;
 
 public class LWJGLWindow implements Window {
 
+	private static final AtomicLong names = new AtomicLong(0);
+	
 	public final AtomicLong id = new AtomicLong();
+	public final AtomicLong name = new AtomicLong();
 	public final AtomicInteger width = new AtomicInteger();
 	public final AtomicInteger height = new AtomicInteger();
 	private final AtomicInteger framebufferWidth = new AtomicInteger();
@@ -86,6 +89,7 @@ public class LWJGLWindow implements Window {
 		this.width.set(width);
 		this.height.set(height);
 		this.title.set(title);
+		this.name.set(names.incrementAndGet());
 	}
 
 	@Override
@@ -248,11 +252,10 @@ public class LWJGLWindow implements Window {
 		WindowThread thread;
 		if ((thread = windowThread.get()) == null) {
 			windowThread.set(thread = new WindowThread());
-			thread.setName("WindowThread");
+			thread.setName("WindowThread-"+name.get());
 			thread.start();
 			try {
 				windowThreadCreateFuture.get().get();
-				thread.setName("WindowThread-" + id.get());
 				if (startRenderer.get()) {
 					startRendering0();
 				}
@@ -299,7 +302,7 @@ public class LWJGLWindow implements Window {
 			}
 		});
 		if (updated.get()) {
-			thread.setName("RenderThread-" + id.get());
+			thread.setName("RenderThread-" + name.get());
 			thread.start();
 		}
 	}

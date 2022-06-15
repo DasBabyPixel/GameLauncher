@@ -130,6 +130,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window.setFloating(true);
 		window.setFloating(false);
 		mouseMovement(false);
+		
 	}
 
 	@Override

@@ -19,6 +19,7 @@ public class EmbedPath extends AbstractPath {
 	protected AbstractPath newInstance(boolean root, String path) {
 		return new EmbedPath(getFileSystem(), root, path);
 	}
+	
 
 	private static String addPrefix(String path) {
 		if (path == null) {

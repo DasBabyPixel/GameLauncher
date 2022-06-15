@@ -7,5 +7,6 @@
 	<modules>
 		<module>base</module>
 		<module>lwjgl</module>
+		<module>orbits</module>
 	</modules>
 </project>

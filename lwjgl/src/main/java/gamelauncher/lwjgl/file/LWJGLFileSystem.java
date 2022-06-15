@@ -5,8 +5,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.file.DirectoryStream;
 import gamelauncher.engine.file.FileSystem;
 import gamelauncher.engine.file.Path;
 import gamelauncher.engine.resource.ResourceStream;
@@ -20,12 +23,14 @@ public class LWJGLFileSystem implements FileSystem {
 
 	@Override
 	public ResourceStream createInputResourceStream(Path path) throws GameException {
-		return new ResourceStream(path, false, createInputStream(path), null);
+		boolean directory = isDirectory(path);
+		return new ResourceStream(path, directory, directory ? null : createInputStream(path), null);
 	}
-	
+
 	@Override
 	public ResourceStream createOutputResourceStream(Path path) throws GameException {
-		return new ResourceStream(path, false, null, createOutputStream(path));
+		boolean directory = isDirectory(path);
+		return new ResourceStream(path, directory, null, directory ? null : createOutputStream(path));
 	}
 
 	@Override
@@ -35,6 +40,30 @@ public class LWJGLFileSystem implements FileSystem {
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
+	}
+
+	@Override
+	public DirectoryStream createDirectoryStream(Path path) throws GameException {
+		ArrayList<Path> files = new ArrayList<>();
+		try {
+			java.nio.file.DirectoryStream<java.nio.file.Path> ns = Files.newDirectoryStream(nio(path));
+			Iterator<java.nio.file.Path> ni = ns.iterator();
+			while (ni.hasNext()) {
+				java.nio.file.Path np = ni.next();
+				files.add(new LWJGLPath(this, false, np.toString()));
+			}
+			ns.close();
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		} catch (GameException ex) {
+			throw ex;
+		}
+		return new IteratorDirectoryStream(files.iterator());
+	}
+
+	@Override
+	public boolean isDirectory(Path path) throws GameException {
+		return Files.isDirectory(nio(path));
 	}
 
 	@Override

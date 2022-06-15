@@ -14,15 +14,18 @@ public abstract class AbstractPath implements Path {
 
 	public AbstractPath(FileSystem fileSystem, boolean root, String path) {
 		this.fileSystem = fileSystem;
-		this.root = root;
+		this.root = path.isEmpty() || root;
 		this.path = path;
 	}
 
 	@Override
 	public final Path getParent() {
 		int index = path.lastIndexOf(Path.SEPERATOR);
+		if (path.isEmpty()) {
+			return null;
+		}
 		if (index == -1) {
-			return newInstance(true, null);
+			return newInstance(true, "");
 		}
 		return newInstance(false, path.substring(0, index));
 	}
@@ -50,7 +53,7 @@ public abstract class AbstractPath implements Path {
 		}
 		return super.equals(obj);
 	}
-	
+
 	@Override
 	public FileSystem getFileSystem() {
 		return fileSystem;

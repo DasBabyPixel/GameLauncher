@@ -23,11 +23,14 @@ public interface FileSystem {
 	OutputStream createOutputStream(Path path) throws GameException;
 
 	ResourceStream createInputResourceStream(Path path) throws GameException;
-	
+
 	ResourceStream createOutputResourceStream(Path path) throws GameException;
 
 	void write(Path path, byte[] bytes) throws GameException;
 
 	void move(Path path, Path to) throws GameException;
 
+	boolean isDirectory(Path path) throws GameException;
+
+	DirectoryStream createDirectoryStream(Path path) throws GameException;
 }

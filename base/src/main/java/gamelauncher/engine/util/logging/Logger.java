@@ -5,6 +5,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Logger {
 
+	public static final OutErrStream system = new OutErrStream(System.out, System.err);
+
 	private final AtomicReference<StackTraceElement> caller = new AtomicReference<>(null);
 	private final AtomicReference<LogLevel> callerLevel = new AtomicReference<>(null);
 

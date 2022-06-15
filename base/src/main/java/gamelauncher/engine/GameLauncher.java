@@ -1,6 +1,9 @@
 package gamelauncher.engine;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -54,9 +57,9 @@ public abstract class GameLauncher {
 	public GameLauncher() {
 		this.logger = Logger.getLogger(getClass());
 		this.eventManager = new EventManager();
+		this.pluginManager = new PluginManager(this);
 		registerSettingInsertions();
 		this.settings = new MainSettingSection(eventManager);
-		this.pluginManager = new PluginManager();
 	}
 
 	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
@@ -169,6 +172,16 @@ public abstract class GameLauncher {
 	}
 
 	public final void start() throws GameException {
+
+		try {
+//			System.out.println(Paths.get(getClass().getClassLoader().getResource("cube.obj").toURI()));
+			java.nio.file.FileSystem efs = FileSystems.newFileSystem(URI.create("embed:/"), null);
+			java.nio.file.Path path = efs.getPath("cube.obj");
+			System.out.println("Lines: " + Files.readAllLines(path));
+//			efs.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		if (window != null) {
 			return;
