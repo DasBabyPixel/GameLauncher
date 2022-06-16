@@ -1,9 +1,13 @@
 package gamelauncher.engine;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -16,9 +20,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
-import gamelauncher.engine.file.FileSystem;
-import gamelauncher.engine.file.Path;
-import gamelauncher.engine.plugins.PluginManager;
+import gamelauncher.engine.file.Files;
+import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
+import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.ModelLoader;
@@ -27,6 +31,7 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
+import gamelauncher.engine.util.StartCommandSettings;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 
@@ -38,7 +43,7 @@ public abstract class GameLauncher {
 	private final Logger logger;
 	private GameThread gameThread;
 	private Window window;
-	private FileSystem fileSystem;
+//	private FileSystem fileSystem;
 	private FileSystem embedFileSystem;
 	private Path gameDirectory;
 	private Path dataDirectory;
@@ -56,20 +61,31 @@ public abstract class GameLauncher {
 
 	public GameLauncher() {
 		this.logger = Logger.getLogger(getClass());
+		this.gameDirectory = Paths.get(NAME).toAbsolutePath();
+		this.dataDirectory = this.gameDirectory.resolve("data");
+		this.settingsFile = this.gameDirectory.resolve("settings.json");
+		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+		try {
+			URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
+			URI uri = URI.create("embed:/");
+			this.embedFileSystem = FileSystems.newFileSystem(uri, null);
+		} catch (IOException ex) {
+			throw new AssertionError(ex);
+		}
 		this.eventManager = new EventManager();
 		this.pluginManager = new PluginManager(this);
 		registerSettingInsertions();
 		this.settings = new MainSettingSection(eventManager);
 	}
 
-	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
-		this.fileSystem = fileSystem;
-		this.embedFileSystem = embedFileSystem;
-		this.gameDirectory = this.fileSystem.getPath(NAME);
-		this.dataDirectory = this.gameDirectory.resolve("data");
-		this.settingsFile = this.gameDirectory.resolve("settings.json");
-		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
-	}
+//	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
+//		this.fileSystem = fileSystem;
+//		this.embedFileSystem = embedFileSystem;
+//		this.gameDirectory = this.fileSystem.getPath(NAME);
+//		this.dataDirectory = this.gameDirectory.resolve("data");
+//		this.settingsFile = this.gameDirectory.resolve("settings.json");
+//		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+//	}
 
 	public PluginManager getPluginManager() {
 		return pluginManager;
@@ -148,9 +164,9 @@ public abstract class GameLauncher {
 		return dataDirectory;
 	}
 
-	public FileSystem getFileSystem() {
-		return fileSystem;
-	}
+//	public FileSystem getFileSystem() {
+//		return fileSystem;
+//	}
 
 	public Path getGameDirectory() {
 		return gameDirectory;
@@ -165,40 +181,34 @@ public abstract class GameLauncher {
 	}
 
 	public void saveSettings() throws GameException {
-		fileSystem.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
+		Files.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
 
 	protected void registerSettingInsertions() {
 	}
 
-	public final void start() throws GameException {
-
-		try {
-//			System.out.println(Paths.get(getClass().getClassLoader().getResource("cube.obj").toURI()));
-			java.nio.file.FileSystem efs = FileSystems.newFileSystem(URI.create("embed:/"), null);
-			java.nio.file.Path path = efs.getPath("cube.obj");
-			System.out.println("Lines: " + Files.readAllLines(path));
-//			efs.close();
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+	public final void start(String[] args) throws GameException {
 
 		if (window != null) {
 			return;
 		}
+
 		System.setOut(logger.createPrintStream(LogLevel.STDOUT));
 		System.setErr(logger.createPrintStream(LogLevel.STDERR));
+
 		logger.info("Starting " + NAME);
 
-		fileSystem.createDirectories(gameDirectory);
-		fileSystem.createDirectories(dataDirectory);
-		fileSystem.createDirectories(pluginsDirectory);
-		if (!fileSystem.exists(settingsFile)) {
-			fileSystem.createFile(settingsFile);
+		StartCommandSettings scs = StartCommandSettings.parse(args);
+
+		Files.createDirectories(gameDirectory);
+		Files.createDirectories(dataDirectory);
+		Files.createDirectories(pluginsDirectory);
+		if (!Files.exists(settingsFile)) {
+			Files.createFile(settingsFile);
 			settings.setDefaultValue();
 			saveSettings();
 		} else {
-			byte[] bytes = fileSystem.readAllBytes(settingsFile);
+			byte[] bytes = Files.readAllBytes(settingsFile);
 			String json = new String(bytes, StandardCharsets.UTF_8);
 			JsonElement element = settingsGson.fromJson(json, JsonElement.class);
 			settings.deserialize(element);
@@ -218,7 +228,7 @@ public abstract class GameLauncher {
 						.appendLiteral('-')
 						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
 						.toFormatter();
-				fileSystem.move(settingsFile,
+				Files.move(settingsFile,
 						settingsFile.getParent()
 								.resolve(String.format("backup-settings-%s.json",
 										formatter.format(LocalDateTime.now()).replace(':', '-'))));
@@ -233,8 +243,12 @@ public abstract class GameLauncher {
 		});
 		gameThread.start();
 
-		this.pluginManager.loadPlugin(this.getEmbedFileSystem().getPath("orbits-0.0.1-SNAPSHOT.jar"));
-		new Exception().printStackTrace();
+		for (Path externalPlugin : scs.externalPlugins) {
+			this.pluginManager.loadPlugin(externalPlugin);
+		}
+		this.pluginManager.loadPlugins(pluginsDirectory);
+
+//		this.pluginManager.loadPlugin(this.getEmbedFileSystem().getPath("orbits-0.0.1-SNAPSHOT.jar"));
 
 	}
 
@@ -245,7 +259,8 @@ public abstract class GameLauncher {
 	public void stop() throws GameException {
 		try {
 			gameThread.exit().get();
-		} catch (InterruptedException | ExecutionException ex) {
+			this.embedFileSystem.close();
+		} catch (InterruptedException | ExecutionException | IOException ex) {
 			throw new GameException(ex);
 		}
 	}

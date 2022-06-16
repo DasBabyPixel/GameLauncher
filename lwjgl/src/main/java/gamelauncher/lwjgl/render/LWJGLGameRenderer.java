@@ -2,15 +2,24 @@ package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.imageio.ImageIO;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.file.Files;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
+import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.font.GlyphProvider;
+import gamelauncher.lwjgl.render.font.BasicFont;
+import gamelauncher.lwjgl.render.font.BasicGlyphProvider;
+import gamelauncher.lwjgl.render.font.DynamicSizeTextureAtlas;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.shader.ShaderLoader;
@@ -34,10 +43,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 //	private GameItem secondaryScreenItem;
 //	private GameItem.GameItemModel secondaryScreenItemModel;
 
+	private Model model;
 	private ShaderProgram shaderhud;
 	private LWJGLDrawContext contexthud;
-//	private ShaderProgram shader3d;
-//	private LWJGLDrawContext context3d;
+	private ShaderProgram shader3d;
+	private LWJGLDrawContext context3d;
 	private GlContext glContext = new GlContext();
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
@@ -73,16 +83,21 @@ public class LWJGLGameRenderer implements GameRenderer {
 //		modelg.setScale(.001F);
 //		models.add(new GameItem.GameItemModel(modelg));
 //		hud.add(new GameItem.GameItemModel(ii));
+		model = launcher.getGlyphProvider()
+				.loadStaticModel(
+						new BasicFont(
+								Files.readAllBytes(launcher.getEmbedFileSystem().getPath("fonts/cinzel_regular.ttf"))),
+						"test", 400);
 
-//		shader3d = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/basic/basic.json"));
+		shader3d = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/basic/basic.json"));
 
 		shaderhud = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/hud/hud.json"));
 
 		LWJGLDrawContext context = (LWJGLDrawContext) window.getContext();
-//		context3d = context.duplicate();
-//		context3d.setProgram(shader3d);
-//		context3d.setProjection(
-//				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0F), 0.01F, 10000F));
+		context3d = context.duplicate();
+		context3d.setProgram(shader3d);
+		context3d.setProjection(
+				new Transformations.Projection.Projection3D((float) Math.toRadians(70.0F), 0.01F, 10000F));
 
 		contexthud = context.duplicate();
 		contexthud.setProgram(shaderhud);
@@ -136,7 +151,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	private void updateScreenItems(Window window) {
-		mainScreenItem.setScale(window.getFramebufferWidth(), window.getFramebufferHeight(), 1);
+		mainScreenItem.setScale(window.getFramebufferWidth(), window.getFramebufferHeight() / 2, 1);
 		mainScreenItem.setPosition(window.getFramebufferWidth() / 2F, window.getFramebufferHeight() / 2F, 0);
 //		secondaryScreenItem.setScale(window.getFramebufferWidth(), window.getFramebufferHeight(), 1);
 //		secondaryScreenItem.setPosition(window.getFramebufferWidth() / 2F, window.getFramebufferHeight() / 2F, 0);
@@ -161,10 +176,25 @@ public class LWJGLGameRenderer implements GameRenderer {
 		if (renderer != null) {
 			renderer.render(window);
 		}
+		
+		contexthud.update(camera);
+		contexthud.drawModel(model, 0, 0, 0);
+		shaderhud.clearUniforms();
 
 		mainFramebuffer.unbind();
 
+		try {
+			GlyphProvider gp = launcher.getGlyphProvider();
+			BasicGlyphProvider bgp = (BasicGlyphProvider)gp;
+			DynamicSizeTextureAtlas dsta = bgp.textures.atlases.stream().findFirst().get();
+			ImageIO.write(dsta.getTexture().getBufferedImage(), "png", new File("screen.png"));
+			ImageIO.write(mainFramebuffer.getColorTexture().getBufferedImage(), "png", new File("screen2.png"));
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
 		contexthud.update(camera);
+
 		contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
 		shaderhud.clearUniforms();
 

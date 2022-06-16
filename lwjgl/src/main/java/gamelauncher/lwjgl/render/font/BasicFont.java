@@ -13,8 +13,11 @@ public class BasicFont implements Font {
 	private final ByteBuffer data;
 
 	public BasicFont(ResourceStream stream) throws GameException {
-		byte[] b = stream.readAllBytes();
+		this(stream.readAllBytes());
 		stream.cleanup();
+	}
+	
+	public BasicFont(byte[] b) {
 		data = memAlloc(b.length);
 		data.put(b).flip();
 	}

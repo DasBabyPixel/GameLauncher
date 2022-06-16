@@ -54,7 +54,8 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 	@Override
 	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
 			throws IOException {
-		InputStream in = embedFileSystem.cl.getResourceAsStream(toEmbedPath(path).toString());
+		EmbedPath embedPath = toEmbedPath(path);
+		InputStream in = embedFileSystem.cl.getResourceAsStream(embedPath.toAbsolutePath().toString().substring(1));
 		if (in == null) {
 			throw new FileNotFoundException(path.toString());
 		}

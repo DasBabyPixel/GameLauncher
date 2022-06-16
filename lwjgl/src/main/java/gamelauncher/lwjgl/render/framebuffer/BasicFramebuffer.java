@@ -3,10 +3,7 @@ package gamelauncher.lwjgl.render.framebuffer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.nio.ByteBuffer;
-
 import gamelauncher.engine.GameException;
-import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
 public class BasicFramebuffer extends Framebuffer {
@@ -27,6 +24,8 @@ public class BasicFramebuffer extends Framebuffer {
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
 				depthStencilRenderbuffer.getId());
 		checkComplete();
+//		glColorMask(true, true, true, true);
+//		glClearColor(0, 0, 0, 0);
 		unbind();
 	}
 
@@ -61,11 +60,15 @@ public class BasicFramebuffer extends Framebuffer {
 	}
 
 	private void resizeColorTexture() {
-		GlStates.bindTexture(GL_TEXTURE_2D, colorTexture.getTextureId());
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		GlStates.bindTexture(GL_TEXTURE_2D, 0);
+		colorTexture.bind();
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		colorTexture.allocate(width, height);
+//		GlStates.bindTexture(GL_TEXTURE_2D, colorTexture.getTextureId());
+//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//		GlStates.bindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	@Override

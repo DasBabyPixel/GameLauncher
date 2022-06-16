@@ -6,13 +6,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.file.Path;
 import gamelauncher.engine.util.GameFunction;
 
 public class ResourceStream implements AutoCloseable {

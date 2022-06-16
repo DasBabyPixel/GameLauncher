@@ -10,7 +10,7 @@ import gamelauncher.engine.GameException;
 
 public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 
-	private final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();
+	public final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();
 	public final Map<Integer, DynamicSizeTextureAtlas> map = new ConcurrentHashMap<>();
 	private final Random random = new Random(163478519);
 

@@ -13,8 +13,6 @@ import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.Math;
-import gamelauncher.lwjgl.file.EmbedFileSystem;
-import gamelauncher.lwjgl.file.LWJGLFileSystem;
 import gamelauncher.lwjgl.input.LWJGLInput.InputType;
 import gamelauncher.lwjgl.input.LWJGLInput.Listener;
 import gamelauncher.lwjgl.render.BasicCamera;
@@ -34,7 +32,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	public LWJGLGameLauncher() throws GameException {
 		setResourceLoader(new SimpleResourceLoader());
-		setFileSystem(new LWJGLFileSystem(), new EmbedFileSystem());
+//		setFileSystem(new LWJGLFileSystem(), new EmbedFileSystem());
 		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 	}

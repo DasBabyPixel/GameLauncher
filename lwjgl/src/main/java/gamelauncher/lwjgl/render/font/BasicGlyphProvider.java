@@ -42,7 +42,7 @@ import gamelauncher.lwjgl.render.shader.ShaderProgram;
 public class BasicGlyphProvider implements GlyphProvider {
 
 	private final Map<GlyphKey, GlyphEntry> entries = new ConcurrentHashMap<>();
-	private final DynamicSizeTextureAtlasArray textures;
+	public final DynamicSizeTextureAtlasArray textures;
 
 	public BasicGlyphProvider() {
 		textures = new DynamicSizeTextureAtlasArray();

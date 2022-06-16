@@ -1,12 +1,15 @@
 package gamelauncher.engine.file.embed;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.spi.FileSystemProvider;
@@ -46,7 +49,7 @@ public class EmbedFileSystem extends FileSystem {
 	}
 
 	long size(EmbedPath path) throws IOException {
-		URL url = cl.getResource(path.toString());
+		URL url = cl.getResource(path.toAbsolutePath().toString().substring(1));
 		URLConnection con = url.openConnection();
 		long s = con.getContentLengthLong();
 		return s;
@@ -57,7 +60,20 @@ public class EmbedFileSystem extends FileSystem {
 		if (!p.endsWith("/")) {
 			p = p + "/";
 		}
-		return cl.getResource(p) != null;
+		URL url = cl.getResource(p);
+		if (url == null) {
+			return false;
+		}
+		if (url.getProtocol().equals("file")) {
+			try {
+				Path jp = Paths.get(url.toURI());
+				return Files.isDirectory(jp);
+			} catch (URISyntaxException ex) {
+				ex.printStackTrace();
+			}
+
+		}
+		return url != null;
 	}
 
 	@Override
@@ -133,6 +149,10 @@ public class EmbedFileSystem extends FileSystem {
 		l.addAll(Arrays.asList(first.split("/")));
 		for (String m : more) {
 			l.addAll(Arrays.asList(m.split("/")));
+		}
+		if (l.get(0).isEmpty()) {
+			// Absolute path
+			l.remove(0);
 		}
 		String[] segments = l.toArray(new String[l.size()]);
 		return new EmbedPath(this, segments, true);

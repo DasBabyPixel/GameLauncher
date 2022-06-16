@@ -1,8 +1,9 @@
 package gamelauncher.engine.render;
 
+import java.nio.file.Path;
+
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Path;
 
 public interface DrawContext {
 

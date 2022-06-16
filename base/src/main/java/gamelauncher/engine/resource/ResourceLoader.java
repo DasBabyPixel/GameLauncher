@@ -1,12 +1,12 @@
 package gamelauncher.engine.resource;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.file.Path;
 
 public abstract class ResourceLoader {
 
@@ -27,13 +27,13 @@ public abstract class ResourceLoader {
 	
 	protected abstract boolean canLoadResource(Path path) throws GameException;
 	
-	protected abstract Resource loadResource(Path path);
+	protected abstract Resource loadResource(Path path) throws GameException;
 	
 	public final boolean isResourceLoaded(Path path) {
 		return resources.containsKey(path);
 	}
 	
-	public final Resource getResource(Path path) {
+	public final Resource getResource(Path path) throws GameException {
 		if(isResourceLoaded(path)) {
 			lock.lock();
 			Resource resource = resources.get(path);

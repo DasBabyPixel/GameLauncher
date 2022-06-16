@@ -18,9 +18,9 @@ import java.util.NoSuchElementException;
 
 public class EmbedPath implements java.nio.file.Path {
 
-	private final EmbedFileSystem fileSystem;
-	private final String[] segments;
-	private final boolean absolute;
+	final EmbedFileSystem fileSystem;
+	final String[] segments;
+	final boolean absolute;
 
 	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute) {
 		this.fileSystem = fileSystem;
@@ -35,7 +35,7 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public Path getRoot() {
-		return new EmbedPath(fileSystem, new String[0], absolute);
+		return new EmbedPath(fileSystem, new String[0], true);
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class EmbedPath implements java.nio.file.Path {
 	public Path getName(int index) {
 		return new EmbedPath(fileSystem, new String[] {
 				segments[index]
-		}, absolute);
+		}, false);
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class EmbedPath implements java.nio.file.Path {
 		for (int i = 0; i < seg.length; i++) {
 			seg[i] = segments[i + beginIndex];
 		}
-		return new EmbedPath(fileSystem, seg, absolute);
+		return new EmbedPath(fileSystem, seg, false);
 	}
 
 	@Override
@@ -92,6 +92,9 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public String toString() {
+		if (absolute) {
+			return "/" + String.join("/", segments);
+		}
 		return String.join("/", segments);
 	}
 
@@ -104,7 +107,7 @@ public class EmbedPath implements java.nio.file.Path {
 	public Path getFileName() {
 		return new EmbedPath(fileSystem, new String[] {
 				this.segments[this.segments.length - 1]
-		}, absolute);
+		}, false);
 	}
 
 	@Override
@@ -152,7 +155,10 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public EmbedPath toAbsolutePath() {
-		return this;
+		if (absolute) {
+			return this;
+		}
+		return new EmbedPath(fileSystem, segments, true);
 	}
 
 	@Override

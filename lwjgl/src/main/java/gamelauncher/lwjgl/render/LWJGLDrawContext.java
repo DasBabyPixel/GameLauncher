@@ -1,6 +1,7 @@
 package gamelauncher.lwjgl.render;
 
 import java.lang.ref.WeakReference;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,7 +13,6 @@ import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Path;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Model;

@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render.shader;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,7 +14,6 @@ import com.google.gson.JsonSyntaxException;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Path;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.Arrays;
