@@ -10,6 +10,7 @@ public class GlContext {
 
 	public final DepthState depth = new DepthState();
 	public final BlendState blend = new BlendState();
+	public final CullState cull = new CullState();
 
 	public void replace(GlContext current) {
 		if (current == null) {
@@ -33,17 +34,37 @@ public class GlContext {
 		if (current.depth.depthFunc.get() != depth.depthFunc.get()) {
 			depth.applyValues();
 		}
+		if (current.cull.enabled.value.get() != cull.enabled.value.get()) {
+			current.cull.enabled.apply();
+		}
+		if (current.cull.cullFace.get() != cull.cullFace.get()) {
+			cull.applyValues();
+		}
+	}
+
+	public static class CullState {
+		public final BooleanState enabled = new BooleanState(GL_CULL_FACE);
+		public final AtomicInteger cullFace = new AtomicInteger(GL_BACK);
+
+		public void applyValues() {
+			glCullFace(cullFace.get());
+		}
 	}
 
 	public static class BlendState {
 		public final BooleanState enabled = new BooleanState(GL_BLEND);
+		public final AtomicBoolean separate = new AtomicBoolean(false);
 		public final AtomicInteger srcrgb = new AtomicInteger(GL_SRC_ALPHA);
 		public final AtomicInteger dstrgb = new AtomicInteger(GL_ONE_MINUS_SRC_ALPHA);
 		public final AtomicInteger srcalpha = new AtomicInteger(GL_ONE);
 		public final AtomicInteger dstalpha = new AtomicInteger(GL_ONE);
 
 		public void applyValues() {
-			glBlendFuncSeparate(srcrgb.get(), dstrgb.get(), srcalpha.get(), dstalpha.get());
+			if (separate.get()) {
+				glBlendFuncSeparate(srcrgb.get(), dstrgb.get(), srcalpha.get(), dstalpha.get());
+			} else {
+				glBlendFunc(srcrgb.get(), dstrgb.get());
+			}
 		}
 	}
 

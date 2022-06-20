@@ -97,13 +97,12 @@ public class BasicGlyphProvider implements GlyphProvider {
 				mapIdList.add(e.key);
 
 				float tl = (float) bd.x / (float) at.size;
-				float tt = (float) bd.y / (float) at.size;
+				float tb = (float) bd.y / (float) at.size;
 				float tr = (float) (bd.x + bd.width) / (float) at.size;
-				float tb = (float) (bd.y + bd.height) / (float) at.size;
+				float tt = (float) (bd.y + bd.height) / (float) at.size;
 
-				float ypos = 0;
-
-				float pb = ypos - e.glyphData.bearingY;
+//				float pb = ypos - e.glyphData.bearingY;
+				float pb = e.glyphData.bearingY - e.glyphData.height;
 				float pt = pb + e.glyphData.height;
 				float pl = xpos + e.glyphData.bearingX;
 				float pr = pl + e.glyphData.width;
@@ -284,7 +283,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 			glDisableVertexAttribArray(0);
 			glDisableVertexAttribArray(1);
 
-			program.utextureAddColor.set(new Vector4f());
+			program.utextureAddColor.set(0, 0, 0, 0);
 		}
 
 		@Override

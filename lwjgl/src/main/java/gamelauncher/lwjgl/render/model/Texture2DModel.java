@@ -10,8 +10,6 @@ import static org.lwjgl.system.MemoryUtil.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import org.lwjgl.opengl.GL11;
-
 import gamelauncher.engine.GameException;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
@@ -57,10 +55,10 @@ public class Texture2DModel implements MeshLikeModel {
 		texbuffer = glGenBuffers();
 		fbuffer = memAllocFloat(8);
 		fbuffer.put(new float[] {
-				0, 0,
 				0, 1,
-				1, 1,
-				1, 0
+				0, 0,
+				1, 0,
+				1, 1
 		}).flip();
 		GlStates.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
 		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
@@ -74,8 +72,10 @@ public class Texture2DModel implements MeshLikeModel {
 		program.uapplyLighting.set(0).upload();
 		GlStates.activeTexture(GL_TEXTURE0);
 		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
-		GL11.glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
 		GlStates.bindVertexArray(vao);
+		
+		
+		program.uploadUniforms();
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);
 		glDrawElements(GL_TRIANGLES, this.vertexCount, GL_UNSIGNED_INT, 0);

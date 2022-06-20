@@ -76,7 +76,6 @@ public class BasicUniform implements Uniform {
 	public Uniform set(int i) {
 		this.intBuffer.put(0, i);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 
@@ -89,7 +88,6 @@ public class BasicUniform implements Uniform {
 	public Uniform set(float f1) {
 		this.floatBuffer.put(0, f1);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 
@@ -97,7 +95,6 @@ public class BasicUniform implements Uniform {
 	public Uniform set(float f1, float f2) {
 		this.floatBuffer.put(0, f1).put(1, f2);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 
@@ -105,7 +102,6 @@ public class BasicUniform implements Uniform {
 	public Uniform set(float f1, float f2, float f3) {
 		this.floatBuffer.put(0, f1).put(1, f2).put(2, f3);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 
@@ -113,7 +109,6 @@ public class BasicUniform implements Uniform {
 	public Uniform set(float f1, float f2, float f3, float f4) {
 		this.floatBuffer.put(0, f1).put(1, f2).put(2, f3).put(3, f4);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 
@@ -137,7 +132,6 @@ public class BasicUniform implements Uniform {
 				.put(14, m32)
 				.put(15, m33);
 		this.hasValue.set(true);
-		upload();
 		return this;
 	}
 

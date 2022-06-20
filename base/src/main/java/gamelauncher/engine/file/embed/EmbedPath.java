@@ -21,11 +21,20 @@ public class EmbedPath implements java.nio.file.Path {
 	final EmbedFileSystem fileSystem;
 	final String[] segments;
 	final boolean absolute;
+	final boolean root;
 
 	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute) {
 		this.fileSystem = fileSystem;
 		this.segments = segments;
 		this.absolute = absolute;
+		this.root = false;
+	}
+
+	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute, boolean root) {
+		this.fileSystem = fileSystem;
+		this.segments = segments;
+		this.absolute = absolute;
+		this.root = root;
 	}
 
 	@Override
@@ -40,6 +49,14 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public Path getParent() {
+		if (absolute) {
+			if (segments.length == 1) {
+				return new EmbedPath(fileSystem, new String[0], true, true);
+			}
+			if (root) {
+				return null;
+			}
+		}
 		return new EmbedPath(fileSystem, Arrays.copyOf(segments, segments.length - 1), absolute);
 	}
 

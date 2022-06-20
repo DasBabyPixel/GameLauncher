@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,7 +42,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		setWindow(window);
 		setCamera(new BasicCamera(() -> window.scheduleDraw()));
 		window.renderLater(() -> {
-			glClearColor(.2F, .2F, .2F, .8F);
 			setGlyphProvider(new BasicGlyphProvider());
 		});
 		window.setRenderMode(RenderMode.ON_UPDATE);

@@ -17,24 +17,25 @@ public abstract class ResourceLoader {
 	public final void set() {
 		instance = this;
 	}
-	
+
 	public final boolean hasResource(Path path) throws GameException {
-		if(isResourceLoaded(path)) {
+		if (isResourceLoaded(path)) {
 			return true;
 		}
 		return canLoadResource(path);
 	}
-	
+
 	protected abstract boolean canLoadResource(Path path) throws GameException;
-	
+
 	protected abstract Resource loadResource(Path path) throws GameException;
-	
+
 	public final boolean isResourceLoaded(Path path) {
 		return resources.containsKey(path);
 	}
-	
+
 	public final Resource getResource(Path path) throws GameException {
-		if(isResourceLoaded(path)) {
+		path = path.toAbsolutePath();
+		if (isResourceLoaded(path)) {
 			lock.lock();
 			Resource resource = resources.get(path);
 			lock.unlock();
@@ -46,7 +47,7 @@ public abstract class ResourceLoader {
 		lock.unlock();
 		return resource;
 	}
-	
+
 	public static ResourceLoader getInstance() {
 		return instance;
 	}

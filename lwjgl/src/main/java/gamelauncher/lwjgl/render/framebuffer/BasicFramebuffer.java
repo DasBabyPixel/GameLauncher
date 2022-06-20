@@ -17,7 +17,7 @@ public class BasicFramebuffer extends Framebuffer {
 		this.width = width;
 		this.height = height;
 		bind();
-		colorTexture = new LWJGLTexture(glGenTextures());
+		colorTexture = new LWJGLTexture();
 		resizeColorTexture();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
 		depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, width, height);
@@ -60,9 +60,6 @@ public class BasicFramebuffer extends Framebuffer {
 	}
 
 	private void resizeColorTexture() {
-		colorTexture.bind();
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		colorTexture.allocate(width, height);
 //		GlStates.bindTexture(GL_TEXTURE_2D, colorTexture.getTextureId());
 //		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);

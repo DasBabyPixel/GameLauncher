@@ -129,8 +129,10 @@ public class LWJGLDrawContext implements DrawContext {
 			projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
 			projectionMatrix.identity();
-			projectionMatrix.ortho(0, window.getFramebufferWidth(), 0, window.getFramebufferHeight(), -10000, 10000);
-//			projectionMatrix.setOrtho2D(0, window.framebufferWidth.get(), 0, window.framebufferHeight.get());
+//			projectionMatrix.ortho(window.getFramebufferWidth() / 2F, -window.getFramebufferWidth() / 2F,
+//					window.getFramebufferHeight() / 2F,- window.getFramebufferHeight() / 2F, -10000, 10000);
+			projectionMatrix.setOrthoSymmetric(window.getFramebufferWidth(), window.getFramebufferHeight(), -10000,
+					10000);
 		}
 	}
 
@@ -188,11 +190,12 @@ public class LWJGLDrawContext implements DrawContext {
 		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<ShaderProgram>(program),
 				projectionMatrix, viewMatrix, projection);
 	}
-	
+
 	@Override
 	public DrawContext withProgram(GameLauncher launcher, Path path) throws GameException {
 		ShaderProgram program = ShaderLoader.loadShader(launcher, path);
-		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program), projectionMatrix, viewMatrix, projection);
+		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program),
+				projectionMatrix, viewMatrix, projection);
 	}
 
 	@Override
