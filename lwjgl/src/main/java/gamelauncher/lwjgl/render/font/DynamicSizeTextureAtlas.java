@@ -73,6 +73,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		}
 		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, GL_ALPHA, GL_UNSIGNED_BYTE,
 				glyph.abuffer);
 		glyphBounds.put(id, rect);
@@ -115,6 +117,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 					}
 				}
 				memFree(pixels);
+				System.out.println("Writing texture atlas to working directory");
 				ImageIO.write(img, "png",
 						new File("tatlas-" + this.fileSuffixAppendix.apply(DynamicSizeTextureAtlas.this) + ".png"));
 			} catch (IOException ex) {

@@ -45,7 +45,6 @@ public class LWJGLModelLoader implements ModelLoader {
 //						? stream.getPath().getPath().substring(1)
 //						: stream.getPath().getPath();
 //		Path file = modelDirectory.resolve(p + ".bin");
-		System.out.println(stream.getPath().getClass().getName());
 		Path file = modelDirectory.resolve(stream.getPath().getParent().toAbsolutePath().toString().substring(1))
 				.resolve(stream.getPath().getFileName() + ".bin");
 		boolean hasSavedFile = false;
