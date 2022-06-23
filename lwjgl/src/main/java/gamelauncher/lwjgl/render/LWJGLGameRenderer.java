@@ -6,14 +6,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Files;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
-import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
-import gamelauncher.lwjgl.render.font.BasicFont;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.shader.ShaderLoader;
@@ -31,8 +28,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 	private GameItem mainScreenItem;
 	private GameItem.GameItemModel mainScreenItemModel;
 
-	private Model model;
-	private Model model2;
+//	private Model model;
+//	private Model model2;
 	private ShaderProgram shaderhud;
 	private LWJGLDrawContext contexthud;
 	private GlContext glContext = new GlContext();
@@ -54,13 +51,13 @@ public class LWJGLGameRenderer implements GameRenderer {
 	@Override
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
-		model = launcher.getGlyphProvider()
-				.loadStaticModel(
-						new BasicFont(
-								Files.readAllBytes(launcher.getEmbedFileSystem().getPath("fonts/cinzel_regular.ttf"))),
-						"tesQT", 400);
-		model2 = launcher.getModelLoader()
-				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("cube.obj")));
+//		model = launcher.getGlyphProvider()
+//				.loadStaticModel(
+//						new BasicFont(
+//								Files.readAllBytes(launcher.getEmbedFileSystem().getPath("fonts/cinzel_regular.ttf"))),
+//						"tesQT", 400);
+//		model2 = launcher.getModelLoader()
+//				.loadModel(launcher.getResourceLoader().getResource(launcher.getEmbedFileSystem().getPath("cube.obj")));
 
 		shaderhud = ShaderLoader.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/hud/hud.json"));
 
@@ -133,12 +130,12 @@ public class LWJGLGameRenderer implements GameRenderer {
 			renderer.render(window);
 		}
 
-		contexthud.update(camera);
-		contexthud.drawModel(model, 0, 100, 0);
-		GameItem gi = new GameItem(model2);
-		gi.setScale(500);
-		contexthud.drawModel(new GameItem.GameItemModel(gi), 0, 0, 0);
-		shaderhud.clearUniforms();
+//		contexthud.update(camera);
+//		contexthud.drawModel(model, 0, 100, 0);
+//		GameItem gi = new GameItem(model2);
+//		gi.setScale(500);
+//		contexthud.drawModel(new GameItem.GameItemModel(gi), 0, 0, 0);
+//		shaderhud.clearUniforms();
 
 		mainFramebuffer.unbind();
 

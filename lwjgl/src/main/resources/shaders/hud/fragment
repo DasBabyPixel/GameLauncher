@@ -12,8 +12,5 @@ void main()
 {
     vec4 fc = color * (textureAddColor + texture(texture_sampler, outTexCoord));
     
-  //  fc = vec4((fc.x+fc.y+fc.z)/3, 0, 0, 0.3);
-    
-    fragColor = texture(texture_sampler, outTexCoord);
     fragColor = fc;
 }
