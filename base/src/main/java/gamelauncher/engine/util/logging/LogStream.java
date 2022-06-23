@@ -11,12 +11,12 @@ import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import gamelauncher.engine.util.logging.OutErrStream.Output;
+import gamelauncher.engine.util.logging.SelectiveStream.Output;
 
 public class LogStream extends OutputStream {
 
 	private final PrintStream out;
-	private final OutErrStream system;
+	private final SelectiveStream system;
 
 	private final Logger logger;
 	private final Lock lock = new ReentrantLock(true);
@@ -62,9 +62,9 @@ public class LogStream extends OutputStream {
 
 	private void setSystemLevel(LogLevel level) {
 		if (level.getLevel() > LogLevel.ERROR.getLevel()) {
-			system.output.set(Output.ERR);
+			system.setOutput(Output.ERR);
 		} else {
-			system.output.set(Output.OUT);
+			system.setOutput(Output.OUT);
 		}
 	}
 

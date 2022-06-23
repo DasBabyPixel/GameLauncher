@@ -3,9 +3,16 @@ package gamelauncher.engine.util.logging;
 import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicReference;
 
+import gamelauncher.engine.util.logging.SelectiveStream.Output;
+
 public abstract class Logger {
 
-	public static final OutErrStream system = new OutErrStream(System.out, System.err);
+	public static final SelectiveStream system = new SelectiveStream();
+	
+	static {
+		system.addEntry(System.out, Output.OUT);
+		system.addEntry(System.err, Output.ERR);
+	}
 
 	private final AtomicReference<StackTraceElement> caller = new AtomicReference<>(null);
 	private final AtomicReference<LogLevel> callerLevel = new AtomicReference<>(null);
@@ -23,7 +30,7 @@ public abstract class Logger {
 	}
 
 	public void errorf(String message, Object... args) {
-		log(LogLevel.INFO, String.format(message, args));
+		log(LogLevel.ERROR, String.format(message, args));
 	}
 
 	public void debug(Object message) {
@@ -31,7 +38,7 @@ public abstract class Logger {
 	}
 
 	public void debugf(String message, Object... args) {
-		log(LogLevel.INFO, String.format(message, args));
+		log(LogLevel.DEBUG, String.format(message, args));
 	}
 
 	public void warn(Object message) {
@@ -39,7 +46,7 @@ public abstract class Logger {
 	}
 
 	public void warnf(String message, Object... args) {
-		log(LogLevel.INFO, String.format(message, args));
+		log(LogLevel.WARN, String.format(message, args));
 	}
 
 	public abstract boolean shouldDisplay(LogLevel level);

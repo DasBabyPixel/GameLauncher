@@ -96,10 +96,10 @@ public class BasicGlyphProvider implements GlyphProvider {
 				Rectangle bd = at.glyphBounds.get(id);
 				mapIdList.add(e.key);
 
-				float tl = (float) bd.x / (float) at.size;
-				float tb = (float) bd.y / (float) at.size;
-				float tr = (float) (bd.x + bd.width) / (float) at.size;
-				float tt = (float) (bd.y + bd.height) / (float) at.size;
+				float tl = (bd.x + 0.0F) / (at.size + 0F);
+				float tb = (bd.y + 0.0F) / (at.size + 0F);
+				float tr = tl + (bd.width - 0.0F) / (at.size + 0F);
+				float tt = tb + (bd.height - 0.0F) / (at.size + 0F);
 
 //				float pb = ypos - e.glyphData.bearingY;
 				float pb = e.glyphData.bearingY - e.glyphData.height;

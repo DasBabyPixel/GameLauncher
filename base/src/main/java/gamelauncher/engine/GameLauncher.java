@@ -22,6 +22,8 @@ import com.google.gson.JsonElement;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.file.Files;
 import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
+import gamelauncher.engine.game.Game;
+import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
@@ -58,6 +60,8 @@ public abstract class GameLauncher {
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
+	private GameRegistry gameRegistry;
+	private Game currentGame;
 
 	public GameLauncher() {
 		this.logger = Logger.getLogger(getClass());
@@ -65,6 +69,7 @@ public abstract class GameLauncher {
 		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
 		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+		this.gameRegistry = new GameRegistry();
 		try {
 			URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
 			URI uri = URI.create("embed:/");
@@ -78,14 +83,9 @@ public abstract class GameLauncher {
 		this.settings = new MainSettingSection(eventManager);
 	}
 
-//	protected void setFileSystem(FileSystem fileSystem, FileSystem embedFileSystem) {
-//		this.fileSystem = fileSystem;
-//		this.embedFileSystem = embedFileSystem;
-//		this.gameDirectory = this.fileSystem.getPath(NAME);
-//		this.dataDirectory = this.gameDirectory.resolve("data");
-//		this.settingsFile = this.gameDirectory.resolve("settings.json");
-//		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
-//	}
+	public GameRegistry getGameRegistry() {
+		return gameRegistry;
+	}
 
 	public PluginManager getPluginManager() {
 		return pluginManager;
@@ -102,6 +102,14 @@ public abstract class GameLauncher {
 
 	public GlyphProvider getGlyphProvider() {
 		return glyphProvider;
+	}
+	
+	public Game getCurrentGame() {
+		return currentGame;
+	}
+	
+	public void setCurrentGame(Game currentGame) {
+		this.currentGame = currentGame;
 	}
 
 	public void setGlyphProvider(GlyphProvider glyphProvider) {
