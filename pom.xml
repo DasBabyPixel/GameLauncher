@@ -8,5 +8,6 @@
 		<module>base</module>
 		<module>lwjgl</module>
 		<module>orbits</module>
+		<module>labyrinth</module>
 	</modules>
 </project>

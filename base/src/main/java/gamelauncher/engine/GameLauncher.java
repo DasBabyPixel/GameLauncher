@@ -79,8 +79,6 @@ public abstract class GameLauncher {
 		}
 		this.eventManager = new EventManager();
 		this.pluginManager = new PluginManager(this);
-		registerSettingInsertions();
-		this.settings = new MainSettingSection(eventManager);
 	}
 
 	public GameRegistry getGameRegistry() {
@@ -192,9 +190,6 @@ public abstract class GameLauncher {
 		Files.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
 
-	protected void registerSettingInsertions() {
-	}
-
 	public final void start(String[] args) throws GameException {
 
 		if (window != null) {
@@ -208,9 +203,19 @@ public abstract class GameLauncher {
 
 		StartCommandSettings scs = StartCommandSettings.parse(args);
 
+		gameThread = new GameThread(this);
+		
+		for (Path externalPlugin : scs.externalPlugins) {
+			this.pluginManager.loadPlugin(externalPlugin);
+		}
+		this.pluginManager.loadPlugins(pluginsDirectory);
+		
 		Files.createDirectories(gameDirectory);
 		Files.createDirectories(dataDirectory);
 		Files.createDirectories(pluginsDirectory);
+		
+		registerSettingInsertions();
+		this.settings = new MainSettingSection(eventManager);
 		if (!Files.exists(settingsFile)) {
 			Files.createFile(settingsFile);
 			settings.setDefaultValue();
@@ -244,20 +249,16 @@ public abstract class GameLauncher {
 			}
 		}
 
-		gameThread = new GameThread(this);
 		gameThread.runLater(() -> {
 			start0();
-
 		});
 		gameThread.start();
 
-		for (Path externalPlugin : scs.externalPlugins) {
-			this.pluginManager.loadPlugin(externalPlugin);
-		}
-		this.pluginManager.loadPlugins(pluginsDirectory);
-
 //		this.pluginManager.loadPlugin(this.getEmbedFileSystem().getPath("orbits-0.0.1-SNAPSHOT.jar"));
 
+	}
+	
+	protected void registerSettingInsertions() {
 	}
 
 	public int getCurrentTick() {

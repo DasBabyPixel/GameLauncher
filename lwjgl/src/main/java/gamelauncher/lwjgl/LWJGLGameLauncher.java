@@ -128,7 +128,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		mouseMovement(false);
 		
 	}
-
+	
 	@Override
 	protected void registerSettingInsertions() {
 		new MouseSensivityInsertion().register(this);
