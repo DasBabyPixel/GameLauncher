@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.shader;
+package gamelauncher.engine.render.shader;
 
 import org.joml.Matrix4f;
 import org.joml.Vector2f;

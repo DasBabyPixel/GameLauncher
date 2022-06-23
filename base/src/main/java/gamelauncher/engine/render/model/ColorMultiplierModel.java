@@ -1,8 +1,6 @@
-package gamelauncher.lwjgl.render.model;
+package gamelauncher.engine.render.model;
 
 import org.joml.Vector4f;
-
-import gamelauncher.engine.render.Model;
 
 public interface ColorMultiplierModel extends Model {
 

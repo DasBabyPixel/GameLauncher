@@ -9,6 +9,7 @@
 	<properties>
 		<pngdecoder.version>1.0</pngdecoder.version>
 		<auto-service.version>1.0.1</auto-service.version>
+		<joml.version>1.10.4</joml.version>
 	</properties>
 	<build>
 		<plugins>
@@ -25,6 +26,11 @@
 	</build>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.joml</groupId>
+			<artifactId>joml</artifactId>
+			<version>${joml.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.auto.service</groupId>
 			<artifactId>auto-service</artifactId>

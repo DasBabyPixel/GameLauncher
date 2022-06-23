@@ -1,8 +1,8 @@
 package gamelauncher.lwjgl.render.shader.struct;
 
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.lwjgl.render.shader.BasicUniform.Type;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
-import gamelauncher.lwjgl.render.shader.Uniform;
 
 public interface Struct {
 

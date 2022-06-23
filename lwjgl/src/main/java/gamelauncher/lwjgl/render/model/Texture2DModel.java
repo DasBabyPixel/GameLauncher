@@ -11,11 +11,12 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
-public class Texture2DModel implements MeshLikeModel {
+public class Texture2DModel implements Model {
 
 	private final int vao;
 	private final int posbuffer;

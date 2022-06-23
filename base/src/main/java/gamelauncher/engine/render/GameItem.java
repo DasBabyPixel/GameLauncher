@@ -1,19 +1,18 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.engine.render;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.render.Model;
+import gamelauncher.engine.render.model.ColorMultiplierModel;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameResource;
-import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
-import gamelauncher.lwjgl.render.model.MeshLikeModel;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class GameItem implements GameResource {
 
-	protected MeshLikeModel model;
+	protected Model model;
 	private final Vector3f position;
 	private final Vector3f scale;
 	private final Vector3f rotation;
@@ -26,20 +25,9 @@ public class GameItem implements GameResource {
 		color = new Vector4f(1, 1, 1, 1);
 	}
 
-	public GameItem(Model model) throws GameException {
-		this(cast(model));
-	}
-
-	public GameItem(MeshLikeModel model) {
+	public GameItem(Model model) {
 		this();
 		this.model = model;
-	}
-
-	private static MeshLikeModel cast(Model model) throws GameException {
-		if (model instanceof MeshLikeModel) {
-			return (MeshLikeModel) model;
-		}
-		throw new GameException("Can't cast model to MeshLikeModel");
 	}
 
 	public Vector3f getPosition() {
@@ -84,7 +72,7 @@ public class GameItem implements GameResource {
 		this.rotation.z = z;
 	}
 
-	public MeshLikeModel getModel() {
+	public Model getModel() {
 		return model;
 	}
 
@@ -101,7 +89,7 @@ public class GameItem implements GameResource {
 		transformationMatrix.scale(scale.x, scale.y, scale.z);
 	}
 
-	public static class GameItemModel implements MeshLikeModel, ColorMultiplierModel {
+	public static class GameItemModel implements ColorMultiplierModel {
 		public final GameItem gameItem;
 
 		public GameItemModel(GameItem gameItem) {

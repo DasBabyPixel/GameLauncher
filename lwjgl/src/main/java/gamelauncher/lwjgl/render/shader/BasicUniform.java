@@ -13,6 +13,9 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import gamelauncher.engine.render.shader.ProgramObject;
+import gamelauncher.engine.render.shader.Uniform;
+
 public class BasicUniform implements Uniform {
 
 	private final int id;

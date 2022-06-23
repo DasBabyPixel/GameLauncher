@@ -1,9 +1,8 @@
 package gamelauncher.engine.render;
 
-import java.nio.file.Path;
-
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 
 public interface DrawContext {
 
@@ -14,24 +13,30 @@ public interface DrawContext {
 
 	void drawModel(Model model, double x, double y, double z) throws GameException;
 
-	void setProjection(Transformations.Projection projection) throws GameException;
-	
+	void drawModel(Model model) throws GameException;
+
 	DrawContext withProjection(Transformations.Projection projection) throws GameException;
 	
-	DrawContext duplicate() throws GameException;
-	
+	DrawContext withProgram(ShaderProgram program) throws GameException;
+
 	Transformations.Projection getProjection();
 	
-	DrawContext withProgram(GameLauncher launcher, Path path) throws GameException;
+	ShaderProgram getProgram();
 	
-	void reloadProjectionMatrix() throws GameException;
-	
-	void update(Camera camera) throws GameException;
+	void setProgram(ShaderProgram program) throws GameException;
+
+	void setProjection(Transformations.Projection projection) throws GameException;
 
 	DrawContext translate(double x, double y, double z) throws GameException;
 
 	DrawContext scale(double x, double y, double z) throws GameException;
-	
+
+	void update(Camera camera) throws GameException;
+
 	void cleanup() throws GameException;
+
+	DrawContext duplicate() throws GameException;
+
+	void reloadProjectionMatrix() throws GameException;
 
 }

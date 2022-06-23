@@ -5,7 +5,6 @@ import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.plugin.Plugin.GamePlugin;
-import gamelauncher.engine.render.GameRenderer;
 
 @GamePlugin
 public class Labyrinth extends Plugin {
@@ -16,10 +15,9 @@ public class Labyrinth extends Plugin {
 
 	@Override
 	public void onEnable() {
-		System.out.println("Labyrinth enabled");
 		GameLauncher launcher = getLauncher();
-		GameRenderer gr = launcher.getGameRenderer();
-		gr.setRenderer(new LabyrinthRender(this));
+//		GameRenderer gr = launcher.getGameRenderer();
+//		gr.setRenderer(new LabyrinthRender(this));
 		
 		launcher.getEventManager().registerListener(this);
 	}

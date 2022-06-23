@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.shader;
+package gamelauncher.engine.render.shader;
 
 import java.util.concurrent.atomic.AtomicReference;
 

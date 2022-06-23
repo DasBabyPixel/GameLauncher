@@ -35,7 +35,7 @@ public class PluginManager {
 	}
 
 	public void loadPlugins(Path folder) throws GameException {
-		logger.infof("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
+		logger.debugf("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
 		DirectoryStream<Path> stream = Files.newDirectoryStream(folder);
 		Iterator<Path> it = stream.iterator();
 		while (it.hasNext()) {
@@ -53,23 +53,16 @@ public class PluginManager {
 	}
 
 	public void loadPlugin(Path plugin) throws GameException {
-		logger.infof("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
+		logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
 		try {
 			PluginClassLoader pcl = new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this,
 					plugin.toUri().toURL());
 			Collection<Class<?>> pluginClasses = new HashSet<>();
 			try (EntryInputStream ein = new EntryInputStream(plugin)) {
-				// ZipInputStream zin = new ZipInputStream(Files.newInputStream(plugin),
-				// StandardCharsets.UTF_8);
-				// ZipEntry ze;
 				EntryInputStream.Entry e;
 				while (ein.hasNextEntry()) {
 					e = ein.getNextEntry();
 
-					System.out.println("Entry: " + e.getName());
-					// ze = zin.getNextEntry();
-					// if (ze == null)
-					// break;
 					if (!e.getName().endsWith(".class") || e.getName().startsWith("META-INF")) {
 						continue;
 					}
@@ -122,6 +115,18 @@ public class PluginManager {
 				| IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
 			throw new GameException(ex);
 		}
+	}
+	
+	public void unloadPlugin(Plugin plugin) throws GameException {
+		PluginInfo info = this.infos.get(plugin.getName());
+		info.lock.lock();
+		PluginClassLoader pcl = info.loader.getAndSet(null);
+		try {
+			pcl.pmClose();
+		} catch (IOException ex) {
+			throw new GameException(ex);
+		}
+		info.lock.unlock();
 	}
 
 	Class<?> findClass(String name) {

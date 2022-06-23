@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render;
 
 import java.lang.ref.WeakReference;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,20 +11,19 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
-import gamelauncher.engine.render.Model;
+import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.Transformations;
+import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.Transformations.Projection;
+import gamelauncher.engine.render.model.ColorMultiplierModel;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameConsumer;
-import gamelauncher.lwjgl.render.GameItem.GameItemModel;
 import gamelauncher.lwjgl.render.light.DirectionalLight;
 import gamelauncher.lwjgl.render.light.PointLight;
-import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
-import gamelauncher.lwjgl.render.model.MeshLikeModel;
-import gamelauncher.lwjgl.render.shader.ShaderLoader;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
+import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 
 public class LWJGLDrawContext implements DrawContext {
 
@@ -129,10 +127,7 @@ public class LWJGLDrawContext implements DrawContext {
 			projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
 			projectionMatrix.identity();
-//			projectionMatrix.ortho(window.getFramebufferWidth() / 2F, -window.getFramebufferWidth() / 2F,
-//					window.getFramebufferHeight() / 2F,- window.getFramebufferHeight() / 2F, -10000, 10000);
-			projectionMatrix.setOrthoSymmetric(window.getFramebufferWidth(), window.getFramebufferHeight(), -10000,
-					10000);
+			projectionMatrix.ortho(window.getFramebufferWidth(), 0, window.getFramebufferHeight(), 0, -10000, 10000);
 		}
 	}
 
@@ -158,12 +153,9 @@ public class LWJGLDrawContext implements DrawContext {
 			GameItem item = ((GameItemModel) model).gameItem;
 			item.applyToTransformationMatrix(modelMatrix);
 			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier);
-		} else if (model instanceof MeshLikeModel) {
-			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
-			drawMesh((MeshLikeModel) model, colorMultiplier);
 		} else {
-			throw new GameException(
-					"Cant Draw Model: " + model.toString() + " (Class: " + model.getClass().getName() + ")");
+			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
+			drawMesh(model, colorMultiplier);
 		}
 	}
 
@@ -186,14 +178,13 @@ public class LWJGLDrawContext implements DrawContext {
 				viewMatrix, projection);
 	}
 
-	public LWJGLDrawContext withProgram(ShaderProgram program) {
+	public LWJGLDrawContext withProgram(LWJGLShaderProgram program) {
 		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<ShaderProgram>(program),
 				projectionMatrix, viewMatrix, projection);
 	}
 
 	@Override
-	public DrawContext withProgram(GameLauncher launcher, Path path) throws GameException {
-		ShaderProgram program = ShaderLoader.loadShader(launcher, path);
+	public DrawContext withProgram(ShaderProgram program) throws GameException {
 		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program),
 				projectionMatrix, viewMatrix, projection);
 	}
@@ -207,11 +198,16 @@ public class LWJGLDrawContext implements DrawContext {
 	}
 
 	@Override
+	public void drawModel(Model model) throws GameException {
+		drawModel(model, 0, 0, 0);
+	}
+
+	@Override
 	public void drawModel(Model model, double x, double y, double z) throws GameException {
 		drawModel(model, x, y, z, 0, 0, 0);
 	}
 
-	private void drawMesh(MeshLikeModel model, Vector4f colorMultiplier) throws GameException {
+	private void drawMesh(Model model, Vector4f colorMultiplier) throws GameException {
 		ShaderProgram shaderProgram = this.shaderProgram.get();
 		shaderProgram.bind();
 		shaderProgram.umodelMatrix.set(modelMatrix);
@@ -233,7 +229,7 @@ public class LWJGLDrawContext implements DrawContext {
 			new PointLight.Attenuation(0, 0, 1));
 	DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(0, -1, 0), 1);
 	float lightAngle = 0;
-	ShaderProgram skybox;
+	LWJGLShaderProgram skybox;
 
 	@Override
 	public void update(Camera camera) throws GameException {
@@ -279,10 +275,12 @@ public class LWJGLDrawContext implements DrawContext {
 		viewMatrix.translate(-camera.getX(), -camera.getY(), -camera.getZ());
 	}
 
+	@Override
 	public void setProgram(ShaderProgram program) {
 		this.shaderProgram.set(program);
 	}
 
+	@Override
 	public ShaderProgram getProgram() {
 		return shaderProgram.get();
 	}

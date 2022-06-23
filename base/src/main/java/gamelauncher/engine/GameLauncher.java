@@ -27,9 +27,10 @@ import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
-import gamelauncher.engine.render.ModelLoader;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.font.GlyphProvider;
+import gamelauncher.engine.render.model.ModelLoader;
+import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
@@ -55,6 +56,7 @@ public abstract class GameLauncher {
 	private GameRenderer gameRenderer;
 	private ModelLoader modelLoader;
 	private GlyphProvider glyphProvider;
+	private ShaderLoader shaderLoader;
 	private Camera camera;
 	private PluginManager pluginManager;
 	private ResourceLoader resourceLoader;
@@ -100,6 +102,14 @@ public abstract class GameLauncher {
 
 	public GlyphProvider getGlyphProvider() {
 		return glyphProvider;
+	}
+	
+	protected void setShaderLoader(ShaderLoader shaderLoader) {
+		this.shaderLoader = shaderLoader;
+	}
+	
+	public ShaderLoader getShaderLoader() {
+		return shaderLoader;
 	}
 	
 	public Game getCurrentGame() {

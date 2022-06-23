@@ -14,6 +14,9 @@ import com.google.gson.JsonSyntaxException;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.shader.ShaderLoader;
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.Arrays;
@@ -21,11 +24,12 @@ import gamelauncher.engine.util.GameConsumer;
 import gamelauncher.lwjgl.render.shader.struct.Custom;
 import gamelauncher.lwjgl.render.shader.struct.Struct;
 
-public class ShaderLoader {
+public class LWJGLShaderLoader implements ShaderLoader {
 
 	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-	public static ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
+	@Override
+	public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
 		ResourceLoader loader = launcher.getResourceLoader();
 		ResourceStream rootStream = loader.getResource(path).newResourceStream();
 		String rootutf8 = rootStream.readUTF8FullyClose();
@@ -37,7 +41,7 @@ public class ShaderLoader {
 			String fspathstr = root.get("fragmentShader").getAsString();
 			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream().readUTF8FullyClose();
 			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
-			ShaderProgram program = new ShaderProgram(launcher);
+			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher);
 			program.createVertexShader(vscode);
 			program.createFragmentShader(fscode);
 			program.link();
@@ -50,15 +54,13 @@ public class ShaderLoader {
 				structs = Arrays.asList(Struct.primitives);
 			}
 			loadUniforms(program, root.get("uniforms").getAsJsonObject(), structs);
-//			launcher.getLogger().info(program.uniformMap);
-//			launcher.getLogger().info(program.uploadUniforms);
 			return program;
 		} catch (JsonSyntaxException ex) {
 			throw new GameException("Invalid Json File", ex);
 		}
 	}
 
-	private static void loadUniforms(ShaderProgram p, JsonObject uniforms, Collection<Struct> structs)
+	private static void loadUniforms(LWJGLShaderProgram p, JsonObject uniforms, Collection<Struct> structs)
 			throws GameException {
 		loadUniform(p, structs, uniforms, "material", u -> p.umaterial = u);
 		loadUniform(p, structs, uniforms, "modelMatrix", u -> p.umodelMatrix = u);
@@ -76,7 +78,7 @@ public class ShaderLoader {
 		loadUniform(p, structs, uniforms, "applyLighting", u -> p.uapplyLighting = u);
 	}
 
-	private static Uniform loadUniform(ShaderProgram program, String uniform, Struct struct) {
+	private static Uniform loadUniform(LWJGLShaderProgram program, String uniform, Struct struct) {
 		Uniform u = struct.createUniform(program, uniform);
 		program.uniformMap.put(uniform, u);
 		if (struct instanceof Custom) {
@@ -88,7 +90,7 @@ public class ShaderLoader {
 		return u;
 	}
 
-	private static void loadUniform(ShaderProgram program, Collection<Struct> structs, JsonObject ouniforms,
+	private static void loadUniform(LWJGLShaderProgram program, Collection<Struct> structs, JsonObject ouniforms,
 			String uniform, GameConsumer<Uniform> successConsumer) throws GameException {
 		if (!ouniforms.has(uniform)) {
 			return;

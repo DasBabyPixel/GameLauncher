@@ -30,14 +30,13 @@ import org.joml.Vector4f;
 import org.lwjgl.stb.STBTTFontinfo;
 
 import gamelauncher.engine.GameException;
-import gamelauncher.engine.render.Model;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.font.GlyphProvider;
+import gamelauncher.engine.render.model.ColorMultiplierModel;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.Color;
 import gamelauncher.lwjgl.render.GlStates;
-import gamelauncher.lwjgl.render.model.ColorMultiplierModel;
-import gamelauncher.lwjgl.render.model.MeshLikeModel;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
 public class BasicGlyphProvider implements GlyphProvider {
 
@@ -187,7 +186,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 		private int tex;
 	}
 
-	public static class GlyphsModel implements MeshLikeModel {
+	public static class GlyphsModel implements Model {
 
 		private final GlyphsMesh[] meshes;
 
@@ -213,7 +212,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 		}
 	}
 
-	public class GlyphsMesh implements MeshLikeModel, ColorMultiplierModel {
+	public class GlyphsMesh implements ColorMultiplierModel {
 
 		private final Color textureAddColor = Color.white.withAlpha(0F);
 		private final Vector4f vectorTextureAddColor = new Vector4f(textureAddColor.r, textureAddColor.g,

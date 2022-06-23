@@ -20,6 +20,7 @@ import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
 import gamelauncher.lwjgl.render.font.BasicGlyphProvider;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
+import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
 import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
 
 public class LWJGLGameLauncher extends GameLauncher {
@@ -31,7 +32,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	public LWJGLGameLauncher() throws GameException {
 		setResourceLoader(new SimpleResourceLoader());
-//		setFileSystem(new LWJGLFileSystem(), new EmbedFileSystem());
+		setShaderLoader(new LWJGLShaderLoader());
 		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 	}

@@ -3,9 +3,9 @@ package gamelauncher.lwjgl.render.shader.struct;
 import java.util.HashMap;
 import java.util.Map;
 
-import gamelauncher.lwjgl.render.shader.ObjectUniform;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
-import gamelauncher.lwjgl.render.shader.Uniform;
+import gamelauncher.engine.render.shader.ObjectUniform;
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.render.shader.Uniform;
 
 public class Custom implements Struct {
 

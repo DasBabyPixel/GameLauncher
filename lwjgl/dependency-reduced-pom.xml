@@ -107,7 +107,6 @@
     </dependencies>
   </dependencyManagement>
   <properties>
-    <joml.version>1.10.4</joml.version>
     <lwjgl.version>3.3.1</lwjgl.version>
   </properties>
 </project>

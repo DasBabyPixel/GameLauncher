@@ -1,4 +1,4 @@
-package gamelauncher.engine.render;
+package gamelauncher.engine.render.model;
 
 import gamelauncher.engine.GameException;
 import gamelauncher.engine.resource.Resource;

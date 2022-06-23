@@ -1,10 +1,11 @@
 package gamelauncher.lwjgl.render.model;
 
 import gamelauncher.engine.GameException;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.lwjgl.render.Mesh;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
-public class MeshModel implements MeshLikeModel {
+public class MeshModel implements Model {
 
 	private final Mesh mesh;
 

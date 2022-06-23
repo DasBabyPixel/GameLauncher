@@ -9,5 +9,6 @@
 		<module>lwjgl</module>
 		<module>orbits</module>
 		<module>labyrinth</module>
+		<module>example</module>
 	</modules>
 </project>
