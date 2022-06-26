@@ -10,21 +10,22 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.GameItem;
-import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.GameItem.GameItemModel;
+import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
-import gamelauncher.engine.util.GameConsumer;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.lwjgl.render.light.DirectionalLight;
 import gamelauncher.lwjgl.render.light.PointLight;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 
+@SuppressWarnings("javadoc")
 public class LWJGLDrawContext implements DrawContext {
 
 	private static final Vector3f X_AXIS = new Vector3f(1, 0, 0);

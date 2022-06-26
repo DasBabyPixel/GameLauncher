@@ -12,7 +12,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.shader.ShaderProgram;
@@ -20,12 +19,20 @@ import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.Arrays;
-import gamelauncher.engine.util.GameConsumer;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.lwjgl.render.shader.struct.Custom;
 import gamelauncher.lwjgl.render.shader.struct.Struct;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class LWJGLShaderLoader implements ShaderLoader {
 
+	/**
+	 * The gson for shaderPrograms
+	 */
 	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 	@Override

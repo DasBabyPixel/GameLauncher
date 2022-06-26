@@ -6,6 +6,7 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
 
+@SuppressWarnings("javadoc")
 public class EmbedFileStore extends FileStore {
 
 	private final EmbedFileSystem efs;

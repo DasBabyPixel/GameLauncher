@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("javadoc")
 public class EmbedFileSystem extends FileSystem {
 
 	private static final Set<String> supportedFileAttributeViews = Collections

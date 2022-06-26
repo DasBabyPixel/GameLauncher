@@ -1,9 +1,9 @@
 package gamelauncher.example;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Window;
+import gamelauncher.engine.util.GameException;
 
 public class ExampleRenderer extends Renderer {
 

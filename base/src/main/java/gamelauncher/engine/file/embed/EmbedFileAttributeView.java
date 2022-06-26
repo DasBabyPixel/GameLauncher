@@ -7,6 +7,7 @@ import java.nio.file.attribute.FileTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@SuppressWarnings("javadoc")
 public class EmbedFileAttributeView implements BasicFileAttributeView {
 
 	private final EmbedPath path;

@@ -10,6 +10,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameCallable;
+import gamelauncher.engine.util.function.GameRunnable;
+
+/**
+ * @author DasBabyPixel
+ */
 public class GameThread extends Thread {
 
 	private final AtomicBoolean exit = new AtomicBoolean(false);
@@ -21,6 +28,9 @@ public class GameThread extends Thread {
 	private final long second = TimeUnit.SECONDS.toNanos(1);
 	private final long tickTime = second / GameLauncher.MAX_TPS;
 
+	/**
+	 * @param launcher
+	 */
 	public GameThread(GameLauncher launcher) {
 		this.gameLauncher = launcher;
 		this.setName("GameThread");
@@ -107,11 +117,20 @@ public class GameThread extends Thread {
 		workQueue();
 	}
 
+	/**
+	 * @return the current tps
+	 */
 	public int getTps() {
 		removeOldTicks();
 		return ticks.size();
 	}
 
+	/**
+	 * Runs a {@link GameRunnable} on the {@link GameThread}
+	 * 
+	 * @param runnable
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> runLater(GameRunnable runnable) {
 		return runLater(() -> {
 			runnable.run();
@@ -119,6 +138,13 @@ public class GameThread extends Thread {
 		});
 	}
 
+	/**
+	 * Runs a {@link GameCallable} on the {@link GameThread}
+	 * 
+	 * @param <T>
+	 * @param callable
+	 * @return a completionFuture
+	 */
 	public <T> CompletableFuture<T> runLater(GameCallable<T> callable) {
 		CompletableFuture<T> future = new CompletableFuture<>();
 		runLater(callable, future);
@@ -151,24 +177,26 @@ public class GameThread extends Thread {
 		}
 	}
 
+	/**
+	 * @return the current tick
+	 */
 	public int getCurrentTick() {
 		return tick.get();
 	}
 
+	/**
+	 * Exits the {@link GameLauncher}
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> exit() {
 		exit.set(true);
 		return exitFuture;
 	}
 
+	/**
+	 * @return the ExitFuture
+	 */
 	public CompletableFuture<Void> getExitFuture() {
 		return exitFuture;
-	}
-
-	public static interface GameRunnable {
-		public void run() throws GameException;
-	}
-
-	public static interface GameCallable<T> {
-		public T call() throws GameException;
 	}
 }

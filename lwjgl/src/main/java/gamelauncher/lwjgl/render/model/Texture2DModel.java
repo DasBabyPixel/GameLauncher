@@ -10,12 +10,15 @@ import static org.lwjgl.system.MemoryUtil.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
+/**
+ * @author DasBabyPixel
+ */
 public class Texture2DModel implements Model {
 
 	private final int vao;
@@ -25,6 +28,9 @@ public class Texture2DModel implements Model {
 	private final int vertexCount;
 	private final LWJGLTexture texture;
 
+	/**
+	 * @param texture
+	 */
 	public Texture2DModel(LWJGLTexture texture) {
 		this.texture = texture;
 		//@formatter:off

@@ -10,6 +10,10 @@ import java.util.concurrent.locks.Lock;
 
 import gamelauncher.engine.plugin.PluginManager.PluginInfo;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class PluginClassLoader extends URLClassLoader {
 
 	private final PluginManager pm;
@@ -18,6 +22,11 @@ public class PluginClassLoader extends URLClassLoader {
 	final Map<String, Class<?>> classes = new ConcurrentHashMap<>();
 	final Collection<Plugin> plugins = ConcurrentHashMap.newKeySet();
 
+	/**
+	 * @param parent
+	 * @param pm
+	 * @param plugin
+	 */
 	public PluginClassLoader(ClassLoader parent, PluginManager pm, URL plugin) {
 		super(new URL[] {
 				plugin
@@ -68,6 +77,7 @@ public class PluginClassLoader extends URLClassLoader {
 			info.plugin.get().onDisable();
 			info.plugin.set(null);
 			info.loader.set(null);
+			pm.infos.remove(pl.getName());
 			info.lock.unlock();
 		}
 		for (String s : classes.keySet()) {

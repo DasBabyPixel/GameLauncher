@@ -2,12 +2,18 @@ package gamelauncher.engine.util.logging;
 
 import java.io.PrintStream;
 
+/**
+ * @author DasBabyPixel
+ */
 public class SimpleLogger extends Logger {
 
 	private int level = 0;
 	private final String name;
 	private final LogStream logStream;
 
+	/**
+	 * @param name
+	 */
 	public SimpleLogger(String name) {
 		this.name = name;
 		this.logStream = new LogStream(this);

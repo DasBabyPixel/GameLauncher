@@ -3,9 +3,10 @@ package gamelauncher.lwjgl.render.framebuffer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
+@SuppressWarnings("javadoc")
 public class BasicFramebuffer extends Framebuffer {
 
 	private int width, height;

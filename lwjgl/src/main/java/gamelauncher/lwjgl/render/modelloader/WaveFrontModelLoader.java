@@ -12,11 +12,12 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.file.Files;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class WaveFrontModelLoader implements ModelSubLoader {
 
 	private final GameLauncher launcher;

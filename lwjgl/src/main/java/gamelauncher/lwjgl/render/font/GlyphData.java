@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render.font;
 
+@SuppressWarnings("javadoc")
 public class GlyphData {
 
 	public int width;

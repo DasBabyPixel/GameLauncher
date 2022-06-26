@@ -21,9 +21,11 @@ import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.file.Files;
+import gamelauncher.engine.file.embed.EmbedFileSystem;
 import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
+import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
@@ -34,13 +36,25 @@ import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
-import gamelauncher.engine.util.StartCommandSettings;
+import gamelauncher.engine.settings.StartCommandSettings;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 
+/**
+ * @author DasBabyPixel
+ */
 public abstract class GameLauncher {
 
+	/**
+	 * The GameLauncher name
+	 */
 	public static final String NAME = "GameLauncher";
+	/**
+	 * The max TPS in the {@link GameThread}
+	 */
 	public static final int MAX_TPS = 60;
 	private final EventManager eventManager;
 	private final Logger logger;
@@ -52,11 +66,14 @@ public abstract class GameLauncher {
 	private Path dataDirectory;
 	private Path settingsFile;
 	private Path pluginsDirectory;
+	private OperatingSystem operatingSystem;
 	private SettingSection settings;
 	private GameRenderer gameRenderer;
 	private ModelLoader modelLoader;
 	private GlyphProvider glyphProvider;
 	private ShaderLoader shaderLoader;
+	private GuiManager guiManager;
+	private KeybindManager keybindManager;
 	private Camera camera;
 	private PluginManager pluginManager;
 	private ResourceLoader resourceLoader;
@@ -65,6 +82,9 @@ public abstract class GameLauncher {
 	private GameRegistry gameRegistry;
 	private Game currentGame;
 
+	/**
+	 * Creates a new GameLauncher
+	 */
 	public GameLauncher() {
 		this.logger = Logger.getLogger(getClass());
 		this.gameDirectory = Paths.get(NAME).toAbsolutePath();
@@ -83,10 +103,49 @@ public abstract class GameLauncher {
 		this.pluginManager = new PluginManager(this);
 	}
 
+	protected void setGuiManager(GuiManager guiManager) {
+		this.guiManager = guiManager;
+	}
+
+	protected void setKeybindManager(KeybindManager keybindManager) {
+		this.keybindManager = keybindManager;
+	}
+
+	/**
+	 * @return the {@link KeybindManager}
+	 */
+	public KeybindManager getKeybindManager() {
+		return keybindManager;
+	}
+
+	/**
+	 * @return the {@link GuiManager}
+	 */
+	public GuiManager getGuiManager() {
+		return guiManager;
+	}
+
+	protected void setOperatingSystem(OperatingSystem operatingSystem) {
+		this.operatingSystem = operatingSystem;
+	}
+
+	/**
+	 * @return the {@link OperatingSystem}
+	 */
+	public OperatingSystem getOperatingSystem() {
+		return operatingSystem;
+	}
+
+	/**
+	 * @return the {@link GameRegistry}
+	 */
 	public GameRegistry getGameRegistry() {
 		return gameRegistry;
 	}
 
+	/**
+	 * @return the {@link PluginManager}
+	 */
 	public PluginManager getPluginManager() {
 		return pluginManager;
 	}
@@ -100,66 +159,121 @@ public abstract class GameLauncher {
 		this.modelLoader = loader;
 	}
 
+	/**
+	 * @return the {@link GlyphProvider}
+	 */
 	public GlyphProvider getGlyphProvider() {
 		return glyphProvider;
 	}
-	
+
 	protected void setShaderLoader(ShaderLoader shaderLoader) {
 		this.shaderLoader = shaderLoader;
 	}
-	
+
+	/**
+	 * @return the {@link ShaderLoader}
+	 */
 	public ShaderLoader getShaderLoader() {
 		return shaderLoader;
 	}
-	
+
+	/**
+	 * @return the current {@link Game}
+	 */
 	public Game getCurrentGame() {
 		return currentGame;
 	}
-	
+
+	/**
+	 * Sets the current {@link Game}
+	 * 
+	 * @param currentGame
+	 */
 	public void setCurrentGame(Game currentGame) {
 		this.currentGame = currentGame;
 	}
 
+	/**
+	 * Sets the current {@link GlyphProvider}
+	 * 
+	 * @param glyphProvider
+	 */
 	public void setGlyphProvider(GlyphProvider glyphProvider) {
 		this.glyphProvider = glyphProvider;
 	}
 
+	/**
+	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
+	 * 
+	 * @param throwable
+	 */
 	public void handleError(Throwable throwable) {
 		throwable.printStackTrace();
 	}
 
+	/**
+	 * @return the {@link Camera}
+	 */
 	public Camera getCamera() {
 		return camera;
 	}
 
+	/**
+	 * Sets the {@link Camera}
+	 * 
+	 * @param camera
+	 */
 	public void setCamera(Camera camera) {
 		this.camera = camera;
 	}
 
+	/**
+	 * @return the {@link EventManager}
+	 */
 	public EventManager getEventManager() {
 		return eventManager;
 	}
 
+	/**
+	 * @return the {@link EmbedFileSystem}
+	 */
 	public FileSystem getEmbedFileSystem() {
 		return embedFileSystem;
 	}
 
+	/**
+	 * @return the {@link Logger}
+	 */
 	public Logger getLogger() {
 		return logger;
 	}
 
+	/**
+	 * @return the {@link ModelLoader}
+	 */
 	public ModelLoader getModelLoader() {
 		return modelLoader;
 	}
 
+	/**
+	 * @return the {@link ResourceLoader}
+	 */
 	public ResourceLoader getResourceLoader() {
 		return resourceLoader;
 	}
 
+	/**
+	 * @return if the {@link GameLauncher} is in debug mode
+	 */
 	public boolean isDebugMode() {
 		return debugMode;
 	}
 
+	/**
+	 * Sets the {@link GameLauncher}'s debug mode
+	 * 
+	 * @param debugMode
+	 */
 	public void setDebugMode(boolean debugMode) {
 		this.debugMode = debugMode;
 	}
@@ -176,30 +290,49 @@ public abstract class GameLauncher {
 		this.window.setFrameRenderer(gameRenderer);
 	}
 
+	/**
+	 * @return the data directory
+	 */
 	public Path getDataDirectory() {
 		return dataDirectory;
 	}
 
-//	public FileSystem getFileSystem() {
-//		return fileSystem;
-//	}
-
+	/**
+	 * @return the game directory
+	 */
 	public Path getGameDirectory() {
 		return gameDirectory;
 	}
 
+	/**
+	 * @return the plugins directory
+	 */
 	public Path getPluginsDirectory() {
 		return pluginsDirectory;
 	}
 
+	/**
+	 * @return the {@link GameRenderer}
+	 */
 	public GameRenderer getGameRenderer() {
 		return gameRenderer;
 	}
 
+	/**
+	 * Saves the current settings
+	 * 
+	 * @throws GameException
+	 */
 	public void saveSettings() throws GameException {
 		Files.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
 
+	/**
+	 * Starts the {@link GameLauncher}
+	 * 
+	 * @param args
+	 * @throws GameException
+	 */
 	public final void start(String[] args) throws GameException {
 
 		if (window != null) {
@@ -214,16 +347,16 @@ public abstract class GameLauncher {
 		StartCommandSettings scs = StartCommandSettings.parse(args);
 
 		gameThread = new GameThread(this);
-		
+
 		for (Path externalPlugin : scs.externalPlugins) {
 			this.pluginManager.loadPlugin(externalPlugin);
 		}
 		this.pluginManager.loadPlugins(pluginsDirectory);
-		
+
 		Files.createDirectories(gameDirectory);
 		Files.createDirectories(dataDirectory);
 		Files.createDirectories(pluginsDirectory);
-		
+
 		registerSettingInsertions();
 		this.settings = new MainSettingSection(eventManager);
 		if (!Files.exists(settingsFile)) {
@@ -264,20 +397,27 @@ public abstract class GameLauncher {
 		});
 		gameThread.start();
 
-//		this.pluginManager.loadPlugin(this.getEmbedFileSystem().getPath("orbits-0.0.1-SNAPSHOT.jar"));
-
 	}
-	
+
 	protected void registerSettingInsertions() {
 	}
 
+	/**
+	 * @return the current tick of the {@link GameLauncher}
+	 */
 	public int getCurrentTick() {
 		return gameThread.getCurrentTick();
 	}
 
+	/**
+	 * Stops the {@link GameLauncher}
+	 * 
+	 * @throws GameException
+	 */
 	public void stop() throws GameException {
 		try {
 			gameThread.exit().get();
+			this.pluginManager.unloadPlugins();
 			this.embedFileSystem.close();
 		} catch (InterruptedException | ExecutionException | IOException ex) {
 			throw new GameException(ex);

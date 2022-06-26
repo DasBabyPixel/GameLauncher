@@ -2,10 +2,11 @@ package gamelauncher.lwjgl.render.framebuffer;
 
 import static org.lwjgl.opengl.GL30.*;
 
-import gamelauncher.engine.GameException;
-import gamelauncher.engine.util.GameResource;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.render.GlStates;
 
+@SuppressWarnings("javadoc")
 public class Framebuffer implements GameResource {
 
 	private final int id;

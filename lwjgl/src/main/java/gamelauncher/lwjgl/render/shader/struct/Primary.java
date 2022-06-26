@@ -8,14 +8,24 @@ import gamelauncher.lwjgl.render.shader.BasicUniform;
 import gamelauncher.lwjgl.render.shader.BasicUniform.Type;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class Primary implements Struct {
 
 	private final Type type;
 
+	/**
+	 * @param type
+	 */
 	public Primary(Type type) {
 		this.type = type;
 	}
 
+	/**
+	 * @return the type of this struct
+	 */
 	public Type getType() {
 		return type;
 	}

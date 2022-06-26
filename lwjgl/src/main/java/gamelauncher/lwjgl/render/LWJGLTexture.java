@@ -12,10 +12,11 @@ import java.util.Objects;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.resource.ResourceStream;
-import gamelauncher.engine.util.GameResource;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameResource;
 
+@SuppressWarnings("javadoc")
 public class LWJGLTexture implements GameResource {
 
 	private final int textureId;

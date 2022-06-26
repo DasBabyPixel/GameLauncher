@@ -19,6 +19,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 
+import org.lwjgl.glfw.GLFWCharCallbackI;
 import org.lwjgl.glfw.GLFWCursorEnterCallbackI;
 import org.lwjgl.glfw.GLFWCursorPosCallbackI;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
@@ -30,31 +31,37 @@ import org.lwjgl.glfw.GLFWWindowPosCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 import org.lwjgl.opengl.GL;
 
-import gamelauncher.engine.GameException;
+import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class LWJGLWindow implements Window {
 
-	public final Logger logger;
+	private final Logger logger;
 
 	private static final AtomicLong names = new AtomicLong(0);
 
-	public final AtomicLong id = new AtomicLong();
-	public final AtomicLong name = new AtomicLong();
-	public final AtomicInteger width = new AtomicInteger();
-	public final AtomicInteger height = new AtomicInteger();
-	private final AtomicInteger framebufferWidth = new AtomicInteger();
-	private final AtomicInteger framebufferHeight = new AtomicInteger();
-	public final AtomicInteger x = new AtomicInteger();
-	public final AtomicInteger y = new AtomicInteger();
-	public final AtomicReference<String> title = new AtomicReference<>();
-	public final LWJGLMouse mouse = new LWJGLMouse(this);
+	private final AtomicLong id = new AtomicLong();
+	private final AtomicLong name = new AtomicLong();
+	private final NumberValue width = NumberValue.zero();
+	private final NumberValue height = NumberValue.zero();
+	private final NumberValue framebufferWidth = NumberValue.zero();
+	private final NumberValue framebufferHeight = NumberValue.zero();
+	private final AtomicInteger x = new AtomicInteger();
+	private final AtomicInteger y = new AtomicInteger();
+	private final AtomicReference<String> title = new AtomicReference<>();
+	private final LWJGLMouse mouse = new LWJGLMouse(this);
 	private final AtomicReference<FrameRenderer> frameRenderer = new AtomicReference<>(null);
 	private final AtomicBoolean floating = new AtomicBoolean(false);
 	private final AtomicBoolean decorated = new AtomicBoolean(true);
@@ -69,9 +76,9 @@ public class LWJGLWindow implements Window {
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
 	private final LWJGLInput input = new LWJGLInput(this);
 	private final CompletableFuture<Window> closeFuture = new CompletableFuture<>();
-//	private final BasicCamera camera = new BasicCamera(this);
 	private final Phaser drawPhaser = new Phaser();
-	public final AtomicBoolean swapBuffers = new AtomicBoolean(false);
+	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
+	private final GameLauncher launcher;
 	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
 		@Override
 		public void close() {
@@ -79,16 +86,62 @@ public class LWJGLWindow implements Window {
 		}
 	});
 
-//	public LWJGLCamera getCamera() {
-//		return camera;
-//	}
-
-	public LWJGLWindow(int width, int height, String title) {
-		this.width.set(width);
-		this.height.set(height);
+	/**
+	 * @param launcher
+	 * @param width
+	 * @param height
+	 * @param title
+	 */
+	public LWJGLWindow(GameLauncher launcher, int width, int height, String title) {
+		this.launcher = launcher;
+		this.width.setNumber(width);
+		this.height.setNumber(height);
 		this.title.set(title);
 		this.name.set(names.incrementAndGet());
 		this.logger = Logger.getLogger(getClass().getSimpleName() + "-" + name.get());
+	}
+
+	/**
+	 * @return the GLFW id of the window
+	 */
+	public long getId() {
+		return id.get();
+	}
+	
+	/**
+	 * @param swap
+	 */
+	public void swapBuffers(boolean swap) {
+		this.swapBuffers.set(swap);
+	}
+
+	/**
+	 * @return the width property
+	 */
+	public NumberValue width() {
+		return width;
+	}
+
+	/**
+	 * @return the height property
+	 */
+	public NumberValue height() {
+		return height;
+	}
+
+	@Override
+	public GameLauncher getLauncher() {
+		return launcher;
+	}
+
+	@Override
+	public NumberValue framebufferHeight() {
+		return framebufferHeight;
+	}
+
+	@Override
+	public NumberValue framebufferWidth() {
+		return framebufferWidth;
 	}
 
 	@Override
@@ -111,6 +164,12 @@ public class LWJGLWindow implements Window {
 		return closeFuture;
 	}
 
+	/**
+	 * Sets the title of this window
+	 * 
+	 * @param title
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> setTitle(String title) {
 		return later(() -> {
 			glfwSetWindowTitle(id.get(), title);
@@ -118,14 +177,28 @@ public class LWJGLWindow implements Window {
 		});
 	}
 
+	/**
+	 * @return the {@link CloseCallback} of this window
+	 */
 	public CloseCallback getCloseCallback() {
 		return closeCallback.get();
 	}
 
+	/**
+	 * Sets the {@link CloseCallback} of this window
+	 * 
+	 * @param closeCallback
+	 */
 	public void setCloseCallback(CloseCallback closeCallback) {
 		this.closeCallback.set(closeCallback);
 	}
 
+	/**
+	 * Runs this {@link Runnable} on the Render Thread
+	 * 
+	 * @param runnable
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> renderLater(Runnable runnable) {
 		RenderThread thread = renderThread.get();
 		if (thread != null) {
@@ -136,6 +209,12 @@ public class LWJGLWindow implements Window {
 		return f;
 	}
 
+	/**
+	 * Runs this {@link Runnable} on the Window Thread
+	 * 
+	 * @param runnable
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> later(Runnable runnable) {
 		WindowThread thread = windowThread.get();
 		if (thread != null) {
@@ -148,14 +227,17 @@ public class LWJGLWindow implements Window {
 
 	@Override
 	public int getFramebufferHeight() {
-		return framebufferHeight.get();
+		return framebufferHeight.intValue();
 	}
 
 	@Override
 	public int getFramebufferWidth() {
-		return framebufferWidth.get();
+		return framebufferWidth.intValue();
 	}
 
+	/**
+	 * @return if this window is closed
+	 */
 	public boolean isClosed() {
 		WindowThread t = windowThread.get();
 		if (t == null)
@@ -163,8 +245,18 @@ public class LWJGLWindow implements Window {
 		return t.closeFuture.isDone();
 	}
 
+	/**
+	 * @return if this window is floating
+	 */
 	public boolean isFloating() {
 		return floating.get();
+	}
+
+	/**
+	 * @return the Mouse
+	 */
+	public LWJGLMouse getMouse() {
+		return mouse;
 	}
 
 	@Override
@@ -178,6 +270,11 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Shows this window and immediatly swaps the buffers
+	 * 
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> showAndEndFrame() {
 		return later(() -> {
 			RenderThread rt = renderThread.get();
@@ -192,34 +289,69 @@ public class LWJGLWindow implements Window {
 		});
 	}
 
+	/**
+	 * @return if this window is decorated
+	 */
 	public boolean isDecorated() {
 		return decorated.get();
 	}
 
+	/**
+	 * Sets if this window is decorated
+	 * 
+	 * @param decorated
+	 */
 	public void setDecorated(boolean decorated) {
 		if (this.decorated.compareAndSet(!decorated, decorated)) {
 			later(() -> glfwSetWindowAttrib(id.get(), GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE));
 		}
 	}
 
+	/**
+	 * Sets if this window is floating
+	 * 
+	 * @param floating
+	 */
 	public void setFloating(boolean floating) {
 		if (this.floating.compareAndSet(!floating, floating)) {
 			later(() -> glfwSetWindowAttrib(id.get(), GLFW_FLOATING, floating ? GLFW_TRUE : GLFW_FALSE));
 		}
 	}
 
+	/**
+	 * Sets the position of this window
+	 * 
+	 * @param x
+	 * @param y
+	 */
 	public void setPosition(int x, int y) {
 		later(() -> glfwSetWindowPos(id.get(), x, y));
 	}
 
+	/**
+	 * Sets the size of this window
+	 * 
+	 * @param w
+	 * @param h
+	 */
 	public void setSize(int w, int h) {
 		later(() -> glfwSetWindowSize(id.get(), w, h));
 	}
 
+	/**
+	 * Shows this window
+	 * 
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> show() {
 		return later(() -> glfwShowWindow(id.get()));
 	}
 
+	/**
+	 * Focuses this window
+	 * 
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> forceFocus() {
 		return later(() -> {
 			glfwRequestWindowAttention(id.get());
@@ -227,14 +359,27 @@ public class LWJGLWindow implements Window {
 		});
 	}
 
+	/**
+	 * Hides this window
+	 * 
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> hide() {
 		return later(() -> glfwHideWindow(id.get()));
 	}
 
+	/**
+	 * @return the {@link RenderMode} of this window
+	 */
 	public RenderMode getRenderMode() {
 		return renderMode.get();
 	}
 
+	/**
+	 * Sets the {@link RenderMode} of this window
+	 * 
+	 * @param mode
+	 */
 	public void setRenderMode(RenderMode mode) {
 		renderMode.set(mode);
 		RenderThread t = renderThread.get();
@@ -243,6 +388,9 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Creates the window
+	 */
 	public void createWindow() {
 		WindowThread thread;
 		if ((thread = windowThread.get()) == null) {
@@ -262,6 +410,9 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Closes the window
+	 */
 	public void closeWindow() {
 		stopRendering();
 		WindowThread thread;
@@ -277,6 +428,9 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Starts rendering
+	 */
 	public void startRendering() {
 		startRenderer.set(true);
 		if (windowThreadCreateFuture.get().isDone()) {
@@ -302,6 +456,9 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Stops rendering
+	 */
 	public void stopRendering() {
 		startRenderer.set(false);
 		RenderThread thread = renderThread.getAndSet(null);
@@ -320,16 +477,25 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * Waits for the nextFrame
+	 */
 	public void waitForFrame() {
 		drawPhaser.awaitAdvance(drawPhaser.getPhase());
 	}
 
+	/**
+	 * Schedules a draw and waits for the next frame
+	 */
 	public void scheduleDrawAndWaitForFrame() {
 		int phase = drawPhaser.getPhase();
 		scheduleDraw();
 		drawPhaser.awaitAdvance(phase);
 	}
 
+	/**
+	 * @return the {@link FrameCounter} object, if one present
+	 */
 	public Optional<FrameCounter> getFrameCounter() {
 		RenderThread rt = renderThread.get();
 		if (rt != null) {
@@ -338,10 +504,22 @@ public class LWJGLWindow implements Window {
 		return Optional.empty();
 	}
 
+	/**
+	 * Sets the size limits of this window
+	 * 
+	 * @param minw minimal width
+	 * @param minh minimal height
+	 * @param maxw maximal width
+	 * @param maxh maximal height
+	 * @return a completionFuture
+	 */
 	public CompletableFuture<Void> setLimits(int minw, int minh, int maxw, int maxh) {
 		return later(() -> glfwSetWindowSizeLimits(id.get(), minw, minh, maxw, maxh));
 	}
 
+	/**
+	 * Schedules a draw
+	 */
 	public void scheduleDraw() {
 		RenderThread thread = renderThread.get();
 		if (thread != null) {
@@ -482,7 +660,7 @@ public class LWJGLWindow implements Window {
 				}
 
 				if (viewportChanged.compareAndSet(true, false)) {
-					glViewport(0, 0, framebufferWidth.get(), framebufferHeight.get());
+					glViewport(0, 0, getFramebufferWidth(), getFramebufferHeight());
 					try {
 						fr.windowSizeChanged(LWJGLWindow.this);
 						context.invalidateProjectionMatrix();
@@ -550,7 +728,7 @@ public class LWJGLWindow implements Window {
 			glfwDefaultWindowHints();
 			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-			long id = glfwCreateWindow(width.get(), height.get(), title.get(), 0, 0);
+			long id = glfwCreateWindow(width.intValue(), height.intValue(), title.get(), 0, 0);
 			if (id == NULL) {
 				System.err.println("Failed to create GLFW Window");
 				System.exit(-1);
@@ -564,15 +742,19 @@ public class LWJGLWindow implements Window {
 			x.set(a0[0]);
 			y.set(a1[0]);
 			glfwGetFramebufferSize(id, a0, a1);
-			framebufferWidth.set(a0[0]);
-			framebufferHeight.set(a1[0]);
+			framebufferWidth.setNumber(a0[0]);
+			framebufferHeight.setNumber(a1[0]);
 
 			windowThreadCreateFuture.get().complete(this);
 
 			glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
 				@Override
 				public void invoke(long window, double xoffset, double yoffset) {
-					input.scroll(xoffset, yoffset);
+					try {
+						input.scroll((float) xoffset, (float) yoffset);
+					} catch (GameException ex) {
+						ex.printStackTrace();
+					}
 				}
 			});
 			glfwSetWindowCloseCallback(id, new GLFWWindowCloseCallbackI() {
@@ -594,15 +776,17 @@ public class LWJGLWindow implements Window {
 			glfwSetCursorPosCallback(id, new GLFWCursorPosCallbackI() {
 				@Override
 				public void invoke(long window, double xpos, double ypos) {
+					float omx = (float) mouse.getX();
+					float omy = (float) mouse.getY();
 					mouse.setPosition(xpos, ypos);
-					input.mouseMove(xpos, ypos);
+					input.mouseMove(omx, omy, (float) xpos, (float) ypos);
 				}
 			});
 			glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
 				@Override
 				public void invoke(long window, int w, int h) {
-					width.set(w);
-					height.set(h);
+					width.setNumber(w);
+					height.setNumber(h);
 				}
 			});
 			glfwSetWindowPosCallback(id, new GLFWWindowPosCallbackI() {
@@ -617,10 +801,10 @@ public class LWJGLWindow implements Window {
 				public void invoke(long window, int button, int action, int mods) {
 					switch (action) {
 					case GLFW_PRESS:
-						input.mousePress(button, mouse.getX(), mouse.getY());
+						input.mousePress(button, (float) mouse.getX(), (float) mouse.getY());
 						break;
 					case GLFW_RELEASE:
-						input.mouseRelease(button, mouse.getX(), mouse.getY());
+						input.mouseRelease(button, (float) mouse.getX(), (float) mouse.getY());
 						break;
 					default:
 						break;
@@ -632,24 +816,31 @@ public class LWJGLWindow implements Window {
 				public void invoke(long window, int key, int scancode, int action, int mods) {
 					switch (action) {
 					case GLFW_PRESS:
-						input.keyPress(key);
+						input.keyPress(key, scancode, (char) 0);
 						break;
 					case GLFW_RELEASE:
-						input.keyRelease(key);
+						input.keyRelease(key, scancode, (char) 0);
 						break;
 					case GLFW_REPEAT:
-						input.keyRepeat(key);
+						input.keyRepeat(key, scancode, (char) 0);
 						break;
 					default:
 						break;
 					}
 				}
 			});
+			glfwSetCharCallback(id, new GLFWCharCallbackI() {
+				@Override
+				public void invoke(long window, int codepoint) {
+					char ch = (char) codepoint;
+					input.character(ch);
+				}
+			});
 			glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
 				@Override
 				public void invoke(long window, int width, int height) {
-					framebufferWidth.set(width);
-					framebufferHeight.set(height);
+					framebufferWidth.setNumber(width);
+					framebufferHeight.setNumber(height);
 					logger.debugf("Viewport changed: (%4d, %4d)", width, height);
 					RenderThread rt = renderThread.get();
 					if (rt != null) {
@@ -696,7 +887,15 @@ public class LWJGLWindow implements Window {
 		}
 	}
 
+	/**
+	 * @author DasBabyPixel
+	 */
 	public static interface CloseCallback {
+		/**
+		 * Closes
+		 * 
+		 * @throws GameException
+		 */
 		void close() throws GameException;
 	}
 

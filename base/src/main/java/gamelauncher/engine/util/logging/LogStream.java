@@ -13,6 +13,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 
+/**
+ * @author DasBabyPixel
+ */
 public class LogStream extends OutputStream {
 
 	private final PrintStream out;
@@ -25,6 +28,9 @@ public class LogStream extends OutputStream {
 	private boolean newLine = true;
 	private boolean nextNewLine = false;
 
+	/**
+	 * @param logger
+	 */
 	public LogStream(Logger logger) {
 		this.logger = logger;
 		this.system = Logger.system;
@@ -68,6 +74,10 @@ public class LogStream extends OutputStream {
 		}
 	}
 
+	/**
+	 * @param level
+	 * @param message
+	 */
 	public void log(LogLevel level, Object message) {
 		lock.lock();
 		setSystemLevel(level);
@@ -134,6 +144,9 @@ public class LogStream extends OutputStream {
 		out.printf("%s%n", message);
 	}
 
+	/**
+	 * @return the {@link PrintStream}
+	 */
 	public PrintStream getOutputStream() {
 		return out;
 	}

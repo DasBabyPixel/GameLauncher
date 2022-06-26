@@ -3,10 +3,13 @@ package gamelauncher.engine.resource;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.file.Files;
-import gamelauncher.engine.util.GameSupplier;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameSupplier;
 
+/**
+ * @author DasBabyPixel
+ */
 public class SimpleResourceLoader extends ResourceLoader {
 
 	@Override

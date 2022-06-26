@@ -4,7 +4,6 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
@@ -14,9 +13,11 @@ import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 
+@SuppressWarnings("javadoc")
 public class LWJGLGameRenderer implements GameRenderer {
 
 	public static final boolean WIREFRAMES = false;

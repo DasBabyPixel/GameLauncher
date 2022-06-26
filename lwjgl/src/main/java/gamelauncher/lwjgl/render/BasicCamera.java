@@ -4,12 +4,18 @@ import org.joml.Vector3f;
 
 import gamelauncher.engine.render.Camera;
 
+/**
+ * @author DasBabyPixel
+ */
 public class BasicCamera implements Camera {
 
 	private final Runnable scheduleDraw;
 	private final Vector3f position = new Vector3f();
 	private final Vector3f rotation = new Vector3f();
 
+	/**
+	 * @param scheduleDraw
+	 */
 	public BasicCamera(Runnable scheduleDraw) {
 		this.scheduleDraw = scheduleDraw == null ? () -> {
 		} : scheduleDraw;
@@ -34,14 +40,6 @@ public class BasicCamera implements Camera {
 		}
 		position.y += offsetY;
 		scheduleDraw.run();
-	}
-
-	public Vector3f getPosition() {
-		return position;
-	}
-
-	public Vector3f getRotation() {
-		return rotation;
 	}
 
 	@Override

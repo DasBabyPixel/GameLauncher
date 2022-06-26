@@ -7,19 +7,22 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.file.Files;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 import gamelauncher.lwjgl.render.Mesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 
+/**
+ * @author DasBabyPixel
+ */
 public class LWJGLModelLoader implements ModelLoader {
 
 	private static final Logger logger = Logger.getLogger(LWJGLModelLoader.class);
@@ -28,6 +31,10 @@ public class LWJGLModelLoader implements ModelLoader {
 	private final Path modelDirectory;
 	private final String version = "0.0.11";
 
+	/**
+	 * @param launcher
+	 * @throws GameException
+	 */
 	public LWJGLModelLoader(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
 		this.modelDirectory = this.launcher.getDataDirectory().resolve("models");
@@ -41,10 +48,6 @@ public class LWJGLModelLoader implements ModelLoader {
 		ResourceStream stream = resource.newResourceStream();
 		String hash = hash(stream.readAllBytes());
 		stream.cleanup();
-//		String p = stream.getPath() instanceof EmbedPath
-//						? stream.getPath().getPath().substring(1)
-//						: stream.getPath().getPath();
-//		Path file = modelDirectory.resolve(p + ".bin");
 		Path file = modelDirectory.resolve(stream.getPath().getParent().toAbsolutePath().toString().substring(1))
 				.resolve(stream.getPath().getFileName() + ".bin");
 		boolean hasSavedFile = false;

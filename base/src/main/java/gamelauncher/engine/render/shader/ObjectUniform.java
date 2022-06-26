@@ -7,12 +7,19 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+/**
+ * @author DasBabyPixel
+ */
 public class ObjectUniform implements Uniform {
 
 	private final AtomicReference<ProgramObject> value = new AtomicReference<>();
 	private final ShaderProgram program;
 	private final String name;
 
+	/**
+	 * @param program
+	 * @param name
+	 */
 	public ObjectUniform(ShaderProgram program, String name) {
 		this.program = program;
 		this.name = name;

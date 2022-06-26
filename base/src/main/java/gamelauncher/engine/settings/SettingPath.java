@@ -2,14 +2,23 @@ package gamelauncher.engine.settings;
 
 import java.util.Objects;
 
+/**
+ * @author DasBabyPixel
+ */
 public class SettingPath {
 
 	private final String path;
 
+	/**
+	 * @param path
+	 */
 	public SettingPath(String path) {
 		this.path = path;
 	}
 
+	/**
+	 * @return the path
+	 */
 	public String getPath() {
 		return path;
 	}

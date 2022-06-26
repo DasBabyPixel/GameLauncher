@@ -13,14 +13,26 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.util.Arrays;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class EventManager {
 
 	private final Map<Object, Listener> listeners = new ConcurrentHashMap<>();
 	private final Collection<Node> sorted = ConcurrentHashMap.newKeySet();
 
+	/**
+	 */
 	public EventManager() {
 	}
 
+	/**
+	 * Posts the event for this {@link EventManager}
+	 * @param <T>
+	 * @param event
+	 * @return the event
+	 */
 	public <T extends Event> T post(T event) {
 		for (Node node : sorted) {
 			node.invoke(event);
@@ -28,12 +40,18 @@ public class EventManager {
 		return event;
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void registerListener(Object listener) {
 		Listener l = new Listener(listener);
 		listeners.put(listener, l);
 		sortMethodNodes();
 	}
 
+	/**
+	 * @param listener
+	 */
 	public void unregisterListener(Object listener) {
 		listeners.remove(listener);
 		sortMethodNodes();

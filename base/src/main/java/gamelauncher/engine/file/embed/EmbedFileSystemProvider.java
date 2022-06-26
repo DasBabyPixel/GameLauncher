@@ -34,6 +34,7 @@ import java.util.Set;
 
 import com.google.auto.service.AutoService;
 
+@SuppressWarnings("javadoc")
 @AutoService(FileSystemProvider.class)
 public class EmbedFileSystemProvider extends FileSystemProvider {
 

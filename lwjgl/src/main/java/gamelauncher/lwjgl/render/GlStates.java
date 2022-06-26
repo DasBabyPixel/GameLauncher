@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@SuppressWarnings("javadoc")
 public class GlStates {
 
 	private static final Map<Integer, Integer> bindTexture = new ConcurrentHashMap<>();

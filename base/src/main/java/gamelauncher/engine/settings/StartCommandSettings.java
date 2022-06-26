@@ -1,10 +1,14 @@
-package gamelauncher.engine.util;
+package gamelauncher.engine.settings;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 
+/**
+ * @author DasBabyPixel
+ */
+@SuppressWarnings("javadoc")
 public class StartCommandSettings {
 
 	public final Collection<Path> externalPlugins = new HashSet<>();
@@ -12,6 +16,10 @@ public class StartCommandSettings {
 	private StartCommandSettings() {
 	}
 
+	/**
+	 * @param args
+	 * @return the parsed {@link StartCommandSettings}
+	 */
 	public static StartCommandSettings parse(String[] args) {
 		StartCommandSettings settings = new StartCommandSettings();
 		for (String arg : args) {

@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL14.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@SuppressWarnings("javadoc")
 public class GlContext {
 
 	public final DepthState depth = new DepthState();

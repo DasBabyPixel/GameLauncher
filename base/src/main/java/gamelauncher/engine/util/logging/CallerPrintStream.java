@@ -4,13 +4,21 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Locale;
 
+/**
+ * @author DasBabyPixel
+ */
 public class CallerPrintStream extends PrintStream {
 
-	public final Logger logger;
-	public final OutputStream parent;
-	public final LogLevel level;
+	private final Logger logger;
+	private final OutputStream parent;
+	private final LogLevel level;
 	private StackTraceElement caller = null;
 
+	/**
+	 * @param level
+	 * @param logger
+	 * @param out
+	 */
 	public CallerPrintStream(LogLevel level, Logger logger, OutputStream out) {
 		super(out, true);
 		this.level = level;

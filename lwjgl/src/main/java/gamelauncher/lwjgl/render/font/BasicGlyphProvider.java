@@ -29,15 +29,16 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.stb.STBTTFontinfo;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.Color;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.GlStates;
 
+@SuppressWarnings("javadoc")
 public class BasicGlyphProvider implements GlyphProvider {
 
 	private final Map<GlyphKey, GlyphEntry> entries = new ConcurrentHashMap<>();

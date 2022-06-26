@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+@SuppressWarnings("javadoc")
 public class EmbedPath implements java.nio.file.Path {
 
 	final EmbedFileSystem fileSystem;

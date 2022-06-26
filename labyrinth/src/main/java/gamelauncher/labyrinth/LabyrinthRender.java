@@ -2,7 +2,6 @@ package gamelauncher.labyrinth;
 
 import java.nio.file.FileSystem;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.GameItem;
@@ -14,6 +13,7 @@ import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.ResourceLoader;
+import gamelauncher.engine.util.GameException;
 
 public class LabyrinthRender extends Renderer {
 

@@ -1,14 +1,20 @@
 package gamelauncher.lwjgl.render.model;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.Mesh;
 
+/**
+ * @author DasBabyPixel
+ */
 public class MeshModel implements Model {
 
 	private final Mesh mesh;
 
+	/**
+	 * @param mesh
+	 */
 	public MeshModel(Mesh mesh) {
 		this.mesh = mesh;
 	}

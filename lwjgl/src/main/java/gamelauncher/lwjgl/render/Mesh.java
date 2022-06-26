@@ -15,11 +15,12 @@ import java.util.List;
 
 import org.joml.Vector4f;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.ShaderProgram;
-import gamelauncher.engine.util.GameResource;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameResource;
 
+@SuppressWarnings("javadoc")
 public class Mesh implements GameResource {
 
 	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);

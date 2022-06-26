@@ -7,11 +7,12 @@ import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.file.Files;
-import gamelauncher.engine.util.GameCloseable;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameResource;
 
-public class EntryInputStream implements GameCloseable, AutoCloseable {
+@SuppressWarnings("javadoc")
+public class EntryInputStream implements GameResource, AutoCloseable {
 
 	public final boolean directory;
 	public final Path path;
@@ -62,6 +63,11 @@ public class EntryInputStream implements GameCloseable, AutoCloseable {
 				throw new GameException(ex);
 			}
 		}
+	}
+
+	@Override
+	public void cleanup() throws GameException {
+		close();
 	}
 
 	public static class Entry {

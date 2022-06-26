@@ -1,14 +1,21 @@
 package gamelauncher.lwjgl.render.model;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.Mesh;
 
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class MeshArrayModel implements Model {
 
-	public final Mesh[] meshes;
+	private final Mesh[] meshes;
 
+	/**
+	 * @param meshes
+	 */
 	public MeshArrayModel(Mesh[] meshes) {
 		this.meshes = meshes;
 	}

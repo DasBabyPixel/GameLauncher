@@ -5,6 +5,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+@SuppressWarnings("javadoc")
 public class EmbedURLStreamHandler extends URLStreamHandler {
 
 	@Override

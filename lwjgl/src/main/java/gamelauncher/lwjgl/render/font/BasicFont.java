@@ -4,10 +4,11 @@ import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.ByteBuffer;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class BasicFont implements Font {
 
 	private final ByteBuffer data;

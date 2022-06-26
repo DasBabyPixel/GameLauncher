@@ -13,12 +13,18 @@ import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
 import gamelauncher.engine.util.logging.Logger;
 
+/**
+ * @author DasBabyPixel
+ */
 public abstract class AbstractSettingSection implements SettingSection {
 
 	protected final Lock lock = new ReentrantLock(false);
 	protected final Map<SettingPath, Setting<?>> settings = new ConcurrentHashMap<>();
 	protected final Logger logger = Logger.getLogger(SettingSection.class);
 
+	/**
+	 * @param eventManager
+	 */
 	public AbstractSettingSection(EventManager eventManager) {
 		addSettings(eventManager);
 		SettingSectionConstructor constructor = new SettingSectionConstructor(this, eventManager);
@@ -91,25 +97,44 @@ public abstract class AbstractSettingSection implements SettingSection {
 		}
 	}
 
+	/**
+	 * @author DasBabyPixel
+	 */
 	public static class SettingSectionConstructor {
 
 		private final Map<SettingPath, Setting<?>> settings = new HashMap<>();
 		private final AbstractSettingSection section;
 		private final EventManager eventManager;
 
+		/**
+		 * @param section
+		 * @param eventManager
+		 */
 		public SettingSectionConstructor(AbstractSettingSection section, EventManager eventManager) {
 			this.section = section;
 			this.eventManager = eventManager;
 		}
 
+		/**
+		 * Adds a setting
+		 * 
+		 * @param path
+		 * @param setting
+		 */
 		public void addSetting(SettingPath path, Setting<?> setting) {
 			settings.put(path, setting);
 		}
-		
+
+		/**
+		 * @return the {@link AbstractSettingSection}
+		 */
 		public AbstractSettingSection getSection() {
 			return section;
 		}
 
+		/**
+		 * @return the {@link EventManager}
+		 */
 		public EventManager getEventManager() {
 			return eventManager;
 		}

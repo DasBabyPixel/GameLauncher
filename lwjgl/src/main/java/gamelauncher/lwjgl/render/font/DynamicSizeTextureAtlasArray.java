@@ -6,8 +6,9 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 
 	public final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();

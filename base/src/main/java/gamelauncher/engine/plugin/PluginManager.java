@@ -12,12 +12,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.file.Files;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 
+/**
+ * @author DasBabyPixel
+ */
 public class PluginManager {
 
 	private static final Logger logger = Logger.getLogger();
@@ -30,10 +34,19 @@ public class PluginManager {
 	final Lock classLoadingLock = new ReentrantLock();
 	final Lock pluginLoadLock = new ReentrantLock(true);
 
+	/**
+	 * @param launcher
+	 */
 	public PluginManager(GameLauncher launcher) {
 		this.launcher = launcher;
 	}
 
+	/**
+	 * Loads all the plugins in a folder
+	 * 
+	 * @param folder
+	 * @throws GameException
+	 */
 	public void loadPlugins(Path folder) throws GameException {
 		logger.debugf("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
 		DirectoryStream<Path> stream = Files.newDirectoryStream(folder);
@@ -46,12 +59,24 @@ public class PluginManager {
 		}
 	}
 
+	/**
+	 * Loads plugins
+	 * 
+	 * @param plugins
+	 * @throws GameException
+	 */
 	public void loadPlugins(Collection<Path> plugins) throws GameException {
 		for (Path path : plugins) {
 			loadPlugin(path);
 		}
 	}
 
+	/**
+	 * Loads the given plugin
+	 * 
+	 * @param plugin
+	 * @throws GameException
+	 */
 	public void loadPlugin(Path plugin) throws GameException {
 		logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
 		try {
@@ -116,17 +141,32 @@ public class PluginManager {
 			throw new GameException(ex);
 		}
 	}
-	
+
+	/**
+	 * Unloads all plugins
+	 * 
+	 * @throws GameException
+	 */
+	public void unloadPlugins() throws GameException {
+		for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).collect(Collectors.toList())) {
+			unloadPlugin(plugin);
+		}
+	}
+
+	/**
+	 * Unloads a plugin
+	 * 
+	 * @param plugin
+	 * @throws GameException
+	 */
 	public void unloadPlugin(Plugin plugin) throws GameException {
 		PluginInfo info = this.infos.get(plugin.getName());
-		info.lock.lock();
-		PluginClassLoader pcl = info.loader.getAndSet(null);
+		PluginClassLoader pcl = info.loader.get();
 		try {
 			pcl.pmClose();
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
-		info.lock.unlock();
 	}
 
 	Class<?> findClass(String name) {
@@ -147,15 +187,20 @@ public class PluginManager {
 		return cls;
 	}
 
+	/**
+	 * @author DasBabyPixel
+	 */
 	public static class PluginInfo {
 		final String name;
 		final Lock lock = new ReentrantLock(true);
 		final AtomicReference<Plugin> plugin = new AtomicReference<>();
 		final AtomicReference<PluginClassLoader> loader = new AtomicReference<>();
 
+		/**
+		 * @param name
+		 */
 		public PluginInfo(String name) {
 			this.name = name;
 		}
-
 	}
 }

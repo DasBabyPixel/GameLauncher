@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.lwjgl.render.font.BasicGlyphProvider.GlyphKey;
 
+@SuppressWarnings("javadoc")
 public class GlyphEntry {
 
 	public final GlyphKey key;

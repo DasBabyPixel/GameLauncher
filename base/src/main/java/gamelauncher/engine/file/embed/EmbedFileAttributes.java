@@ -3,6 +3,7 @@ package gamelauncher.engine.file.embed;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 
+@SuppressWarnings("javadoc")
 public class EmbedFileAttributes implements BasicFileAttributes {
 
 	private final boolean directory;

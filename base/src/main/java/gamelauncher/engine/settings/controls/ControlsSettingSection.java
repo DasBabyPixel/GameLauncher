@@ -3,8 +3,14 @@ package gamelauncher.engine.settings.controls;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.settings.AbstractSettingSection;
 
+/**
+ * @author DasBabyPixel
+ */
 public class ControlsSettingSection extends AbstractSettingSection {
 
+	/**
+	 * @param eventManager
+	 */
 	public ControlsSettingSection(EventManager eventManager) {
 		super(eventManager);
 	}

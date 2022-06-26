@@ -8,6 +8,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@SuppressWarnings("javadoc")
 public class EmbedURLConnection extends URLConnection {
 
 	private final ClassLoader cl;

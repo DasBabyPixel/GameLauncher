@@ -16,11 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
-import gamelauncher.engine.GameException;
-import gamelauncher.engine.util.GameFunction;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
+@SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlas extends TextureAtlas {
 
 	public int size;

@@ -5,8 +5,14 @@ import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
 import gamelauncher.engine.settings.AbstractSettingSection.SettingSectionConstructor;
 
+/**
+ * @author DasBabyPixel
+ */
 public abstract class SettingSectionInsertion {
 
+	/**
+	 * @param launcher
+	 */
 	public void register(GameLauncher launcher) {
 		launcher.getEventManager().registerListener(this);
 	}

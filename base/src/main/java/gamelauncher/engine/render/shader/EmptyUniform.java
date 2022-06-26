@@ -5,8 +5,14 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+/**
+ * @author DasBabyPixel
+ */
 public class EmptyUniform implements Uniform {
 
+	/**
+	 * 
+	 */
 	public static final EmptyUniform instance = new EmptyUniform();
 
 	private EmptyUniform() {
