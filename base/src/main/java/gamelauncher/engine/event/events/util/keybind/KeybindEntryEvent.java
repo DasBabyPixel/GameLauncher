@@ -1,4 +1,4 @@
-package gamelauncher.engine.event.util.keybind;
+package gamelauncher.engine.event.events.util.keybind;
 
 import gamelauncher.engine.event.Event;
 import gamelauncher.engine.util.keybind.KeybindEntry;

@@ -45,15 +45,29 @@ public class LWJGLGuiManager implements GuiManager {
 	}
 
 	@Override
+	public Gui getCurrentGui(Window window) throws GameException {
+		if (!guis.containsKey(window)) {
+			return null;
+		}
+		return guis.get(window).peekGui();
+	}
+
+	@Override
 	public void openGui(Window window, Gui gui) throws GameException {
 		GuiStack stack = guis.get(window);
+		if (stack == null) {
+			stack = new GuiStack();
+			guis.put(window, stack);
+		}
 		final boolean exit = gui == null;
 		Gui currentGui = exit ? stack.popGui() : stack.peekGui();
 		if (currentGui != null) {
 			currentGui.unfocus();
 			currentGui.onClose();
 			if (exit) {
-				currentGui.cleanup(window);
+				window.getRenderThread().runLater(() -> {
+					currentGui.cleanup(window);
+				});
 			}
 		} else {
 			if (exit) {
@@ -62,7 +76,10 @@ public class LWJGLGuiManager implements GuiManager {
 		}
 		if (gui != null) {
 			stack.pushGui(gui);
-			gui.init(window);
+			Gui fgui = gui;
+			window.getRenderThread().runLater(() -> {
+				fgui.init(window);
+			});
 			gui.onOpen();
 			gui.focus();
 		}

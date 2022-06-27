@@ -39,6 +39,11 @@ public interface Window {
 	NumberValue framebufferHeight();
 
 	/**
+	 * @return the {@link RenderThread} for this window
+	 */
+	RenderThread getRenderThread();
+
+	/**
 	 * @return the framebuffer width
 	 */
 	int getFramebufferWidth();
@@ -64,7 +69,7 @@ public interface Window {
 	 * @param renderer
 	 */
 	void setFrameRenderer(FrameRenderer renderer);
-	
+
 	/**
 	 * @return the {@link GameLauncher}
 	 */

@@ -26,6 +26,8 @@ import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiManager;
+import gamelauncher.engine.gui.GuiRenderer;
+import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.GameRenderer;
@@ -310,6 +312,12 @@ public abstract class GameLauncher {
 	public Path getPluginsDirectory() {
 		return pluginsDirectory;
 	}
+	/**
+	 * @return the {@link GameThread}
+	 */
+	public GameThread getGameThread() {
+		return gameThread;
+	}
 
 	/**
 	 * @return the {@link GameRenderer}
@@ -394,6 +402,12 @@ public abstract class GameLauncher {
 
 		gameThread.runLater(() -> {
 			start0();
+			guiManager.openGuiByClass(window, MainScreenGui.class);
+			if (gameRenderer.getRenderer() == null) {
+				gameRenderer.setRenderer(new GuiRenderer(this));
+			} else {
+				logger.warn("Not using GuiRenderer: " + gameRenderer.getRenderer().getClass().getName());
+			}
 		});
 		gameThread.start();
 

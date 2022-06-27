@@ -36,8 +36,11 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
+import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameCallable;
+import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
@@ -70,11 +73,11 @@ public class LWJGLWindow implements Window {
 	private final AtomicReference<CompletableFuture<WindowThread>> windowThreadCreateFuture = new AtomicReference<>(
 			new CompletableFuture<>());
 	private final AtomicBoolean startRenderer = new AtomicBoolean(false);
-	private final AtomicReference<RenderThread> renderThread = new AtomicReference<>(null);
+	private final AtomicReference<LRenderThread> renderThread = new AtomicReference<>(null);
 	private final Queue<Future> windowThreadFutures = new ConcurrentLinkedQueue<>();
 	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
 	private final LWJGLDrawContext context = new LWJGLDrawContext(this);
-	private final LWJGLInput input = new LWJGLInput(this);
+	private final LWJGLInput input;
 	private final CompletableFuture<Window> closeFuture = new CompletableFuture<>();
 	private final Phaser drawPhaser = new Phaser();
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
@@ -94,6 +97,7 @@ public class LWJGLWindow implements Window {
 	 */
 	public LWJGLWindow(GameLauncher launcher, int width, int height, String title) {
 		this.launcher = launcher;
+		this.input = new LWJGLInput(this);
 		this.width.setNumber(width);
 		this.height.setNumber(height);
 		this.title.set(title);
@@ -107,7 +111,7 @@ public class LWJGLWindow implements Window {
 	public long getId() {
 		return id.get();
 	}
-	
+
 	/**
 	 * @param swap
 	 */
@@ -200,7 +204,7 @@ public class LWJGLWindow implements Window {
 	 * @return a completionFuture
 	 */
 	public CompletableFuture<Void> renderLater(Runnable runnable) {
-		RenderThread thread = renderThread.get();
+		LRenderThread thread = renderThread.get();
 		if (thread != null) {
 			return thread.later(runnable);
 		}
@@ -277,7 +281,7 @@ public class LWJGLWindow implements Window {
 	 */
 	public CompletableFuture<Void> showAndEndFrame() {
 		return later(() -> {
-			RenderThread rt = renderThread.get();
+			LRenderThread rt = renderThread.get();
 			if (rt != null) {
 				rt.bindContext();
 			}
@@ -382,7 +386,7 @@ public class LWJGLWindow implements Window {
 	 */
 	public void setRenderMode(RenderMode mode) {
 		renderMode.set(mode);
-		RenderThread t = renderThread.get();
+		LRenderThread t = renderThread.get();
 		if (t != null) {
 			t.scheduleDraw();
 		}
@@ -440,12 +444,12 @@ public class LWJGLWindow implements Window {
 
 	private void startRendering0() {
 		AtomicBoolean updated = new AtomicBoolean(false);
-		RenderThread thread = renderThread.updateAndGet(new UnaryOperator<LWJGLWindow.RenderThread>() {
+		LRenderThread thread = renderThread.updateAndGet(new UnaryOperator<LWJGLWindow.LRenderThread>() {
 			@Override
-			public RenderThread apply(RenderThread thread) {
+			public LRenderThread apply(LRenderThread thread) {
 				if (thread == null) {
 					updated.set(true);
-					return new RenderThread();
+					return new LRenderThread();
 				}
 				return thread;
 			}
@@ -461,7 +465,7 @@ public class LWJGLWindow implements Window {
 	 */
 	public void stopRendering() {
 		startRenderer.set(false);
-		RenderThread thread = renderThread.getAndSet(null);
+		LRenderThread thread = renderThread.getAndSet(null);
 		if (thread != null) {
 			thread.close.set(true);
 			thread.shouldDrawLock.lock();
@@ -497,7 +501,7 @@ public class LWJGLWindow implements Window {
 	 * @return the {@link FrameCounter} object, if one present
 	 */
 	public Optional<FrameCounter> getFrameCounter() {
-		RenderThread rt = renderThread.get();
+		LRenderThread rt = renderThread.get();
 		if (rt != null) {
 			return Optional.of(rt.frameCounter);
 		}
@@ -521,13 +525,13 @@ public class LWJGLWindow implements Window {
 	 * Schedules a draw
 	 */
 	public void scheduleDraw() {
-		RenderThread thread = renderThread.get();
+		LRenderThread thread = renderThread.get();
 		if (thread != null) {
 			thread.scheduleDraw();
 		}
 	}
 
-	private class RenderThread extends Thread {
+	private class LRenderThread extends Thread implements RenderThread {
 
 		private final AtomicBoolean shouldDraw = new AtomicBoolean(false);
 		private final Lock shouldDrawLock = new ReentrantLock(true);
@@ -716,6 +720,34 @@ public class LWJGLWindow implements Window {
 			shouldDrawLock.unlock();
 			return f;
 		}
+
+		@Override
+		public Window getWindow() {
+			return LWJGLWindow.this;
+		}
+
+		@Override
+		public CompletableFuture<Void> runLater(GameRunnable runnable) {
+			return runLater(() -> {
+				runnable.run();
+				return null;
+			});
+		}
+
+		@Override
+		public <T> CompletableFuture<T> runLater(GameCallable<T> callable) {
+			CompletableFuture<T> f = new CompletableFuture<>();
+			later(() -> {
+				T t = null;
+				try {
+					t = callable.call();
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
+				f.complete(t);
+			});
+			return f;
+		}
 	}
 
 	private class WindowThread extends Thread {
@@ -842,7 +874,7 @@ public class LWJGLWindow implements Window {
 					framebufferWidth.setNumber(width);
 					framebufferHeight.setNumber(height);
 					logger.debugf("Viewport changed: (%4d, %4d)", width, height);
-					RenderThread rt = renderThread.get();
+					LRenderThread rt = renderThread.get();
 					if (rt != null) {
 						rt.viewportChanged.set(true);
 						if (renderMode.get() != RenderMode.MANUAL) {
@@ -912,6 +944,11 @@ public class LWJGLWindow implements Window {
 
 	static {
 		glfwInit();
+	}
+
+	@Override
+	public RenderThread getRenderThread() {
+		return renderThread.get();
 	}
 
 }

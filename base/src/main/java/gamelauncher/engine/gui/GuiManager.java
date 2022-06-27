@@ -10,7 +10,8 @@ import gamelauncher.engine.util.GameException;
 public interface GuiManager {
 
 	/**
-	 * Opens a {@link Gui} for a window. Use null to exit the current gui. 
+	 * Opens a {@link Gui} for a window. Use null to exit the current gui.
+	 * 
 	 * @param window
 	 * @param gui
 	 * @throws GameException
@@ -18,7 +19,15 @@ public interface GuiManager {
 	void openGui(Window window, Gui gui) throws GameException;
 
 	/**
+	 * @param window
+	 * @return the current gui for a window
+	 * @throws GameException
+	 */
+	Gui getCurrentGui(Window window) throws GameException;
+
+	/**
 	 * Opens a {@link Gui} for a window.
+	 * 
 	 * @param window
 	 * @param clazz
 	 * @throws GameException
@@ -34,6 +43,7 @@ public interface GuiManager {
 
 	/**
 	 * Creates a Gui for the given {@link Class class}.
+	 * 
 	 * @param <T>
 	 * @param clazz
 	 * @return the created {@link Gui}

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.event.util.keybind.KeybindEntryEvent;
+import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.keybind.Keybind;

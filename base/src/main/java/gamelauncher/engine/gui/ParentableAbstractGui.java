@@ -7,8 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
+import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
@@ -22,6 +21,7 @@ import gamelauncher.engine.util.keybind.ScrollKeybindEntry;
 
 /**
  * A {@link Gui} for having and handling sub-{@link Gui}s
+ * 
  * @see ParentableAbstractGui#GUIs
  * 
  * @author DasBabyPixel
@@ -35,8 +35,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	public final Collection<Gui> GUIs = ConcurrentHashMap.newKeySet();
 	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
 	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
-	private final AtomicDouble lastMouseX = new AtomicDouble();
-	private final AtomicDouble lastMouseY = new AtomicDouble();
+	private final NumberValue lastMouseX = NumberValue.zero();
+	private final NumberValue lastMouseY = NumberValue.zero();
 
 	/**
 	 * @param launcher
@@ -47,7 +47,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void init(Window window) throws GameException {
-		doInit();
+		doInit(window);
 		doForGUIs(gui -> {
 			gui.init(window);
 		});
@@ -58,7 +58,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 		doForGUIs(gui -> {
 			gui.cleanup(window);
 		});
-		doCleanup();
+		doCleanup(window);
 		super.cleanup(window);
 	}
 
@@ -114,8 +114,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 				}
 			} else if (entry instanceof MouseButtonKeybindEntry) {
 				MouseButtonKeybindEntry c = (MouseButtonKeybindEntry) entry;
-				lastMouseX.set(c.mouseX());
-				lastMouseY.set(c.mouseY());
+				lastMouseX.setNumber(c.mouseX());
+				lastMouseY.setNumber(c.mouseY());
 				switch (c.type()) {
 				case HOLD:
 					forFocused(c);
@@ -129,8 +129,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 				}
 			} else if (entry instanceof MouseMoveKeybindEntry) {
 				MouseMoveKeybindEntry c = (MouseMoveKeybindEntry) entry;
-				lastMouseX.set(c.mouseX());
-				lastMouseY.set(c.mouseY());
+				lastMouseX.setNumber(c.mouseX());
+				lastMouseY.setNumber(c.mouseY());
 				mouseMove(c);
 			} else if (entry instanceof ScrollKeybindEntry) {
 				ScrollKeybindEntry c = (ScrollKeybindEntry) entry;
@@ -214,7 +214,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			if (done.compareAndSet(false, true)) {
 				gui.handle(entry);
 			}
-		}, gui -> gui.isHovering((float) lastMouseX.get(), (float) lastMouseY.get()));
+		}, gui -> gui.isHovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
 	}
 
 	private void forFocused(KeybindEntry e) throws GameException {
@@ -239,11 +239,11 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@SuppressWarnings("unused")
-	protected void doCleanup() throws GameException {
+	protected void doCleanup(Window window) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected void doInit() throws GameException {
+	protected void doInit(Window window) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
@@ -271,7 +271,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 		doForGUIs(cons, v -> true, clazz);
 	}
 
-	protected final <V> void doForGUIs(GameConsumer<V> cons, GamePredicate<V> pred, Class<V> clazz) throws GameException {
+	protected final <V> void doForGUIs(GameConsumer<V> cons, GamePredicate<V> pred, Class<V> clazz)
+			throws GameException {
 		for (Gui gui : GUIs) {
 			try {
 				if (!clazz.isAssignableFrom(gui.getClass())) {
