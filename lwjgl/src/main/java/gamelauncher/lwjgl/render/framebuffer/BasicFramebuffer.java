@@ -7,16 +7,16 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class BasicFramebuffer extends Framebuffer {
+public class BasicFramebuffer extends LWJGLFramebuffer {
 
-	private int width, height;
+//	private int width, height;
 	private LWJGLTexture colorTexture;
 	private Renderbuffer depthStencilRenderbuffer;
 
 	public BasicFramebuffer(int width, int height) throws GameException {
 		super();
-		this.width = width;
-		this.height = height;
+		width().setNumber(width);
+		height().setNumber(height);
 		bind();
 		colorTexture = new LWJGLTexture();
 		resizeColorTexture();
@@ -31,11 +31,11 @@ public class BasicFramebuffer extends Framebuffer {
 	}
 
 	public void resize(int width, int height) {
-		if (this.width == width && this.height == height) {
+		if (width().intValue() == width && height().intValue() == height) {
 			return;
 		}
-		this.width = width;
-		this.height = height;
+		width().setNumber(width);
+		height().setNumber(height);
 		resizeColorTexture();
 		resizeDepthStencilRenderbuffer();
 	}
@@ -48,25 +48,12 @@ public class BasicFramebuffer extends Framebuffer {
 		return depthStencilRenderbuffer;
 	}
 
-	public int getHeight() {
-		return height;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
 	private void resizeDepthStencilRenderbuffer() {
-		depthStencilRenderbuffer.resize(width, height);
+		depthStencilRenderbuffer.resize(width().intValue(), height().intValue());
 	}
 
 	private void resizeColorTexture() {
-		colorTexture.allocate(width, height);
-//		GlStates.bindTexture(GL_TEXTURE_2D, colorTexture.getTextureId());
-//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-//		GlStates.bindTexture(GL_TEXTURE_2D, 0);
+		colorTexture.allocate(width().intValue(), height().intValue());
 	}
 
 	@Override

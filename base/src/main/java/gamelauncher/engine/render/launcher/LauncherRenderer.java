@@ -19,6 +19,6 @@ public class LauncherRenderer extends Renderer {
 	}
 
 	@Override
-	public void close(Window window) throws GameException {
+	public void cleanup(Window window) throws GameException {
 	}
 }

@@ -79,6 +79,7 @@ public class LWJGLGuiManager implements GuiManager {
 			Gui fgui = gui;
 			window.getRenderThread().runLater(() -> {
 				fgui.init(window);
+				window.scheduleDraw();
 			});
 			gui.onOpen();
 			gui.focus();

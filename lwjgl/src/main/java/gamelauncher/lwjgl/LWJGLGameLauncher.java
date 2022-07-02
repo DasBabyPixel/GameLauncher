@@ -5,7 +5,11 @@ import static org.lwjgl.glfw.GLFW.*;
 import org.joml.Vector3f;
 
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.event.EventHandler;
+import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.render.Camera;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
@@ -13,6 +17,7 @@ import gamelauncher.engine.util.Math;
 import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.BasicCamera;
+import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
 import gamelauncher.lwjgl.render.LWJGLWindow;
 import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
@@ -51,12 +56,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 		window = new LWJGLWindow(this, 400, 400, NAME);
 		setWindow(window);
 		setCamera(new BasicCamera(() -> window.scheduleDraw()));
-		window.renderLater(() -> {
-			setGlyphProvider(new BasicGlyphProvider());
-		});
+		window.renderLater(() -> setGlyphProvider(new BasicGlyphProvider()));
 		window.setRenderMode(RenderMode.ON_UPDATE);
-		window.createWindow();
-		window.startRendering();
 //		AtomicBoolean boost = new AtomicBoolean(false);
 //		window.getInput().addListener(new Listener() {
 //
@@ -116,6 +117,12 @@ public class LWJGLGameLauncher extends GameLauncher {
 //				}
 //			}
 //		});
+		window.createWindow();
+		window.startRendering();
+		window.swapBuffers(false);
+//		window.getFrameCounter().addUpdateListener(fps -> {
+//			getLogger().infof("FPS: %s", fps);
+//		});
 		CloseCallback oldCloseCallback = window.getCloseCallback();
 		window.setCloseCallback(new CloseCallback() {
 			@Override
@@ -124,19 +131,27 @@ public class LWJGLGameLauncher extends GameLauncher {
 				LWJGLGameLauncher.this.stop();
 			}
 		});
-		window.swapBuffers(false);
-		window.getFrameCounter().ifPresent(fc -> {
-			fc.addUpdateListener(fps -> {
-				getLogger().infof("FPS: %s", fps);
-			});
-		});
-		window.scheduleDrawAndWaitForFrame();
+		getEventManager().registerListener(this);
+
+	}
+
+	@SuppressWarnings("javadoc")
+	@EventHandler
+	public void handle(LauncherInitializedEvent event) {
+//		window.scheduleDrawAndWaitForFrame();
+//		window.show();
+//		window.showAndEndFrame();
 		window.swapBuffers(true);
 		window.showAndEndFrame();
-		window.setFloating(true);
-		window.setFloating(false);
-		mouseMovement(false);
 
+		window.setFloating(true);
+		mouseMovement(false);
+	}
+
+	@Override
+	public DrawContext createContext(Framebuffer framebuffer) {
+		LWJGLDrawContext ctx = new LWJGLDrawContext(framebuffer);
+		return ctx;
 	}
 
 	@Override

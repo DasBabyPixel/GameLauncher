@@ -22,7 +22,10 @@ public class LogStream extends OutputStream {
 	private final SelectiveStream system;
 
 	private final Logger logger;
-	private final Lock lock = new ReentrantLock(true);
+	/**
+	 * The lock of this LogStream
+	 */
+	public final Lock lock = new ReentrantLock(true);
 	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
 			.toFormatter();
 	private boolean newLine = true;

@@ -20,6 +20,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
+import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.file.Files;
 import gamelauncher.engine.file.embed.EmbedFileSystem;
 import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
@@ -30,6 +31,8 @@ import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.Camera;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.font.GlyphProvider;
@@ -104,6 +107,130 @@ public abstract class GameLauncher {
 		this.eventManager = new EventManager();
 		this.pluginManager = new PluginManager(this);
 	}
+	
+	/**
+	 * @param framebuffer
+	 * @return a new {@link DrawContext}
+	 */
+	public abstract DrawContext createContext(Framebuffer framebuffer);
+
+	/**
+	 * Starts the {@link GameLauncher}
+	 * 
+	 * @param args
+	 * @throws GameException
+	 */
+	public final void start(String[] args) throws GameException {
+
+		if (window != null) {
+			return;
+		}
+
+		System.setOut(logger.createPrintStream(LogLevel.STDOUT));
+		System.setErr(logger.createPrintStream(LogLevel.STDERR));
+
+		logger.info("Starting " + NAME);
+
+		StartCommandSettings scs = StartCommandSettings.parse(args);
+
+		gameThread = new GameThread(this);
+
+		for (Path externalPlugin : scs.externalPlugins) {
+			this.pluginManager.loadPlugin(externalPlugin);
+		}
+		this.pluginManager.loadPlugins(pluginsDirectory);
+
+		Files.createDirectories(gameDirectory);
+		Files.createDirectories(dataDirectory);
+		Files.createDirectories(pluginsDirectory);
+
+		registerSettingInsertions();
+		this.settings = new MainSettingSection(eventManager);
+		if (!Files.exists(settingsFile)) {
+			Files.createFile(settingsFile);
+			settings.setDefaultValue();
+			saveSettings();
+		} else {
+			byte[] bytes = Files.readAllBytes(settingsFile);
+			String json = new String(bytes, StandardCharsets.UTF_8);
+			JsonElement element = settingsGson.fromJson(json, JsonElement.class);
+			settings.deserialize(element);
+			JsonElement serialized = settingsGson.toJsonTree(settings.serialize());
+			if (!serialized.equals(element)) {
+				getLogger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+						.appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+						.appendLiteral('-')
+						.appendValue(ChronoField.MONTH_OF_YEAR, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.DAY_OF_MONTH, 2)
+						.appendLiteral('_')
+						.appendValue(ChronoField.HOUR_OF_DAY, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+						.appendLiteral('-')
+						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+						.toFormatter();
+				Files.move(settingsFile,
+						settingsFile.getParent()
+								.resolve(String.format("backup-settings-%s.json",
+										formatter.format(LocalDateTime.now()).replace(':', '-'))));
+				saveSettings();
+			}
+		}
+
+		gameThread.runLater(() -> {
+			start0();
+			if (gameRenderer.getRenderer() == null) {
+				gameRenderer.setRenderer(new GuiRenderer(this));
+			} else {
+				logger.warn("Not using GuiRenderer: " + gameRenderer.getRenderer().getClass().getName());
+			}
+			guiManager.openGuiByClass(window, MainScreenGui.class);
+			window.scheduleDrawAndWaitForFrame();
+			getEventManager().post(new LauncherInitializedEvent(this));
+		});
+		gameThread.start();
+
+	}
+
+	/**
+	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
+	 * 
+	 * @param throwable
+	 */
+	public void handleError(Throwable throwable) {
+		throwable.printStackTrace();
+	}
+
+	protected void registerSettingInsertions() {
+	}
+
+	/**
+	 * @return the current tick of the {@link GameLauncher}
+	 */
+	public int getCurrentTick() {
+		return gameThread.getCurrentTick();
+	}
+
+	/**
+	 * Stops the {@link GameLauncher}
+	 * 
+	 * @throws GameException
+	 */
+	public void stop() throws GameException {
+		try {
+			gameThread.exit().get();
+			this.pluginManager.unloadPlugins();
+			this.embedFileSystem.close();
+		} catch (InterruptedException | ExecutionException | IOException ex) {
+			throw new GameException(ex);
+		}
+	}
+
+	protected abstract void tick() throws GameException;
+
+	protected abstract void start0() throws GameException;
 
 	protected void setGuiManager(GuiManager guiManager) {
 		this.guiManager = guiManager;
@@ -205,15 +332,6 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
-	 * 
-	 * @param throwable
-	 */
-	public void handleError(Throwable throwable) {
-		throwable.printStackTrace();
-	}
-
-	/**
 	 * @return the {@link Camera}
 	 */
 	public Camera getCamera() {
@@ -312,6 +430,7 @@ public abstract class GameLauncher {
 	public Path getPluginsDirectory() {
 		return pluginsDirectory;
 	}
+
 	/**
 	 * @return the {@link GameThread}
 	 */
@@ -334,111 +453,4 @@ public abstract class GameLauncher {
 	public void saveSettings() throws GameException {
 		Files.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
-
-	/**
-	 * Starts the {@link GameLauncher}
-	 * 
-	 * @param args
-	 * @throws GameException
-	 */
-	public final void start(String[] args) throws GameException {
-
-		if (window != null) {
-			return;
-		}
-
-		System.setOut(logger.createPrintStream(LogLevel.STDOUT));
-		System.setErr(logger.createPrintStream(LogLevel.STDERR));
-
-		logger.info("Starting " + NAME);
-
-		StartCommandSettings scs = StartCommandSettings.parse(args);
-
-		gameThread = new GameThread(this);
-
-		for (Path externalPlugin : scs.externalPlugins) {
-			this.pluginManager.loadPlugin(externalPlugin);
-		}
-		this.pluginManager.loadPlugins(pluginsDirectory);
-
-		Files.createDirectories(gameDirectory);
-		Files.createDirectories(dataDirectory);
-		Files.createDirectories(pluginsDirectory);
-
-		registerSettingInsertions();
-		this.settings = new MainSettingSection(eventManager);
-		if (!Files.exists(settingsFile)) {
-			Files.createFile(settingsFile);
-			settings.setDefaultValue();
-			saveSettings();
-		} else {
-			byte[] bytes = Files.readAllBytes(settingsFile);
-			String json = new String(bytes, StandardCharsets.UTF_8);
-			JsonElement element = settingsGson.fromJson(json, JsonElement.class);
-			settings.deserialize(element);
-			JsonElement serialized = settingsGson.toJsonTree(settings.serialize());
-			if (!serialized.equals(element)) {
-				getLogger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-						.appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MONTH_OF_YEAR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.DAY_OF_MONTH, 2)
-						.appendLiteral('_')
-						.appendValue(ChronoField.HOUR_OF_DAY, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-						.toFormatter();
-				Files.move(settingsFile,
-						settingsFile.getParent()
-								.resolve(String.format("backup-settings-%s.json",
-										formatter.format(LocalDateTime.now()).replace(':', '-'))));
-				saveSettings();
-			}
-		}
-
-		gameThread.runLater(() -> {
-			start0();
-			guiManager.openGuiByClass(window, MainScreenGui.class);
-			if (gameRenderer.getRenderer() == null) {
-				gameRenderer.setRenderer(new GuiRenderer(this));
-			} else {
-				logger.warn("Not using GuiRenderer: " + gameRenderer.getRenderer().getClass().getName());
-			}
-		});
-		gameThread.start();
-
-	}
-
-	protected void registerSettingInsertions() {
-	}
-
-	/**
-	 * @return the current tick of the {@link GameLauncher}
-	 */
-	public int getCurrentTick() {
-		return gameThread.getCurrentTick();
-	}
-
-	/**
-	 * Stops the {@link GameLauncher}
-	 * 
-	 * @throws GameException
-	 */
-	public void stop() throws GameException {
-		try {
-			gameThread.exit().get();
-			this.pluginManager.unloadPlugins();
-			this.embedFileSystem.close();
-		} catch (InterruptedException | ExecutionException | IOException ex) {
-			throw new GameException(ex);
-		}
-	}
-
-	protected abstract void tick() throws GameException;
-
-	protected abstract void start0() throws GameException;
 }

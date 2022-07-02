@@ -2,7 +2,6 @@ package gamelauncher.engine.render;
 
 import java.util.concurrent.CompletableFuture;
 
-import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.input.Input;
 
@@ -22,21 +21,26 @@ public interface Window {
 	 */
 	void endFrame();
 
+//	/**
+//	 * @return the default {@link DrawContext} of this window. Should not be
+//	 *         modified
+//	 */
+//	DrawContext getContext();
+	
 	/**
-	 * @return the default {@link DrawContext} of this window. Should not be
-	 *         modified
+	 * @return the framebuffer of this window
 	 */
-	DrawContext getContext();
+	Framebuffer getFramebuffer();
 
 	/**
-	 * @return the framebuffer width property
-	 */
-	NumberValue framebufferWidth();
-
-	/**
-	 * @return the framebuffer height property
-	 */
-	NumberValue framebufferHeight();
+//	 * @return the framebuffer width property
+//	 */
+//	NumberValue framebufferWidth();
+//
+//	/**
+//	 * @return the framebuffer height property
+//	 */
+//	NumberValue framebufferHeight();
 
 	/**
 	 * @return the {@link RenderThread} for this window
@@ -44,14 +48,41 @@ public interface Window {
 	RenderThread getRenderThread();
 
 	/**
-	 * @return the framebuffer width
-	 */
-	int getFramebufferWidth();
+//	 * @return the framebuffer width
+//	 */
+//	int getFramebufferWidth();
+//
+//	/**
+//	 * @return the framebuffer height
+//	 */
+//	int getFramebufferHeight();
 
 	/**
-	 * @return the framebuffer height
+	 * @return the {@link RenderMode} of this window
 	 */
-	int getFramebufferHeight();
+	RenderMode getRenderMode();
+
+	/**
+	 * Sets the {@link RenderMode} of this window
+	 * 
+	 * @param mode
+	 */
+	void setRenderMode(RenderMode mode);
+	
+	/**
+	 * Schedules a draw
+	 */
+	void scheduleDraw();
+	
+	/**
+	 * Waits for the next frame
+	 */
+	void waitForFrame();
+	
+	/**
+	 * Schedules a draw and waits for the next frmae
+	 */
+	void scheduleDrawAndWaitForFrame();
 
 	/**
 	 * @return the input for this window

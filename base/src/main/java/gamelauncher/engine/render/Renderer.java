@@ -24,6 +24,6 @@ public abstract class Renderer {
 	 * @param window
 	 * @throws GameException
 	 */
-	public void close(Window window) throws GameException {
+	public void cleanup(Window window) throws GameException {
 	}
 }

@@ -2,21 +2,34 @@ package gamelauncher.lwjgl.render.framebuffer;
 
 import static org.lwjgl.opengl.GL30.*;
 
+import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.render.GlStates;
 
 @SuppressWarnings("javadoc")
-public class Framebuffer implements GameResource {
+public class LWJGLFramebuffer implements Framebuffer {
 
 	private final int id;
+	private final NumberValue width = NumberValue.zero();
+	private final NumberValue height = NumberValue.zero();
 
-	public Framebuffer() {
+	public LWJGLFramebuffer() {
 		this(glGenFramebuffers());
 	}
 
-	public Framebuffer(int id) {
+	public LWJGLFramebuffer(int id) {
 		this.id = id;
+	}
+
+	@Override
+	public NumberValue width() {
+		return width;
+	}
+
+	@Override
+	public NumberValue height() {
+		return height;
 	}
 
 	public void bind() {
@@ -36,6 +49,14 @@ public class Framebuffer implements GameResource {
 		if (!isComplete()) {
 			throw new GameException("Framebuffer not complete!");
 		}
+	}
+
+	@Override
+	public void beginFrame() {
+	}
+
+	@Override
+	public void endFrame() {
 	}
 
 	@Override

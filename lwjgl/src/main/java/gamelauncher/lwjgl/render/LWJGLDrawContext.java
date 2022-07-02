@@ -10,8 +10,11 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import de.dasbabypixel.api.property.NumberChangeListener;
+import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.Transformations;
@@ -28,40 +31,48 @@ import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 @SuppressWarnings("javadoc")
 public class LWJGLDrawContext implements DrawContext {
 
-	private static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
-	private static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
-	private static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
+	protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
+	protected static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
+	protected static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
 
-	private final LWJGLWindow window;
-	private final double tx, ty, tz;
-	private final double sx, sy, sz;
-	private final Matrix4f projectionMatrix;
-	private final Matrix4f modelMatrix = new Matrix4f();
-	private final Matrix4f viewMatrix;
-	private final Matrix4f tempMatrix4f = new Matrix4f();
-	private final Vector3f tempVector3f = new Vector3f();
-	private final AtomicReference<ShaderProgram> shaderProgram;
-	private final AtomicReference<Projection> projection;
-	private final Collection<WeakReference<LWJGLDrawContext>> children = ConcurrentHashMap.newKeySet();
-	private final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
+	protected final Framebuffer framebuffer;
+	protected final double tx, ty, tz;
+	protected final double sx, sy, sz;
+	protected final Matrix4f projectionMatrix;
+	protected final Matrix4f modelMatrix = new Matrix4f();
+	protected final Matrix4f viewMatrix;
+	protected final Matrix4f tempMatrix4f = new Matrix4f();
+	protected final Vector3f tempVector3f = new Vector3f();
+	protected final AtomicReference<ShaderProgram> shaderProgram;
+	protected final AtomicReference<Projection> projection;
+	protected final Collection<WeakReference<LWJGLDrawContext>> children = ConcurrentHashMap.newKeySet();
+	protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
+	protected final NumberChangeListener numberChangeListener = new NumberChangeListener() {
+		@Override
+		public void handleChange(NumberValue value, Number oldValue, Number newValue) {
+			invalidateProjectionMatrix();
+		}
+	};
 
-	public LWJGLDrawContext(LWJGLWindow window) {
+	public LWJGLDrawContext(Framebuffer window) {
 		this(null, window, 0, 0, 0, 1, 1, 1);
 	}
 
-	private LWJGLDrawContext(LWJGLDrawContext parent, LWJGLWindow window, double tx, double ty, double tz, double sx,
+	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer window, double tx, double ty, double tz, double sx,
 			double sy, double sz) {
 		this(parent, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(),
 				new AtomicReference<>());
 	}
 
-	private LWJGLDrawContext(LWJGLDrawContext parent, LWJGLWindow window, double tx, double ty, double tz, double sx,
-			double sy, double sz, AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix,
+	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz,
+			double sx, double sy, double sz, AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix,
 			Matrix4f viewMatrix, AtomicReference<Projection> projection) {
 		if (parent != null) {
 			parent.children.add(new WeakReference<LWJGLDrawContext>(this));
 		}
-		this.window = window;
+		this.framebuffer = framebuffer;
+		this.framebuffer.width().addListener(numberChangeListener);
+		this.framebuffer.height().addListener(numberChangeListener);
 		this.tx = tx;
 		this.ty = ty;
 		this.tz = tz;
@@ -93,8 +104,9 @@ public class LWJGLDrawContext implements DrawContext {
 
 	@Override
 	public LWJGLDrawContext duplicate() throws GameException {
-		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(shaderProgram.get()),
-				new Matrix4f(), new Matrix4f(), new AtomicReference<>(projection.get()));
+		return new LWJGLDrawContext(this, framebuffer, tx, ty, tz, sx, sy, sz,
+				new AtomicReference<>(shaderProgram.get()), new Matrix4f(), new Matrix4f(),
+				new AtomicReference<>(projection.get()));
 	}
 
 	@Override
@@ -109,11 +121,11 @@ public class LWJGLDrawContext implements DrawContext {
 		return projection.get();
 	}
 
-	public void invalidateProjectionMatrix() throws GameException {
+	public void invalidateProjectionMatrix() {
 		projectionMatrixValid.set(false);
-		runForChildren(ctx -> {
-			ctx.invalidateProjectionMatrix();
-		});
+//		runForChildren(ctx -> {
+//			ctx.invalidateProjectionMatrix();
+//		});
 	}
 
 	@Override
@@ -124,11 +136,12 @@ public class LWJGLDrawContext implements DrawContext {
 		}
 		if (projection instanceof Transformations.Projection.Projection3D) {
 			Transformations.Projection.Projection3D p3d = (Transformations.Projection.Projection3D) projection;
-			float aspectRatio = (float) window.getFramebufferWidth() / (float) window.getFramebufferHeight();
+			float aspectRatio = framebuffer.width().floatValue() / framebuffer.height().floatValue();
 			projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
 			projectionMatrix.identity();
-			projectionMatrix.ortho(window.getFramebufferWidth(), 0, window.getFramebufferHeight(), 0, -10000, 10000);
+			projectionMatrix.ortho(0, framebuffer.width().floatValue(), 0, framebuffer.height().floatValue(), -10000,
+					10000);
 		}
 	}
 
@@ -169,31 +182,31 @@ public class LWJGLDrawContext implements DrawContext {
 
 	@Override
 	public LWJGLDrawContext translate(double x, double y, double z) {
-		return new LWJGLDrawContext(this, window, tx + x, ty + y, tz + z, sx, sy, sz, shaderProgram, projectionMatrix,
-				viewMatrix, projection);
-	}
-
-	@Override
-	public LWJGLDrawContext scale(double x, double y, double z) {
-		return new LWJGLDrawContext(this, window, tx, ty, tz, sx * x, sy * y, sz * z, shaderProgram, projectionMatrix,
-				viewMatrix, projection);
-	}
-
-	public LWJGLDrawContext withProgram(LWJGLShaderProgram program) {
-		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<ShaderProgram>(program),
+		return new LWJGLDrawContext(this, framebuffer, tx + x, ty + y, tz + z, sx, sy, sz, shaderProgram,
 				projectionMatrix, viewMatrix, projection);
 	}
 
 	@Override
+	public LWJGLDrawContext scale(double x, double y, double z) {
+		return new LWJGLDrawContext(this, framebuffer, tx, ty, tz, sx * x, sy * y, sz * z, shaderProgram,
+				projectionMatrix, viewMatrix, projection);
+	}
+
+	public LWJGLDrawContext withProgram(LWJGLShaderProgram program) {
+		return new LWJGLDrawContext(this, framebuffer, tx, ty, tz, sx, sy, sz,
+				new AtomicReference<ShaderProgram>(program), projectionMatrix, viewMatrix, projection);
+	}
+
+	@Override
 	public DrawContext withProgram(ShaderProgram program) throws GameException {
-		return new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program),
+		return new LWJGLDrawContext(this, framebuffer, tx, ty, tz, sx, sy, sz, new AtomicReference<>(program),
 				projectionMatrix, viewMatrix, projection);
 	}
 
 	@Override
 	public LWJGLDrawContext withProjection(Projection projection) throws GameException {
-		LWJGLDrawContext ctx = new LWJGLDrawContext(this, window, tx, ty, tz, sx, sy, sz, shaderProgram, new Matrix4f(),
-				viewMatrix, new AtomicReference<>(projection));
+		LWJGLDrawContext ctx = new LWJGLDrawContext(this, framebuffer, tx, ty, tz, sx, sy, sz, shaderProgram,
+				new Matrix4f(), viewMatrix, new AtomicReference<>(projection));
 		ctx.reloadProjectionMatrix();
 		return ctx;
 	}

@@ -23,7 +23,6 @@ public class LabyrinthRender extends Renderer {
 	private FileSystem embedFileSystem;
 	private ModelLoader modelLoader;
 	private ShaderLoader shaderLoader;
-	private ShaderProgram program;
 	private DrawContext contexthud;
 
 	Model model1;
@@ -42,8 +41,8 @@ public class LabyrinthRender extends Renderer {
 
 	@Override
 	public void init(Window window) throws GameException {
-		program = shaderLoader.loadShader(launcher, embedFileSystem.getPath("shaders/hud/hud.json"));
-		contexthud = window.getContext().duplicate();
+		ShaderProgram program = shaderLoader.loadShader(launcher, embedFileSystem.getPath("shaders/hud/hud.json"));
+		contexthud = launcher.createContext(window.getFramebuffer());
 		contexthud.setProgram(program);
 		contexthud.setProjection(new Projection.Projection2D());
 
@@ -64,14 +63,15 @@ public class LabyrinthRender extends Renderer {
 		contexthud.update(labyrinth.getLauncher().getCamera());
 		contexthud.drawModel(model1, 0, 0, 0);
 		contexthud.drawModel(model2, 0, 0, 0);
-		program.clearUniforms();
+		contexthud.getProgram().clearUniforms();
+//		program.clearUniforms();
 	}
 
 	@Override
-	public void close(Window window) throws GameException {
-		program.cleanup();
+	public void cleanup(Window window) throws GameException {
 		model1.cleanup();
 		model2.cleanup();
+		contexthud.getProgram().clearUniforms();
 		contexthud.cleanup();
 	}
 }
