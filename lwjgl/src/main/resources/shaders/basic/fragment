@@ -49,6 +49,7 @@ uniform vec3 camera_pos;
 uniform DirectionalLight directionalLight;
 uniform vec4 color;
 uniform vec4 textureAddColor;
+uniform int applyLighting;
 
 vec4 ambientC;
 vec4 diffuseC;
@@ -114,12 +115,16 @@ vec4 calcDirectionalLight(DirectionalLight light, vec3 position, vec3 normal) {
 
 void main() {
 	setupColors(material, outTexCoord);
-	vec4 diffuseSpecularComp = calcDirectionalLight(directionalLight, mvVertexPos, mvVertexNormal);
-	diffuseSpecularComp += calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
-	vec4 fColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
-	
-	//if(fColor.w == 0) {
-	//	discard;
-	//}
-	fragColor = color * fColor;
+	if(applyLighting == 1) {
+		vec4 diffuseSpecularComp = calcDirectionalLight(directionalLight, mvVertexPos, mvVertexNormal);
+		diffuseSpecularComp += calcPointLight(pointLight, mvVertexPos, mvVertexNormal);
+		vec4 fColor = ambientC * vec4(ambientLight, 1) + diffuseSpecularComp;
+		
+		//if(fColor.w == 0) {
+		//	discard;
+		//}
+		fragColor = color * fColor;
+	} else {
+		fragColor = color * ambientC;
+	}
 }

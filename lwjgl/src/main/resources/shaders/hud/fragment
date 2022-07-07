@@ -10,5 +10,7 @@ uniform vec4 textureAddColor;
 
 void main()
 {
-    fragColor = (textureAddColor + texture(texture_sampler, outTexCoord));
+    vec4 fc = color * (textureAddColor + texture(texture_sampler, outTexCoord));
+    
+    fragColor = fc;
 }

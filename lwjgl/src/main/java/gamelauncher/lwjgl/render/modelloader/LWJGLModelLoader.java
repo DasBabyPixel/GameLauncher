@@ -1,25 +1,28 @@
 package gamelauncher.lwjgl.render.modelloader;
 
 import java.io.ByteArrayInputStream;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Path;
-import gamelauncher.engine.render.Model;
-import gamelauncher.engine.render.ModelLoader;
+import gamelauncher.engine.file.Files;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
-import gamelauncher.lwjgl.file.EmbedPath;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 import gamelauncher.lwjgl.render.Mesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 
+/**
+ * @author DasBabyPixel
+ */
 public class LWJGLModelLoader implements ModelLoader {
 
 	private static final Logger logger = Logger.getLogger(LWJGLModelLoader.class);
@@ -28,13 +31,16 @@ public class LWJGLModelLoader implements ModelLoader {
 	private final Path modelDirectory;
 	private final String version = "0.0.11";
 
+	/**
+	 * @param launcher
+	 * @throws GameException
+	 */
 	public LWJGLModelLoader(GameLauncher launcher) throws GameException {
 		this.launcher = launcher;
 		this.modelDirectory = this.launcher.getDataDirectory().resolve("models");
-		this.launcher.getFileSystem().createDirectories(this.modelDirectory);
+		Files.createDirectories(this.modelDirectory);
 
-		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader(
-						launcher));
+		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader(launcher));
 	}
 
 	@Override
@@ -42,15 +48,11 @@ public class LWJGLModelLoader implements ModelLoader {
 		ResourceStream stream = resource.newResourceStream();
 		String hash = hash(stream.readAllBytes());
 		stream.cleanup();
-		String p = stream.getPath() instanceof EmbedPath
-						? stream.getPath().getPath().substring(1)
-						: stream.getPath().getPath();
-		Path file = modelDirectory.resolve(p + ".bin");
+		Path file = modelDirectory.resolve(stream.getPath().getParent().toAbsolutePath().toString().substring(1))
+				.resolve(stream.getPath().getFileName() + ".bin");
 		boolean hasSavedFile = false;
-		if (launcher.getFileSystem().exists(file)) {
-			stream = new ResourceStream(null, false,
-							launcher.getFileSystem().createInputStream(file),
-							null);
+		if (Files.exists(file)) {
+			stream = new ResourceStream(null, false, Files.newInputStream(file), null);
 			String version = stream.readUTF8(stream.readInt());
 			String savedHash = stream.readUTF8(stream.readInt());
 
@@ -74,20 +76,17 @@ public class LWJGLModelLoader implements ModelLoader {
 		stream = resource.newResourceStream();
 		byte[] bytes = loader.convertModel(stream);
 		stream.cleanup();
-		if (!launcher.getFileSystem().exists(file)) {
-			launcher.getFileSystem().createFile(file);
+		if (!Files.exists(file)) {
+			Files.createFile(file);
 		}
-		stream = new ResourceStream(file, false,
-						new ByteArrayInputStream(bytes),
-						launcher.getFileSystem().createOutputStream(file));
+		stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes), Files.newOutputStream(file));
 		saveConvertedModel(hash, bytes, stream);
 		Model model = loadConvertedModel(stream);
 		stream.cleanup();
 		return model;
 	}
 
-	private void saveConvertedModel(String hash, byte[] bytes,
-					ResourceStream stream) throws GameException {
+	private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream) throws GameException {
 		stream.writeInt(this.version.length());
 		stream.writeUTF8(this.version);
 		stream.writeInt(hash.length());
@@ -95,8 +94,7 @@ public class LWJGLModelLoader implements ModelLoader {
 		stream.writeBytes(bytes);
 	}
 
-	private Model loadConvertedModel(ResourceStream stream)
-					throws GameException {
+	private Model loadConvertedModel(ResourceStream stream) throws GameException {
 		float[] vertices = stream.sreadFloats();
 		float[] texCoords = stream.sreadFloats();
 		float[] normals = stream.sreadFloats();
@@ -112,8 +110,7 @@ public class LWJGLModelLoader implements ModelLoader {
 			for (Material mat : materialList.materials) {
 				byte[] tex = mat.diffuseColor.texture;
 				if (tex != null) {
-					ResourceStream st = new ResourceStream(null, false,
-									new ByteArrayInputStream(tex), null);
+					ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
 					LWJGLTexture lt = new LWJGLTexture(st);
 					lm.texture = lt;
 					st.cleanup();

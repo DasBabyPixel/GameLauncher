@@ -6,15 +6,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
-import gamelauncher.engine.GameException;
-import gamelauncher.engine.file.Path;
-import gamelauncher.engine.util.GameFunction;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameFunction;
 
+/**
+ * @author DasBabyPixel
+ */
 public class ResourceStream implements AutoCloseable {
 
 	private final Path path;
@@ -27,6 +30,12 @@ public class ResourceStream implements AutoCloseable {
 
 	private static final int NULL = -1;
 
+	/**
+	 * @param path
+	 * @param directory
+	 * @param in
+	 * @param out
+	 */
 	public ResourceStream(Path path, boolean directory, InputStream in, OutputStream out) {
 		this.path = path;
 		this.directory = directory;
@@ -34,22 +43,39 @@ public class ResourceStream implements AutoCloseable {
 		this.out = out;
 	}
 
+	/**
+	 * @return if this {@link ResourceStream} has an {@link InputStream}
+	 */
 	public boolean hasInputStream() {
 		return in != null;
 	}
 
+	/**
+	 * @return the {@link InputStream} of this {@link ResourceStream}
+	 */
 	public InputStream getInputStream() {
 		return in;
 	}
 
+	/**
+	 * @return if this {@link ResourceStream} has an {@link OutputStream}
+	 */
 	public boolean hasOutputStream() {
 		return out != null;
 	}
 
+	/**
+	 * @return the {@link OutputStream} of this {@link ResourceStream}
+	 */
 	public OutputStream getOutputStream() {
 		return out;
 	}
 
+	/**
+	 * @see InputStream#skip(long)
+	 * @param n
+	 * @throws GameException
+	 */
 	public void skip(long n) throws GameException {
 		if (in != null) {
 			try {
@@ -70,6 +96,11 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @see InputStream#close()
+	 * @see OutputStream#close()
+	 * @throws GameException
+	 */
 	public void cleanup() throws GameException {
 		try {
 			close();
@@ -78,6 +109,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return a new {@link PNGDecoder} for this {@link ResourceStream}
+	 * @throws GameException
+	 */
 	public PNGDecoder newPNGDecoder() throws GameException {
 		try {
 			return new PNGDecoder(in);
@@ -86,18 +121,35 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @param length
+	 * @return the string
+	 * @throws GameException
+	 */
 	public String readUTF8(int length) throws GameException {
 		return new String(readBytes(length), StandardCharsets.UTF_8);
 	}
 
+	/**
+	 * @param string
+	 * @throws GameException
+	 */
 	public void writeUTF8(String string) throws GameException {
 		writeBytes(string.getBytes(StandardCharsets.UTF_8));
 	}
 
+	/**
+	 * @return the string
+	 * @throws GameException
+	 */
 	public String readUTF8Fully() throws GameException {
 		return new String(readAllBytes(), StandardCharsets.UTF_8);
 	}
 
+	/**
+	 * @param string
+	 * @throws GameException
+	 */
 	public void swriteUTF8(String string) throws GameException {
 		if (string == null) {
 			swriteBytes(null);
@@ -106,6 +158,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the string
+	 * @throws GameException
+	 */
 	public String sreadUTF8() throws GameException {
 		byte[] b = sreadBytes();
 		if (b == null)
@@ -113,6 +169,10 @@ public class ResourceStream implements AutoCloseable {
 		return new String(b, StandardCharsets.UTF_8);
 	}
 
+	/**
+	 * @param floats
+	 * @throws GameException
+	 */
 	public void swriteFloats(float[] floats) throws GameException {
 		if (floats == null) {
 			writeInt(NULL);
@@ -122,6 +182,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the floats
+	 * @throws GameException
+	 */
 	public float[] sreadFloats() throws GameException {
 		int len = readInt();
 		if (len == NULL)
@@ -129,6 +193,10 @@ public class ResourceStream implements AutoCloseable {
 		return readFloats(len);
 	}
 
+	/**
+	 * @param ints
+	 * @throws GameException
+	 */
 	public void swriteInts(int[] ints) throws GameException {
 		if (ints == null) {
 			writeInt(NULL);
@@ -138,6 +206,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the ints
+	 * @throws GameException
+	 */
 	public int[] sreadInts() throws GameException {
 		int len = readInt();
 		if (len == NULL)
@@ -145,6 +217,10 @@ public class ResourceStream implements AutoCloseable {
 		return readInts(len);
 	}
 
+	/**
+	 * @param bytes
+	 * @throws GameException
+	 */
 	public void swriteBytes(byte[] bytes) throws GameException {
 		if (bytes == null) {
 			writeInt(NULL);
@@ -154,6 +230,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the bytes
+	 * @throws GameException
+	 */
 	public byte[] sreadBytes() throws GameException {
 		int len = readInt();
 		if (len == NULL)
@@ -161,6 +241,10 @@ public class ResourceStream implements AutoCloseable {
 		return readBytes(len);
 	}
 
+	/**
+	 * @return the string
+	 * @throws GameException
+	 */
 	public String readUTF8FullyClose() throws GameException {
 		String utf8 = readUTF8Fully();
 		try {
@@ -171,6 +255,11 @@ public class ResourceStream implements AutoCloseable {
 		return utf8;
 	}
 
+	/**
+	 * @param bytes
+	 * @return the size
+	 * @throws GameException
+	 */
 	public int readBytes(byte[] bytes) throws GameException {
 		try {
 			return in.read(bytes);
@@ -179,6 +268,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the bytes
+	 * @throws GameException
+	 */
 	public byte[] readAllBytes() throws GameException {
 		byte[] buffer = new byte[16384];
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -189,6 +282,10 @@ public class ResourceStream implements AutoCloseable {
 		return out.toByteArray();
 	}
 
+	/**
+	 * @return the byte
+	 * @throws GameException
+	 */
 	public byte readByte() throws GameException {
 		try {
 			int read = in.read();
@@ -201,6 +298,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @param b
+	 * @throws GameException
+	 */
 	public void writeByte(byte b) throws GameException {
 		try {
 			out.write(b);
@@ -209,6 +310,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @param b
+	 * @throws GameException
+	 */
 	public void writeBytes(byte[] b) throws GameException {
 		try {
 			out.write(b);
@@ -217,6 +322,10 @@ public class ResourceStream implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * @return the int
+	 * @throws GameException
+	 */
 	public int readInt() throws GameException {
 		return byteBuffer(buf -> {
 			buf.put(readBytes(4));
@@ -225,6 +334,10 @@ public class ResourceStream implements AutoCloseable {
 		});
 	}
 
+	/**
+	 * @param i
+	 * @throws GameException
+	 */
 	public void writeInt(int i) throws GameException {
 		byteBuffer(buf -> {
 			buf.putInt(i);
@@ -234,6 +347,10 @@ public class ResourceStream implements AutoCloseable {
 		});
 	}
 
+	/**
+	 * @return the float
+	 * @throws GameException
+	 */
 	public float readFloat() throws GameException {
 		return byteBuffer(buf -> {
 			buf.put(readBytes(4));
@@ -242,6 +359,10 @@ public class ResourceStream implements AutoCloseable {
 		});
 	}
 
+	/**
+	 * @param f
+	 * @throws GameException
+	 */
 	public void writeFloat(float f) throws GameException {
 		byteBuffer(buf -> {
 			buf.putFloat(f);
@@ -251,12 +372,21 @@ public class ResourceStream implements AutoCloseable {
 		});
 	}
 
+	/**
+	 * @param floats
+	 * @throws GameException
+	 */
 	public void writeFloats(float[] floats) throws GameException {
 		for (float f : floats) {
 			writeFloat(f);
 		}
 	}
 
+	/**
+	 * @param length
+	 * @return the floats
+	 * @throws GameException
+	 */
 	public float[] readFloats(int length) throws GameException {
 		float[] floats = new float[length];
 		for (int i = 0; i < floats.length; i++) {
@@ -265,12 +395,21 @@ public class ResourceStream implements AutoCloseable {
 		return floats;
 	}
 
+	/**
+	 * @param ints
+	 * @throws GameException
+	 */
 	public void writeInts(int[] ints) throws GameException {
 		for (int f : ints) {
 			writeInt(f);
 		}
 	}
 
+	/**
+	 * @param length
+	 * @return the ints
+	 * @throws GameException
+	 */
 	public int[] readInts(int length) throws GameException {
 		int[] ints = new int[length];
 		for (int i = 0; i < ints.length; i++) {
@@ -287,16 +426,27 @@ public class ResourceStream implements AutoCloseable {
 		return t;
 	}
 
+	/**
+	 * @param length
+	 * @return the bytes
+	 * @throws GameException
+	 */
 	public byte[] readBytes(int length) throws GameException {
 		byte[] bytes = new byte[length];
 		length = readBytes(bytes);
 		return Arrays.copyOf(bytes, length);
 	}
 
+	/**
+	 * @return if this {@link ResourceStream} is a directory
+	 */
 	public boolean isDirectory() {
 		return directory;
 	}
 
+	/**
+	 * @return the path
+	 */
 	public Path getPath() {
 		return path;
 	}

@@ -10,12 +10,16 @@ import static org.lwjgl.system.MemoryUtil.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
-public class Texture2DModel implements MeshLikeModel {
+/**
+ * @author DasBabyPixel
+ */
+public class Texture2DModel implements Model {
 
 	private final int vao;
 	private final int posbuffer;
@@ -24,6 +28,9 @@ public class Texture2DModel implements MeshLikeModel {
 	private final int vertexCount;
 	private final LWJGLTexture texture;
 
+	/**
+	 * @param texture
+	 */
 	public Texture2DModel(LWJGLTexture texture) {
 		this.texture = texture;
 		//@formatter:off
@@ -32,8 +39,8 @@ public class Texture2DModel implements MeshLikeModel {
 		idxbuffer = glGenBuffers();
 		IntBuffer ibuffer = memAllocInt(6);
 		ibuffer.put(new int[] {
-				0, 1, 2,
-				0, 3, 1
+				0, 2, 1,
+				0, 3, 2
 		}).flip();
 		vertexCount = 6;
 		GlStates.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
@@ -55,10 +62,10 @@ public class Texture2DModel implements MeshLikeModel {
 		texbuffer = glGenBuffers();
 		fbuffer = memAllocFloat(8);
 		fbuffer.put(new float[] {
-				0, 0,
 				0, 1,
-				1, 1,
-				1, 0
+				0, 0,
+				1, 0,
+				1, 1
 		}).flip();
 		GlStates.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
 		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
@@ -69,9 +76,18 @@ public class Texture2DModel implements MeshLikeModel {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
+		program.uapplyLighting.set(0).upload();
 		GlStates.activeTexture(GL_TEXTURE0);
 		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
+		GlStates.bindVertexArray(vao);
 		
+		
+		program.uploadUniforms();
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glDrawElements(GL_TRIANGLES, this.vertexCount, GL_UNSIGNED_INT, 0);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 	}
 
 	@Override

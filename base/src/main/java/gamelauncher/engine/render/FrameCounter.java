@@ -9,6 +9,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+/**
+ * @author DasBabyPixel
+ */
 public class FrameCounter {
 
 	private static final long second = TimeUnit.SECONDS.toNanos(1);
@@ -31,10 +34,16 @@ public class FrameCounter {
 		}
 	}
 
+	/**
+	 * @return the update listeners
+	 */
 	public Collection<Consumer<Integer>> getUpdateListeners() {
 		return updateListeners;
 	}
 
+	/**
+	 * @param fpsConsumer
+	 */
 	public void addUpdateListener(Consumer<Integer> fpsConsumer) {
 		updateListeners.add(fpsConsumer);
 	}
@@ -48,10 +57,14 @@ public class FrameCounter {
 		}
 	}
 
+	/**
+	 */
 	public void frameNoWait() {
 		offer(System.nanoTime());
 	}
 
+	/**
+	 */
 	public void frame() {
 		long limit = this.limit();
 		if (limit == 0) {
@@ -91,6 +104,9 @@ public class FrameCounter {
 		}
 	}
 
+	/**
+	 * @return the current fps
+	 */
 	public int getFps() {
 		removeOldFrames();
 		if (frames.size() >= 2) {
@@ -106,10 +122,18 @@ public class FrameCounter {
 		return frames.size();
 	}
 
+	/**
+	 * @return the frameLimit
+	 */
 	public long limit() {
 		return limit.get();
 	}
 
+	/**
+	 * Sets the frameLimit
+	 * 
+	 * @param limit
+	 */
 	public void limit(long limit) {
 		if (limit <= 0) {
 			this.limit.set(0);

@@ -1,16 +1,29 @@
 package gamelauncher.engine.render;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.util.GameException;
 
+/**
+ * @author DasBabyPixel
+ */
 public abstract class Renderer {
 
+	/**
+	 * @param window
+	 * @throws GameException
+	 */
 	public abstract void render(Window window) throws GameException;
 
-	@SuppressWarnings("unused")
-	public void init() throws GameException {
+	/**
+	 * @param window
+	 * @throws GameException
+	 */
+	public void init(Window window) throws GameException {
 	}
 
-	@SuppressWarnings("unused")
-	public void close() throws GameException {
+	/**
+	 * @param window
+	 * @throws GameException
+	 */
+	public void cleanup(Window window) throws GameException {
 	}
 }

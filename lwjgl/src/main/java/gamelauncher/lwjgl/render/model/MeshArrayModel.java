@@ -1,13 +1,21 @@
 package gamelauncher.lwjgl.render.model;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.Mesh;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
 
-public class MeshArrayModel implements MeshLikeModel {
+/**
+ * @author DasBabyPixel
+ *
+ */
+public class MeshArrayModel implements Model {
 
-	public final Mesh[] meshes;
+	private final Mesh[] meshes;
 
+	/**
+	 * @param meshes
+	 */
 	public MeshArrayModel(Mesh[] meshes) {
 		this.meshes = meshes;
 	}
@@ -27,6 +35,7 @@ public class MeshArrayModel implements MeshLikeModel {
 				program.umaterial.set(mesh.getMaterial());
 			}
 			program.umaterial.upload();
+			program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0).upload();
 			mesh.render();
 		}
 	}

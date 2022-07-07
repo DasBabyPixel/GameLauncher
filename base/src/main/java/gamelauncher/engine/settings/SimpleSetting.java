@@ -8,6 +8,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+/**
+ * @author DasBabyPixel
+ * @param <T>
+ */
 public class SimpleSetting<T> implements Setting<T> {
 
 	protected Gson gson;
@@ -15,12 +19,20 @@ public class SimpleSetting<T> implements Setting<T> {
 	protected final Type type;
 	protected final Supplier<T> defaultSupplier;
 
+	/**
+	 * @param type
+	 * @param defaultSupplier
+	 */
 	public SimpleSetting(Type type, Supplier<T> defaultSupplier) {
 		this.type = type;
 		this.defaultSupplier = defaultSupplier;
 		this.gson = new GsonBuilder().setPrettyPrinting().create();
 	}
 
+	/**
+	 * @param type
+	 * @param defaultValue
+	 */
 	public SimpleSetting(Type type, T defaultValue) {
 		this(type, () -> defaultValue);
 	}

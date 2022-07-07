@@ -1,9 +1,16 @@
 package gamelauncher.engine.input;
 
+import gamelauncher.engine.util.GameException;
+
+/**
+ * @author DasBabyPixel
+ */
 public interface Input {
-
-	void handleInput();
-
-	boolean hasKeyboard();
+	
+	/**
+	 * Handles the Input queue and fires all events
+	 * @throws GameException 
+	 */
+	void handleInput() throws GameException;
 	
 }

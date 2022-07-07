@@ -5,9 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import gamelauncher.engine.GameException;
-import gamelauncher.engine.util.GameResource;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameResource;
 
+@SuppressWarnings("javadoc")
 public class TextureAtlas implements GameResource {
 
 	public final Lock lock = new ReentrantLock(true);

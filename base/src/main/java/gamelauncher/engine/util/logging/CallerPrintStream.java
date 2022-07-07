@@ -1,16 +1,27 @@
 package gamelauncher.engine.util.logging;
 
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Locale;
 
+/**
+ * @author DasBabyPixel
+ */
 public class CallerPrintStream extends PrintStream {
 
-	public final Logger logger;
+	private final Logger logger;
+	private final LogStream parent;
+	private final LogLevel level;
 	private StackTraceElement caller = null;
 
-	public CallerPrintStream(Logger logger, OutputStream out) {
+	/**
+	 * @param level
+	 * @param logger
+	 * @param out
+	 */
+	public CallerPrintStream(LogLevel level, Logger logger, LogStream out) {
 		super(out, true);
+		this.level = level;
+		this.parent = out;
 		this.logger = logger;
 	}
 
@@ -18,6 +29,7 @@ public class CallerPrintStream extends PrintStream {
 		if (caller != null) {
 			return false;
 		}
+		this.parent.lock.lock();
 		StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = null;
 		String cname = getClass().getName();
@@ -33,11 +45,13 @@ public class CallerPrintStream extends PrintStream {
 		}
 		this.caller = caller;
 		logger.setCaller(caller);
+		logger.setCallerLevel(level);
 		return true;
 	}
 
 	private void unsetCaller() {
 		this.caller = null;
+		this.parent.lock.unlock();
 	}
 
 	@Override

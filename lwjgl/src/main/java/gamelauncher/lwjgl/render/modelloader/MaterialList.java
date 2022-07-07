@@ -5,9 +5,10 @@ import java.util.List;
 
 import org.joml.Vector4f;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class MaterialList {
 
 	public final List<Material> materials = new ArrayList<>();

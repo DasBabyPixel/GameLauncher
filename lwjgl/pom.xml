@@ -8,11 +8,42 @@
 	<artifactId>lwjgl</artifactId>
 
 	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
 		<lwjgl.version>3.3.1</lwjgl.version>
-		<joml.version>1.10.4</joml.version>
 	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.10.1</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<release>8</release>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>gamelauncher.lwjgl.Start</mainClass>
+								</transformer>
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 	<profiles>
 		<profile>
@@ -196,11 +227,6 @@
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-stb</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.joml</groupId>
-			<artifactId>joml</artifactId>
-			<version>${joml.version}</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -1,5 +1,8 @@
 package gamelauncher.engine.event;
 
+/**
+ * @author DasBabyPixel
+ */
 public abstract class CancellableEvent extends Event implements Cancellable {
 
 	private boolean cancelled = false;

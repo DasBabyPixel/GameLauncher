@@ -11,19 +11,33 @@ import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import gamelauncher.engine.util.logging.SelectiveStream.Output;
+
+/**
+ * @author DasBabyPixel
+ */
 public class LogStream extends OutputStream {
 
 	private final PrintStream out;
+	private final SelectiveStream system;
+
 	private final Logger logger;
-	private final Lock lock = new ReentrantLock(true);
+	/**
+	 * The lock of this LogStream
+	 */
+	public final Lock lock = new ReentrantLock(true);
 	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
 			.toFormatter();
 	private boolean newLine = true;
 	private boolean nextNewLine = false;
 
-	public LogStream(Logger logger, PrintStream out) {
+	/**
+	 * @param logger
+	 */
+	public LogStream(Logger logger) {
 		this.logger = logger;
-		this.out = out;
+		this.system = Logger.system;
+		this.out = new PrintStream(system, false);
 	}
 
 	@Override
@@ -38,18 +52,38 @@ public class LogStream extends OutputStream {
 		lock.lock();
 		if (newLine == true) {
 			newLine = false;
+			LogLevel level = logger.getCallerLevel();
+			setSystemLevel(level);
 			printNewLine();
+			out.flush();
 			StackTraceElement t = logger.getCaller();
 			if (t != null) {
-				out.printf("[%s.%s:%s] ", t.getClassName(), t.getMethodName(), t.getLineNumber());
+				out.printf("[%s] ", level.getName());
+				printThread();
+				if (!t.getClassName().startsWith(Throwable.class.getName())) {
+					out.printf("[%s.%s:%s] ", t.getClassName(), t.getMethodName(), t.getLineNumber());
+				}
 			}
 		}
 		out.write(b);
 		lock.unlock();
 	}
 
+	private void setSystemLevel(LogLevel level) {
+		if (level.getLevel() > LogLevel.ERROR.getLevel()) {
+			system.setOutput(Output.ERR);
+		} else {
+			system.setOutput(Output.OUT);
+		}
+	}
+
+	/**
+	 * @param level
+	 * @param message
+	 */
 	public void log(LogLevel level, Object message) {
 		lock.lock();
+		setSystemLevel(level);
 		if (message == null) {
 			message = "null";
 		}
@@ -108,14 +142,14 @@ public class LogStream extends OutputStream {
 	private void logString(LogLevel level, String message) {
 		printNewLine();
 		printLoggerName();
+		printThread();
 		printLevel(level);
-		println(message);
-	}
-
-	private void println(Object message) {
 		out.printf("%s%n", message);
 	}
 
+	/**
+	 * @return the {@link PrintStream}
+	 */
 	public PrintStream getOutputStream() {
 		return out;
 	}

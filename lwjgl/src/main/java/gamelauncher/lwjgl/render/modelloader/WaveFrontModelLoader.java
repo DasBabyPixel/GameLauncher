@@ -2,6 +2,7 @@ package gamelauncher.lwjgl.render.modelloader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,11 +12,12 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import gamelauncher.engine.GameException;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Path;
+import gamelauncher.engine.file.Files;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class WaveFrontModelLoader implements ModelSubLoader {
 
 	private final GameLauncher launcher;
@@ -50,8 +52,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 			} else if (l[0].equals("mtllib")) {
 				String fileName = line.split("\\s", 2)[1];
 				Path file = in.getPath().getParent().resolve(fileName);
-				ResourceStream stream = file.getFileSystem().createInputResourceStream(file);
-				String mtlcontent = stream.readUTF8FullyClose();
+				String mtlcontent = Files.readUTF8(file);
 				MaterialList.Material material = null;
 				launcher.getLogger().infof("Material: %n%s", mtlcontent);
 				for (String mtlline : mtlcontent.split("\\R")) {
@@ -90,7 +91,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 						String[] mtla = mtlline.split("\\s", 2);
 						String map = mtla[1];
 						Path mapFile = file.getParent().resolve(map);
-						byte[] texture = mapFile.getFileSystem().createInputResourceStream(mapFile).readAllBytes();
+						byte[] texture = Files.readAllBytes(mapFile);
 						if (mtll[0].equals("map_Kd")) {
 							material.diffuseColor.texture = texture;
 						} else if (mtll[0].equals("map_Ka")) {

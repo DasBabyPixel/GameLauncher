@@ -16,11 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
-import gamelauncher.engine.GameException;
-import gamelauncher.engine.util.GameFunction;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.lwjgl.render.GlStates;
 import gamelauncher.lwjgl.render.LWJGLTexture;
 
+@SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlas extends TextureAtlas {
 
 	public int size;
@@ -40,8 +41,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		int id = glGenTextures();
 		GlStates.bindTexture(GL_TEXTURE_2D, id);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize, newSize, 0, GL_ALPHA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
 		if (texture != null) {
 			glCopyImageSubData(texture.getTextureId(), GL_TEXTURE_2D, 0, 0, 0, 0, id, GL_TEXTURE_2D, 0, 0, 0, 0, size,
@@ -49,6 +50,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 			texture.cleanup();
 		}
 		texture = new LWJGLTexture(id);
+		texture.width = newSize;
+		texture.height = newSize;
 		this.size = newSize;
 		lock.unlock();
 	}
@@ -71,6 +74,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		}
 		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, GL_ALPHA, GL_UNSIGNED_BYTE,
 				glyph.abuffer);
 		glyphBounds.put(id, rect);
@@ -113,6 +118,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 					}
 				}
 				memFree(pixels);
+				System.out.println("Writing texture atlas to working directory");
 				ImageIO.write(img, "png",
 						new File("tatlas-" + this.fileSuffixAppendix.apply(DynamicSizeTextureAtlas.this) + ".png"));
 			} catch (IOException ex) {

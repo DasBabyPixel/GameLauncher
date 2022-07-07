@@ -6,11 +6,12 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import gamelauncher.engine.GameException;
+import gamelauncher.engine.util.GameException;
 
+@SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 
-	private final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();
+	public final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();
 	public final Map<Integer, DynamicSizeTextureAtlas> map = new ConcurrentHashMap<>();
 	private final Random random = new Random(163478519);
 

@@ -2,9 +2,10 @@ package gamelauncher.lwjgl.render.light;
 
 import org.joml.Vector3f;
 
-import gamelauncher.lwjgl.render.shader.ProgramObject;
-import gamelauncher.lwjgl.render.shader.ShaderProgram;
+import gamelauncher.engine.render.shader.ProgramObject;
+import gamelauncher.engine.render.shader.ShaderProgram;
 
+@SuppressWarnings("javadoc")
 public class PointLight implements ProgramObject {
 
 	public Vector3f color;

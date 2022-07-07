@@ -13,6 +13,13 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import gamelauncher.engine.render.shader.ProgramObject;
+import gamelauncher.engine.render.shader.Uniform;
+
+/**
+ * @author DasBabyPixel
+ *
+ */
 public class BasicUniform implements Uniform {
 
 	private final int id;
@@ -24,6 +31,11 @@ public class BasicUniform implements Uniform {
 	private final FloatBuffer floatBuffer;
 	private final AtomicBoolean hasValue = new AtomicBoolean(false);
 
+	/**
+	 * @param name
+	 * @param id
+	 * @param type
+	 */
 	public BasicUniform(String name, int id, Type type) {
 		this.name = name;
 		this.id = id;
@@ -46,7 +58,6 @@ public class BasicUniform implements Uniform {
 			return this;
 		}
 		hasValue.set(false);
-		System.out.println("Upload " + this.name + " - " + this.type);
 		switch (type) {
 		case FLOAT1:
 			glUniform1fv(id, floatBuffer);
@@ -157,6 +168,7 @@ public class BasicUniform implements Uniform {
 		return this.set(vec.x, vec.y, vec.z, vec.w);
 	}
 
+	@SuppressWarnings("javadoc")
 	public static enum Type {
 		INT1("int", Integer.BYTES),
 		FLOAT1("float", Float.BYTES),

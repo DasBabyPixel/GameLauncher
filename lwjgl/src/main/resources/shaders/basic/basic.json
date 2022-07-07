@@ -112,6 +112,7 @@
 		"textureAddColor": "vec4",
 		"modelMatrix": "mat4",
 		"viewMatrix": "mat4",
-		"projectionMatrix": "mat4"
+		"projectionMatrix": "mat4",
+		"applyLighting": "int"
 	}
 }

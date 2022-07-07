@@ -1,5 +1,6 @@
 package gamelauncher.engine.render;
 
+@SuppressWarnings("javadoc")
 public interface Transformations {
 	
 	public static interface Projection {
@@ -29,26 +30,4 @@ public interface Transformations {
 			}
 		}
 	}
-
-//	public static interface Transformation {
-//
-//		public static class BasicTransformation implements Transformations {
-//			public final float offsetX, offsetY, offsetZ;
-//			public final float rotationX, rotationY, rotationZ;
-//			public final float scaleX, scaleY, scaleZ;
-//
-//			public BasicTransformation(float offsetX, float offsetY, float offsetZ, float rotationX, float rotationY,
-//					float rotationZ, float scaleX, float scaleY, float scaleZ) {
-//				this.offsetX = offsetX;
-//				this.offsetY = offsetY;
-//				this.offsetZ = offsetZ;
-//				this.rotationX = rotationX;
-//				this.rotationY = rotationY;
-//				this.rotationZ = rotationZ;
-//				this.scaleX = scaleX;
-//				this.scaleY = scaleY;
-//				this.scaleZ = scaleZ;
-//			}
-//		}
-//	}
 }

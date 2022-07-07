@@ -6,10 +6,18 @@ import gamelauncher.engine.settings.SettingPath;
 import gamelauncher.engine.settings.SimpleSetting;
 import gamelauncher.engine.settings.controls.ControlsSettingSection;
 
+/**
+ * @author DasBabyPixel
+ */
 public class MouseSensivityInsertion extends ClassBasedSettingSectionInsertion {
 
+	/**
+	 * The sensitivy {@link SettingPath}
+	 */
 	public static final SettingPath SENSIVITY = new SettingPath("sensivity");
 
+	/**
+	 */
 	public MouseSensivityInsertion() {
 		super(ControlsSettingSection.class);
 	}
