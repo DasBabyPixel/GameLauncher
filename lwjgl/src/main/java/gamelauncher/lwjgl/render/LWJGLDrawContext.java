@@ -47,6 +47,7 @@ public class LWJGLDrawContext implements DrawContext {
 	protected final AtomicReference<Projection> projection;
 	protected final Collection<WeakReference<LWJGLDrawContext>> children = ConcurrentHashMap.newKeySet();
 	protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
+	public boolean swapTopBottom = false;
 	protected final NumberChangeListener numberChangeListener = new NumberChangeListener() {
 		@Override
 		public void handleChange(NumberValue value, Number oldValue, Number newValue) {
@@ -87,6 +88,8 @@ public class LWJGLDrawContext implements DrawContext {
 
 	@Override
 	public void cleanup() throws GameException {
+		this.framebuffer.width().removeListener(numberChangeListener);
+		this.framebuffer.height().removeListener(numberChangeListener);
 		runForChildren(ctx -> ctx.cleanup());
 	}
 
@@ -140,8 +143,13 @@ public class LWJGLDrawContext implements DrawContext {
 			projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
 			projectionMatrix.identity();
-			projectionMatrix.ortho(0, framebuffer.width().floatValue(), 0, framebuffer.height().floatValue(), -10000,
-					10000);
+			if (swapTopBottom) {
+				projectionMatrix.ortho(0, framebuffer.width().floatValue(), 0, framebuffer.height().floatValue(),
+						-10000, 10000);
+			} else {
+				projectionMatrix.ortho(0, framebuffer.width().floatValue(), framebuffer.height().floatValue(), 0,
+						-10000, 10000);
+			}
 		}
 	}
 
@@ -151,11 +159,14 @@ public class LWJGLDrawContext implements DrawContext {
 		drawModel(model, x, y, z, rx, ry, rz, 1, 1, 1);
 	}
 
+	private final Vector4f colorMultiplier = new Vector4f();
+
 	@Override
 	public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
 			double sy, double sz) throws GameException {
 		modelMatrix.identity();
-		pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, new Vector4f(1, 1, 1, 1));
+		colorMultiplier.set(1, 1, 1, 1);
+		pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier);
 	}
 
 	private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
@@ -239,9 +250,11 @@ public class LWJGLDrawContext implements DrawContext {
 	Vector3f lightPosition = new Vector3f(2, 2, 2);
 	Vector3f lightColor = new Vector3f(1, 1, 1);
 	float specularPower = 200;
-	PointLight pointLight = new PointLight(lightColor, lightPosition, lightIntensity,
+	PointLight pointLight = new PointLight(lightColor, new Vector3f(lightPosition), lightIntensity,
 			new PointLight.Attenuation(0, 0, 1));
-	DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(0, -1, 0), 1);
+	Vector3f directionalLightDirection = new Vector3f(0, -1, 0);
+	DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1),
+			new Vector3f(directionalLightDirection), 1);
 	float lightAngle = 0;
 	LWJGLShaderProgram skybox;
 
@@ -264,20 +277,17 @@ public class LWJGLDrawContext implements DrawContext {
 		float pow = (float) (Math.sin(System.currentTimeMillis() / 1000D) + 1) * 200;
 		shaderProgram.uspecularPower.set(pow);
 
-		PointLight cPointLight = new PointLight(pointLight);
-		Vector3f lightPos = cPointLight.position;
-		Vector4f aux = new Vector4f(lightPos, 1);
-		aux.mul(viewMatrix);
-		lightPos.x = aux.x;
-		lightPos.y = aux.y;
-		lightPos.z = aux.z;
-		shaderProgram.upointLight.set(cPointLight);
+		Vector3f lightPos = pointLight.position;
+		lightPos.set(lightPosition);
+		lightPos.mulPosition(viewMatrix);
+		shaderProgram.upointLight.set(pointLight);
 
-		DirectionalLight currDirLight = new DirectionalLight(directionalLight);
-		Vector4f dir = new Vector4f(currDirLight.direction, 0);
-		dir.mul(viewMatrix);
-		currDirLight.direction = new Vector3f(dir.x, dir.y, dir.z);
-		shaderProgram.udirectionalLight.set(currDirLight);
+		directionalLight.direction.set(directionalLightDirection);
+		directionalLight.direction.mulDirection(viewMatrix);
+//		Vector4f dir = new Vector4f(currDirLight.direction, 0);
+//		dir.mul(viewMatrix);
+//		currDirLight.direction = new Vector3f(dir.x, dir.y, dir.z);
+		shaderProgram.udirectionalLight.set(directionalLight);
 
 	}
 

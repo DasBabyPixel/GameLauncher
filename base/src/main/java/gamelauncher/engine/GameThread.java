@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
@@ -26,7 +27,8 @@ public class GameThread extends Thread {
 	private final GameLauncher gameLauncher;
 	private final AtomicInteger tick = new AtomicInteger(0);
 	private final long second = TimeUnit.SECONDS.toNanos(1);
-	private final long tickTime = second / GameLauncher.MAX_TPS;
+	private final long tickTime = (long) (second / GameLauncher.MAX_TPS);
+	private final AtomicLong lastTick = new AtomicLong(-1L);
 
 	/**
 	 * @param launcher
@@ -34,6 +36,21 @@ public class GameThread extends Thread {
 	public GameThread(GameLauncher launcher) {
 		this.gameLauncher = launcher;
 		this.setName("GameThread");
+	}
+
+	/**
+	 * Computes the partial tick
+	 * 
+	 * @return the current partial tick
+	 */
+	public float getPartialTick() {
+		long lastTick = this.lastTick.get();
+		if (lastTick == -1) {
+			return 0;
+		}
+		long nanos = System.nanoTime();
+		long diff = nanos - lastTick;
+		return diff / (float) tickTime;
 	}
 
 	@Override
@@ -68,9 +85,10 @@ public class GameThread extends Thread {
 					long tooLong = tickTook - tickTime;
 					long ticksToSkip = tooLong / tickTime;
 					gameLauncher.getLogger()
-							.infof("Tick took %sms. This is %sms longer than expected!\n"
-									+ "Skipping %s ticks to compensate", TimeUnit.NANOSECONDS.toMillis(tickTook),
-									TimeUnit.NANOSECONDS.toMillis(tooLong), ticksToSkip);
+							.infof("Tick took %sms. This is %sms longer than expected!%s",
+									TimeUnit.NANOSECONDS.toMillis(tickTook), TimeUnit.NANOSECONDS.toMillis(tooLong),
+									ticksToSkip > 0 ? String.format("%nSkipping %s ticks to compensate", ticksToSkip)
+											: "");
 					if (ticksToSkip > 0) {
 						lastTick += (ticksToSkip - 1) * tickTime;
 					}
@@ -103,6 +121,7 @@ public class GameThread extends Thread {
 
 	private void offerTick(long nanos) {
 		removeOldTicks();
+		this.lastTick.set(nanos - tickTime);
 		ticks.offer(nanos);
 	}
 
@@ -186,6 +205,7 @@ public class GameThread extends Thread {
 
 	/**
 	 * Exits the {@link GameLauncher}
+	 * 
 	 * @return a completionFuture
 	 */
 	public CompletableFuture<Void> exit() {

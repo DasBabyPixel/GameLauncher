@@ -3,8 +3,9 @@ package gamelauncher.lwjgl.render.framebuffer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.LWJGLTexture;
+import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
 public class BasicFramebuffer extends LWJGLFramebuffer {
@@ -13,12 +14,12 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 	private LWJGLTexture colorTexture;
 	private Renderbuffer depthStencilRenderbuffer;
 
-	public BasicFramebuffer(int width, int height) throws GameException {
+	public BasicFramebuffer(GameLauncher launcher, int width, int height) throws GameException {
 		super();
 		width().setNumber(width);
 		height().setNumber(height);
 		bind();
-		colorTexture = new LWJGLTexture();
+		colorTexture = (LWJGLTexture) launcher.getTextureManager().createTexture();
 		resizeColorTexture();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
 		depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, width, height);

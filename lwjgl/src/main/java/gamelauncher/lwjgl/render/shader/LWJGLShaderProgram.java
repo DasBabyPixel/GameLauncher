@@ -2,6 +2,8 @@ package gamelauncher.lwjgl.render.shader;
 
 import static org.lwjgl.opengl.GL20.*;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
@@ -11,13 +13,16 @@ import gamelauncher.lwjgl.render.GlStates;
 public class LWJGLShaderProgram extends ShaderProgram {
 
 	private final int programId;
-
+	final AtomicInteger refCount = new AtomicInteger(1);
+	private final LWJGLShaderLoader loader;
+	
 	private int vertexShaderId;
 
 	private int fragmentShaderId;
 
-	public LWJGLShaderProgram(GameLauncher launcher) throws GameException {
+	public LWJGLShaderProgram(LWJGLShaderLoader loader, GameLauncher launcher) throws GameException {
 		super(launcher);
+		this.loader = loader;
 		this.programId = glCreateProgram();
 		if (this.programId == 0) {
 			throw new GameException("Could not create Shader");
@@ -95,9 +100,11 @@ public class LWJGLShaderProgram extends ShaderProgram {
 
 	@Override
 	public void cleanup() {
-		unbind();
-		if (programId != 0) {
-			glDeleteProgram(programId);
+		if (refCount.decrementAndGet() == 0) {
+			unbind();
+			if (programId != 0) {
+				glDeleteProgram(programId);
+			}
 		}
 	}
 }

@@ -37,5 +37,5 @@ public interface FrameRenderer {
 	 * @param window
 	 * @throws GameException
 	 */
-	void close(Window window) throws GameException;
+	void cleanup(Window window) throws GameException;
 }

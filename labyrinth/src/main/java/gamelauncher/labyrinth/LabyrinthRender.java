@@ -3,6 +3,8 @@ package gamelauncher.labyrinth;
 import java.nio.file.FileSystem;
 
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.BasicCamera;
+import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.Renderer;
@@ -24,6 +26,8 @@ public class LabyrinthRender extends Renderer {
 	private ModelLoader modelLoader;
 	private ShaderLoader shaderLoader;
 	private DrawContext contexthud;
+	private Window window;
+	private Camera camera = new BasicCamera(()->window.scheduleDraw());
 
 	Model model1;
 	GameItem gi1;
@@ -41,6 +45,7 @@ public class LabyrinthRender extends Renderer {
 
 	@Override
 	public void init(Window window) throws GameException {
+		this.window = window;
 		ShaderProgram program = shaderLoader.loadShader(launcher, embedFileSystem.getPath("shaders/hud/hud.json"));
 		contexthud = launcher.createContext(window.getFramebuffer());
 		contexthud.setProgram(program);
@@ -60,7 +65,7 @@ public class LabyrinthRender extends Renderer {
 
 	@Override
 	public void render(Window window) throws GameException {
-		contexthud.update(labyrinth.getLauncher().getCamera());
+		contexthud.update(camera);
 		contexthud.drawModel(model1, 0, 0, 0);
 		contexthud.drawModel(model2, 0, 0, 0);
 		contexthud.getProgram().clearUniforms();

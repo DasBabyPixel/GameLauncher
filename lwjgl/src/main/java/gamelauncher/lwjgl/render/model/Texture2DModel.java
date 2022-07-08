@@ -14,7 +14,7 @@ import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.GlStates;
-import gamelauncher.lwjgl.render.LWJGLTexture;
+import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 /**
  * @author DasBabyPixel

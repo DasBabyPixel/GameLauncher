@@ -2,15 +2,12 @@ package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.imageio.ImageIO;
-
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.GameItem;
@@ -26,9 +23,13 @@ import gamelauncher.lwjgl.render.model.Texture2DModel;
 @SuppressWarnings("javadoc")
 public class LWJGLGameRenderer implements GameRenderer {
 
+	public static final boolean WIREFRAMES = false;
+
 	private final AtomicReference<Renderer> renderer = new AtomicReference<>();
+	private final Map<Window, Entry> map = new ConcurrentHashMap<>();
 	private GameLauncher launcher;
-	private ConcurrentHashMap<Window, WindowBasedRenderer> m = new ConcurrentHashMap<>();
+
+	private GlContext glContext = new GlContext();
 
 	public LWJGLGameRenderer(GameLauncher launcher) {
 		this.launcher = launcher;
@@ -47,84 +48,82 @@ public class LWJGLGameRenderer implements GameRenderer {
 	@Override
 	public void init(Window window) throws GameException {
 		launcher.getLogger().info("Initializing RenderEngine");
-
-		WindowBasedRenderer r = new WindowBasedRenderer(launcher, window);
-		r.init();
-		m.put(window, r);
-
+		map.put(window, new Entry(window));
+		map.get(window).init();
 		launcher.getLogger().info("RenderEngine initialized");
 	}
 
 	@Override
-	public void close(Window window) throws GameException {
+	public void cleanup(Window window) throws GameException {
 		launcher.getLogger().info("Cleaning up RenderEngine");
-		m.remove(window).cleanup();
+		map.remove(window).cleanup();
 		launcher.getLogger().info("RenderEngine cleaned up");
 	}
 
 	@Override
 	public void windowSizeChanged(Window window) throws GameException {
-		m.get(window).windowSizeChanged();
+		map.get(window).windowSizeChanged();
 	}
 
 	@Override
 	public void renderFrame(Window window) throws GameException {
-		m.get(window).render(renderer.get());
+		map.get(window).renderFrame(renderer.get());
 	}
 
-	public static class WindowBasedRenderer {
-		private final GameLauncher launcher;
+	private class Entry {
 		private final Window window;
-		private Renderer crenderer;
-		private DrawContext contexthud;
 		private BasicFramebuffer mainFramebuffer;
 		private GameItem mainScreenItem;
 		private GameItem.GameItemModel mainScreenItemModel;
-		private final GlContext glContext = new GlContext();
+		private Renderer crenderer;
+		private Camera camera;
 
-		public WindowBasedRenderer(GameLauncher launcher, Window window) {
-			this.launcher = launcher;
+		private DrawContext contexthud;
+
+		public Entry(Window window) {
 			this.window = window;
+			this.camera = new BasicCamera(() -> window.scheduleDraw());
 		}
 
-		private void cleanup() throws GameException {
-			cleanup(crenderer);
+		public void init() throws GameException {
+
+			ShaderProgram shaderhud = launcher.getShaderLoader()
+					.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders/hud/hud.json"));
+
+			glContext.depth.enabled.value.set(true);
+			glContext.depth.depthFunc.set(GL_LEQUAL);
+			glContext.blend.enabled.value.set(true);
+			glContext.blend.srcrgb.set(GL_SRC_ALPHA);
+			glContext.blend.dstrgb.set(GL_ONE_MINUS_SRC_ALPHA);
+			glContext.replace(null);
+
+			mainFramebuffer = new BasicFramebuffer(launcher, window.getFramebuffer().width().intValue(),
+					window.getFramebuffer().height().intValue());
+			mainScreenItem = new GameItem(new Texture2DModel(mainFramebuffer.getColorTexture()));
+			mainScreenItemModel = new GameItem.GameItemModel(mainScreenItem);
+
+			contexthud = launcher.createContext(mainFramebuffer);
+			contexthud.setProgram(shaderhud);
+			contexthud.setProjection(new Transformations.Projection.Projection2D());
+			((LWJGLDrawContext) contexthud).swapTopBottom = true;
+
+			updateScreenItems();
+
+			if (WIREFRAMES) {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			}
+		}
+
+		public void cleanup() throws GameException {
 			contexthud.getProgram().cleanup();
 			contexthud.cleanup();
 			mainFramebuffer.cleanup();
-			mainScreenItemModel.cleanup();
 		}
 
-		private void render(Renderer renderer) throws GameException {
-			window.beginFrame();
-			glClearColor(0, 0, 0, 0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//			mainFramebuffer.bind();
-			Camera camera = launcher.getCamera();
-			if (renderer != crenderer) {
-				cleanup(crenderer);
-				init(renderer);
-				crenderer = renderer;
-			}
-			if (crenderer != null) {
-				crenderer.render(window);
-			}
-
-			BufferedImage img = mainFramebuffer.getColorTexture().getBufferedImage();
-			try {
-				ImageIO.write(img, "png", new File("fb.png"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-
-//			mainFramebuffer.unbind();
-//
-//			contexthud.update(camera);
-//			contexthud.drawModel(mainScreenItemModel);
-//			contexthud.getProgram().clearUniforms();
-
-			window.endFrame();
+		public void windowSizeChanged() {
+			mainFramebuffer.resize(window.getFramebuffer().width().intValue(),
+					window.getFramebuffer().height().intValue());
+			updateScreenItems();
 		}
 
 		private void updateScreenItems() {
@@ -134,39 +133,31 @@ public class LWJGLGameRenderer implements GameRenderer {
 			mainScreenItem.setPosition(fw / 2F, fh / 2F, 0);
 		}
 
-		private void init() throws GameException {
-			contexthud = launcher.createContext(window.getFramebuffer());
-			ShaderProgram program = launcher.getShaderLoader()
-					.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders", "hud", "hud.json"));
-			contexthud.setProgram(program);
-			contexthud.setProjection(new Transformations.Projection.Projection2D());
+		public void renderFrame(Renderer renderer) throws GameException {
+			window.beginFrame();
+			glClearColor(0, 0, 0, 0);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glContext.depth.enabled.value.set(true);
-			glContext.depth.depthFunc.set(GL_LEQUAL);
-			glContext.blend.enabled.value.set(true);
-			glContext.blend.srcrgb.set(GL_SRC_ALPHA);
-			glContext.blend.dstrgb.set(GL_ONE_MINUS_SRC_ALPHA);
-			glContext.replace(null);
+			mainFramebuffer.bind();
+			glClearColor(0.2F, 0.2F, 0.2F, 0.8F);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			mainFramebuffer = new BasicFramebuffer(window.getFramebuffer().width().intValue(),
-					window.getFramebuffer().height().intValue());
-//			System.out.println(mainFramebuffer.width().intValue());
-			mainScreenItem = new GameItem(new Texture2DModel(mainFramebuffer.getColorTexture()));
-			mainScreenItemModel = new GameItem.GameItemModel(mainScreenItem);
-			updateScreenItems();
-		}
-
-		public void windowSizeChanged() {
-			mainFramebuffer.resize(window.getFramebuffer().width().intValue(),
-					window.getFramebuffer().height().intValue());
-			updateScreenItems();
-		}
-
-		private void init(Renderer renderer) throws GameException {
-			if (renderer == null) {
-				return;
+			if (renderer != crenderer) {
+				cleanup(crenderer);
+				init(renderer);
+				crenderer = renderer;
 			}
-			renderer.init(window);
+			if (renderer != null) {
+				renderer.render(window);
+			}
+
+			mainFramebuffer.unbind();
+
+			contexthud.update(camera);
+			contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
+			contexthud.getProgram().clearUniforms();
+
+			window.endFrame();
 		}
 
 		private void cleanup(Renderer renderer) throws GameException {
@@ -174,6 +165,13 @@ public class LWJGLGameRenderer implements GameRenderer {
 				return;
 			}
 			renderer.cleanup(window);
+		}
+
+		private void init(Renderer renderer) throws GameException {
+			if (renderer == null) {
+				return;
+			}
+			renderer.init(window);
 		}
 	}
 }

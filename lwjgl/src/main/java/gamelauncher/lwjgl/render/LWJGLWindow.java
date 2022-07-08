@@ -280,7 +280,6 @@ public class LWJGLWindow implements Window {
 			LRenderThread rt = renderThread;
 			rt.bindContext();
 			glfwShowWindow(id.get());
-			System.out.println("swap");
 			glfwSwapBuffers(id.get());
 			rt.releaseContext();
 		});
@@ -537,7 +536,7 @@ public class LWJGLWindow implements Window {
 			}
 			if (lastFrameRenderer != null) {
 				try {
-					lastFrameRenderer.close(LWJGLWindow.this);
+					lastFrameRenderer.cleanup(LWJGLWindow.this);
 				} catch (GameException ex) {
 					ex.printStackTrace();
 				}
@@ -604,7 +603,7 @@ public class LWJGLWindow implements Window {
 				if (lastFrameRenderer != fr) {
 					if (lastFrameRenderer != null) {
 						try {
-							lastFrameRenderer.close(LWJGLWindow.this);
+							lastFrameRenderer.cleanup(LWJGLWindow.this);
 						} catch (Exception ex) {
 							ex.printStackTrace();
 						}

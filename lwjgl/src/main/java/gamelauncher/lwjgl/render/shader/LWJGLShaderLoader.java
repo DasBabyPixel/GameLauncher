@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,6 +17,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;
+import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.Arrays;
@@ -34,11 +36,18 @@ public class LWJGLShaderLoader implements ShaderLoader {
 	 * The gson for shaderPrograms
 	 */
 	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	final Map<Resource, LWJGLShaderProgram> programs = new ConcurrentHashMap<>();
 
 	@Override
 	public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
 		ResourceLoader loader = launcher.getResourceLoader();
-		ResourceStream rootStream = loader.getResource(path).newResourceStream();
+		Resource resource = loader.getResource(path);
+		if(programs.containsKey(resource)) {
+			LWJGLShaderProgram program = programs.get(resource);
+			program.refCount.incrementAndGet();
+			return program;
+		}
+		ResourceStream rootStream = resource.newResourceStream();
 		String rootutf8 = rootStream.readUTF8FullyClose();
 		JsonObject root;
 		try {
@@ -48,7 +57,8 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			String fspathstr = root.get("fragmentShader").getAsString();
 			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream().readUTF8FullyClose();
 			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
-			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher);
+			LWJGLShaderProgram program = new LWJGLShaderProgram(this, launcher);
+			programs.put(resource, program);
 			program.createVertexShader(vscode);
 			program.createFragmentShader(fscode);
 			program.link();
