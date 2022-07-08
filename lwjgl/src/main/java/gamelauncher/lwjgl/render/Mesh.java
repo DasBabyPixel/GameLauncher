@@ -19,6 +19,7 @@ import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
 public class Mesh implements GameResource {
@@ -99,7 +100,7 @@ public class Mesh implements GameResource {
 	public void render() {
 		if (material.texture != null) {
 			GlStates.activeTexture(GL_TEXTURE0);
-			GlStates.bindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
+			material.texture.bind();
 //			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 

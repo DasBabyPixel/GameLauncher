@@ -28,13 +28,13 @@ public class GlStates {
 	public static BlendState getBlendState() {
 		return blend;
 	}
-	
+
 	public static DepthState getDepthState() {
 		return depth;
 	}
 
 	public static void bindFramebuffer(int target, int framebuffer) {
-		if (bindFramebuffer.put(target, framebuffer) != Integer.valueOf(framebuffer)) {
+		if (!bindFramebuffer.containsKey(target) || bindFramebuffer.put(target, framebuffer) != framebuffer) {
 			glBindFramebuffer(target, framebuffer);
 		}
 	}
@@ -49,7 +49,7 @@ public class GlStates {
 	}
 
 	public static void bindRenderbuffer(int target, int renderbuffer) {
-		if (bindRenderbuffer.put(target, renderbuffer) != Integer.valueOf(renderbuffer)) {
+		if (!bindRenderbuffer.containsKey(target) || bindRenderbuffer.put(target, renderbuffer) != renderbuffer) {
 			glBindRenderbuffer(target, renderbuffer);
 		}
 	}
@@ -61,7 +61,7 @@ public class GlStates {
 	}
 
 	public static void bindTexture(int target, int texture) {
-		if (bindTexture.put(target, texture) != Integer.valueOf(texture)) {
+		if (!bindTexture.containsKey(target) || bindTexture.put(target, texture) != texture) {
 			glBindTexture(target, texture);
 		}
 	}
@@ -73,7 +73,7 @@ public class GlStates {
 	}
 
 	public static void bindBuffer(int target, int buffer) {
-		if (bindBuffer.put(target, buffer) != Integer.valueOf(buffer)) {
+		if (!bindBuffer.containsKey(target) || bindBuffer.put(target, buffer) != buffer) {
 			glBindBuffer(target, buffer);
 		}
 	}
@@ -85,7 +85,7 @@ public class GlStates {
 	}
 
 	public static class DepthState {
-		
+
 		public int func;
 		public final BooleanState enabled = new BooleanState(GL_DEPTH_TEST);
 

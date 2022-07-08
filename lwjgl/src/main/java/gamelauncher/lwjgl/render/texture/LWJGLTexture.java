@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.render.texture;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -9,21 +9,23 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
 import de.matthiasmann.twl.utils.PNGDecoder.Format;
+import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.lwjgl.render.GlStates;
 
 @SuppressWarnings("javadoc")
-public class LWJGLTexture implements GameResource {
+public class LWJGLTexture implements Texture {
 
 	private final int textureId;
 	public int width;
 	public int height;
 
-	public LWJGLTexture(ResourceStream stream) throws GameException {
+	LWJGLTexture(ResourceStream stream) throws GameException {
 		textureId = glGenTextures();
 		bind();
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -40,33 +42,37 @@ public class LWJGLTexture implements GameResource {
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		long time1 = System.nanoTime();
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
 				buf);
 		memFree(buf);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		long time2 = System.nanoTime();
 		stream.cleanup();
 		unbind();
+		long took = time2 - time1;
+		System.out.println("Took " + took + " nanos, " + TimeUnit.NANOSECONDS.toMillis(took) + "ms");
 	}
 
-	public LWJGLTexture(BufferedImage img) {
-		textureId = glGenTextures();
-		bind();
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//	public LWJGLTexture(BufferedImage img) {
+//		textureId = glGenTextures();
+//		bind();
+//		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//
+//		ByteBuffer buf = memAlloc(4 * img.getWidth() * img.getHeight());
+//		int[] rgb = new int[img.getWidth() * img.getHeight()];
+//		img.getRGB(0, 0, img.getWidth(), img.getHeight(), rgb, 0, img.getWidth());
+//		buf.asIntBuffer().put(rgb);
+//		buf.flip();
+//		this.width = img.getWidth();
+//		this.height = img.getHeight();
+//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+//		memFree(buf);
+//		glGenerateMipmap(GL_TEXTURE_2D);
+//		unbind();
+//	}
 
-		ByteBuffer buf = memAlloc(4 * img.getWidth() * img.getHeight());
-		int[] rgb = new int[img.getWidth() * img.getHeight()];
-		img.getRGB(0, 0, img.getWidth(), img.getHeight(), rgb, 0, img.getWidth());
-		buf.asIntBuffer().put(rgb);
-		buf.flip();
-		this.width = img.getWidth();
-		this.height = img.getHeight();
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.getWidth(), img.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-		memFree(buf);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		unbind();
-	}
-
-	public LWJGLTexture() {
+	LWJGLTexture() {
 		this(glGenTextures());
 	}
 
@@ -74,6 +80,7 @@ public class LWJGLTexture implements GameResource {
 		this.textureId = textureId;
 	}
 
+	@Override
 	public BufferedImage getBufferedImage() {
 		ByteBuffer pixels = getBufferedImageBuffer();
 		IntBuffer ipixels = pixels.asIntBuffer();
@@ -94,6 +101,7 @@ public class LWJGLTexture implements GameResource {
 		return pixels;
 	}
 
+	@Override
 	public void allocate(int width, int height) {
 		bind();
 		this.width = width;
@@ -137,5 +145,13 @@ public class LWJGLTexture implements GameResource {
 			return false;
 		LWJGLTexture other = (LWJGLTexture) obj;
 		return textureId == other.textureId;
+	}
+
+	@Override
+	public void upload(BufferedImage image) {
+	}
+
+	@Override
+	public void upload(ResourceStream stream) {
 	}
 }

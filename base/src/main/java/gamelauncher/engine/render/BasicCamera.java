@@ -1,8 +1,6 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.engine.render;
 
 import org.joml.Vector3f;
-
-import gamelauncher.engine.render.Camera;
 
 /**
  * @author DasBabyPixel

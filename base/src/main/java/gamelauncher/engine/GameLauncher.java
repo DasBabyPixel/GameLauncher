@@ -30,7 +30,6 @@ import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.plugin.PluginManager;
-import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameRenderer;
@@ -38,12 +37,15 @@ import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
+import gamelauncher.engine.render.texture.TextureManager;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.Threads;
+import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
@@ -60,7 +62,7 @@ public abstract class GameLauncher {
 	/**
 	 * The max TPS in the {@link GameThread}
 	 */
-	public static final int MAX_TPS = 60;
+	public static final float MAX_TPS = 0.5F;
 	private final EventManager eventManager;
 	private final Logger logger;
 	private GameThread gameThread;
@@ -79,7 +81,8 @@ public abstract class GameLauncher {
 	private ShaderLoader shaderLoader;
 	private GuiManager guiManager;
 	private KeybindManager keybindManager;
-	private Camera camera;
+	private TextureManager textureManager;
+	private Threads threads;
 	private PluginManager pluginManager;
 	private ResourceLoader resourceLoader;
 	private boolean debugMode = false;
@@ -92,6 +95,7 @@ public abstract class GameLauncher {
 	 */
 	public GameLauncher() {
 		this.logger = Logger.getLogger(getClass());
+		this.threads = new Threads();
 		this.gameDirectory = Paths.get(NAME).toAbsolutePath();
 		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
@@ -107,7 +111,7 @@ public abstract class GameLauncher {
 		this.eventManager = new EventManager();
 		this.pluginManager = new PluginManager(this);
 	}
-	
+
 	/**
 	 * @param framebuffer
 	 * @return a new {@link DrawContext}
@@ -219,12 +223,20 @@ public abstract class GameLauncher {
 	 * @throws GameException
 	 */
 	public void stop() throws GameException {
-		try {
-			gameThread.exit().get();
-			this.pluginManager.unloadPlugins();
-			this.embedFileSystem.close();
-		} catch (InterruptedException | ExecutionException | IOException ex) {
-			throw new GameException(ex);
+		GameRunnable r = () -> {
+			try {
+				gameThread.exit().get();
+				this.pluginManager.unloadPlugins();
+				this.embedFileSystem.close();
+				this.threads.cleanup();
+			} catch (InterruptedException | ExecutionException | IOException ex) {
+				throw new GameException(ex);
+			}
+		};
+		if (Thread.currentThread() != gameThread) {
+			r.run();
+		} else {
+			new Thread(r.toRunnable()).start();
 		}
 	}
 
@@ -238,6 +250,25 @@ public abstract class GameLauncher {
 
 	protected void setKeybindManager(KeybindManager keybindManager) {
 		this.keybindManager = keybindManager;
+	}
+
+	protected void setTextureManager(TextureManager textureManager) {
+		this.textureManager = textureManager;
+	}
+
+	/**
+	 * @return the {@link TextureManager}
+	 */
+	public TextureManager getTextureManager() {
+		return textureManager;
+	}
+
+	/**
+	 * @return the {@link Threads Threads utility class} for this
+	 *         {@link GameLauncher}
+	 */
+	public Threads getThreads() {
+		return threads;
 	}
 
 	/**
@@ -329,22 +360,6 @@ public abstract class GameLauncher {
 	 */
 	public void setGlyphProvider(GlyphProvider glyphProvider) {
 		this.glyphProvider = glyphProvider;
-	}
-
-	/**
-	 * @return the {@link Camera}
-	 */
-	public Camera getCamera() {
-		return camera;
-	}
-
-	/**
-	 * Sets the {@link Camera}
-	 * 
-	 * @param camera
-	 */
-	public void setCamera(Camera camera) {
-		this.camera = camera;
 	}
 
 	/**

@@ -2,24 +2,18 @@ package gamelauncher.lwjgl.render.font;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL43.*;
-import static org.lwjgl.system.MemoryUtil.*;
 
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.imageio.ImageIO;
-
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.lwjgl.render.GlStates;
-import gamelauncher.lwjgl.render.LWJGLTexture;
+import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlas extends TextureAtlas {
@@ -30,7 +24,8 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	private final int maxSize;
 	private final GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix;
 
-	public DynamicSizeTextureAtlas(int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix) throws GameException {
+	public DynamicSizeTextureAtlas(int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix)
+			throws GameException {
 		this.fileSuffixAppendix = fileSuffixAppendix;
 		maxSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
 		resizeTexture(initialSize);
@@ -72,7 +67,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		if (!super.addGlyph(id, glyph)) {
 			return false;
 		}
-		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
+		texture.bind();
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -86,47 +81,47 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 		return texture;
 	}
 
-	public BufferedImage getBufferedImage() {
-		ByteBuffer pixels = getBufferedImageBuffer();
-		BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < size; x++) {
-				img.setRGB(x, y, pixels.get(y * size + x) << 24);
-			}
-		}
-		memFree(pixels);
-		return img;
-	}
-
-	public ByteBuffer getBufferedImageBuffer() {
-		ByteBuffer pixels = memAlloc(size * size);
-		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
-		return pixels;
-	}
+//	public BufferedImage getBufferedImage() {
+//		ByteBuffer pixels = getBufferedImageBuffer();
+//		BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
+//		for (int y = 0; y < size; y++) {
+//			for (int x = 0; x < size; x++) {
+//				img.setRGB(x, y, pixels.get(y * size + x) << 24);
+//			}
+//		}
+//		memFree(pixels);
+//		return img;
+//	}
+//
+//	public ByteBuffer getBufferedImageBuffer() {
+//		ByteBuffer pixels = memAlloc(size * size);
+//		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
+//		glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
+//		return pixels;
+//	}
 
 	@Override
 	public void cleanup() throws GameException {
 
-		ByteBuffer pixels = getBufferedImageBuffer();
-		new Thread(() -> {
-			try {
-				BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
-				for (int y = 0; y < size; y++) {
-					for (int x = 0; x < size; x++) {
-						img.setRGB(x, y, pixels.get(y * size + x) << 24);
-					}
-				}
-				memFree(pixels);
-				System.out.println("Writing texture atlas to working directory");
-				ImageIO.write(img, "png",
-						new File("tatlas-" + this.fileSuffixAppendix.apply(DynamicSizeTextureAtlas.this) + ".png"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			} catch (GameException ex) {
-				ex.printStackTrace();
-			}
-		}).start();
+//		ByteBuffer pixels = getBufferedImageBuffer();
+//		new Thread(() -> {
+//			try {
+//				BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
+//				for (int y = 0; y < size; y++) {
+//					for (int x = 0; x < size; x++) {
+//						img.setRGB(x, y, pixels.get(y * size + x) << 24);
+//					}
+//				}
+//				memFree(pixels);
+//				System.out.println("Writing texture atlas to working directory");
+//				ImageIO.write(img, "png",
+//						new File("tatlas-" + this.fileSuffixAppendix.apply(DynamicSizeTextureAtlas.this) + ".png"));
+//			} catch (IOException ex) {
+//				ex.printStackTrace();
+//			} catch (GameException ex) {
+//				ex.printStackTrace();
+//			}
+//		}).start();
 
 		glyphBounds.clear();
 		glyphs.clear();

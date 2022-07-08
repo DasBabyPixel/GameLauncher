@@ -7,6 +7,7 @@ import org.joml.Vector3f;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
+import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
@@ -16,7 +17,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Math;
 import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
-import gamelauncher.lwjgl.render.BasicCamera;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
 import gamelauncher.lwjgl.render.LWJGLWindow;
@@ -24,6 +24,7 @@ import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
 import gamelauncher.lwjgl.render.font.BasicGlyphProvider;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
+import gamelauncher.lwjgl.render.texture.LWJGLTextureManager;
 import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 
@@ -37,6 +38,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	private boolean mouseMovement = false;
 	private float mouseSensivity = 1.0F;
 	private boolean ignoreNextMovement = false;
+	private Camera camera = new BasicCamera(() -> window.scheduleDraw());
 
 	/**
 	 * @throws GameException
@@ -55,92 +57,36 @@ public class LWJGLGameLauncher extends GameLauncher {
 	protected void start0() throws GameException {
 		window = new LWJGLWindow(this, 400, 400, NAME);
 		setWindow(window);
-		setCamera(new BasicCamera(() -> window.scheduleDraw()));
+//		setCamera(new BasicCamera(() -> window.scheduleDraw()));
 		window.renderLater(() -> setGlyphProvider(new BasicGlyphProvider()));
 		window.setRenderMode(RenderMode.ON_UPDATE);
-//		AtomicBoolean boost = new AtomicBoolean(false);
-//		window.getInput().addListener(new Listener() {
-//
-//			private final double moveSpeed = 1.0 / MAX_TPS;
-//
-//			@Override
-//			public void handleKeyboard(InputType inputType, int key, int scancode) {
-//				float moveSpeed = (float) (boost.get() ? 200.0 * this.moveSpeed : this.moveSpeed);
-//				if (inputType == InputType.HELD) {
-//					if (key == GLFW_KEY_W) {
-//						getCamera().movePosition(0, 0, -moveSpeed);
-//					} else if (key == GLFW_KEY_S) {
-//						getCamera().movePosition(0, 0, moveSpeed);
-//					} else if (key == GLFW_KEY_A) {
-//						getCamera().movePosition(-moveSpeed, 0, 0);
-//					} else if (key == GLFW_KEY_D) {
-//						getCamera().movePosition(moveSpeed, 0, 0);
-//					} else if (key == GLFW_KEY_SPACE) {
-//						getCamera().movePosition(0, moveSpeed, 0);
-//					} else if (key == GLFW_KEY_LEFT_SHIFT) {
-//						getCamera().movePosition(0, -moveSpeed, 0);
-//					}
-//				} else if (inputType == InputType.PRESSED) {
-//					if (key == GLFW_KEY_LEFT_CONTROL) {
-//						boost.set(true);
-//					} else if (key == GLFW_KEY_ESCAPE) {
-//						mouseMovement(!mouseMovement);
-//					}
-//				} else if (inputType == InputType.RELEASED) {
-//					if (key == GLFW_KEY_LEFT_CONTROL) {
-//						boost.set(false);
-//					}
-//				}
-//			}
-//
-//			@Override
-//			public void handleMouse(InputType inputType, int mouseButton, double mouseX, double mouseY) {
-//				if (inputType == InputType.SCROLL) {
-//					if (mouseY != 0) {
-//						float v = Math.pow(0.9F, Math.abs((float) mouseY));
-//						if (mouseY < 0) {
-//							mouseSensivity *= v;
-//						} else {
-//							mouseSensivity /= v;
-//						}
-//					}
-//					if (mouseX != 0) {
-//						getCamera().moveRotation((float) mouseX * 3, 0, 0);
-//					}
-//				} else if (inputType == InputType.PRESSED) {
-//					if (mouseButton == 1) {
-//						boolean pin = !window.isFloating();
-//						window.setFloating(pin);
-//						window.setTitle(pin ? window.title.get() + " - pinned"
-//								: window.title.get().substring(0, window.title.get().length() - " - pinned".length()));
-//					}
-//				}
-//			}
-//		});
 		window.createWindow();
-		window.startRendering();
 		window.swapBuffers(false);
-//		window.getFrameCounter().addUpdateListener(fps -> {
-//			getLogger().infof("FPS: %s", fps);
-//		});
+		window.startRendering();
+		window.getFrameCounter().addUpdateListener(fps -> {
+			getLogger().debugf("FPS: %s", fps);
+		});
 		CloseCallback oldCloseCallback = window.getCloseCallback();
 		window.setCloseCallback(new CloseCallback() {
 			@Override
 			public void close() throws GameException {
 				oldCloseCallback.close();
-				LWJGLGameLauncher.this.stop();
+				new Thread(() -> {
+					try {
+						LWJGLGameLauncher.this.stop();
+					} catch (GameException ex) {
+						ex.printStackTrace();
+					}
+				}).start();
 			}
 		});
-		getEventManager().registerListener(this);
 
+		getEventManager().registerListener(this);
 	}
 
 	@SuppressWarnings("javadoc")
 	@EventHandler
 	public void handle(LauncherInitializedEvent event) {
-//		window.scheduleDrawAndWaitForFrame();
-//		window.show();
-//		window.showAndEndFrame();
 		window.swapBuffers(true);
 		window.showAndEndFrame();
 
@@ -180,9 +126,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick() throws GameException {
+		System.out.println("Tick");
 		window.getInput().handleInput();
 		mouse: if (mouseMovement) {
-			Camera cam = getCamera();
+			Camera cam = camera;
 			float dy = (float) (window.getMouse().getDeltaX() * 0.4) * mouseSensivity;
 			float dx = (float) (window.getMouse().getDeltaY() * 0.4) * mouseSensivity;
 			if ((dx != 0 || dy != 0) && ignoreNextMovement) {
@@ -192,5 +139,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 			Vector3f rot = new Vector3f(cam.getRotX(), cam.getRotY(), cam.getRotZ());
 			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
 		}
+	}
+
+	@Override
+	public LWJGLTextureManager getTextureManager() {
+		return (LWJGLTextureManager) super.getTextureManager();
 	}
 }

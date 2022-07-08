@@ -3,6 +3,8 @@ package gamelauncher.engine.gui;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameFunction;
+import gamelauncher.engine.util.function.GameSupplier;
 
 /**
  * @author DasBabyPixel
@@ -50,5 +52,24 @@ public interface GuiManager {
 	 * @throws GameException
 	 */
 	<T extends LauncherBasedGui> T createGui(Class<T> clazz) throws GameException;
+
+	/**
+	 * Registers a converter for {@link LauncherBasedGui}s. When a
+	 * {@link LauncherBasedGui} is created via {@link GuiManager#createGui(Class)},
+	 * this function will be called.
+	 * 
+	 * @param clazz 
+	 * @param converter
+	 */
+	<T extends LauncherBasedGui>void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter);
+
+	/**
+	 * Registers a {@link LauncherBasedGui} creator. Used to create
+	 * {@link LauncherBasedGui}s via {@link GuiManager#createGui(Class)}
+	 * 
+	 * @param clazz
+	 * @param supplier
+	 */
+	<T extends LauncherBasedGui> void registerGuiCreator(Class<T> clazz, GameSupplier<T> supplier);
 
 }
