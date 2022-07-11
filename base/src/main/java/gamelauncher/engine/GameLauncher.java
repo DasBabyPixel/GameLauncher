@@ -226,6 +226,7 @@ public abstract class GameLauncher {
 		GameRunnable r = () -> {
 			try {
 				gameThread.exit().get();
+				this.stop0();
 				this.pluginManager.unloadPlugins();
 				this.embedFileSystem.close();
 				this.threads.cleanup();
@@ -243,6 +244,8 @@ public abstract class GameLauncher {
 	protected abstract void tick() throws GameException;
 
 	protected abstract void start0() throws GameException;
+
+	protected abstract void stop0() throws GameException;
 
 	protected void setGuiManager(GuiManager guiManager) {
 		this.guiManager = guiManager;

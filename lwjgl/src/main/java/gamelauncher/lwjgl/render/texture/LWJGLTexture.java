@@ -6,13 +6,10 @@ import static org.lwjgl.opengl.GL21.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -22,6 +19,8 @@ import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.function.GameRunnable;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.render.GlStates;
 
 @SuppressWarnings("javadoc")
@@ -31,6 +30,7 @@ public class LWJGLTexture implements Texture {
 	private final int textureId;
 	public int width;
 	public int height;
+	public final Logger logger = Logger.getLogger();
 
 //	public LWJGLTexture(BufferedImage img) {
 //		textureId = glGenTextures();
@@ -136,38 +136,45 @@ public class LWJGLTexture implements Texture {
 				PNGDecoder decoder = stream.newPNGDecoder();
 				int w = decoder.getWidth();
 				int h = decoder.getHeight();
+				System.out.printf("%s %s%n", w, h);
 				AtomicReference<ByteBuffer> abuf = new AtomicReference<>();
-				CountDownLatch c = new CountDownLatch(1);
-				manager.launcher.getWindow().renderLater(() -> {
+				CompletableFuture<Void> fut2 = manager.launcher.getWindow().renderLater(() -> {
 					long t1 = System.nanoTime();
 					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
 					glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * Integer.BYTES, GL_STATIC_DRAW);
 					ByteBuffer buf1 = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+					if (buf1 == null) {
+						int error = glGetError();
+						throw new GameException("Couldn't map buffer! (" + Integer.toHexString(error) + ")");
+					}
 					abuf.set(buf1);
-					c.countDown();
 					nanos.addAndGet(System.nanoTime() - t1);
 				});
-				c.await();
+				Threads.waitFor(fut2);
 				decoder.decode(abuf.get(), w * Integer.BYTES, PNGDecoder.Format.RGBA);
 				stream.cleanup();
 				abuf.get().flip();
-				manager.launcher.getWindow().renderLater(() -> {
-					long t1 = System.nanoTime();
-					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
-					glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-					bind();
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-			  		nanos.addAndGet(System.nanoTime() - t1);
-					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-					glDeleteBuffers(buf);
-					fut.complete(null);
-					System.out.println(
-							"Took " + nanos.get() + "ns - " + TimeUnit.NANOSECONDS.toMillis(nanos.get()) + "ms");
-				}).get();
-			} catch (GameException | InterruptedException | IOException | ExecutionException ex) {
+				CompletableFuture<Void> fut3 = manager.launcher.getWindow().renderLater(new GameRunnable() {
+					@Override
+					public void run() {
+						long t1 = System.nanoTime();
+						GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+						glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+						bind();
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+						nanos.addAndGet(System.nanoTime() - t1);
+						GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+						glDeleteBuffers(buf);
+						fut.complete(null);
+						System.out.println(
+								"Took " + nanos.get() + "ns - " + TimeUnit.NANOSECONDS.toMillis(nanos.get()) + "ms");
+					}
+				});
+				Threads.waitFor(fut3);
+			} catch (Throwable ex) {
 				manager.launcher.handleError(ex);
 			}
 		});

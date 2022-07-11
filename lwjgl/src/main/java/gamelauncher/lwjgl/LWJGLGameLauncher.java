@@ -15,13 +15,15 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLWindow;
-import gamelauncher.lwjgl.render.LWJGLWindow.CloseCallback;
 import gamelauncher.lwjgl.render.font.BasicGlyphProvider;
+import gamelauncher.lwjgl.render.glfw.GLFWThread;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow.CloseCallback;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
 import gamelauncher.lwjgl.render.texture.LWJGLTextureManager;
@@ -34,10 +36,11 @@ import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
  */
 public class LWJGLGameLauncher extends GameLauncher {
 
-	private LWJGLWindow window;
+	private GLFWWindow window;
 	private boolean mouseMovement = false;
 	private float mouseSensivity = 1.0F;
 	private boolean ignoreNextMovement = false;
+	private GLFWThread glfwThread;
 	private Camera camera = new BasicCamera(() -> window.scheduleDraw());
 
 	/**
@@ -56,14 +59,15 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void start0() throws GameException {
-		window = new LWJGLWindow(this, 400, 400, NAME);
+		this.glfwThread = new GLFWThread(this);
+		this.glfwThread.start();
+		
+		window = new GLFWWindow(this, 400, 400, NAME);
 		setWindow(window);
-//		setCamera(new BasicCamera(() -> window.scheduleDraw()));
 		window.renderLater(() -> setGlyphProvider(new BasicGlyphProvider()));
 		window.setRenderMode(RenderMode.ON_UPDATE);
-		window.createWindow();
 		window.swapBuffers(false);
-		window.startRendering();
+		window.createWindow();
 		window.getFrameCounter().addUpdateListener(fps -> {
 			getLogger().debugf("FPS: %s", fps);
 		});
@@ -83,6 +87,11 @@ public class LWJGLGameLauncher extends GameLauncher {
 		});
 
 		getEventManager().registerListener(this);
+	}
+	
+	@Override
+	protected void stop0() throws GameException {
+		Threads.waitFor(this.glfwThread.terminate());
 	}
 
 	@SuppressWarnings("javadoc")
@@ -121,7 +130,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	/**
 	 * @return the window
 	 */
-	public LWJGLWindow getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 
@@ -140,6 +149,13 @@ public class LWJGLGameLauncher extends GameLauncher {
 			Vector3f rot = new Vector3f(cam.getRotX(), cam.getRotY(), cam.getRotZ());
 			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
 		}
+	}
+	
+	/**
+	 * @return the GLFW thread
+	 */
+	public GLFWThread getGLFWThread() {
+		return glfwThread;
 	}
 
 	@Override

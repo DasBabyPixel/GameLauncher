@@ -16,7 +16,7 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
-import gamelauncher.lwjgl.render.LWJGLWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow;
 import gamelauncher.lwjgl.util.keybind.AllKeybind;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeyboardKeybindEntry;
@@ -30,7 +30,7 @@ import gamelauncher.lwjgl.util.keybind.LWJGLMouseScrollKeybindEntry;
  */
 public class LWJGLInput implements Input {
 
-	private final LWJGLWindow window;
+	private final GLFWWindow window;
 	private final LWJGLMouse mouse;
 	private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
@@ -46,7 +46,7 @@ public class LWJGLInput implements Input {
 	/**
 	 * @param window
 	 */
-	public LWJGLInput(LWJGLWindow window) {
+	public LWJGLInput(GLFWWindow window) {
 		this.window = window;
 		this.mouse = this.window.getMouse();
 		this.keybindManager = window.getLauncher().getKeybindManager();

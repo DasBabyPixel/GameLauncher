@@ -7,10 +7,10 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
@@ -26,6 +26,8 @@ public class GLFWThread extends Thread implements ExecutorThread {
 	private final AtomicBoolean terminate = new AtomicBoolean(false);
 	private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
+	private final Lock lock = new ReentrantLock(true);
+	private final Condition condition = lock.newCondition();
 	private final Logger logger = Logger.getLogger();
 
 	public GLFWThread(LWJGLGameLauncher launcher) {
@@ -39,40 +41,64 @@ public class GLFWThread extends Thread implements ExecutorThread {
 			throw new ExceptionInInitializerError("Couldn't initialize GLFW");
 		}
 		while (!terminate.get()) {
-			glfwWaitEventsTimeout(1.0D);
+			glfwWaitEventsTimeout(0.5D);
 			glfwPollEvents();
 			workQueue();
 		}
-		while (!users.isEmpty()) {
-			for (GLFWUser user : users) {
-				CompletableFuture<Void> fut = user.doneFuture();
-				if (fut.isDone()) {
-					users.remove(user);
-					continue;
-				}
-				try {
-					user.destroy();
-					fut.get(5, TimeUnit.SECONDS);
-					users.remove(user);
-				} catch (InterruptedException | ExecutionException ex) {
-					launcher.handleError(ex);
-				} catch (TimeoutException ex) {
-					logger.errorf("GLFW-Thread user took more than 5 seconds to finish. This mustn't happen!");
-				}
+		for (GLFWUser user : users) {
+			user.destroy();
+		}
+		while (true) {
+			workQueue();
+			if (users.isEmpty()) {
+				break;
 			}
+			lock.lock();
+			try {
+				condition.await();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+			}
+			lock.unlock();
+		}
+		if (!users.isEmpty()) {
+			logger.errorf("Not all users of the GLFWThread have been cleared: %n%s", users);
 		}
 		glfwTerminate();
+		this.terminateFuture.complete(null);
+	}
+
+	private void signal() {
+		if (!terminate.get()) {
+			glfwPostEmptyEvent();
+		} else {
+			lock.lock();
+			condition.signal();
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public CompletableFuture<Void> submit(GameRunnable runnable) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
 		queue.offer(new Entry(fut, runnable));
+		signal();
 		return fut;
+	}
+
+	void addUser(GLFWUser user) {
+		users.add(user);
+		signal();
+	}
+
+	void removeUser(GLFWUser user) {
+		users.remove(user);
+		signal();
 	}
 
 	public CompletableFuture<Void> terminate() {
 		terminate.set(true);
+		signal();
 		return terminateFuture;
 	}
 

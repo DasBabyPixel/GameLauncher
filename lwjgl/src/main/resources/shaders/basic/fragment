@@ -1,4 +1,4 @@
-#version 330
+#version 320 es
 
 in vec2 outTexCoord;
 in vec3 mvVertexNormal;
