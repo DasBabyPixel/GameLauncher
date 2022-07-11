@@ -10,8 +10,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import de.dasbabypixel.api.property.NumberChangeListener;
-import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
@@ -48,12 +46,7 @@ public class LWJGLDrawContext implements DrawContext {
 	protected final Collection<WeakReference<LWJGLDrawContext>> children = ConcurrentHashMap.newKeySet();
 	protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
 	public boolean swapTopBottom = false;
-	protected final NumberChangeListener numberChangeListener = new NumberChangeListener() {
-		@Override
-		public void handleChange(NumberValue value, Number oldValue, Number newValue) {
-			invalidateProjectionMatrix();
-		}
-	};
+	protected final DrawContextFramebufferChangeListener listener;
 
 	public LWJGLDrawContext(Framebuffer window) {
 		this(null, window, 0, 0, 0, 1, 1, 1);
@@ -72,8 +65,8 @@ public class LWJGLDrawContext implements DrawContext {
 			parent.children.add(new WeakReference<LWJGLDrawContext>(this));
 		}
 		this.framebuffer = framebuffer;
-		this.framebuffer.width().addListener(numberChangeListener);
-		this.framebuffer.height().addListener(numberChangeListener);
+		this.listener = new DrawContextFramebufferChangeListener(this, this.framebuffer.width(),
+				this.framebuffer.height());
 		this.tx = tx;
 		this.ty = ty;
 		this.tz = tz;
@@ -88,8 +81,7 @@ public class LWJGLDrawContext implements DrawContext {
 
 	@Override
 	public void cleanup() throws GameException {
-		this.framebuffer.width().removeListener(numberChangeListener);
-		this.framebuffer.height().removeListener(numberChangeListener);
+		listener.cleanup();
 		runForChildren(ctx -> ctx.cleanup());
 	}
 

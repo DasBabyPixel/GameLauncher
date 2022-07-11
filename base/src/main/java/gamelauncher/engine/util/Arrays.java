@@ -20,4 +20,13 @@ public class Arrays {
 		}
 		return list;
 	}
+	
+	/**
+	 * @param <T>
+	 * @param array
+	 * @return a cloned array
+	 */
+	public static <T> T[] copy(T[] array) {
+		return java.util.Arrays.copyOf(array, array.length);
+	}
 }

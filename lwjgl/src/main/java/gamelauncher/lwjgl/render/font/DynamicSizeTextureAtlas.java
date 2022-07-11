@@ -44,7 +44,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 					size, 1);
 			texture.cleanup();
 		}
-		texture = new LWJGLTexture(id);
+		texture = new LWJGLTexture(null, id);
 		texture.width = newSize;
 		texture.height = newSize;
 		this.size = newSize;

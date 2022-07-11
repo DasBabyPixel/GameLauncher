@@ -14,8 +14,8 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.Math;
 import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
@@ -50,6 +50,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 		setGuiManager(new LWJGLGuiManager(this));
+		setTextureManager(new LWJGLTextureManager(this));
 		setOperatingSystem(OperatingSystem.WINDOWS);
 	}
 

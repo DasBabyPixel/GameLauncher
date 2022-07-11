@@ -1,0 +1,20 @@
+package gamelauncher.lwjgl.render.glfw;
+
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * @author DasBabyPixel
+ */
+public interface GLFWUser {
+
+	/**
+	 * 
+	 */
+	void destroy();
+	
+	/**
+	 * @return the future for when this {@link GLFWUser} is done
+	 */
+	CompletableFuture<Void> doneFuture();
+	
+}

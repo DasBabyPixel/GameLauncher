@@ -1,7 +1,8 @@
 package gamelauncher.lwjgl.render.texture;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL21.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.awt.image.BufferedImage;
@@ -9,50 +10,27 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
-import de.matthiasmann.twl.utils.PNGDecoder.Format;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.lwjgl.render.GlStates;
 
 @SuppressWarnings("javadoc")
 public class LWJGLTexture implements Texture {
 
+	private final LWJGLTextureManager manager;
 	private final int textureId;
 	public int width;
 	public int height;
-
-	LWJGLTexture(ResourceStream stream) throws GameException {
-		textureId = glGenTextures();
-		bind();
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		PNGDecoder decoder = stream.newPNGDecoder();
-		ByteBuffer buf = memAlloc(4 * decoder.getWidth() * decoder.getHeight());
-		try {
-			decoder.decode(buf, decoder.getWidth() * 4, Format.RGBA);
-		} catch (IOException ex) {
-			throw new GameException(ex);
-		}
-		buf.flip();
-		this.width = decoder.getWidth();
-		this.height = decoder.getHeight();
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		long time1 = System.nanoTime();
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-				buf);
-		memFree(buf);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		long time2 = System.nanoTime();
-		stream.cleanup();
-		unbind();
-		long took = time2 - time1;
-		System.out.println("Took " + took + " nanos, " + TimeUnit.NANOSECONDS.toMillis(took) + "ms");
-	}
 
 //	public LWJGLTexture(BufferedImage img) {
 //		textureId = glGenTextures();
@@ -72,11 +50,12 @@ public class LWJGLTexture implements Texture {
 //		unbind();
 //	}
 
-	LWJGLTexture() {
-		this(glGenTextures());
+	LWJGLTexture(LWJGLTextureManager manager) {
+		this(manager, glGenTextures());
 	}
 
-	public LWJGLTexture(int textureId) {
+	public LWJGLTexture(LWJGLTextureManager manager, int textureId) {
+		this.manager = manager;
 		this.textureId = textureId;
 	}
 
@@ -123,7 +102,6 @@ public class LWJGLTexture implements Texture {
 	@Override
 	public void cleanup() throws GameException {
 		GlStates.deleteTextures(textureId);
-//		glDeleteTextures(textureId);
 	}
 
 	public int getTextureId() {
@@ -148,10 +126,107 @@ public class LWJGLTexture implements Texture {
 	}
 
 	@Override
-	public void upload(BufferedImage image) {
+	public CompletableFuture<Void> uploadAsync(ResourceStream stream) throws GameException {
+		final int buf = glGenBuffers();
+		CompletableFuture<Void> fut = new CompletableFuture<>();
+
+		AtomicLong nanos = new AtomicLong();
+		manager.service.submit(() -> {
+			try {
+				PNGDecoder decoder = stream.newPNGDecoder();
+				int w = decoder.getWidth();
+				int h = decoder.getHeight();
+				AtomicReference<ByteBuffer> abuf = new AtomicReference<>();
+				CountDownLatch c = new CountDownLatch(1);
+				manager.launcher.getWindow().renderLater(() -> {
+					long t1 = System.nanoTime();
+					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+					glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * Integer.BYTES, GL_STATIC_DRAW);
+					ByteBuffer buf1 = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+					abuf.set(buf1);
+					c.countDown();
+					nanos.addAndGet(System.nanoTime() - t1);
+				});
+				c.await();
+				decoder.decode(abuf.get(), w * Integer.BYTES, PNGDecoder.Format.RGBA);
+				stream.cleanup();
+				abuf.get().flip();
+				manager.launcher.getWindow().renderLater(() -> {
+					long t1 = System.nanoTime();
+					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+					glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+					bind();
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+			  		nanos.addAndGet(System.nanoTime() - t1);
+					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+					glDeleteBuffers(buf);
+					fut.complete(null);
+					System.out.println(
+							"Took " + nanos.get() + "ns - " + TimeUnit.NANOSECONDS.toMillis(nanos.get()) + "ms");
+				}).get();
+			} catch (GameException | InterruptedException | IOException | ExecutionException ex) {
+				manager.launcher.handleError(ex);
+			}
+		});
+		Threads.waitFor(fut);
+		return fut;
 	}
 
 	@Override
-	public void upload(ResourceStream stream) {
+	public CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException {
+		throw new UnsupportedOperationException();
 	}
+
+//	@Override
+//	public void upload(BufferedImage image) {
+//	}
+
+//	@Override
+//	public void upload(ResourceStream stream) throws GameException {
+//		bind();
+//		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//		PNGDecoder decoder = stream.newPNGDecoder();
+//		ByteBuffer buf = memAlloc(4 * decoder.getWidth() * decoder.getHeight());
+//		try {
+//			decoder.decode(buf, decoder.getWidth() * 4, PNGDecoder.Format.RGBA);
+//		} catch (IOException ex) {
+//			throw new GameException(ex);
+//		}
+//		buf.flip();
+//		this.width = decoder.getWidth();
+//		this.height = decoder.getHeight();
+//
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//		long time1 = System.nanoTime();
+//		int buf1 = glGenBuffers();
+//		int buf2 = glGenBuffers();
+//		GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf1);
+//		glBufferData(GL_PIXEL_UNPACK_BUFFER, 4 * 4, GL_STATIC_DRAW);
+//		ByteBuffer bb1 = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_READ_WRITE);
+//		GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf1);
+//		glBufferData(GL_PIXEL_UNPACK_BUFFER, 4 * 4, GL_STATIC_DRAW);
+//		ByteBuffer bb2 = glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_READ_WRITE);
+//		long time2 = System.nanoTime();
+//
+//		GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf1);
+//		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+//		GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf2);
+//		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+//
+//		GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+//
+//		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+//				buf);
+//		memFree(buf);
+//		glGenerateMipmap(GL_TEXTURE_2D);
+//		stream.cleanup();
+//		unbind();
+//		long took = time2 - time1;
+//		System.out.println("Took " + took + " nanos, " + TimeUnit.NANOSECONDS.toMillis(took) + "ms");
+//	}
 }

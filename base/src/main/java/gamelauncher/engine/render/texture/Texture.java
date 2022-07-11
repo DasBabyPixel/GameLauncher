@@ -1,8 +1,10 @@
 package gamelauncher.engine.render.texture;
 
 import java.awt.image.BufferedImage;
+import java.util.concurrent.CompletableFuture;
 
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
 
 /**
@@ -23,12 +25,16 @@ public interface Texture extends GameResource {
 	
 	/**
 	 * @param image
+	 * @return a future for this task
+	 * @throws GameException 
 	 */
-	void upload(BufferedImage image);
+	CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException;
 	
 	/**
 	 * @param stream
+	 * @return a future for this task
+	 * @throws GameException 
 	 */
-	void upload(ResourceStream stream);
+	CompletableFuture<Void> uploadAsync(ResourceStream stream) throws GameException;
 	
 }

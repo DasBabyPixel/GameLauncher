@@ -112,7 +112,7 @@ public class LWJGLModelLoader implements ModelLoader {
 				if (tex != null) {
 					ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
 					LWJGLTexture lt = (LWJGLTexture) launcher.getTextureManager().createTexture();
-					lt.upload(st);
+					lt.uploadAsync(st);
 					lm.texture = lt;
 					st.cleanup();
 					break;

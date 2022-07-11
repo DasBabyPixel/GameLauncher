@@ -44,7 +44,7 @@ import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
-import gamelauncher.engine.util.Threads;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.LogLevel;

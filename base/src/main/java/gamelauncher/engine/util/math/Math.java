@@ -1,4 +1,4 @@
-package gamelauncher.engine.util;
+package gamelauncher.engine.util.math;
 
 /**
  * @author DasBabyPixel

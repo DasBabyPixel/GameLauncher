@@ -271,7 +271,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 		@Override
 		public void render(ShaderProgram program) throws GameException {
 			GlStates.activeTexture(GL_TEXTURE0);
-			GlStates.bindTexture(GL_TEXTURE_2D, texture.getTexture().getTextureId());
+			texture.getTexture().bind();
 
 			program.utextureAddColor.set(vectorTextureAddColor);
 			program.uploadUniforms();

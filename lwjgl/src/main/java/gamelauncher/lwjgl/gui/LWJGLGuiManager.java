@@ -73,7 +73,7 @@ public class LWJGLGuiManager implements GuiManager {
 			currentGui.unfocus();
 			currentGui.onClose();
 			if (exit) {
-				window.getRenderThread().runLater(() -> {
+				window.getRenderThread().submit(() -> {
 					currentGui.cleanup(window);
 				});
 			}
@@ -87,7 +87,7 @@ public class LWJGLGuiManager implements GuiManager {
 			gui.getWidthProperty().bind(window.getFramebuffer().width());
 			gui.getHeightProperty().bind(window.getFramebuffer().height());
 			Gui fgui = gui;
-			window.getRenderThread().runLater(() -> {
+			window.getRenderThread().submit(() -> {
 				fgui.init(window);
 				window.scheduleDraw();
 			});

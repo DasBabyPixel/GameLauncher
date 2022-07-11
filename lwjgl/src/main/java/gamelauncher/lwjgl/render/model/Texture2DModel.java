@@ -78,10 +78,9 @@ public class Texture2DModel implements Model {
 	public void render(ShaderProgram program) throws GameException {
 		program.uapplyLighting.set(0).upload();
 		GlStates.activeTexture(GL_TEXTURE0);
-		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
+		texture.bind();
 		GlStates.bindVertexArray(vao);
-		
-		
+
 		program.uploadUniforms();
 		glEnableVertexAttribArray(0);
 		glEnableVertexAttribArray(1);

@@ -109,6 +109,7 @@ public class Mesh implements GameResource {
 			glEnableVertexAttribArray(i);
 		}
 		glDrawElements(this.renderType, getVertexCount(), GL_UNSIGNED_INT, 0);
+
 		for (int i = 0; i < vaoSize; i++) {
 			glDisableVertexAttribArray(i);
 		}

@@ -1,14 +1,11 @@
 package gamelauncher.engine.render;
 
-import java.util.concurrent.CompletableFuture;
-
-import gamelauncher.engine.util.function.GameCallable;
-import gamelauncher.engine.util.function.GameRunnable;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
 
 /**
  * @author DasBabyPixel
  */
-public interface RenderThread {
+public interface RenderThread extends ExecutorThread {
 
 	/**
 	 * @return the window of this {@link RenderThread}
@@ -19,18 +16,5 @@ public interface RenderThread {
 	 * @return the name of this {@link Thread}
 	 */
 	String getName();
-	
-	/**
-	 * @param runnable
-	 * @return a completionFuture
-	 */
-	CompletableFuture<Void> runLater(GameRunnable runnable);
-	
-	/**
-	 * @param <T>
-	 * @param callable
-	 * @return a completionFuture
-	 */
-	<T> CompletableFuture<T> runLater(GameCallable<T> callable);
 	
 }

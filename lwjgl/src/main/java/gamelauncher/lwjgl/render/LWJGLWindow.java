@@ -38,7 +38,6 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.input.LWJGLInput;
@@ -146,25 +145,10 @@ public class LWJGLWindow implements Window {
 		return launcher;
 	}
 
-//	@Override
-//	public NumberValue framebufferHeight() {
-//		return framebufferHeight;
-//	}
-//
-//	@Override
-//	public NumberValue framebufferWidth() {
-//		return framebufferWidth;
-//	}
-
 	@Override
 	public void setFrameRenderer(FrameRenderer renderer) {
 		this.frameRenderer.set(renderer);
 	}
-
-//	@Override
-//	public LWJGLDrawContext getContext() {
-//		return context;
-//	}
 
 	@Override
 	public LWJGLInput getInput() {
@@ -211,9 +195,9 @@ public class LWJGLWindow implements Window {
 	 * @param runnable
 	 * @return a completionFuture
 	 */
-	public CompletableFuture<Void> renderLater(Runnable runnable) {
+	public CompletableFuture<Void> renderLater(GameRunnable runnable) {
 		LRenderThread thread = renderThread;
-		return thread.later(runnable);
+		return thread.submit(runnable);
 	}
 
 	/**
@@ -222,20 +206,10 @@ public class LWJGLWindow implements Window {
 	 * @param runnable
 	 * @return a completionFuture
 	 */
-	public CompletableFuture<Void> later(Runnable runnable) {
+	public CompletableFuture<Void> later(GameRunnable runnable) {
 		WindowThread thread = windowThread;
 		return thread.later(runnable);
 	}
-
-//	@Override
-//	public int getFramebufferHeight() {
-//		return framebufferHeight.intValue();
-//	}
-//
-//	@Override
-//	public int getFramebufferWidth() {
-//		return framebufferWidth.intValue();
-//	}
 
 	/**
 	 * @return if this window is closed
@@ -655,18 +629,25 @@ public class LWJGLWindow implements Window {
 			}
 		}
 
-		private void workQueue() {
+		@Override
+		public void workQueue() {
 			if (renderThreadFutures.isEmpty()) {
 				return;
 			}
 			Future f;
 			while ((f = renderThreadFutures.poll()) != null) {
-				f.r.run();
-				f.f.complete(null);
+				try {
+					f.r.run();
+					f.f.complete(null);
+				} catch (Throwable ex) {
+					f.f.completeExceptionally(ex);
+					launcher.handleError(ex);
+				}
 			}
 		}
 
-		public CompletableFuture<Void> later(Runnable r) {
+		@Override
+		public CompletableFuture<Void> submit(GameRunnable r) {
 			CompletableFuture<Void> f = new CompletableFuture<>();
 			renderThreadFutures.offer(new Future(f, r));
 			shouldDrawLock.lock();
@@ -679,30 +660,11 @@ public class LWJGLWindow implements Window {
 		public Window getWindow() {
 			return LWJGLWindow.this;
 		}
-
-		@Override
-		public CompletableFuture<Void> runLater(GameRunnable runnable) {
-			return runLater(() -> {
-				runnable.run();
-				return null;
-			});
-		}
-
-		@Override
-		public <T> CompletableFuture<T> runLater(GameCallable<T> callable) {
-			CompletableFuture<T> f = new CompletableFuture<>();
-			later(() -> {
-				T t = null;
-				try {
-					t = callable.call();
-				} catch (GameException ex) {
-					ex.printStackTrace();
-				}
-				f.complete(t);
-			});
-			return f;
-		}
 	}
+
+	private final GameRunnable windowCreator = () -> {
+		
+	};
 
 	private class WindowThread extends Thread {
 
@@ -730,8 +692,6 @@ public class LWJGLWindow implements Window {
 			glfwGetFramebufferSize(id, a0, a1);
 			framebuffer.width().setNumber(a0[0]);
 			framebuffer.height().setNumber(a0[0]);
-//			framebufferWidth.setNumber(a0[0]);
-//			framebufferHeight.setNumber(a1[0]);
 
 			windowThreadCreateFuture.get().complete(this);
 
@@ -827,8 +787,6 @@ public class LWJGLWindow implements Window {
 			glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
 				@Override
 				public void invoke(long window, int width, int height) {
-//					framebufferWidth.setNumber(width);
-//					framebufferHeight.setNumber(height);
 					framebuffer.width().setNumber(width);
 					framebuffer.height().setNumber(height);
 					logger.debugf("Viewport changed: (%4d, %4d)", width, height);
@@ -867,7 +825,7 @@ public class LWJGLWindow implements Window {
 			closeFuture.complete(null);
 		}
 
-		public CompletableFuture<Void> later(Runnable r) {
+		public CompletableFuture<Void> later(GameRunnable r) {
 			CompletableFuture<Void> f = new CompletableFuture<>();
 			windowThreadFutures.offer(new Future(f, r));
 			glfwPostEmptyEvent();
@@ -889,9 +847,9 @@ public class LWJGLWindow implements Window {
 
 	private static class Future {
 		private final CompletableFuture<Void> f;
-		private final Runnable r;
+		private final GameRunnable r;
 
-		public Future(CompletableFuture<Void> f, Runnable r) {
+		public Future(CompletableFuture<Void> f, GameRunnable r) {
 			super();
 			this.f = f;
 			this.r = r;
