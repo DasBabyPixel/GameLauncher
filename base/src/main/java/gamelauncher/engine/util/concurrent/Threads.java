@@ -120,4 +120,19 @@ public class Threads implements GameResource {
 			}
 		}
 	}
+
+	/**
+	 * Waits for the future to finish. This behaves like
+	 * {@link Threads#waitFor(CompletableFuture[])}
+	 * 
+	 * @param <T>
+	 * @param future
+	 * @return the result from the {@link CompletableFuture}
+	 */
+	public static <T> T waitFor(CompletableFuture<T> future) {
+		waitFor(new CompletableFuture[] {
+				future
+		});
+		return future.getNow(null);
+	}
 }

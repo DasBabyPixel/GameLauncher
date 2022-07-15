@@ -8,14 +8,18 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  */
 public class GuiStack {
 
-	private final Deque<Gui> deque = new ConcurrentLinkedDeque<>();
+	private final Deque<StackEntry> deque = new ConcurrentLinkedDeque<>();
 
 	/**
 	 * Pushes a {@link Gui} to the stack
+	 * 
 	 * @param gui
+	 * @return the {@link StackEntry} for this gui
 	 */
-	public void pushGui(Gui gui) {
-		deque.offer(gui);
+	public StackEntry pushGui(Gui gui) {
+		StackEntry e = new StackEntry(gui);
+		deque.offerLast(e);
+		return e;
 	}
 
 	/**
@@ -23,14 +27,14 @@ public class GuiStack {
 	 * 
 	 * @return the last {@link Gui} of the stack
 	 */
-	public Gui popGui() {
+	public StackEntry popGui() {
 		return deque.pollLast();
 	}
 
 	/**
 	 * @return the last {@link Gui} of the stack
 	 */
-	public Gui peekGui() {
+	public StackEntry peekGui() {
 		return deque.peekLast();
 	}
 
@@ -39,5 +43,23 @@ public class GuiStack {
 	 */
 	public int size() {
 		return deque.size();
+	}
+
+	/**
+	 * @author DasBabyPixel
+	 */
+	public static class StackEntry {
+
+		/**
+		 * The gui
+		 */
+		public final Gui gui;
+
+		/**
+		 * @param gui
+		 */
+		public StackEntry(Gui gui) {
+			this.gui = gui;
+		}
 	}
 }

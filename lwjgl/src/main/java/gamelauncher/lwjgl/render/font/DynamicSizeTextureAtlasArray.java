@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
 
 @SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlasArray extends TextureAtlas {
@@ -14,6 +15,11 @@ public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 	public final Collection<DynamicSizeTextureAtlas> atlases = new CopyOnWriteArrayList<>();
 	public final Map<Integer, DynamicSizeTextureAtlas> map = new ConcurrentHashMap<>();
 	private final Random random = new Random(163478519);
+	private final ExecutorThread owner;
+
+	public DynamicSizeTextureAtlasArray(ExecutorThread owner) {
+		this.owner = owner;
+	}
 
 	@Override
 	public boolean addGlyph(int id, GlyphEntry glyph) throws GameException {
@@ -28,7 +34,7 @@ public class DynamicSizeTextureAtlasArray extends TextureAtlas {
 			}
 		}
 
-		DynamicSizeTextureAtlas a = new DynamicSizeTextureAtlas(8, atlas -> Integer.toString(random.nextInt()));
+		DynamicSizeTextureAtlas a = new DynamicSizeTextureAtlas(owner, 8, atlas -> Integer.toString(random.nextInt()));
 		if (!a.addGlyph(id, glyph))
 			return false;
 		atlases.add(a);

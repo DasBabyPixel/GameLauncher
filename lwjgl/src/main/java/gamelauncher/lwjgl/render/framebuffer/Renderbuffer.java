@@ -1,9 +1,9 @@
 package gamelauncher.lwjgl.render.framebuffer;
 
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import gamelauncher.engine.util.function.GameResource;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
 public class Renderbuffer implements GameResource {

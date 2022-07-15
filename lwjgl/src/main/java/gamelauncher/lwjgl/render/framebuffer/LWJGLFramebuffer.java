@@ -1,11 +1,11 @@
 package gamelauncher.lwjgl.render.framebuffer;
 
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
 public class LWJGLFramebuffer implements Framebuffer {

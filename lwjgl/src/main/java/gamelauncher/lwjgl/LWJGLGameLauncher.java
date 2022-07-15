@@ -2,6 +2,10 @@ package gamelauncher.lwjgl;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+
 import org.joml.Vector3f;
 
 import gamelauncher.engine.GameLauncher;
@@ -61,10 +65,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 	protected void start0() throws GameException {
 		this.glfwThread = new GLFWThread(this);
 		this.glfwThread.start();
-		
+
 		window = new GLFWWindow(this, 400, 400, NAME);
 		setWindow(window);
-		window.renderLater(() -> setGlyphProvider(new BasicGlyphProvider()));
+		window.renderLater(() -> setGlyphProvider(new BasicGlyphProvider(this.getTextureManager().asyncTextureUploader)));
 		window.setRenderMode(RenderMode.ON_UPDATE);
 		window.swapBuffers(false);
 		window.createWindow();
@@ -85,12 +89,18 @@ public class LWJGLGameLauncher extends GameLauncher {
 				}).start();
 			}
 		});
+		getTextureManager().startAsyncUploader();
 
 		getEventManager().registerListener(this);
 	}
-	
+
 	@Override
 	protected void stop0() throws GameException {
+		Collection<CompletableFuture<?>> c = new ArrayList<>();
+		c.add(window.closeWindow());
+		getGlyphProvider().cleanup();
+		getTextureManager().cleanup();
+		Threads.waitFor(c.toArray(new CompletableFuture[0]));
 		Threads.waitFor(this.glfwThread.terminate());
 	}
 
@@ -150,7 +160,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
 		}
 	}
-	
+
 	/**
 	 * @return the GLFW thread
 	 */

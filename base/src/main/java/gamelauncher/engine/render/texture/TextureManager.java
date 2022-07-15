@@ -1,5 +1,7 @@
 package gamelauncher.engine.render.texture;
 
+import java.util.concurrent.CompletableFuture;
+
 import gamelauncher.engine.util.function.GameResource;
 
 /**
@@ -10,6 +12,6 @@ public interface TextureManager extends GameResource {
 	/**
 	 * @return a new {@link Texture}
 	 */
-	Texture createTexture();
+	CompletableFuture<? extends Texture> createTexture();
 	
 }

@@ -13,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
-import java.util.concurrent.ExecutionException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -225,12 +224,12 @@ public abstract class GameLauncher {
 	public void stop() throws GameException {
 		GameRunnable r = () -> {
 			try {
-				gameThread.exit().get();
+				Threads.waitFor(gameThread.exit());
 				this.stop0();
 				this.pluginManager.unloadPlugins();
 				this.embedFileSystem.close();
 				this.threads.cleanup();
-			} catch (InterruptedException | ExecutionException | IOException ex) {
+			} catch (IOException ex) {
 				throw new GameException(ex);
 			}
 		};

@@ -1,11 +1,7 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.render.states;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES30.*;
 
 import java.util.Collection;
 import java.util.Map;

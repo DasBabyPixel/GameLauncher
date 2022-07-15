@@ -1,7 +1,7 @@
 package gamelauncher.lwjgl.render.font;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES32.*;
 
 import java.awt.Rectangle;
 import java.nio.ByteBuffer;
@@ -11,8 +11,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.function.GameFunction;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
@@ -22,11 +23,13 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	private LWJGLTexture texture = null;
 	public final Map<Integer, Rectangle> glyphBounds = new ConcurrentHashMap<>();
 	private final int maxSize;
+	private final ExecutorThread owner;
 	private final GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix;
 
-	public DynamicSizeTextureAtlas(int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix)
+	public DynamicSizeTextureAtlas(ExecutorThread owner, int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix)
 			throws GameException {
 		this.fileSuffixAppendix = fileSuffixAppendix;
+		this.owner = owner;
 		maxSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
 		resizeTexture(initialSize);
 	}
@@ -44,7 +47,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 					size, 1);
 			texture.cleanup();
 		}
-		texture = new LWJGLTexture(null, id);
+		texture = new LWJGLTexture(null, owner, id);
 		texture.width = newSize;
 		texture.height = newSize;
 		this.size = newSize;

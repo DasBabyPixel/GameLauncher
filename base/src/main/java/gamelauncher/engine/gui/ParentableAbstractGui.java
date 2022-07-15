@@ -35,6 +35,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	public final Collection<Gui> GUIs = ConcurrentHashMap.newKeySet();
 	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
 	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
+	private final AtomicBoolean initialized = new AtomicBoolean();
 	private final NumberValue lastMouseX = NumberValue.zero();
 	private final NumberValue lastMouseY = NumberValue.zero();
 
@@ -47,19 +48,23 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void init(Window window) throws GameException {
-		doInit(window);
-		doForGUIs(gui -> {
-			gui.init(window);
-		});
+		if (initialized.compareAndSet(false, true)) {
+			doInit(window);
+			doForGUIs(gui -> {
+				gui.init(window);
+			});
+		}
 	}
 
 	@Override
 	public final void cleanup(Window window) throws GameException {
-		doForGUIs(gui -> {
-			gui.cleanup(window);
-		});
-		doCleanup(window);
-		super.cleanup(window);
+		if (initialized.compareAndSet(true, false)) {
+			doForGUIs(gui -> {
+				gui.cleanup(window);
+			});
+			doCleanup(window);
+			super.cleanup(window);
+		}
 	}
 
 	@Override
@@ -81,6 +86,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void render(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
+		init(window);
 		preRender(window, mouseX, mouseY, partialTick);
 		if (doRender(window, mouseX, mouseY, partialTick)) {
 			doForGUIs(gui -> {
@@ -286,5 +292,10 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 				throw ex;
 			}
 		}
+	}
+	
+	@Override
+	public boolean isInitialized() {
+		return initialized.get();
 	}
 }

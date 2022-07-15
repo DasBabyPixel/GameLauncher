@@ -114,6 +114,11 @@ public interface Gui {
 	GameLauncher getLauncher();
 
 	/**
+	 * @return if this {@link Gui} has been initialized
+	 */
+	boolean isInitialized();
+	
+	/**
 	 * @return if this gui is focused
 	 */
 	default boolean isFocused() {

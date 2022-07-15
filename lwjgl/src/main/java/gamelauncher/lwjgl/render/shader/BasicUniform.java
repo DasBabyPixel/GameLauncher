@@ -1,6 +1,6 @@
 package gamelauncher.lwjgl.render.shader;
 
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.ByteBuffer;

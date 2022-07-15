@@ -10,6 +10,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
+import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.render.Window;
@@ -57,7 +58,8 @@ public class LWJGLGuiManager implements GuiManager {
 		if (!guis.containsKey(window)) {
 			return null;
 		}
-		return guis.get(window).peekGui();
+		StackEntry e = guis.get(window).peekGui();
+		return e == null ? null : e.gui;
 	}
 
 	@Override
@@ -68,7 +70,8 @@ public class LWJGLGuiManager implements GuiManager {
 			guis.put(window, stack);
 		}
 		final boolean exit = gui == null;
-		Gui currentGui = exit ? stack.popGui() : stack.peekGui();
+		StackEntry scurrentGui = exit ? stack.popGui() : stack.peekGui();
+		Gui currentGui = scurrentGui == null ? null : scurrentGui.gui;
 		if (currentGui != null) {
 			currentGui.unfocus();
 			currentGui.onClose();
@@ -83,16 +86,12 @@ public class LWJGLGuiManager implements GuiManager {
 			}
 		}
 		if (gui != null) {
-			stack.pushGui(gui);
 			gui.getWidthProperty().bind(window.getFramebuffer().width());
 			gui.getHeightProperty().bind(window.getFramebuffer().height());
-			Gui fgui = gui;
-			window.getRenderThread().submit(() -> {
-				fgui.init(window);
-				window.scheduleDraw();
-			});
+			stack.pushGui(gui);
 			gui.onOpen();
 			gui.focus();
+			window.scheduleDraw();
 		}
 	}
 

@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;

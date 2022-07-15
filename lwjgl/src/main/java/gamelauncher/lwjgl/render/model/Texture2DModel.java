@@ -1,10 +1,7 @@
 package gamelauncher.lwjgl.render.model;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.FloatBuffer;
@@ -13,7 +10,7 @@ import java.nio.IntBuffer;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 /**

@@ -1,12 +1,11 @@
 package gamelauncher.lwjgl.render;
 
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
@@ -17,21 +16,22 @@ import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 
 @SuppressWarnings("javadoc")
 public class LWJGLGameRenderer implements GameRenderer {
 
-	public static final boolean WIREFRAMES = false;
+//	public static final boolean WIREFRAMES = false;
 
 	private final AtomicReference<Renderer> renderer = new AtomicReference<>();
 	private final Map<Window, Entry> map = new ConcurrentHashMap<>();
-	private GameLauncher launcher;
+	private LWJGLGameLauncher launcher;
 
 	private GlContext glContext = new GlContext();
 
-	public LWJGLGameRenderer(GameLauncher launcher) {
+	public LWJGLGameRenderer(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 	}
 
@@ -109,9 +109,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			updateScreenItems();
 
-			if (WIREFRAMES) {
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			}
+//			if (WIREFRAMES) {
+//				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//			}
 		}
 
 		public void cleanup() throws GameException {

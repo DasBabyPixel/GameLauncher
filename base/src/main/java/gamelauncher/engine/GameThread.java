@@ -69,7 +69,7 @@ public class GameThread extends Thread {
 				int tps = getTps();
 				if (tps < GameLauncher.MAX_TPS * 0.9) {
 					tpsTrySkipCounter++;
-					if (tpsTrySkipCounter > GameLauncher.MAX_TPS) {
+					if (tpsTrySkipCounter > GameLauncher.MAX_TPS && tpsTrySkipCounter > 1) {
 						gameLauncher.getLogger().infof("Low TPS!");
 						tpsTrySkipCounter = 0;
 					}

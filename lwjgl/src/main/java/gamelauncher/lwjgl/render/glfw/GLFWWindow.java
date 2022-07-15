@@ -1,33 +1,21 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryUtil.*;
 
-import java.util.Queue;
+import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
-import org.lwjgl.glfw.GLFWCharCallbackI;
-import org.lwjgl.glfw.GLFWCursorEnterCallbackI;
-import org.lwjgl.glfw.GLFWCursorPosCallbackI;
-import org.lwjgl.glfw.GLFWFramebufferSizeCallbackI;
-import org.lwjgl.glfw.GLFWKeyCallbackI;
-import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
-import org.lwjgl.glfw.GLFWScrollCallbackI;
-import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
-import org.lwjgl.glfw.GLFWWindowPosCallbackI;
-import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
+import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengles.GLES;
+import org.lwjgl.system.Configuration;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
@@ -35,7 +23,6 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderMode;
-import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
@@ -51,34 +38,36 @@ import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
  */
 public class GLFWWindow implements Window, GLFWUser {
 
-	private final Logger logger;
+	final Logger logger;
 
 	private static final AtomicLong names = new AtomicLong(0);
 
-	private final AtomicLong id = new AtomicLong();
-	private final AtomicBoolean closed = new AtomicBoolean(false);
-	private final AtomicLong name = new AtomicLong();
-	private final NumberValue width = NumberValue.zero();
-	private final NumberValue height = NumberValue.zero();
-	private final AtomicInteger x = new AtomicInteger();
-	private final AtomicInteger y = new AtomicInteger();
-	private final AtomicReference<String> title = new AtomicReference<>();
-	private final LWJGLMouse mouse = new LWJGLMouse(this);
-	private final AtomicReference<FrameRenderer> frameRenderer = new AtomicReference<>(null);
-	private final AtomicBoolean floating = new AtomicBoolean(false);
-	private final AtomicBoolean decorated = new AtomicBoolean(true);
-	private final AtomicReference<RenderMode> renderMode = new AtomicReference<>(RenderMode.CONTINUOUSLY);
-	private final LRenderThread renderThread = new LRenderThread();
-	private final Queue<Future> renderThreadFutures = new ConcurrentLinkedQueue<>();
-	private final GLFWThread glfwThread;
-	private final Framebuffer framebuffer = new WindowFramebuffer();
-	private final LWJGLInput input;
-	private final CompletableFuture<Window> closeFuture = new CompletableFuture<>();
-	private final CompletableFuture<Void> windowCreateFuture = new CompletableFuture<>();
-	private final Phaser drawPhaser = new Phaser();
-	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
-	private final LWJGLGameLauncher launcher;
-	private final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
+	final AtomicLong id = new AtomicLong();
+	final AtomicBoolean closed = new AtomicBoolean(false);
+	final AtomicBoolean closing = new AtomicBoolean(false);
+	final AtomicLong name = new AtomicLong();
+	final NumberValue width = NumberValue.zero();
+	final NumberValue height = NumberValue.zero();
+	final AtomicInteger x = new AtomicInteger();
+	final AtomicInteger y = new AtomicInteger();
+	final AtomicReference<String> title = new AtomicReference<>();
+	final LWJGLMouse mouse = new LWJGLMouse(this);
+	final AtomicReference<FrameRenderer> frameRenderer = new AtomicReference<>(null);
+	final AtomicBoolean floating = new AtomicBoolean(false);
+	final AtomicBoolean decorated = new AtomicBoolean(true);
+	final AtomicReference<RenderMode> renderMode = new AtomicReference<>(RenderMode.CONTINUOUSLY);
+	final GLFWRenderThread renderThread = new GLFWRenderThread(this);
+	final Deque<Future> renderThreadFutures = new ConcurrentLinkedDeque<>();
+	final GLFWThread glfwThread;
+	final Framebuffer framebuffer = new WindowFramebuffer();
+	final LWJGLInput input;
+	final CompletableFuture<Window> closeFuture = new CompletableFuture<>();
+	final CompletableFuture<Void> windowCreateFuture = new CompletableFuture<>();
+	final Phaser drawPhaser = new Phaser();
+	final AtomicBoolean swapBuffers = new AtomicBoolean(false);
+	final LWJGLGameLauncher launcher;
+	final GLFWWindowCreator windowCreator = new GLFWWindowCreator(this);
+	final AtomicReference<CloseCallback> closeCallback = new AtomicReference<>(new CloseCallback() {
 		@Override
 		public void close() {
 			closeWindow();
@@ -102,6 +91,241 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.name.set(names.incrementAndGet());
 		this.logger = Logger.getLogger(getClass().getSimpleName() + "-" + name.get());
 		this.renderThread.setName("RenderThread-" + name.get());
+	}
+
+	@Override
+	public void beginFrame() {
+	}
+
+	@Override
+	public void endFrame() {
+		if (swapBuffers.get()) {
+			glfwSwapBuffers(id.get());
+		}
+	}
+
+	/**
+	 * Shows this window and immediatly swaps the buffers
+	 * 
+	 * @return a completionFuture
+	 */
+	public CompletableFuture<Void> showAndEndFrame() {
+		return this.glfwThread.submit(() -> {
+			GLFWRenderThread rt = renderThread;
+			rt.bindContext();
+			glfwShowWindow(id.get());
+			glfwSwapBuffers(id.get());
+			rt.releaseContext();
+		});
+	}
+
+	/**
+	 * @return if this window is decorated
+	 */
+	public boolean isDecorated() {
+		return decorated.get();
+	}
+
+	/**
+	 * Sets if this window is decorated
+	 * 
+	 * @param decorated
+	 */
+	public void setDecorated(boolean decorated) {
+		if (this.decorated.compareAndSet(!decorated, decorated)) {
+			onGLFWThread(() -> glfwSetWindowAttrib(id.get(), GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE));
+		}
+	}
+
+	/**
+	 * Sets if this window is floating
+	 * 
+	 * @param floating
+	 */
+	public void setFloating(boolean floating) {
+		if (this.floating.compareAndSet(!floating, floating)) {
+			onGLFWThread(() -> glfwSetWindowAttrib(id.get(), GLFW_FLOATING, floating ? GLFW_TRUE : GLFW_FALSE));
+		}
+	}
+
+	/**
+	 * Sets the position of this window
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void setPosition(int x, int y) {
+		onGLFWThread(() -> glfwSetWindowPos(id.get(), x, y));
+	}
+
+	/**
+	 * Sets the size of this window
+	 * 
+	 * @param w
+	 * @param h
+	 */
+	public void setSize(int w, int h) {
+		onGLFWThread(() -> glfwSetWindowSize(id.get(), w, h));
+	}
+
+	/**
+	 * @return a new context
+	 */
+	public CompletableFuture<GLFWSecondaryContext> createSecondaryContext() {
+		return this.glfwThread.submit(() -> {
+			GLFWSecondaryContext secondary = new GLFWSecondaryContext(this);
+			return secondary;
+		});
+	}
+
+	/**
+	 * Shows this window
+	 * 
+	 * @return a completionFuture
+	 */
+	public CompletableFuture<Void> show() {
+		return onGLFWThread(() -> glfwShowWindow(id.get()));
+	}
+
+	/**
+	 * Focuses this window
+	 * 
+	 * @return a completionFuture
+	 */
+	public CompletableFuture<Void> forceFocus() {
+		return onGLFWThread(() -> {
+			glfwRequestWindowAttention(id.get());
+			glfwFocusWindow(id.get());
+		});
+	}
+
+	/**
+	 * Hides this window
+	 * 
+	 * @return a completionFuture
+	 */
+	public CompletableFuture<Void> hide() {
+		return onGLFWThread(() -> glfwHideWindow(id.get()));
+	}
+
+	/**
+	 * @return the {@link RenderMode} of this window
+	 */
+	@Override
+	public RenderMode getRenderMode() {
+		return renderMode.get();
+	}
+
+	/**
+	 * Sets the {@link RenderMode} of this window
+	 * 
+	 * @param mode
+	 */
+	@Override
+	public void setRenderMode(RenderMode mode) {
+		renderMode.set(mode);
+		GLFWRenderThread t = renderThread;
+		t.scheduleDraw();
+	}
+
+	/**
+	 * Creates the window
+	 */
+	public void createWindow() {
+		this.glfwThread.submit(this.windowCreator);
+		try {
+			windowCreateFuture.get();
+			startRendering0();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Closes the window
+	 * 
+	 * @return the closeFuture
+	 */
+	public CompletableFuture<Window> closeWindow() {
+		if (closing.compareAndSet(false, true)) {
+			stopRendering().thenRun(() -> {
+				glfwThread.submit(() -> {
+					glfwThread.removeUser(this);
+					glfwMakeContextCurrent(id.get());
+					GLES.createCapabilities();
+//				GL.createCapabilities();
+
+					closeFuture.complete(null);
+					Callbacks.glfwFreeCallbacks(id.get());
+					glfwDestroyWindow(id.get());
+				});
+			});
+		}
+		return closeFuture;
+	}
+
+	private void startRendering0() {
+		renderThread.start();
+	}
+
+	@Override
+	public void destroy() {
+		this.closeWindow();
+	}
+
+	@Override
+	public CompletableFuture<Void> doneFuture() {
+		return this.closeFuture.thenApply(w -> null);
+	}
+
+	/**
+	 * Stops rendering
+	 */
+	private CompletableFuture<Void> stopRendering() {
+		renderThread.close.set(true);
+		renderThread.shouldDrawLock.lock();
+		renderThread.shouldDrawCondition.signalAll();
+		renderThread.shouldDrawLock.unlock();
+		return renderThread.closeFuture;
+	}
+
+	@Override
+	public void waitForFrame() {
+		drawPhaser.awaitAdvance(drawPhaser.getPhase());
+	}
+
+	@Override
+	public void scheduleDrawAndWaitForFrame() {
+		int phase = drawPhaser.getPhase();
+		scheduleDraw();
+		drawPhaser.awaitAdvance(phase);
+	}
+
+	/**
+	 * @return the {@link FrameCounter} object, if one present
+	 */
+	public FrameCounter getFrameCounter() {
+		return renderThread.frameCounter;
+	}
+
+	/**
+	 * Sets the size limits of this window
+	 * 
+	 * @param minw minimal width
+	 * @param minh minimal height
+	 * @param maxw maximal width
+	 * @param maxh maximal height
+	 * @return a completionFuture
+	 */
+	public CompletableFuture<Void> setLimits(int minw, int minh, int maxw, int maxh) {
+		return onGLFWThread(() -> glfwSetWindowSizeLimits(id.get(), minw, minh, maxw, maxh));
+	}
+
+	@Override
+	public void scheduleDraw() {
+		renderThread.scheduleDraw();
 	}
 
 	@Override
@@ -228,568 +452,9 @@ public class GLFWWindow implements Window, GLFWUser {
 	}
 
 	@Override
-	public void beginFrame() {
+	public GLFWRenderThread getRenderThread() {
+		return renderThread;
 	}
-
-	@Override
-	public void endFrame() {
-		if (swapBuffers.get()) {
-			glfwSwapBuffers(id.get());
-		}
-	}
-
-	/**
-	 * Shows this window and immediatly swaps the buffers
-	 * 
-	 * @return a completionFuture
-	 */
-	public CompletableFuture<Void> showAndEndFrame() {
-		return this.glfwThread.submit(() -> {
-			LRenderThread rt = renderThread;
-			rt.bindContext();
-			glfwShowWindow(id.get());
-			glfwSwapBuffers(id.get());
-			rt.releaseContext();
-		});
-	}
-
-	/**
-	 * @return if this window is decorated
-	 */
-	public boolean isDecorated() {
-		return decorated.get();
-	}
-
-	/**
-	 * Sets if this window is decorated
-	 * 
-	 * @param decorated
-	 */
-	public void setDecorated(boolean decorated) {
-		if (this.decorated.compareAndSet(!decorated, decorated)) {
-			onGLFWThread(() -> glfwSetWindowAttrib(id.get(), GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE));
-		}
-	}
-
-	/**
-	 * Sets if this window is floating
-	 * 
-	 * @param floating
-	 */
-	public void setFloating(boolean floating) {
-		if (this.floating.compareAndSet(!floating, floating)) {
-			onGLFWThread(() -> glfwSetWindowAttrib(id.get(), GLFW_FLOATING, floating ? GLFW_TRUE : GLFW_FALSE));
-		}
-	}
-
-	/**
-	 * Sets the position of this window
-	 * 
-	 * @param x
-	 * @param y
-	 */
-	public void setPosition(int x, int y) {
-		onGLFWThread(() -> glfwSetWindowPos(id.get(), x, y));
-	}
-
-	/**
-	 * Sets the size of this window
-	 * 
-	 * @param w
-	 * @param h
-	 */
-	public void setSize(int w, int h) {
-		onGLFWThread(() -> glfwSetWindowSize(id.get(), w, h));
-	}
-
-	/**
-	 * Shows this window
-	 * 
-	 * @return a completionFuture
-	 */
-	public CompletableFuture<Void> show() {
-		return onGLFWThread(() -> glfwShowWindow(id.get()));
-	}
-
-	/**
-	 * Focuses this window
-	 * 
-	 * @return a completionFuture
-	 */
-	public CompletableFuture<Void> forceFocus() {
-		return onGLFWThread(() -> {
-			glfwRequestWindowAttention(id.get());
-			glfwFocusWindow(id.get());
-		});
-	}
-
-	/**
-	 * Hides this window
-	 * 
-	 * @return a completionFuture
-	 */
-	public CompletableFuture<Void> hide() {
-		return onGLFWThread(() -> glfwHideWindow(id.get()));
-	}
-
-	/**
-	 * @return the {@link RenderMode} of this window
-	 */
-	@Override
-	public RenderMode getRenderMode() {
-		return renderMode.get();
-	}
-
-	/**
-	 * Sets the {@link RenderMode} of this window
-	 * 
-	 * @param mode
-	 */
-	@Override
-	public void setRenderMode(RenderMode mode) {
-		renderMode.set(mode);
-		LRenderThread t = renderThread;
-		t.scheduleDraw();
-	}
-
-	/**
-	 * Creates the window
-	 */
-	public void createWindow() {
-		this.glfwThread.submit(this.windowCreator);
-		try {
-			windowCreateFuture.get();
-			startRendering0();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Closes the window
-	 * 
-	 * @return the closeFuture
-	 */
-	public CompletableFuture<Window> closeWindow() {
-		stopRendering().thenRun(() -> {
-			glfwThread.submit(() -> {
-				glfwThread.removeUser(this);
-				glfwMakeContextCurrent(id.get());
-				GL.createCapabilities();
-				closeFuture.complete(null);
-				glfwDestroyWindow(id.get());
-			});
-		});
-		return closeFuture;
-	}
-
-	private void startRendering0() {
-		renderThread.start();
-	}
-
-	@Override
-	public void destroy() {
-		this.closeWindow();
-	}
-
-	@Override
-	public CompletableFuture<Void> doneFuture() {
-		return this.closeFuture.thenApply(w -> null);
-	}
-
-	/**
-	 * Stops rendering
-	 */
-	private CompletableFuture<Void> stopRendering() {
-		renderThread.close.set(true);
-		renderThread.shouldDrawLock.lock();
-		renderThread.shouldDrawCondition.signalAll();
-		renderThread.shouldDrawLock.unlock();
-		return renderThread.closeFuture;
-	}
-
-	@Override
-	public void waitForFrame() {
-		drawPhaser.awaitAdvance(drawPhaser.getPhase());
-	}
-
-	@Override
-	public void scheduleDrawAndWaitForFrame() {
-		int phase = drawPhaser.getPhase();
-		scheduleDraw();
-		drawPhaser.awaitAdvance(phase);
-	}
-
-	/**
-	 * @return the {@link FrameCounter} object, if one present
-	 */
-	public FrameCounter getFrameCounter() {
-		return renderThread.frameCounter;
-	}
-
-	/**
-	 * Sets the size limits of this window
-	 * 
-	 * @param minw minimal width
-	 * @param minh minimal height
-	 * @param maxw maximal width
-	 * @param maxh maximal height
-	 * @return a completionFuture
-	 */
-	public CompletableFuture<Void> setLimits(int minw, int minh, int maxw, int maxh) {
-		return onGLFWThread(() -> glfwSetWindowSizeLimits(id.get(), minw, minh, maxw, maxh));
-	}
-
-	@Override
-	public void scheduleDraw() {
-		renderThread.scheduleDraw();
-	}
-
-	private class LRenderThread extends Thread implements RenderThread {
-
-		private final AtomicBoolean shouldDraw = new AtomicBoolean(false);
-		private final Lock shouldDrawLock = new ReentrantLock(true);
-		private final Condition shouldDrawCondition = shouldDrawLock.newCondition();
-		private final AtomicBoolean close = new AtomicBoolean(false);
-		private final AtomicBoolean viewportChanged = new AtomicBoolean(true);
-		private final CompletableFuture<Void> closeFuture = new CompletableFuture<>();
-		private final FrameCounter frameCounter = new FrameCounter();
-		private final AtomicBoolean hasContext = new AtomicBoolean(false);
-		private final Lock hasContextLock = new ReentrantLock(true);
-		private final Condition hasContextCondition = hasContextLock.newCondition();
-
-		@Override
-		public void run() {
-
-			try {
-				windowCreateFuture.get();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-			drawPhaser.register();
-			glfwMakeContextCurrent(id.get());
-			GL.createCapabilities();
-			hasContext.set(true);
-			glfwSwapInterval(0);
-			scheduleDraw();
-			while (!close.get()) {
-				workQueue();
-				if (!hasContext.get()) {
-					hasContextLock.lock();
-					hasContextCondition.awaitUninterruptibly();
-					hasContextLock.unlock();
-					continue;
-				}
-				if (shouldDraw()) {
-					frame();
-				} else {
-					shouldDrawLock.lock();
-					if (shouldDraw()) {
-						shouldDrawLock.unlock();
-						continue;
-					}
-					shouldDrawCondition.awaitUninterruptibly();
-					shouldDrawLock.unlock();
-				}
-			}
-			if (lastFrameRenderer != null) {
-				try {
-					lastFrameRenderer.cleanup(GLFWWindow.this);
-				} catch (GameException ex) {
-					ex.printStackTrace();
-				}
-				lastFrameRenderer = null;
-			}
-			glfwMakeContextCurrent(0L);
-			GL.setCapabilities(null);
-			closeFuture.complete(null);
-		}
-
-		public void bindContext() {
-			try {
-				CompletableFuture<Void> f = this.submit(() -> {
-					hasContext.set(false);
-					glfwMakeContextCurrent(0);
-					GL.setCapabilities(null);
-				});
-				f.get();
-				glfwMakeContextCurrent(id.get());
-				GL.createCapabilities();
-			} catch (InterruptedException ex) {
-				ex.printStackTrace();
-			} catch (ExecutionException ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		public void releaseContext() {
-			try {
-				glfwMakeContextCurrent(0);
-				GL.setCapabilities(null);
-				CompletableFuture<Void> f = submit(() -> {
-					glfwMakeContextCurrent(id.get());
-					GL.createCapabilities();
-					hasContext.set(true);
-				});
-				hasContextLock.lock();
-				hasContextCondition.signalAll();
-				hasContextLock.unlock();
-				f.get();
-			} catch (InterruptedException ex) {
-				ex.printStackTrace();
-			} catch (ExecutionException ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		public void scheduleDraw() {
-			shouldDrawLock.lock();
-			shouldDraw.set(true);
-			shouldDrawCondition.signalAll();
-			shouldDrawLock.unlock();
-		}
-
-		private FrameRenderer lastFrameRenderer = null;
-
-		private void frame() {
-			shouldDrawLock.lock();
-			shouldDraw.set(false);
-			shouldDrawLock.unlock();
-
-			FrameRenderer fr = frameRenderer.get();
-			if (fr != null) {
-				if (lastFrameRenderer != fr) {
-					if (lastFrameRenderer != null) {
-						try {
-							lastFrameRenderer.cleanup(GLFWWindow.this);
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-					}
-					lastFrameRenderer = fr;
-					if (fr != null) {
-						try {
-							fr.init(GLFWWindow.this);
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-					}
-				}
-
-				if (viewportChanged.compareAndSet(true, false)) {
-					glViewport(0, 0, getFramebuffer().width().intValue(), getFramebuffer().height().intValue());
-					try {
-						fr.windowSizeChanged(GLFWWindow.this);
-					} catch (GameException ex) {
-						ex.printStackTrace();
-					}
-				}
-
-				try {
-					fr.renderFrame(GLFWWindow.this);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			drawPhaser.arrive();
-			if (hasContext.get()) {
-				frameCounter.frame();
-			} else {
-				frameCounter.frameNoWait();
-			}
-		}
-
-		private boolean shouldDraw() {
-			shouldDrawLock.lock();
-			try {
-				RenderMode mode = renderMode.get();
-				if (mode == RenderMode.CONTINUOUSLY) {
-					return true;
-				}
-				return shouldDraw.get();
-			} finally {
-				shouldDrawLock.unlock();
-			}
-		}
-
-		@Override
-		public void workQueue() {
-			if (renderThreadFutures.isEmpty()) {
-				return;
-			}
-			Future f;
-			while ((f = renderThreadFutures.poll()) != null) {
-				try {
-					f.r.run();
-					f.f.complete(null);
-				} catch (Throwable ex) {
-					f.f.completeExceptionally(ex);
-					launcher.handleError(ex);
-				}
-			}
-		}
-
-		@Override
-		public CompletableFuture<Void> submit(GameRunnable r) {
-			CompletableFuture<Void> f = new CompletableFuture<>();
-			renderThreadFutures.offer(new Future(f, r));
-			shouldDrawLock.lock();
-			shouldDrawCondition.signalAll();
-			shouldDrawLock.unlock();
-			return f;
-		}
-
-		@Override
-		public Window getWindow() {
-			return GLFWWindow.this;
-		}
-	}
-
-	private final GameRunnable windowCreator = new GameRunnable() {
-
-		@Override
-		public void run() {
-			glfwDefaultWindowHints();
-			glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-			glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-			glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-			long id = glfwCreateWindow(width.intValue(), height.intValue(), title.get(), 0, 0);
-			if (id == NULL) {
-				glfwTerminate();
-				System.err.println("Failed to create GLFW Window");
-				int error = glfwGetError(null);
-				System.out.println(Integer.toHexString(error));
-				System.exit(-1);
-				return;
-			}
-
-			glfwSetWindowSizeLimits(id, 10, 10, GLFW_DONT_CARE, GLFW_DONT_CARE);
-			int[] a0 = new int[1];
-			int[] a1 = new int[1];
-			glfwGetWindowPos(id, a0, a1);
-			GLFWWindow.this.id.set(id);
-			x.set(a0[0]);
-			y.set(a1[0]);
-			glfwGetFramebufferSize(id, a0, a1);
-			framebuffer.width().setNumber(a0[0]);
-			framebuffer.height().setNumber(a0[0]);
-
-			windowCreateFuture.complete(null);
-
-			glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
-				@Override
-				public void invoke(long window, double xoffset, double yoffset) {
-					try {
-						input.scroll((float) xoffset, (float) yoffset);
-					} catch (GameException ex) {
-						ex.printStackTrace();
-					}
-				}
-			});
-			glfwSetWindowCloseCallback(id, new GLFWWindowCloseCallbackI() {
-				@Override
-				public void invoke(long window) {
-					try {
-						closeCallback.get().close();
-					} catch (GameException ex) {
-						ex.printStackTrace();
-					}
-				}
-			});
-			glfwSetCursorEnterCallback(id, new GLFWCursorEnterCallbackI() {
-				@Override
-				public void invoke(long window, boolean entered) {
-					mouse.setInWindow(entered);
-				}
-			});
-			glfwSetCursorPosCallback(id, new GLFWCursorPosCallbackI() {
-				@Override
-				public void invoke(long window, double xpos, double ypos) {
-					float omx = (float) mouse.getX();
-					float omy = (float) mouse.getY();
-					mouse.setPosition(xpos, ypos);
-					input.mouseMove(omx, omy, (float) xpos, (float) ypos);
-				}
-			});
-			glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
-				@Override
-				public void invoke(long window, int w, int h) {
-					width.setNumber(w);
-					height.setNumber(h);
-				}
-			});
-			glfwSetWindowPosCallback(id, new GLFWWindowPosCallbackI() {
-				@Override
-				public void invoke(long window, int xpos, int ypos) {
-					x.set(xpos);
-					y.set(ypos);
-				}
-			});
-			glfwSetMouseButtonCallback(id, new GLFWMouseButtonCallbackI() {
-				@Override
-				public void invoke(long window, int button, int action, int mods) {
-					switch (action) {
-					case GLFW_PRESS:
-						input.mousePress(button, (float) mouse.getX(), (float) mouse.getY());
-						break;
-					case GLFW_RELEASE:
-						input.mouseRelease(button, (float) mouse.getX(), (float) mouse.getY());
-						break;
-					default:
-						break;
-					}
-				}
-			});
-			glfwSetKeyCallback(id, new GLFWKeyCallbackI() {
-				@Override
-				public void invoke(long window, int key, int scancode, int action, int mods) {
-					switch (action) {
-					case GLFW_PRESS:
-						input.keyPress(key, scancode, (char) 0);
-						break;
-					case GLFW_RELEASE:
-						input.keyRelease(key, scancode, (char) 0);
-						break;
-					case GLFW_REPEAT:
-						input.keyRepeat(key, scancode, (char) 0);
-						break;
-					default:
-						break;
-					}
-				}
-			});
-			glfwSetCharCallback(id, new GLFWCharCallbackI() {
-				@Override
-				public void invoke(long window, int codepoint) {
-					char ch = (char) codepoint;
-					input.character(ch);
-				}
-			});
-			glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
-				@Override
-				public void invoke(long window, int width, int height) {
-					framebuffer.width().setNumber(width);
-					framebuffer.height().setNumber(height);
-					logger.debugf("Viewport changed: (%4d, %4d)", width, height);
-					LRenderThread rt = renderThread;
-					rt.viewportChanged.set(true);
-					if (renderMode.get() != RenderMode.MANUAL) {
-						rt.bindContext();
-						rt.frame();
-						rt.releaseContext();
-					}
-				}
-			});
-		}
-	};
 
 	/**
 	 * @author DasBabyPixel
@@ -803,20 +468,24 @@ public class GLFWWindow implements Window, GLFWUser {
 		void close() throws GameException;
 	}
 
-	private static class Future {
-		private final CompletableFuture<Void> f;
-		private final GameRunnable r;
+	static {
+		Configuration.OPENGLES_EXPLICIT_INIT.set(true);
+		Configuration.OPENGL_EXPLICIT_INIT.set(true);
+
+		GL.create();
+		GLES.create(GL.getFunctionProvider());
+		GL.destroy();
+	}
+
+	static class Future {
+		final CompletableFuture<Void> f;
+		final GameRunnable r;
 
 		public Future(CompletableFuture<Void> f, GameRunnable r) {
 			super();
 			this.f = f;
 			this.r = r;
 		}
-	}
-
-	@Override
-	public RenderThread getRenderThread() {
-		return renderThread;
 	}
 
 }

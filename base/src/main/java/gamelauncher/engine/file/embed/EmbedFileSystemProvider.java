@@ -122,7 +122,6 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 
 			@Override
 			public Path next() {
-				System.out.println(en.nextElement());
 				return new EmbedPath(embedFileSystem, new String[0], true);
 			}
 		};

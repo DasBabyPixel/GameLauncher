@@ -1,10 +1,7 @@
 package gamelauncher.lwjgl.render.font;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES30.*;
 import static org.lwjgl.stb.STBTruetype.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -36,7 +33,8 @@ import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
 public class BasicGlyphProvider implements GlyphProvider {
@@ -44,8 +42,8 @@ public class BasicGlyphProvider implements GlyphProvider {
 	private final Map<GlyphKey, GlyphEntry> entries = new ConcurrentHashMap<>();
 	public final DynamicSizeTextureAtlasArray textures;
 
-	public BasicGlyphProvider() {
-		textures = new DynamicSizeTextureAtlasArray();
+	public BasicGlyphProvider(ExecutorThread owner) {
+		textures = new DynamicSizeTextureAtlasArray(owner);
 	}
 
 	@Override

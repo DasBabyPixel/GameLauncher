@@ -1,6 +1,6 @@
 package gamelauncher.lwjgl.render.shader.struct;
 
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;

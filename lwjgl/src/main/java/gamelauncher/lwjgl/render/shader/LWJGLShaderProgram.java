@@ -1,13 +1,13 @@
 package gamelauncher.lwjgl.render.shader;
 
-import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengles.GLES20.*;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.GlStates;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
 public class LWJGLShaderProgram extends ShaderProgram {
