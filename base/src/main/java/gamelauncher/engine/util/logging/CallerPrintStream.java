@@ -1,7 +1,10 @@
 package gamelauncher.engine.util.logging;
 
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author DasBabyPixel
@@ -9,8 +12,9 @@ import java.util.Locale;
 public class CallerPrintStream extends PrintStream {
 
 	private final Logger logger;
-	private final LogStream parent;
+	private final AsyncLogStream parent;
 	private final LogLevel level;
+	private final Lock lock = new ReentrantLock(true);
 	private StackTraceElement caller = null;
 
 	/**
@@ -18,18 +22,23 @@ public class CallerPrintStream extends PrintStream {
 	 * @param logger
 	 * @param out
 	 */
-	public CallerPrintStream(LogLevel level, Logger logger, LogStream out) {
-		super(out, true);
+	public CallerPrintStream(LogLevel level, Logger logger, AsyncLogStream out) {
+		super(new LogStreamConverter(StandardCharsets.UTF_8), true);
+		((LogStreamConverter) this.out).callerPrintStream = this;
 		this.level = level;
 		this.parent = out;
 		this.logger = logger;
+	}
+
+	void converted(String line) {
+		parent.offerCalled(level, caller, line);
 	}
 
 	private boolean setCaller() {
 		if (caller != null) {
 			return false;
 		}
-		this.parent.lock.lock();
+		lock.lock();
 		StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = null;
 		String cname = getClass().getName();
@@ -44,14 +53,12 @@ public class CallerPrintStream extends PrintStream {
 			}
 		}
 		this.caller = caller;
-		logger.setCaller(caller);
-		logger.setCallerLevel(level);
 		return true;
 	}
 
 	private void unsetCaller() {
 		this.caller = null;
-		this.parent.lock.unlock();
+		lock.unlock();
 	}
 
 	@Override

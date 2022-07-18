@@ -93,6 +93,7 @@ public abstract class GameLauncher {
 	 * Creates a new GameLauncher
 	 */
 	public GameLauncher() {
+		Logger.asyncLogStream.start();
 		this.logger = Logger.getLogger(getClass());
 		this.threads = new Threads();
 		this.gameDirectory = Paths.get(NAME).toAbsolutePath();
@@ -229,6 +230,7 @@ public abstract class GameLauncher {
 				this.pluginManager.unloadPlugins();
 				this.embedFileSystem.close();
 				this.threads.cleanup();
+				Logger.asyncLogStream.cleanup();
 			} catch (IOException ex) {
 				throw new GameException(ex);
 			}

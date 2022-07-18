@@ -37,7 +37,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	private void resizeTexture(int newSize) throws GameException {
 		lock.lock();
 		int id = glGenTextures();
-		GlStates.bindTexture(GL_TEXTURE_2D, id);
+		GlStates.current().bindTexture(GL_TEXTURE_2D, id);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

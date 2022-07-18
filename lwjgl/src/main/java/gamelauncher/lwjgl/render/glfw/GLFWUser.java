@@ -8,13 +8,13 @@ import java.util.concurrent.CompletableFuture;
 public interface GLFWUser {
 
 	/**
-	 * 
+	 * @return the {@link #destroyFuture()}
 	 */
-	void destroy();
+	CompletableFuture<Void> destroy();
 	
 	/**
 	 * @return the future for when this {@link GLFWUser} is done
 	 */
-	CompletableFuture<Void> doneFuture();
+	CompletableFuture<Void> destroyFuture();
 	
 }

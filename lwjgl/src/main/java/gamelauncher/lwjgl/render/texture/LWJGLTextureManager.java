@@ -13,7 +13,6 @@ public class LWJGLTextureManager implements TextureManager {
 
 	public final ExecutorService service;
 	public final LWJGLGameLauncher launcher;
-	public LWJGLAsyncTextureUploader asyncTextureUploader;
 
 	public LWJGLTextureManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
@@ -22,7 +21,7 @@ public class LWJGLTextureManager implements TextureManager {
 
 	@Override
 	public CompletableFuture<LWJGLTexture> createTexture() {
-		return createTexture(asyncTextureUploader);
+		return createTexture(launcher.getAsyncUploader());
 	}
 	
 	public CompletableFuture<LWJGLTexture> createTexture(ExecutorThread owner) {
@@ -31,11 +30,6 @@ public class LWJGLTextureManager implements TextureManager {
 
 	@Override
 	public void cleanup() throws GameException {
-		asyncTextureUploader.cleanup();
 		launcher.getThreads().shutdown(service);
-	}
-	
-	public void startAsyncUploader() {
-		this.asyncTextureUploader = new LWJGLAsyncTextureUploader(this);
 	}
 }

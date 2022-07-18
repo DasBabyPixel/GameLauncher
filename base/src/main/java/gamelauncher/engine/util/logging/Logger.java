@@ -14,6 +14,10 @@ public abstract class Logger {
 	 * The System Streams ({@link System#in} and {@link System#out})
 	 */
 	public static final SelectiveStream system = new SelectiveStream();
+	/**
+	 * The {@link AsyncLogStream} for submitting to the {@link #system system stream}
+	 */
+	public static final AsyncLogStream asyncLogStream = new AsyncLogStream();
 
 	static {
 		system.addEntry(System.out, Output.OUT);
@@ -107,38 +111,6 @@ public abstract class Logger {
 	public abstract PrintStream createPrintStream(LogLevel level);
 
 	/**
-	 * Sets the caller of this {@link Logger}
-	 * 
-	 * @param caller
-	 */
-	public void setCaller(StackTraceElement caller) {
-		this.caller.set(caller);
-	}
-
-	/**
-	 * Sets the callerLevel of this {@link Logger}
-	 * 
-	 * @param level
-	 */
-	public void setCallerLevel(LogLevel level) {
-		this.callerLevel.set(level);
-	}
-
-	/**
-	 * @return the callerLevel
-	 */
-	public LogLevel getCallerLevel() {
-		return this.callerLevel.get();
-	}
-
-	/**
-	 * @return the caller
-	 */
-	public StackTraceElement getCaller() {
-		return this.caller.get();
-	}
-
-	/**
 	 * @return {@link Logger}
 	 */
 	@SuppressWarnings("null")
@@ -175,6 +147,6 @@ public abstract class Logger {
 	 * @return {@link Logger}
 	 */
 	public static Logger getLogger(String name) {
-		return new SimpleLogger(name);
+		return new SimpleLogger(name, asyncLogStream);
 	}
 }

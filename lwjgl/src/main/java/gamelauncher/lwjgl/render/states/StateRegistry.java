@@ -10,11 +10,12 @@ public class StateRegistry {
 
 	private static final Collection<Long> glfwWindows = new CopyOnWriteArrayList<>();
 	private static final Map<Long, Thread> contextHoldingThreads = new ConcurrentHashMap<>();
+	private static final Map<Long, ContextDependant> contexts = new ConcurrentHashMap<>();
 	private static final Map<Thread, Long> contextByThread = new ConcurrentHashMap<>();
 
 	public static void addWindow(long id) {
 		glfwWindows.add(id);
-		setContextHoldingThread(id, null);
+		contexts.put(id, new ContextDependant());
 	}
 
 	public static Thread getContextHolder(long id) {
@@ -25,11 +26,20 @@ public class StateRegistry {
 		return contextByThread.get(thread);
 	}
 
+	public static ContextDependant currentContext() {
+		if (contextByThread.containsKey(Thread.currentThread())) {
+			long c = contextByThread.get(Thread.currentThread());
+			return contexts.get(c);
+		}
+		return null;
+	}
+
 	public static void setContextHoldingThread(long id, Thread thread) {
-		System.out.printf("%s: %s%n", id, thread==null?"none":thread.getName());
 		if (thread == null) {
 			Thread th = contextHoldingThreads.remove(id);
-			contextByThread.remove(th);
+			if (th != null) {
+				contextByThread.remove(th);
+			}
 			return;
 		}
 		contextHoldingThreads.put(id, thread);
@@ -38,6 +48,7 @@ public class StateRegistry {
 
 	public static void removeWindow(long id) {
 		glfwWindows.remove(id);
+		contexts.remove(id);
 		Thread thread = contextHoldingThreads.remove(id);
 		if (thread != null) {
 			contextByThread.remove(thread);

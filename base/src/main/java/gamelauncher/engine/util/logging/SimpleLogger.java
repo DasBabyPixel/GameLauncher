@@ -9,14 +9,15 @@ public class SimpleLogger extends Logger {
 
 	private int level = 0;
 	private final String name;
-	private final LogStream logStream;
+	private final AsyncLogStream logStream;
 
 	/**
 	 * @param name
+	 * @param stream 
 	 */
-	public SimpleLogger(String name) {
+	public SimpleLogger(String name, AsyncLogStream stream) {
 		this.name = name;
-		this.logStream = new LogStream(this);
+		this.logStream =stream;
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class SimpleLogger extends Logger {
 	@Override
 	public void log(LogLevel level, Object message) {
 		if (shouldDisplay(level)) {
-			logStream.log(level, message);
+			logStream.offerLog(this, level, message);
 		}
 	}
 

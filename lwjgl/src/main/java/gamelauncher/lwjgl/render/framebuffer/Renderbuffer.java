@@ -39,10 +39,10 @@ public class Renderbuffer implements GameResource {
 	}
 
 	public void bind() {
-		GlStates.bindRenderbuffer(GL_RENDERBUFFER, id);
+		GlStates.current().bindRenderbuffer(GL_RENDERBUFFER, id);
 	}
 
 	public void unbind() {
-		GlStates.bindRenderbuffer(GL_RENDERBUFFER, 0);
+		GlStates.current().bindRenderbuffer(GL_RENDERBUFFER, 0);
 	}
 }

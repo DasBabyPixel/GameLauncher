@@ -233,18 +233,18 @@ public class BasicGlyphProvider implements GlyphProvider {
 			this.texMapIds = texMapIds;
 			this.vertexCount = idxA.length;
 			vao = glGenVertexArrays();
-			GlStates.bindVertexArray(vao);
+			GlStates.current().bindVertexArray(vao);
 			idxbuffer = glGenBuffers();
 			IntBuffer ibuffer = memAllocInt(idxA.length);
 			ibuffer.put(idxA).flip();
-			GlStates.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
+			GlStates.current().bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL_STATIC_DRAW);
 			memFree(ibuffer);
 
 			posbuffer = glGenBuffers();
 			FloatBuffer fbuffer = memAllocFloat(posA.length);
 			fbuffer.put(posA).flip();
-			GlStates.bindBuffer(GL_ARRAY_BUFFER, posbuffer);
+			GlStates.current().bindBuffer(GL_ARRAY_BUFFER, posbuffer);
 			glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 			memFree(fbuffer);
 
@@ -253,7 +253,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 			texbuffer = glGenBuffers();
 			fbuffer = memAllocFloat(texA.length);
 			fbuffer.put(texA).flip();
-			GlStates.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
+			GlStates.current().bindBuffer(GL_ARRAY_BUFFER, texbuffer);
 			glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 			memFree(fbuffer);
 
@@ -268,13 +268,13 @@ public class BasicGlyphProvider implements GlyphProvider {
 
 		@Override
 		public void render(ShaderProgram program) throws GameException {
-			GlStates.activeTexture(GL_TEXTURE0);
+			GlStates.current().activeTexture(GL_TEXTURE0);
 			texture.getTexture().bind();
 
 			program.utextureAddColor.set(vectorTextureAddColor);
 			program.uploadUniforms();
 
-			GlStates.bindVertexArray(vao);
+			GlStates.current().bindVertexArray(vao);
 			glEnableVertexAttribArray(0);
 			glEnableVertexAttribArray(1);
 			glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);

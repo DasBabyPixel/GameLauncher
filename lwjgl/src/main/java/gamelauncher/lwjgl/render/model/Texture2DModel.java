@@ -32,7 +32,7 @@ public class Texture2DModel implements Model {
 		this.texture = texture;
 		//@formatter:off
 		vao = glGenVertexArrays();
-		GlStates.bindVertexArray(vao);
+		GlStates.current().bindVertexArray(vao);
 		idxbuffer = glGenBuffers();
 		IntBuffer ibuffer = memAllocInt(6);
 		ibuffer.put(new int[] {
@@ -40,7 +40,7 @@ public class Texture2DModel implements Model {
 				0, 3, 2
 		}).flip();
 		vertexCount = 6;
-		GlStates.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
+		GlStates.current().bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL_STATIC_DRAW);
 		memFree(ibuffer);
 		posbuffer = glGenBuffers();
@@ -51,7 +51,7 @@ public class Texture2DModel implements Model {
 				0.5F, 0.5F, 0F,
 				0.5F, -0.5F, 0F
 		}).flip();
-		GlStates.bindBuffer(GL_ARRAY_BUFFER, posbuffer);
+		GlStates.current().bindBuffer(GL_ARRAY_BUFFER, posbuffer);
 		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 		memFree(fbuffer);
 		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
@@ -64,7 +64,7 @@ public class Texture2DModel implements Model {
 				1, 0,
 				1, 1
 		}).flip();
-		GlStates.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
+		GlStates.current().bindBuffer(GL_ARRAY_BUFFER, texbuffer);
 		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 		memFree(fbuffer);
 		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
@@ -74,9 +74,9 @@ public class Texture2DModel implements Model {
 	@Override
 	public void render(ShaderProgram program) throws GameException {
 		program.uapplyLighting.set(0).upload();
-		GlStates.activeTexture(GL_TEXTURE0);
+		GlStates.current().activeTexture(GL_TEXTURE0);
 		texture.bind();
-		GlStates.bindVertexArray(vao);
+		GlStates.current().bindVertexArray(vao);
 
 		program.uploadUniforms();
 		glEnableVertexAttribArray(0);

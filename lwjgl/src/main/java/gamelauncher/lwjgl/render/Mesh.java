@@ -36,7 +36,7 @@ public class Mesh implements GameResource {
 		this.renderType = renderType;
 
 		vaoId = glGenVertexArrays();
-		GlStates.bindVertexArray(vaoId);
+		GlStates.current().bindVertexArray(vaoId);
 
 		createBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices);
 
@@ -51,7 +51,7 @@ public class Mesh implements GameResource {
 
 		vaoSize = 3;
 
-		GlStates.bindVertexArray(0);
+		GlStates.current().bindVertexArray(0);
 	}
 
 	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
@@ -76,7 +76,7 @@ public class Mesh implements GameResource {
 
 	private int createBuffer(int target) {
 		int id = glGenBuffers();
-		GlStates.bindBuffer(target, id);
+		GlStates.current().bindBuffer(target, id);
 		vbos.add(id);
 		return id;
 	}
@@ -97,12 +97,12 @@ public class Mesh implements GameResource {
 
 	public void render() {
 		if (material.texture != null) {
-			GlStates.activeTexture(GL_TEXTURE0);
+			GlStates.current().activeTexture(GL_TEXTURE0);
 			material.texture.bind();
 //			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
-		GlStates.bindVertexArray(getVaoId());
+		GlStates.current().bindVertexArray(getVaoId());
 		for (int i = 0; i < vaoSize; i++) {
 			glEnableVertexAttribArray(i);
 		}

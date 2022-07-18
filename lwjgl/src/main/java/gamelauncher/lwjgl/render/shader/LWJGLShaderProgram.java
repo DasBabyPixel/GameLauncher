@@ -90,12 +90,12 @@ public class LWJGLShaderProgram extends ShaderProgram {
 
 	@Override
 	public void bind() {
-		GlStates.useProgram(programId);
+		GlStates.current().useProgram(programId);
 	}
 
 	@Override
 	public void unbind() {
-		GlStates.useProgram(0);
+		GlStates.current().useProgram(0);
 	}
 
 	@Override

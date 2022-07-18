@@ -33,10 +33,23 @@ public class SelectiveStream extends OutputStream {
 			if (it.hasNext()) {
 				Entry e = it.next();
 				if (e.output.weight <= o.weight) {
-					this.currentEntry.set(e);
+					currentEntry.set(e);
 				}
 			}
 		}
+	}
+
+	@SuppressWarnings("javadoc")
+	public OutputStream computeOutputStream(Output output) {
+		OutputStream out = null;
+		Iterator<Entry> it = entries.iterator();
+		if (it.hasNext()) {
+			Entry e = it.next();
+			if (e.output.weight <= output.weight) {
+				out = e.out;
+			}
+		}
+		return out;
 	}
 
 	/**

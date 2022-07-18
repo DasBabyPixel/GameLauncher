@@ -11,31 +11,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings("javadoc")
 public class GlStates {
 
-	private static final Map<Integer, Integer> bindTexture = new ConcurrentHashMap<>();
-	private static final Map<Integer, Integer> bindBuffer = new ConcurrentHashMap<>();
-	private static final Map<Integer, Integer> bindFramebuffer = new ConcurrentHashMap<>();
-	private static final Map<Integer, Integer> bindRenderbuffer = new ConcurrentHashMap<>();
-	private static final Collection<Integer> activeTexture = ConcurrentHashMap.newKeySet();
-	private static final BlendState blend = new BlendState();
-	private static final DepthState depth = new DepthState();
-	private static final AtomicInteger bindVertexArray = new AtomicInteger();
-	private static final AtomicInteger useProgram = new AtomicInteger();
+	private final Map<Integer, Integer> bindTexture = new ConcurrentHashMap<>();
+	private final Map<Integer, Integer> bindBuffer = new ConcurrentHashMap<>();
+	private final Map<Integer, Integer> bindFramebuffer = new ConcurrentHashMap<>();
+	private final Map<Integer, Integer> bindRenderbuffer = new ConcurrentHashMap<>();
+	private final Collection<Integer> activeTexture = ConcurrentHashMap.newKeySet();
+	private final BlendState blend = new BlendState();
+	private final DepthState depth = new DepthState();
+	private final AtomicInteger bindVertexArray = new AtomicInteger();
+	private final AtomicInteger useProgram = new AtomicInteger();
 
-	public static BlendState getBlendState() {
+	public static GlStates current() {
+		return StateRegistry.currentContext().states;
+	}
+	
+	public BlendState getBlendState() {
 		return blend;
 	}
 
-	public static DepthState getDepthState() {
+	public DepthState getDepthState() {
 		return depth;
 	}
 
-	public static void bindFramebuffer(int target, int framebuffer) {
+	public void bindFramebuffer(int target, int framebuffer) {
 		if (!bindFramebuffer.containsKey(target) || bindFramebuffer.put(target, framebuffer) != framebuffer) {
 			glBindFramebuffer(target, framebuffer);
 		}
 	}
 
-	public static void deleteTextures(int texture) {
+	public void deleteTextures(int texture) {
 		glDeleteTextures(texture);
 		for (Map.Entry<Integer, Integer> e : bindTexture.entrySet()) {
 			if (e.getValue() == texture) {
@@ -44,37 +48,37 @@ public class GlStates {
 		}
 	}
 
-	public static void bindRenderbuffer(int target, int renderbuffer) {
+	public void bindRenderbuffer(int target, int renderbuffer) {
 		if (!bindRenderbuffer.containsKey(target) || bindRenderbuffer.put(target, renderbuffer) != renderbuffer) {
 			glBindRenderbuffer(target, renderbuffer);
 		}
 	}
 
-	public static void bindVertexArray(int vao) {
+	public void bindVertexArray(int vao) {
 		if (bindVertexArray.getAndSet(vao) != vao) {
 			glBindVertexArray(vao);
 		}
 	}
 
-	public static void bindTexture(int target, int texture) {
+	public void bindTexture(int target, int texture) {
 		if (!bindTexture.containsKey(target) || bindTexture.put(target, texture) != texture) {
 			glBindTexture(target, texture);
 		}
 	}
 
-	public static void activeTexture(int texture) {
+	public void activeTexture(int texture) {
 		if (activeTexture.add(texture)) {
 			glActiveTexture(texture);
 		}
 	}
 
-	public static void bindBuffer(int target, int buffer) {
+	public void bindBuffer(int target, int buffer) {
 		if (!bindBuffer.containsKey(target) || bindBuffer.put(target, buffer) != buffer) {
 			glBindBuffer(target, buffer);
 		}
 	}
 
-	public static void useProgram(int program) {
+	public void useProgram(int program) {
 		if (useProgram.getAndSet(program) != program) {
 			glUseProgram(program);
 		}

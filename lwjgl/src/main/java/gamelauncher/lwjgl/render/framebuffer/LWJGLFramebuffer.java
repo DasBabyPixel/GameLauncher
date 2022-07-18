@@ -33,11 +33,11 @@ public class LWJGLFramebuffer implements Framebuffer {
 	}
 
 	public void bind() {
-		GlStates.bindFramebuffer(GL_FRAMEBUFFER, id);
+		GlStates.current().bindFramebuffer(GL_FRAMEBUFFER, id);
 	}
 
 	public void unbind() {
-		GlStates.bindFramebuffer(GL_FRAMEBUFFER, 0);
+		GlStates.current().bindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	public boolean isComplete() {

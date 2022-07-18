@@ -10,7 +10,6 @@ import java.nio.IntBuffer;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,37 +27,30 @@ import gamelauncher.lwjgl.render.states.GlStates;
 public class LWJGLTexture implements Texture {
 
 	private final LWJGLTextureManager manager;
-	private final AtomicInteger textureId = new AtomicInteger();
+	private int textureId;
 	public int width;
 	public int height;
 	private final ExecutorThread owner;
 	public final Logger logger = Logger.getLogger();
 
-	LWJGLTexture(LWJGLTextureManager manager, ExecutorThread owner) {
-		this(manager, owner, -1);
-	}
-
+//	LWJGLTexture(LWJGLTextureManager manager, ExecutorThread owner) {
+//		this(manager, owner, -1);
+//	}
+//
+	@Deprecated
 	public LWJGLTexture(LWJGLTextureManager manager, ExecutorThread owner, int textureId) {
 		this.manager = manager;
 		this.owner = owner;
-		this.textureId.set(textureId);
-		if (this.textureId.get() == -1) {
-			submit(new GameRunnable() {
-				@Override
-				public void run() {
-					System.out.println("generating texture on " + owner);
-					LWJGLTexture.this.textureId.set(glGenTextures());
-				}
-			});
+		this.textureId = textureId;
+		if (this.textureId == -1) {
+			submit(() -> LWJGLTexture.this.textureId = glGenTextures());
 		}
 	}
 
 	private LWJGLTexture(LWJGLTextureManager man, ExecutorThread owner, CompletableFuture<LWJGLTexture> f) {
 		this.owner = owner;
 		this.manager = man;
-		submit(() -> {
-			textureId.set(glGenTextures());
-		}).thenRun(() -> {
+		submit(() -> textureId = glGenTextures()).thenRun(() -> {
 			f.complete(this);
 		});
 	}
@@ -101,20 +93,20 @@ public class LWJGLTexture implements Texture {
 	}
 
 	public void bind() {
-		GlStates.bindTexture(GL_TEXTURE_2D, getTextureId());
+		GlStates.current().bindTexture(GL_TEXTURE_2D, getTextureId());
 	}
 
 	public void unbind() {
-		GlStates.bindTexture(GL_TEXTURE_2D, 0);
+		GlStates.current().bindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	@Override
 	public void cleanup() throws GameException {
-		GlStates.deleteTextures(getTextureId());
+		GlStates.current().deleteTextures(getTextureId());
 	}
 
 	public int getTextureId() {
-		return textureId.get();
+		return textureId;
 	}
 
 	@Override
@@ -136,24 +128,7 @@ public class LWJGLTexture implements Texture {
 
 	private CompletableFuture<Void> submit(GameRunnable run) {
 		return owner.submit(() -> {
-//			glfwMakeContextCurrent(0);
-//			GLES.setCapabilities(null);
-//			boolean current = manager.asyncTextureUploader.secondaryContext.isCurrent();
-//			if (current)
-//				manager.asyncTextureUploader.secondaryContext.destroyCurrent();
-//			this.manager.asyncTextureUploader.secondaryContext.makeCurrent();
-//			glfwMakeContextCurrent(manager.launcher.getWindow().getId());
-//			GLES.createCapabilities();
-//			manager.asyncTextureUploader.secondaryContext.makeCurrent();
-//			manager.launcher.getWindow().getRenderThread().bindContext();
 			run.run();
-//			manager.launcher.getWindow().getRenderThread().releaseContext();
-//			if (current)
-//				manager.asyncTextureUploader.secondaryContext.makeCurrent();
-//			glFinish();
-//			this.managOer.asyncTextureUploader.secondaryContext.destroyCurrent();
-//			glfwMakeContextCurrent(this.manager.launcher.getWindow().getId());
-//			GLES.createCapabilities();
 		});
 	}
 
@@ -170,13 +145,12 @@ public class LWJGLTexture implements Texture {
 				int h = decoder.getHeight();
 				AtomicReference<ByteBuffer> abuf = new AtomicReference<>();
 				CompletableFuture<Void> fut2 = submit(() -> {
-					System.out.println("work");
 					long t1 = System.nanoTime();
-					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+					GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
 					glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * Integer.BYTES, GL_STATIC_DRAW);
 					ByteBuffer buf1 = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, w * h * Integer.BYTES,
 							GL_MAP_WRITE_BIT);
-					GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+					GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 					if (buf1 == null) {
 						int error = glGetError();
 						throw new GameException("Couldn't map buffer! (" + Integer.toHexString(error) + ")");
@@ -192,19 +166,23 @@ public class LWJGLTexture implements Texture {
 					@Override
 					public void run() {
 						long t1 = System.nanoTime();
-						GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
+						GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
 						glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 						bind();
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 						nanos.addAndGet(System.nanoTime() - t1);
-						GlStates.bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+						GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 						glDeleteBuffers(buf);
+						glFinish();
 						fut.complete(null);
+						System.out.println(glIsTexture(textureId));
+						manager.launcher.getWindow().getRenderThread().submit(() -> {
+							System.out.println(glIsTexture(textureId));
+						});
 						System.out.println(
 								"Took " + nanos.get() + "ns - " + TimeUnit.NANOSECONDS.toMillis(nanos.get()) + "ms");
-						System.out.println(glGetError());
 					}
 				});
 				Threads.waitFor(fut3);
@@ -213,6 +191,7 @@ public class LWJGLTexture implements Texture {
 			}
 		});
 		Threads.waitFor(fut);
+		System.out.println("loaded texture");
 		return fut;
 	}
 
