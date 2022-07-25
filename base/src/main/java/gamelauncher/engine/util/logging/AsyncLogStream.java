@@ -4,6 +4,7 @@ import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -37,13 +38,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 
 	@Override
 	protected void startExecuting() {
-		system.setOutput(Output.ERR);
-		out.println("Starting");
 	}
 
 	@Override
 	protected void stopExecuting() {
-		out.println("Stopping");
 	}
 
 	public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
@@ -118,11 +116,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			} else if (message instanceof Collection<?>) {
 				logCollection(entry.withObject((Collection<?>) message));
 			} else {
-				for (String s1 : Objects.toString(message).split(System.lineSeparator())) {
-					for (String s : s1.split("\\n")) {
-						logString(entry, s);
-					}
-				}
+				logString(entry, Objects.toString(message));
 			}
 		}
 	}
@@ -150,9 +144,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		out.printf("[%s] ", logger.toString());
 	}
 
-	private void printNewLine() {
-		out.printf("newline");
-		out.printf("[%s] ", formatter.format(LocalDateTime.now()));
+	private void printNewLine(TemporalAccessor time) {
+		out.printf("[%s] ", formatter.format(time));
 	}
 
 	private void printLevel(LogLevel level) {
@@ -167,8 +160,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		setSystemLevel(entry.level);
 		for (String s1 : entry.object.split(System.lineSeparator())) {
 			for (String object : s1.split("\\n")) {
-//				out.println("String---");
-				printNewLine();
+				printNewLine(entry.time);
 				if (entry.caller == null) {
 					printLoggerName(entry.logger);
 					printThread(entry.thread);
@@ -179,8 +171,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 					out.printf("[%s.%s:%s] ", entry.caller.getClassName(), entry.caller.getMethodName(),
 							entry.caller.getLineNumber());
 				}
-				out.printf("1\"%s2\"%n", object);
-				out.println("1\"" + object + "\"2");
+				out.printf("%s%n", object);
 			}
 		}
 	}
@@ -191,22 +182,28 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		private final T object;
 		private final LogLevel level;
 		private final StackTraceElement caller;
+		private final TemporalAccessor time;
 
 		public LogEntry(Logger logger, Thread thread, T object, LogLevel level) {
 			this(logger, thread, object, level, null);
 		}
 
 		public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller) {
-			super();
+			this(logger, thread, object, level, caller, LocalDateTime.now());
+		}
+
+		public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller,
+				TemporalAccessor time) {
 			this.logger = logger;
 			this.thread = thread;
 			this.object = object;
 			this.level = level;
 			this.caller = caller;
+			this.time = time;
 		}
 
 		public <V> LogEntry<V> withObject(V object) {
-			return new LogEntry<V>(logger, thread, object, level, caller);
+			return new LogEntry<V>(logger, thread, object, level, caller, time);
 		}
 	}
 }

@@ -17,10 +17,10 @@ public class GLFWSecondaryContext implements GameResource {
 
 	private final Lock lock = new ReentrantLock(true);
 	private long id;
-	private final GWindow window;
+	private final GLFWWindow window;
 	private final AtomicReference<Thread> current = new AtomicReference<>();
 
-	public GLFWSecondaryContext(GWindow window) {
+	public GLFWSecondaryContext(GLFWWindow window) {
 		this.window = window;
 	}
 

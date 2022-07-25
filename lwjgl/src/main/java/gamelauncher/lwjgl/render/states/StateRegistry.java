@@ -15,7 +15,7 @@ public class StateRegistry {
 
 	public static void addWindow(long id) {
 		glfwWindows.add(id);
-		contexts.put(id, new ContextDependant());
+		contexts.put(id, new ContextDependant(id));
 	}
 
 	public static Thread getContextHolder(long id) {

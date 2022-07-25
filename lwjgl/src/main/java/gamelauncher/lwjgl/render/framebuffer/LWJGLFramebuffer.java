@@ -41,13 +41,23 @@ public class LWJGLFramebuffer implements Framebuffer {
 	}
 
 	public boolean isComplete() {
-		bind();
-		return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+		try {
+			bind();
+			int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			return status == GL_FRAMEBUFFER_COMPLETE;
+		} finally {
+			unbind();
+		}
 	}
 
 	public void checkComplete() throws GameException {
 		if (!isComplete()) {
-			throw new GameException("Framebuffer not complete!");
+			try {
+				bind();
+				throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(glCheckFramebufferStatus(GL_FRAMEBUFFER)));
+			} finally {
+				unbind();
+			}
 		}
 	}
 

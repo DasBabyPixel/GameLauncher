@@ -22,9 +22,9 @@ import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindowCreator implements GameRunnable {
-	private final GWindow window;
+	private final GLFWWindow window;
 
-	public GLFWWindowCreator(GWindow window) {
+	public GLFWWindowCreator(GLFWWindow window) {
 		this.window = window;
 	}
 
@@ -48,13 +48,13 @@ public class GLFWWindowCreator implements GameRunnable {
 			System.exit(-1);
 			return;
 		}
+		window.glfwId = id;
 		this.window.getSecondaryContext().create();
 
 		glfwSetWindowSizeLimits(id, 10, 10, GLFW_DONT_CARE, GLFW_DONT_CARE);
 		int[] a0 = new int[1];
 		int[] a1 = new int[1];
 		glfwGetWindowPos(id, a0, a1);
-		window.glfwId = id;
 		window.x.setNumber(a0[0]);
 		window.y.setNumber(a1[0]);
 		glfwGetFramebufferSize(id, a0, a1);
@@ -159,13 +159,11 @@ public class GLFWWindowCreator implements GameRunnable {
 		glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
 			@Override
 			public void invoke(long window, int width, int height) {
-				GLFWWindowCreator.this.window.getFramebuffer().width().setNumber(width);
-				GLFWWindowCreator.this.window.getFramebuffer().height().setNumber(height);
 				GLFWWindowCreator.this.window.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
 				GLFWRenderThread rt = GLFWWindowCreator.this.window.getRenderThread();
-				rt.viewportChanged.set(true);
+				rt.setSize(width, height);
 				if (GLFWWindowCreator.this.window.getRenderMode() != RenderMode.MANUAL) {
-					rt.scheduleDraw();
+					GLFWWindowCreator.this.window.scheduleDraw();
 				}
 			}
 		});

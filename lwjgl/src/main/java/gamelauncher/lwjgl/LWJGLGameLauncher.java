@@ -27,10 +27,11 @@ import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.font.BasicGlyphProvider;
+import gamelauncher.lwjgl.render.font.BasicFontFactory;
+import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
-import gamelauncher.lwjgl.render.glfw.GWindow;
-import gamelauncher.lwjgl.render.glfw.GWindow.CloseCallback;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow.CloseCallback;
 import gamelauncher.lwjgl.render.glfw.LWJGLAsyncUploader;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
@@ -44,7 +45,7 @@ import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
  */
 public class LWJGLGameLauncher extends GameLauncher {
 
-	private GWindow window;
+	private GLFWWindow window;
 	private boolean mouseMovement = false;
 	private float mouseSensivity = 1.0F;
 	private boolean ignoreNextMovement = false;
@@ -62,6 +63,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 		setGuiManager(new LWJGLGuiManager(this));
+		setFontFactory(new BasicFontFactory());
 		setTextureManager(new LWJGLTextureManager(this));
 		setOperatingSystem(OperatingSystem.WINDOWS);
 	}
@@ -74,19 +76,20 @@ public class LWJGLGameLauncher extends GameLauncher {
 		Configuration.OPENGLES_EXPLICIT_INIT.set(true);
 		GL.create();
 		GLES.create(GL.getFunctionProvider());
+		GL.destroy();
 
-		window = new GWindow(this, NAME, 400, 400);
-		asyncUploader  = new LWJGLAsyncUploader(this);
+		window = new GLFWWindow(this, NAME, 400, 400);
+		asyncUploader = new LWJGLAsyncUploader(this);
 		setWindow(window);
-		window.getRenderThread()
-				.submit(() -> setGlyphProvider(new BasicGlyphProvider(asyncUploader)));
-		window.setRenderMode(RenderMode.ON_UPDATE);
+		window.getRenderThread().submit(() -> setGlyphProvider(new LWJGLGlyphProvider(this, asyncUploader)));
+		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.swapBuffers(false);
 		Threads.waitFor(window.createWindow());
 		asyncUploader.start();
-		window.getFrameCounter().addUpdateListener(fps -> {
-			getLogger().debugf("FPS: %s", fps);
+		window.getFrameCounter().addAvgUpdateListener(fps -> {
+			getLogger().debugf("FPS: %.2f", fps);
 		});
+		window.getFrameCounter().limit(2F);
 		CloseCallback oldCloseCallback = window.getCloseCallback();
 		window.setCloseCallback(new CloseCallback() {
 			@Override
@@ -109,7 +112,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	@Override
 	protected void stop0() throws GameException {
 		Collection<CompletableFuture<?>> c = new ArrayList<>();
-		c.add(window.closeWindow());
+		c.add(window.destroy());
 		getGlyphProvider().cleanup();
 		getTextureManager().cleanup();
 		asyncUploader.cleanup();
@@ -154,7 +157,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	/**
 	 * @return the window
 	 */
-	public GWindow getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 
@@ -181,12 +184,17 @@ public class LWJGLGameLauncher extends GameLauncher {
 	public GLFWThread getGLFWThread() {
 		return glfwThread;
 	}
-	
+
 	/**
 	 * @return the {@link LWJGLAsyncUploader}
 	 */
 	public LWJGLAsyncUploader getAsyncUploader() {
 		return asyncUploader;
+	}
+
+	@Override
+	public LWJGLGuiManager getGuiManager() {
+		return (LWJGLGuiManager) super.getGuiManager();
 	}
 
 	@Override

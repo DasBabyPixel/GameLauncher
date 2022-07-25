@@ -77,13 +77,17 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 				queue.offerFirst(e);
 				return;
 			}
-			try {
-				e.run.run();
-				e.fut.complete(null);
-			} catch (GameException ex) {
-				e.fut.completeExceptionally(ex);
-				ex.printStackTrace();
-			}
+			work(e.run, e.fut);
+		}
+	}
+
+	private void work(GameRunnable run, CompletableFuture<Void> fut) {
+		try {
+			run.run();
+			fut.complete(null);
+		} catch (GameException ex) {
+			fut.completeExceptionally(ex);
+			ex.printStackTrace();
 		}
 	}
 
@@ -105,16 +109,24 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 	@Override
 	public final CompletableFuture<Void> submitLast(GameRunnable runnable) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
-		queue.offerLast(new QueueEntry(fut, runnable));
-		signal();
+		if (Thread.currentThread() == this) {
+			work(runnable, fut);
+		} else {
+			queue.offerLast(new QueueEntry(fut, runnable));
+			signal();
+		}
 		return fut;
 	}
 
 	@Override
 	public final CompletableFuture<Void> submitFirst(GameRunnable runnable) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
-		queue.offerFirst(new QueueEntry(fut, runnable));
-		signal();
+		if (Thread.currentThread() == this) {
+			work(runnable, fut);
+		} else {
+			queue.offerFirst(new QueueEntry(fut, runnable));
+			signal();
+		}
 		return fut;
 	}
 

@@ -1,7 +1,6 @@
 package gamelauncher.engine.util.logging;
 
 import java.io.PrintStream;
-import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 
@@ -17,15 +16,13 @@ public abstract class Logger {
 	/**
 	 * The {@link AsyncLogStream} for submitting to the {@link #system system stream}
 	 */
-	public static final AsyncLogStream asyncLogStream = new AsyncLogStream();
+	public static final AsyncLogStream asyncLogStream;
 
 	static {
 		system.addEntry(System.out, Output.OUT);
 		system.addEntry(System.err, Output.ERR);
+		asyncLogStream = new AsyncLogStream();
 	}
-
-	private final AtomicReference<StackTraceElement> caller = new AtomicReference<>(null);
-	private final AtomicReference<LogLevel> callerLevel = new AtomicReference<>(null);
 
 	/**
 	 * @param message

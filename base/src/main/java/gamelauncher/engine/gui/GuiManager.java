@@ -4,12 +4,13 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
+import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.function.GameSupplier;
 
 /**
  * @author DasBabyPixel
  */
-public interface GuiManager {
+public interface GuiManager extends GameResource {
 
 	/**
 	 * Opens a {@link Gui} for a window. Use null to exit the current gui.

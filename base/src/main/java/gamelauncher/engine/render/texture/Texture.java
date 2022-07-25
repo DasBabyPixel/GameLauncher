@@ -16,25 +16,45 @@ public interface Texture extends GameResource {
 	 * @return a {@link BufferedImage} for this {@link Texture}
 	 */
 	BufferedImage getBufferedImage();
-	
+
 	/**
 	 * @param width
 	 * @param height
+	 * @return a new future
 	 */
-	void allocate(int width, int height);
-	
+	CompletableFuture<Void> allocate(int width, int height);
+
+	/**
+	 * Resizes this texture
+	 * 
+	 * @param width
+	 * @param height
+	 * @return a future for this task
+	 */
+	CompletableFuture<Void> resize(int width, int height);
+
 	/**
 	 * @param image
 	 * @return a future for this task
-	 * @throws GameException 
+	 * @throws GameException
 	 */
+	@Deprecated
 	CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException;
-	
+
 	/**
 	 * @param stream
 	 * @return a future for this task
-	 * @throws GameException 
+	 * @throws GameException
 	 */
 	CompletableFuture<Void> uploadAsync(ResourceStream stream) throws GameException;
-	
+
+	/**
+	 * Copies the contents of this texture to another
+	 * 
+	 * @param other
+	 * @return a new future
+	 * @throws GameException
+	 */
+	CompletableFuture<Void> copyTo(Texture other) throws GameException;
+
 }

@@ -33,6 +33,7 @@ import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.font.FontFactory;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
@@ -81,6 +82,7 @@ public abstract class GameLauncher {
 	private GuiManager guiManager;
 	private KeybindManager keybindManager;
 	private TextureManager textureManager;
+	private FontFactory fontFactory;
 	private Threads threads;
 	private PluginManager pluginManager;
 	private ResourceLoader resourceLoader;
@@ -199,25 +201,6 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
-	 * 
-	 * @param throwable
-	 */
-	public void handleError(Throwable throwable) {
-		throwable.printStackTrace();
-	}
-
-	protected void registerSettingInsertions() {
-	}
-
-	/**
-	 * @return the current tick of the {@link GameLauncher}
-	 */
-	public int getCurrentTick() {
-		return gameThread.getCurrentTick();
-	}
-
-	/**
 	 * Stops the {@link GameLauncher}
 	 * 
 	 * @throws GameException
@@ -225,6 +208,7 @@ public abstract class GameLauncher {
 	public void stop() throws GameException {
 		GameRunnable r = () -> {
 			try {
+				this.guiManager.cleanup();
 				Threads.waitFor(gameThread.exit());
 				this.stop0();
 				this.pluginManager.unloadPlugins();
@@ -235,11 +219,7 @@ public abstract class GameLauncher {
 				throw new GameException(ex);
 			}
 		};
-		if (Thread.currentThread() != gameThread) {
-			r.run();
-		} else {
-			new Thread(r.toRunnable()).start();
-		}
+		new Thread(r.toRunnable(), "ExitThread").start();
 	}
 
 	protected abstract void tick() throws GameException;
@@ -258,6 +238,25 @@ public abstract class GameLauncher {
 
 	protected void setTextureManager(TextureManager textureManager) {
 		this.textureManager = textureManager;
+	}
+
+	/**
+	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
+	 * 
+	 * @param throwable
+	 */
+	public void handleError(Throwable throwable) {
+		throwable.printStackTrace();
+	}
+
+	protected void registerSettingInsertions() {
+	}
+
+	/**
+	 * @return the current tick of the {@link GameLauncher}
+	 */
+	public int getCurrentTick() {
+		return gameThread.getCurrentTick();
 	}
 
 	/**
@@ -448,6 +447,17 @@ public abstract class GameLauncher {
 	 */
 	public Path getPluginsDirectory() {
 		return pluginsDirectory;
+	}
+
+	/**
+	 * @return the {@link FontFactory}
+	 */
+	public FontFactory getFontFactory() {
+		return fontFactory;
+	}
+
+	protected void setFontFactory(FontFactory fontFactory) {
+		this.fontFactory = fontFactory;
 	}
 
 	/**

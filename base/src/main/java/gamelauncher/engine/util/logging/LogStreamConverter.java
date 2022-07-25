@@ -13,6 +13,7 @@ class LogStreamConverter extends OutputStream {
 	CallerPrintStream callerPrintStream;
 	private final Charset charset;
 	private final ByteArrayOutputStream out = new ByteArrayOutputStream();
+	private boolean carriage = false;
 
 	LogStreamConverter(Charset charset) {
 		this.charset = charset;
@@ -24,10 +25,17 @@ class LogStreamConverter extends OutputStream {
 			lock.lock();
 			boolean newLine = b == '\n';
 			if (newLine) {
+				carriage = false;
 				byte[] array = out.toByteArray();
 				out.reset();
 				String string = new String(array, charset);
 				this.callerPrintStream.converted(string);
+				return;
+			} else if (carriage) {
+				out.write('\r');
+			}
+			carriage = b == '\r';
+			if (carriage) {
 				return;
 			}
 			out.write(b);

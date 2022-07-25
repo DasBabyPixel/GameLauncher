@@ -16,12 +16,13 @@ public class LWJGLTextureManager implements TextureManager {
 
 	public LWJGLTextureManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
-		this.service = launcher.getThreads().newWorkStealingPool();
+		this.service = launcher.getThreads().cached;
 	}
 
 	@Override
 	public CompletableFuture<LWJGLTexture> createTexture() {
 		return createTexture(launcher.getAsyncUploader());
+//		return createTexture(launcher.getWindow().getRenderThread());
 	}
 	
 	public CompletableFuture<LWJGLTexture> createTexture(ExecutorThread owner) {
@@ -30,6 +31,6 @@ public class LWJGLTextureManager implements TextureManager {
 
 	@Override
 	public void cleanup() throws GameException {
-		launcher.getThreads().shutdown(service);
+//		launcher.getThreads().shutdown(service);
 	}
 }

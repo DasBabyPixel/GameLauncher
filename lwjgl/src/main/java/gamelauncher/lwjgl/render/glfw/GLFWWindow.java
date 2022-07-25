@@ -22,7 +22,7 @@ import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
-public class GWindow implements Window, GLFWUser {
+public class GLFWWindow implements Window, GLFWUser {
 
 	private final LWJGLGameLauncher launcher;
 	private final WindowFramebuffer framebuffer;
@@ -30,6 +30,7 @@ public class GWindow implements Window, GLFWUser {
 	private final CompletableFuture<Void> destroyFuture;
 	@Deprecated
 	private final CompletableFuture<Window> windowCloseFuture;
+	private final AtomicBoolean closing = new AtomicBoolean(false);
 	private final CompletableFuture<Window> windowCreateFuture;
 	private final Property<FrameRenderer> frameRenderer;
 	private final Property<RenderMode> renderMode;
@@ -48,13 +49,14 @@ public class GWindow implements Window, GLFWUser {
 	final FrameCounter frameCounter;
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
-	public GWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
+	public GLFWWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
 		this.launcher = launcher;
 		this.logger = Logger.getLogger();
 		this.glfwId = 0;
+		this.frameCounter = new FrameCounter();
 		this.glfwThread = launcher.getGLFWThread();
 		this.destroyFuture = new CompletableFuture<>();
-		this.windowCloseFuture = this.destroyFuture.thenApply(v -> GWindow.this);
+		this.windowCloseFuture = this.destroyFuture.thenApply(v -> GLFWWindow.this);
 		this.windowCreateFuture = new CompletableFuture<>();
 		this.renderMode = ObjectProperty.empty();
 		this.frameRenderer = ObjectProperty.empty();
@@ -68,8 +70,7 @@ public class GWindow implements Window, GLFWUser {
 		this.title = ObjectProperty.withValue(title);
 		this.width = NumberValue.withValue(width);
 		this.height = NumberValue.withValue(height);
-		this.frameCounter = new FrameCounter();
-		this.closeCallback = ObjectProperty.withValue(() -> closeWindow());
+		this.closeCallback = ObjectProperty.withValue(() -> destroy());
 		glfwThread.addUser(this);
 
 	}
@@ -103,20 +104,36 @@ public class GWindow implements Window, GLFWUser {
 		return this.glfwThread.submit(new GLFWWindowCreator(this));
 	}
 
-	public CompletableFuture<Void> closeWindow() {
-		this.renderThread.exit().thenRun(() -> {
-			glfwThread.submit(() -> {
-				if (glfwId != 0) {
-					glfwThread.removeUser(this);
-					windowCloseFuture.complete(this);
+	@Override
+	public CompletableFuture<Void> destroy() {
+		if (closing.compareAndSet(false, true)) {
+			renderThread.exit().thenRun(() -> {
+				glfwThread.submit(() -> {
 					StateRegistry.removeWindow(glfwId);
-					glfwDestroyWindow(this.getGLFWId());
-					this.glfwId = 0;
-				}
+					glfwDestroyWindow(glfwId);
+					glfwId = 0;
+					glfwThread.removeUser(this);
+					destroyFuture().complete(null);
+				});
 			});
-		});
-		return windowCloseFuture.thenApply(v -> null);
+		}
+		return destroyFuture();
 	}
+
+//	public CompletableFuture<Void> closeWindow() {
+//		this.renderThread.exit().thenRun(() -> {
+//			glfwThread.submit(() -> {
+//				if (glfwId != 0) {
+//					System.out.println("close");
+//					destroy();
+//					StateRegistry.removeWindow(glfwId);
+//					glfwDestroyWindow(this.getGLFWId());
+//					this.glfwId = 0;
+//				}
+//			});
+//		});
+//		return windowCloseFuture.thenApply(v -> null);
+//	}
 
 	@Override
 	public void beginFrame() {
@@ -219,11 +236,6 @@ public class GWindow implements Window, GLFWUser {
 	@Override
 	public Framebuffer getFramebuffer() {
 		return framebuffer;
-	}
-
-	@Override
-	public CompletableFuture<Void> destroy() {
-		return destroyFuture();
 	}
 
 	@Override

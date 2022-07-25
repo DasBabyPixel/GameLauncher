@@ -1,0 +1,38 @@
+package gamelauncher.lwjgl.render.model;
+
+import org.joml.Vector4f;
+
+import gamelauncher.engine.render.model.CombinedModelsModel;
+import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.util.GameException;
+
+@SuppressWarnings("javadoc")
+public final class LWJGLCombinedModelsModel implements CombinedModelsModel {
+
+	private final Model[] models;
+	public final Vector4f colorMultiplier = new Vector4f();
+	public final Vector4f colorAdd = new Vector4f();
+
+	public LWJGLCombinedModelsModel(Model... models) {
+		this.models = models;
+	}
+
+	@Override
+	public void render(ShaderProgram program) throws GameException {
+		throw new UnsupportedOperationException(
+				"Not correctly implemented. This should not render. Use #getModels() to query the models to be rendered");
+	}
+
+	@Override
+	public void cleanup() throws GameException {
+		for (Model model : models) {
+			model.cleanup();
+		}
+	}
+
+	@Override
+	public Model[] getModels() {
+		return models;
+	}
+}

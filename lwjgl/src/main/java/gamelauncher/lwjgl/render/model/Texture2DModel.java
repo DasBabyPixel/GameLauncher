@@ -13,9 +13,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
-/**
- * @author DasBabyPixel
- */
+@SuppressWarnings("javadoc")
 public class Texture2DModel implements Model {
 
 	private final int vao;
@@ -25,11 +23,15 @@ public class Texture2DModel implements Model {
 	private final int vertexCount;
 	private final LWJGLTexture texture;
 
-	/**
-	 * @param texture
-	 */
 	public Texture2DModel(LWJGLTexture texture) {
+		this(texture, 0F, 1F, 1F, 0F);
+	}
+
+	public Texture2DModel(LWJGLTexture texture, float textureLeft, float textureTop, float textureRight,
+			float textureBottom) {
 		this.texture = texture;
+		textureTop = 1 - textureTop;
+		textureBottom = 1 - textureBottom;
 		//@formatter:off
 		vao = glGenVertexArrays();
 		GlStates.current().bindVertexArray(vao);
@@ -59,10 +61,10 @@ public class Texture2DModel implements Model {
 		texbuffer = glGenBuffers();
 		fbuffer = memAllocFloat(8);
 		fbuffer.put(new float[] {
-				0, 1,
-				0, 0,
-				1, 0,
-				1, 1
+				textureLeft, textureBottom,
+				textureLeft, textureTop,
+				textureRight, textureTop,
+				textureRight, textureBottom
 		}).flip();
 		GlStates.current().bindBuffer(GL_ARRAY_BUFFER, texbuffer);
 		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);

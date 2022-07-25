@@ -24,7 +24,7 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread implements GameRe
 	@Override
 	protected void startExecuting() {
 		this.secondaryContext.makeCurrent();
-		logger.infof("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
+		logger.debugf("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
 
 	}
 

@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.lwjgl.opengles.GLES;
 
+import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
@@ -27,20 +28,23 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 
 	private static final AtomicInteger names = new AtomicInteger();
 
-	final GWindow window;
+	final GLFWWindow window;
 	final Lock shouldDrawLock = new ReentrantLock(true);
 	final Condition shouldDrawCondition = shouldDrawLock.newCondition();
-	final AtomicBoolean viewportChanged = new AtomicBoolean(true);
-	final FrameCounter frameCounter = new FrameCounter();
+	final FrameCounter frameCounter;
 	final AtomicBoolean hasContext = new AtomicBoolean(false);
 	final Lock hasContextLock = new ReentrantLock(true);
 	final Condition hasContextCondition = hasContextLock.newCondition();
 	final Phaser drawPhaser = new Phaser();
+	private final AtomicBoolean viewportChanged = new AtomicBoolean(false);
+	private final NumberValue width = NumberValue.zero();
+	private final NumberValue height = NumberValue.zero();
 	private FrameRenderer lastFrameRenderer = null;
 	private boolean shouldDraw = false;
 
-	public GLFWRenderThread(GWindow window) {
+	public GLFWRenderThread(GLFWWindow window) {
 		this.window = window;
+		this.frameCounter = this.window.getFrameCounter();
 		this.setName("GLFW-RenderThread-" + names.incrementAndGet());
 	}
 
@@ -48,6 +52,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	protected void startExecuting() {
 		Threads.waitFor(window.windowCreateFuture());
 		drawPhaser.register();
+		setSize(window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
 
 		glfwMakeContextCurrent(window.getGLFWId());
 		GLES.createCapabilities();
@@ -89,6 +94,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		shouldDrawLock.lock();
 		shouldDrawCondition.signal();
 		shouldDrawLock.unlock();
+		frameCounter.stopWaiting();
 	}
 
 	@Override
@@ -120,34 +126,37 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 				if (lastFrameRenderer != null) {
 					try {
 						lastFrameRenderer.cleanup(window);
-					} catch (Exception ex) {
-						ex.printStackTrace();
+					} catch (Throwable ex) {
+						window.getLauncher().handleError(ex);
 					}
 				}
 				lastFrameRenderer = fr;
 				if (fr != null) {
 					try {
 						fr.init(window);
-					} catch (Exception ex) {
-						ex.printStackTrace();
+					} catch (Throwable ex) {
+						window.getLauncher().handleError(ex);
 					}
 				}
 			}
 
 			if (viewportChanged.compareAndSet(true, false)) {
-				glViewport(0, 0, window.getFramebuffer().width().intValue(),
-						window.getFramebuffer().height().intValue());
+				int width = this.width.intValue();
+				int height = this.height.intValue();
+				window.getFramebuffer().width().setNumber(width);
+				window.getFramebuffer().height().setNumber(height);
+				glViewport(0, 0, width, height);
 				try {
 					fr.windowSizeChanged(window);
-				} catch (GameException ex) {
-					ex.printStackTrace();
+				} catch (Throwable ex) {
+					window.getLauncher().handleError(ex);
 				}
 			}
 
 			try {
 				fr.renderFrame(window);
-			} catch (Exception ex) {
-				ex.printStackTrace();
+			} catch (Throwable ex) {
+				window.getLauncher().handleError(ex);
 			}
 		}
 
@@ -177,11 +186,18 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		shouldDraw = true;
 		shouldDrawCondition.signalAll();
 		shouldDrawLock.unlock();
+		signal();
 	}
 
 	@Override
 	public Window getWindow() {
 		return window;
+	}
+
+	void setSize(int width, int height) {
+		this.width.setNumber(width);
+		this.height.setNumber(height);
+		this.viewportChanged.set(true);
 	}
 
 //	@Override

@@ -1,162 +1,173 @@
 package gamelauncher.lwjgl.render.font;
 
 import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.opengles.GLES32.*;
 
 import java.awt.Rectangle;
-import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
-import gamelauncher.engine.util.function.GameFunction;
-import gamelauncher.lwjgl.render.states.GlStates;
+import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
+import gamelauncher.lwjgl.render.texture.LWJGLTextureFormat;
 
 @SuppressWarnings("javadoc")
-public class DynamicSizeTextureAtlas extends TextureAtlas {
+public class DynamicSizeTextureAtlas implements GameResource {
 
-	public int size;
-	private LWJGLTexture texture = null;
-	public final Map<Integer, Rectangle> glyphBounds = new ConcurrentHashMap<>();
-	private final int maxSize;
+	private final Logger logger = Logger.getLogger();
+	private final Map<Integer, Entry> glyphs = new HashMap<>();
+	private final Map<LWJGLTexture, Collection<Entry>> byTexture = new HashMap<>();
+	private final Lock lock = new ReentrantLock(true);
+	private final LWJGLGameLauncher launcher;
 	private final ExecutorThread owner;
-	private final GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix;
+	volatile int maxTextureSize;
 
-	public DynamicSizeTextureAtlas(ExecutorThread owner, int initialSize, GameFunction<DynamicSizeTextureAtlas, String> fileSuffixAppendix)
-			throws GameException {
-		this.fileSuffixAppendix = fileSuffixAppendix;
+	public DynamicSizeTextureAtlas(LWJGLGameLauncher launcher, ExecutorThread owner) {
+		this.launcher = launcher;
 		this.owner = owner;
-		maxSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
-		resizeTexture(initialSize);
+		this.owner.submit(() -> {
+			this.maxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
+		});
 	}
 
-	private void resizeTexture(int newSize) throws GameException {
-		lock.lock();
-		int id = glGenTextures();
-		GlStates.current().bindTexture(GL_TEXTURE_2D, id);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSize, newSize, 0, GL_ALPHA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
-		if (texture != null) {
-			glCopyImageSubData(texture.getTextureId(), GL_TEXTURE_2D, 0, 0, 0, 0, id, GL_TEXTURE_2D, 0, 0, 0, 0, size,
-					size, 1);
-			texture.cleanup();
+	public Entry getGlyph(int id) {
+		try {
+			lock.lock();
+			return glyphs.get(id);
+		} finally {
+			lock.unlock();
 		}
-		texture = new LWJGLTexture(null, owner, id);
-		texture.width = newSize;
-		texture.height = newSize;
-		this.size = newSize;
-		lock.unlock();
 	}
 
-	@Override
-	public boolean addGlyph(int id, GlyphEntry glyph) throws GameException {
-		Rectangle rect = new Rectangle(glyph.glyphData.width, glyph.glyphData.height);
-		while (true) {
-			boolean suc = findFit(rect);
-			if (!suc) {
-				if (!scaleUp()) {
+	public CompletableFuture<Void> removeGlyph(int glyphId) {
+		CompletableFuture<Void> fut = new CompletableFuture<>();
+		launcher.getThreads().cached.execute(() -> {
+			try {
+				lock.lock();
+				Entry entry = glyphs.remove(glyphId);
+				Collection<Entry> col = byTexture.get(entry.texture);
+				col.remove(entry);
+				if (col.isEmpty()) {
+					byTexture.remove(entry.texture);
+					entry.texture.cleanup();
+				}
+				fut.complete(null);
+			} catch (Exception ex) {
+				fut.completeExceptionally(ex);
+				launcher.handleError(ex);
+			} finally {
+				lock.unlock();
+			}
+		});
+		return fut;
+	}
+
+	public CompletableFuture<Boolean> addGlyph(int glyphId, GlyphEntry entry) {
+		CompletableFuture<Boolean> fut = new CompletableFuture<>();
+		launcher.getThreads().cached.execute(() -> {
+			try {
+				lock.lock();
+				if (glyphs.containsKey(glyphId)) {
+					fut.complete(true);
+					return;
+				}
+				Entry e = new Entry(null, entry, new Rectangle(entry.data.width, entry.data.height));
+				for (LWJGLTexture texture : byTexture.keySet()) {
+					e.texture = texture;
+					if (add(glyphId, e)) {
+						break;
+					}
+					e.texture = null;
+				}
+				if (e.texture == null) {
+					e.texture = Threads.waitFor(launcher.getTextureManager().createTexture(owner));
+					e.texture.setInternalFormat(LWJGLTextureFormat.ALPHA);
+					Threads.waitFor(e.texture.allocate(1, 1));
+					byTexture.put(e.texture, new HashSet<>());
+					add(glyphId, e);
+				}
+				fut.complete(true);
+			} catch (Exception ex) {
+				fut.completeExceptionally(ex);
+				launcher.handleError(ex);
+			} finally {
+				lock.unlock();
+			}
+		});
+		return fut;
+	}
+
+	private boolean add(int glyphId, Entry e) {
+		try {
+			lock.lock();
+			Rectangle textureBounds = new Rectangle(e.texture.getWidth(), e.texture.getHeight());
+			Rectangle currentBounds = textureBounds;
+			boolean glyphTooLarge = false;
+			while (true) {
+				if (findFit(e, currentBounds)) {
+					break;
+				}
+				Rectangle newBounds = scaledBounds(currentBounds);
+				if (!newBounds.equals(currentBounds)) {
+					currentBounds = newBounds;
+				} else {
+					glyphTooLarge = true;
+					break;
+				}
+			}
+			if (!textureBounds.equals(currentBounds)) {
+				Threads.waitFor(e.texture.resize(currentBounds.width, currentBounds.height));
+			}
+			if (glyphTooLarge) {
+				if (byTexture.get(e.texture).isEmpty()) {
+					logger.warnf("Glyph too large: ID: %s, CodePoint: %s, Scale: %s, Width: %s, Height: %s", glyphId,
+							e.entry.key.codepoint, e.entry.key.scale, e.bounds.width, e.bounds.height);
+				} else {
 					return false;
 				}
-				continue;
 			}
-			break;
-		}
-		if (!super.addGlyph(id, glyph)) {
-			return false;
-		}
-		texture.bind();
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, rect.x, rect.y, rect.width, rect.height, GL_ALPHA, GL_UNSIGNED_BYTE,
-				glyph.abuffer);
-		glyphBounds.put(id, rect);
-		return true;
-	}
-
-	public LWJGLTexture getTexture() {
-		return texture;
-	}
-
-//	public BufferedImage getBufferedImage() {
-//		ByteBuffer pixels = getBufferedImageBuffer();
-//		BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
-//		for (int y = 0; y < size; y++) {
-//			for (int x = 0; x < size; x++) {
-//				img.setRGB(x, y, pixels.get(y * size + x) << 24);
-//			}
-//		}
-//		memFree(pixels);
-//		return img;
-//	}
-//
-//	public ByteBuffer getBufferedImageBuffer() {
-//		ByteBuffer pixels = memAlloc(size * size);
-//		GlStates.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
-//		glGetTexImage(GL_TEXTURE_2D, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
-//		return pixels;
-//	}
-
-	@Override
-	public void cleanup() throws GameException {
-
-//		ByteBuffer pixels = getBufferedImageBuffer();
-//		new Thread(() -> {
-//			try {
-//				BufferedImage img = new BufferedImage(size, size, BufferedImage.TRANSLUCENT);
-//				for (int y = 0; y < size; y++) {
-//					for (int x = 0; x < size; x++) {
-//						img.setRGB(x, y, pixels.get(y * size + x) << 24);
-//					}
-//				}
-//				memFree(pixels);
-//				System.out.println("Writing texture atlas to working directory");
-//				ImageIO.write(img, "png",
-//						new File("tatlas-" + this.fileSuffixAppendix.apply(DynamicSizeTextureAtlas.this) + ".png"));
-//			} catch (IOException ex) {
-//				ex.printStackTrace();
-//			} catch (GameException ex) {
-//				ex.printStackTrace();
-//			}
-//		}).start();
-
-		glyphBounds.clear();
-		glyphs.clear();
-		texture.cleanup();
-	}
-
-	private boolean scaleUp() throws GameException {
-		lock.lock();
-		int newSize = size * 2;
-		if (newSize > maxSize) {
+			Threads.waitFor(
+					e.texture.uploadAsync(e.bounds.x, e.bounds.y, e.bounds.width, e.bounds.height, e.entry.buffer));
+			byTexture.get(e.texture).add(e);
+			glyphs.put(glyphId, e);
+			return true;
+		} finally {
 			lock.unlock();
-			return false;
 		}
-		resizeTexture(newSize);
-		lock.unlock();
-		return true;
 	}
 
-	/**
-	 * 
-	 * @param rect
-	 * @return true if success, if success then the rect will have different x and y
-	 *         coordinates
-	 */
-	private boolean findFit(Rectangle rect) {
+	private Rectangle scaledBounds(Rectangle textureBounds) {
+		boolean same = textureBounds.width == textureBounds.height;
+		int newWidth = same ? textureBounds.width * 2 : textureBounds.width;
+		if (newWidth > maxTextureSize) {
+			return textureBounds;
+		}
+		int newHeight = same ? textureBounds.height : textureBounds.height * 2;
+		return new Rectangle(newWidth, newHeight);
+	}
+
+	private boolean findFit(Entry entry, Rectangle bounds) {
+		Rectangle rect = entry.bounds;
 		int ox = rect.x;
 		int oy = rect.y;
 		rect.y = 0;
 		boolean found = false;
-		Collection<Rectangle> check = new HashSet<>(glyphBounds.values());
+		Collection<Rectangle> check = byTexture.get(entry.texture)
+				.stream()
+				.map(e -> e.bounds)
+				.collect(Collectors.toSet());
 		Collection<Rectangle> remove = new HashSet<>();
-		yl: for (; rect.y < size - rect.height; rect.y++) {
+		yl: for (; rect.y < bounds.height - rect.height; rect.y++) {
 			rect.x = 0;
 			for (Rectangle r : check) {
 				if (r.y + r.height < rect.y) {
@@ -166,7 +177,7 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 			check.removeAll(remove);
 			remove.clear();
 
-			xl: for (; rect.x < size - rect.width; rect.x++) {
+			xl: for (; rect.x < bounds.width - rect.width; rect.x++) {
 				for (Rectangle r : check) {
 					if (r.intersects(rect)) {
 						rect.x = r.x + r.width - 1;
@@ -185,8 +196,39 @@ public class DynamicSizeTextureAtlas extends TextureAtlas {
 	}
 
 	@Override
-	public void removeGlyph(int id) throws GameException {
-		glyphBounds.remove(id);
-		super.removeGlyph(id);
+	public void cleanup() throws GameException {
+		Threads.waitFor(owner.submit(() -> {
+			lock.lock();
+			for (LWJGLTexture texture : byTexture.keySet()) {
+				texture.cleanup();
+			}
+			glyphs.clear();
+			byTexture.clear();
+			lock.unlock();
+		}));
+	}
+
+	public static class Entry {
+		private LWJGLTexture texture;
+		private GlyphEntry entry;
+		private Rectangle bounds;
+
+		public Entry(LWJGLTexture texture, GlyphEntry entry, Rectangle bounds) {
+			this.texture = texture;
+			this.entry = entry;
+			this.bounds = bounds;
+		}
+
+		public Rectangle getBounds() {
+			return bounds;
+		}
+
+		public GlyphEntry getEntry() {
+			return entry;
+		}
+
+		public LWJGLTexture getTexture() {
+			return texture;
+		}
 	}
 }

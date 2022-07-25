@@ -27,7 +27,7 @@ public class LabyrinthRender extends Renderer {
 	private ShaderLoader shaderLoader;
 	private DrawContext contexthud;
 	private Window window;
-	private Camera camera = new BasicCamera(()->window.scheduleDraw());
+	private Camera camera = new BasicCamera(() -> window.scheduleDraw());
 
 	Model model1;
 	GameItem gi1;
@@ -52,15 +52,15 @@ public class LabyrinthRender extends Renderer {
 		contexthud.setProjection(new Projection.Projection2D());
 
 		Model model = modelLoader.loadModel(resourceLoader.getResource(embedFileSystem.getPath("cube.obj")));
-		
+
 		gi1 = new GameItem(model);
 		gi1.setScale(100);
-		model1 = new GameItem.GameItemModel(gi1);
+		model1 = gi1.createModel();
 
 		gi2 = new GameItem(model);
 		gi2.setScale(200);
 		gi2.setPosition(300, 0, 0);
-		model2 = new GameItem.GameItemModel(gi2);
+		model2 = gi2.createModel();
 	}
 
 	@Override

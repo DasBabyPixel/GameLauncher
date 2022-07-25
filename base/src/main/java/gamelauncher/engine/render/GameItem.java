@@ -4,6 +4,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
@@ -20,6 +21,7 @@ public class GameItem implements GameResource {
 	private final Vector3f scale;
 	private final Vector3f rotation;
 	private final Vector4f color;
+	private final Vector4f addColor;
 
 	/**
 	 * 
@@ -29,6 +31,7 @@ public class GameItem implements GameResource {
 		scale = new Vector3f(1, 1, 1);
 		rotation = new Vector3f(0, 0, 0);
 		color = new Vector4f(1, 1, 1, 1);
+		addColor = new Vector4f(0, 0, 0, 0);
 	}
 
 	/**
@@ -44,6 +47,25 @@ public class GameItem implements GameResource {
 	 */
 	public Vector3f getPosition() {
 		return position;
+	}
+
+	/**
+	 * @return the addColor
+	 */
+	public Vector4f getAddColor() {
+		return addColor;
+	}
+
+	/**
+	 * Sets the addColor
+	 * 
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @param a
+	 */
+	public void setAddColor(float r, float g, float b, float a) {
+		this.addColor.set(r, g, b, a);
 	}
 
 	/**
@@ -128,6 +150,13 @@ public class GameItem implements GameResource {
 	public void cleanup() throws GameException {
 		model.cleanup();
 	}
+	
+	/**
+	 * @return the {@link GameItemModel} for this {@link GameItem}
+	 */
+	public GameItemModel createModel() {
+		return new GameItemModel(this);
+	}
 
 	/**
 	 * @param transformationMatrix
@@ -143,7 +172,7 @@ public class GameItem implements GameResource {
 	/**
 	 * @author DasBabyPixel
 	 */
-	public static class GameItemModel implements ColorMultiplierModel {
+	public static final class GameItemModel implements ColorMultiplierModel, ColorAddModel {
 		/**
 		 */
 		public final GameItem gameItem;
@@ -151,7 +180,7 @@ public class GameItem implements GameResource {
 		/**
 		 * @param gameItem
 		 */
-		public GameItemModel(GameItem gameItem) {
+		private GameItemModel(GameItem gameItem) {
 			this.gameItem = gameItem;
 		}
 
@@ -163,6 +192,11 @@ public class GameItem implements GameResource {
 		@Override
 		public void render(ShaderProgram program) throws GameException {
 			gameItem.model.render(program);
+		}
+		
+		@Override
+		public Vector4f getAddColor() {
+			return gameItem.getAddColor();
 		}
 
 		@Override

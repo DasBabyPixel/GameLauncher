@@ -16,6 +16,7 @@ import gamelauncher.engine.render.Transformations;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
@@ -56,6 +57,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	@Override
 	public void cleanup(Window window) throws GameException {
 		launcher.getLogger().info("Cleaning up RenderEngine");
+		Threads.waitFor(launcher.getGuiManager().cleanup(window));
 		map.remove(window).cleanup();
 		launcher.getLogger().info("RenderEngine cleaned up");
 	}
@@ -100,7 +102,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 			mainFramebuffer = new BasicFramebuffer(launcher, window.getFramebuffer().width().intValue(),
 					window.getFramebuffer().height().intValue());
 			mainScreenItem = new GameItem(new Texture2DModel(mainFramebuffer.getColorTexture()));
-			mainScreenItemModel = new GameItem.GameItemModel(mainScreenItem);
+			mainScreenItemModel = mainScreenItem.createModel();
 
 			contexthud = launcher.createContext(mainFramebuffer);
 			contexthud.setProgram(shaderhud);

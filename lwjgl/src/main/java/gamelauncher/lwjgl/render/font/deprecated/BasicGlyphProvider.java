@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.deprecated;
 
 import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.opengles.GLES30.*;
@@ -34,16 +34,20 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
+import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
+import gamelauncher.lwjgl.render.font.GlyphData;
 import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
+@Deprecated
 public class BasicGlyphProvider implements GlyphProvider {
 
 	private final Map<GlyphKey, GlyphEntry> entries = new ConcurrentHashMap<>();
 	public final DynamicSizeTextureAtlasArray textures;
 
-	public BasicGlyphProvider(ExecutorThread owner) {
-		textures = new DynamicSizeTextureAtlasArray(owner);
+	public BasicGlyphProvider(LWJGLGameLauncher launcher, ExecutorThread owner) {
+		textures = new DynamicSizeTextureAtlasArray(launcher, owner);
 	}
 
 	@Override
@@ -324,7 +328,7 @@ public class BasicGlyphProvider implements GlyphProvider {
 		GlyphEntry e = createEntry(key, font, finfo, ch, pixelHeight, scale);
 		key.required.incrementAndGet();
 		entries.put(key, e);
-		if (!textures.addGlyph(getId(key), e)) {
+		if (!Threads.waitFor(textures.addGlyph(getId(key), e))) {
 			memFree(e.abuffer);
 			throw new GameException("Problem while adding glyph to dynamic size TextureAtlasArray");
 		}

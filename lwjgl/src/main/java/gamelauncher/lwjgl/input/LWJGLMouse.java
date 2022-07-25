@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import gamelauncher.engine.util.function.GameRunnable;
-import gamelauncher.lwjgl.render.glfw.GWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWWindow;
 
 /**
  * @author DasBabyPixel
@@ -15,7 +15,7 @@ import gamelauncher.lwjgl.render.glfw.GWindow;
  */
 public class LWJGLMouse {
 
-	private final GWindow window;
+	private final GLFWWindow window;
 	private final AtomicBoolean grabbed = new AtomicBoolean(false);
 	private final AtomicBoolean inWindow = new AtomicBoolean(false);
 	private final AtomicReference<Double> x = new AtomicReference<>(0D);
@@ -26,7 +26,7 @@ public class LWJGLMouse {
 	/**
 	 * @param window
 	 */
-	public LWJGLMouse(GWindow window) {
+	public LWJGLMouse(GLFWWindow window) {
 		this.window = window;
 	}
 

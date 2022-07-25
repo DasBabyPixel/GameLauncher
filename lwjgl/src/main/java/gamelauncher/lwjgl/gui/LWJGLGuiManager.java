@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.GameLauncher;
@@ -15,8 +16,10 @@ import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
 
 /**
@@ -25,7 +28,7 @@ import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
  */
 public class LWJGLGuiManager implements GuiManager {
 
-	private final GameLauncher launcher;
+	private final LWJGLGameLauncher launcher;
 	private final Map<Window, GuiStack> guis = new ConcurrentHashMap<>();
 	private final Map<Class<? extends LauncherBasedGui>, GameSupplier<? extends LauncherBasedGui>> registeredGuis = new HashMap<>();
 	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>> converters = new HashMap<>();
@@ -33,9 +36,39 @@ public class LWJGLGuiManager implements GuiManager {
 	/**
 	 * @param launcher
 	 */
-	public LWJGLGuiManager(GameLauncher launcher) {
+	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 		registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
+	}
+
+	@Override
+	public void cleanup() throws GameException {
+		@SuppressWarnings("unchecked")
+		CompletableFuture<Void>[] futures = new CompletableFuture[guis.size()];
+		int i = 0;
+		for (Map.Entry<Window, GuiStack> entry : guis.entrySet()) {
+			futures[i++] = cleanup(entry.getKey());
+		}
+		Threads.waitFor(futures);
+	}
+
+	/**
+	 * Cleanes up a window and its guis
+	 * 
+	 * @param window
+	 * @return a future for the task
+	 */
+	public CompletableFuture<Void> cleanup(Window window) {
+		GuiStack stack = guis.remove(window);
+		if (stack != null) {
+			return window.getRenderThread().submit(() -> {
+				GuiStack.StackEntry se;
+				while ((se = stack.popGui()) != null) {
+					se.gui.cleanup(window);
+				}
+			});
+		}
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override

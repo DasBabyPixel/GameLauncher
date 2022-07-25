@@ -7,7 +7,6 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.file.Files;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
@@ -16,6 +15,7 @@ import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.Mesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
@@ -28,7 +28,7 @@ public class LWJGLModelLoader implements ModelLoader {
 
 	private static final Logger logger = Logger.getLogger(LWJGLModelLoader.class);
 	private final Map<ModelType, ModelSubLoader> loaders = new HashMap<>();
-	private final GameLauncher launcher;
+	private final LWJGLGameLauncher launcher;
 	private final Path modelDirectory;
 	private final String version = "0.0.11";
 
@@ -36,7 +36,7 @@ public class LWJGLModelLoader implements ModelLoader {
 	 * @param launcher
 	 * @throws GameException
 	 */
-	public LWJGLModelLoader(GameLauncher launcher) throws GameException {
+	public LWJGLModelLoader(LWJGLGameLauncher launcher) throws GameException {
 		this.launcher = launcher;
 		this.modelDirectory = this.launcher.getDataDirectory().resolve("models");
 		Files.createDirectories(this.modelDirectory);
@@ -112,8 +112,8 @@ public class LWJGLModelLoader implements ModelLoader {
 				byte[] tex = mat.diffuseColor.texture;
 				if (tex != null) {
 					ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
-					LWJGLTexture lt = (LWJGLTexture) Threads.waitFor(launcher.getTextureManager().createTexture());
-					lt.uploadAsync(st);
+					LWJGLTexture lt = Threads.waitFor(launcher.getTextureManager().createTexture());
+					Threads.waitFor(lt.uploadAsync(st));
 					lm.texture = lt;
 					st.cleanup();
 					break;

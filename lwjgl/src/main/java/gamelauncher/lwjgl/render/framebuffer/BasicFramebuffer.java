@@ -3,6 +3,8 @@ package gamelauncher.lwjgl.render.framebuffer;
 import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.opengles.GLES30.*;
 
+import java.util.concurrent.CompletableFuture;
+
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -22,7 +24,7 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		height().setNumber(height);
 		bind();
 		colorTexture = Threads.waitFor(launcher.getTextureManager().createTexture((ExecutorThread) Thread.currentThread()));
-		resizeColorTexture();
+		Threads.waitFor(colorTexture.allocate(width, height));
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
 		depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, width, height);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
@@ -39,7 +41,8 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		}
 		width().setNumber(width);
 		height().setNumber(height);
-		resizeColorTexture();
+//		Threads.waitFor(resizeColorTexture());
+		Threads.waitFor(colorTexture.allocate(width().intValue(), height().intValue()));
 		resizeDepthStencilRenderbuffer();
 	}
 
@@ -55,8 +58,8 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		depthStencilRenderbuffer.resize(width().intValue(), height().intValue());
 	}
 
-	private void resizeColorTexture() {
-		colorTexture.allocate(width().intValue(), height().intValue());
+	private CompletableFuture<Void> resizeColorTexture() {
+		return colorTexture.resize(width().intValue(), height().intValue());
 	}
 
 	@Override

@@ -36,7 +36,6 @@ public abstract class AbstractQueueSubmissionThread<T> extends Thread {
 	}
 
 	public CompletableFuture<Void> exit() {
-		System.out.println("Exit");
 		exit.countDown();
 		signal();
 		return exitFuture();

@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
@@ -92,6 +93,14 @@ public class Threads implements GameResource {
 		} catch (InterruptedException ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	/**
+	 * @see Thread#sleep(long)
+	 * @param millis
+	 */
+	public static void sleep(long millis) {
+		LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(millis));
 	}
 
 	/**

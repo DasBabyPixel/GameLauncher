@@ -1,17 +1,17 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.deprecated;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.lwjgl.render.font.GlyphData;
 
 @SuppressWarnings("javadoc")
+@Deprecated
 public class TextureAtlas implements GameResource {
 
-	public final Lock lock = new ReentrantLock(true);
 	protected final Map<Integer, GlyphData> glyphs = new ConcurrentHashMap<>();
 
 	public boolean hasGlyph(int id) {
@@ -25,9 +25,9 @@ public class TextureAtlas implements GameResource {
 	 * @return true if success, false if cant add glyph e.g. font atlas is full
 	 */
 	@SuppressWarnings("unused")
-	public boolean addGlyph(int id, GlyphEntry glyph) throws GameException {
+	public CompletableFuture<Boolean> addGlyph(int id, GlyphEntry glyph) throws GameException {
 		glyphs.put(id, glyph.glyphData);
-		return true;
+		return CompletableFuture.completedFuture(true);
 	}
 	
 	@SuppressWarnings("unused")
