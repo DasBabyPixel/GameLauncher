@@ -26,4 +26,17 @@ public interface GameRunnable {
 			}
 		};
 	}
+
+	/**
+	 * Converts this {@link GameRunnable} to a {@link GameCallable} object
+	 * 
+	 * @return a {@link GameCallable} for this {@link GameRunnable}
+	 */
+	default GameCallable<Void> toCallable() {
+		return () -> {
+			run();
+			return null;
+		};
+	}
+
 }

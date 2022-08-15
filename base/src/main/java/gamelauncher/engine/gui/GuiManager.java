@@ -1,7 +1,7 @@
 package gamelauncher.engine.gui;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameResource;
@@ -15,28 +15,34 @@ public interface GuiManager extends GameResource {
 	/**
 	 * Opens a {@link Gui} for a window. Use null to exit the current gui.
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @param gui
 	 * @throws GameException
 	 */
-	void openGui(Window window, Gui gui) throws GameException;
+	void openGui(Framebuffer framebuffer, Gui gui) throws GameException;
 
 	/**
-	 * @param window
+	 * @param framebuffer
 	 * @return the current gui for a window
 	 * @throws GameException
 	 */
-	Gui getCurrentGui(Window window) throws GameException;
+	Gui getCurrentGui(Framebuffer framebuffer) throws GameException;
+
+	/**
+	 * @param framebuffer
+	 * @throws GameException
+	 */
+	void cleanup(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * Opens a {@link Gui} for a window.
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @param clazz
 	 * @throws GameException
 	 */
-	default void openGuiByClass(Window window, Class<? extends LauncherBasedGui> clazz) throws GameException {
-		openGui(window, createGui(clazz));
+	default void openGuiByClass(Framebuffer framebuffer, Class<? extends LauncherBasedGui> clazz) throws GameException {
+		openGui(framebuffer, createGui(clazz));
 	}
 
 	/**
@@ -59,10 +65,10 @@ public interface GuiManager extends GameResource {
 	 * {@link LauncherBasedGui} is created via {@link GuiManager#createGui(Class)},
 	 * this function will be called.
 	 * 
-	 * @param clazz 
+	 * @param clazz
 	 * @param converter
 	 */
-	<T extends LauncherBasedGui>void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter);
+	<T extends LauncherBasedGui> void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter);
 
 	/**
 	 * Registers a {@link LauncherBasedGui} creator. Used to create

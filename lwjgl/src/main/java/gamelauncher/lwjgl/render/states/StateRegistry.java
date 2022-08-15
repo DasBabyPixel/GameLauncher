@@ -1,16 +1,23 @@
 package gamelauncher.lwjgl.render.states;
 
+import static org.lwjgl.glfw.GLFW.*;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.lwjgl.opengles.GLES;
+
 @SuppressWarnings("javadoc")
 public class StateRegistry {
 
 	private static final Collection<Long> glfwWindows = new CopyOnWriteArrayList<>();
+
 	private static final Map<Long, Thread> contextHoldingThreads = new ConcurrentHashMap<>();
+
 	private static final Map<Long, ContextDependant> contexts = new ConcurrentHashMap<>();
+
 	private static final Map<Thread, Long> contextByThread = new ConcurrentHashMap<>();
 
 	public static void addWindow(long id) {
@@ -36,22 +43,31 @@ public class StateRegistry {
 
 	public static void setContextHoldingThread(long id, Thread thread) {
 		if (thread == null) {
+			glfwMakeContextCurrent(0L);
+			GLES.setCapabilities(null);
 			Thread th = contextHoldingThreads.remove(id);
 			if (th != null) {
 				contextByThread.remove(th);
 			}
 			return;
 		}
+		glfwMakeContextCurrent(id);
+		GLES.createCapabilities();
 		contextHoldingThreads.put(id, thread);
 		contextByThread.put(thread, id);
 	}
 
 	public static void removeWindow(long id) {
-		glfwWindows.remove(id);
+		ContextDependant cd = contexts.get(id);
+		for (ContextLocal<?> cl : cd.contextLocals.keySet()) {
+			cl.remove(cd);
+		}
 		contexts.remove(id);
 		Thread thread = contextHoldingThreads.remove(id);
 		if (thread != null) {
 			contextByThread.remove(thread);
 		}
+		glfwWindows.remove(id);
 	}
+
 }

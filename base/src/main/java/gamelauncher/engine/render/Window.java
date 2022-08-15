@@ -24,6 +24,7 @@ public interface Window {
 	/**
 	 * @return the framebuffer of this window
 	 */
+	@Deprecated
 	Framebuffer getFramebuffer();
 
 	/**

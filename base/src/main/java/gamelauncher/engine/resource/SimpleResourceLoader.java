@@ -3,7 +3,7 @@ package gamelauncher.engine.resource;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import gamelauncher.engine.file.Files;
+import gamelauncher.engine.io.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameSupplier;
 

@@ -1,4 +1,4 @@
-package gamelauncher.engine.file.embed;
+package gamelauncher.engine.io.embed;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;

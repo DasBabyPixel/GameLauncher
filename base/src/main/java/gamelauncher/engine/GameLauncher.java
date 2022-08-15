@@ -20,14 +20,14 @@ import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
-import gamelauncher.engine.file.Files;
-import gamelauncher.engine.file.embed.EmbedFileSystem;
 import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
-import gamelauncher.engine.launcher.gui.MainScreenGui;
+import gamelauncher.engine.io.Files;
+import gamelauncher.engine.io.embed.EmbedFileSystem;
+import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
@@ -49,6 +49,7 @@ import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.engine.util.profiler.Profiler;
 
 /**
  * @author DasBabyPixel
@@ -59,36 +60,67 @@ public abstract class GameLauncher {
 	 * The GameLauncher name
 	 */
 	public static final String NAME = "GameLauncher";
+
 	/**
 	 * The max TPS in the {@link GameThread}
 	 */
 	public static final float MAX_TPS = 0.5F;
+
 	private final EventManager eventManager;
+
 	private final Logger logger;
+
 	private GameThread gameThread;
+
 	private Window window;
+
 //	private FileSystem fileSystem;
 	private FileSystem embedFileSystem;
+
 	private Path gameDirectory;
+
 	private Path dataDirectory;
+
 	private Path settingsFile;
+
 	private Path pluginsDirectory;
+
 	private OperatingSystem operatingSystem;
+
 	private SettingSection settings;
+
 	private GameRenderer gameRenderer;
+
 	private ModelLoader modelLoader;
+
 	private GlyphProvider glyphProvider;
+
 	private ShaderLoader shaderLoader;
+
 	private GuiManager guiManager;
+
 	private KeybindManager keybindManager;
+
 	private TextureManager textureManager;
+
 	private FontFactory fontFactory;
+
+	private NetworkClient networkClient;
+
 	private Threads threads;
+
 	private PluginManager pluginManager;
+
 	private ResourceLoader resourceLoader;
+
+	private Profiler profiler;
+
 	private boolean debugMode = false;
+
 	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
+
 	private GameRegistry gameRegistry;
+
 	private Game currentGame;
 
 	/**
@@ -102,6 +134,7 @@ public abstract class GameLauncher {
 		this.dataDirectory = this.gameDirectory.resolve("data");
 		this.settingsFile = this.gameDirectory.resolve("settings.json");
 		this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+		this.profiler = new Profiler();
 		this.gameRegistry = new GameRegistry();
 		try {
 			URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
@@ -118,6 +151,7 @@ public abstract class GameLauncher {
 	 * @param framebuffer
 	 * @return a new {@link DrawContext}
 	 */
+	@Deprecated
 	public abstract DrawContext createContext(Framebuffer framebuffer);
 
 	/**
@@ -187,12 +221,10 @@ public abstract class GameLauncher {
 
 		gameThread.runLater(() -> {
 			start0();
-			if (gameRenderer.getRenderer() == null) {
-				gameRenderer.setRenderer(new GuiRenderer(this));
-			} else {
+			if (gameRenderer.getRenderer() != null && !(gameRenderer.getRenderer() instanceof GuiRenderer)) {
 				logger.warn("Not using GuiRenderer: " + gameRenderer.getRenderer().getClass().getName());
 			}
-			guiManager.openGuiByClass(window, MainScreenGui.class);
+//			guiManager.openGuiByClass(window.getFramebuffer(), MainScreenGui.class);
 			window.scheduleDrawAndWaitForFrame();
 			getEventManager().post(new LauncherInitializedEvent(this));
 		});
@@ -281,6 +313,17 @@ public abstract class GameLauncher {
 		return keybindManager;
 	}
 
+	protected void setNetworkClient(NetworkClient networkClient) {
+		this.networkClient = networkClient;
+	}
+
+	/**
+	 * @return the {@link NetworkClient}
+	 */
+	public NetworkClient getNetworkClient() {
+		return networkClient;
+	}
+
 	/**
 	 * @return the {@link GuiManager}
 	 */
@@ -331,6 +374,13 @@ public abstract class GameLauncher {
 
 	protected void setShaderLoader(ShaderLoader shaderLoader) {
 		this.shaderLoader = shaderLoader;
+	}
+
+	/**
+	 * @return the {@link Profiler}
+	 */
+	public Profiler getProfiler() {
+		return profiler;
 	}
 
 	/**
@@ -482,4 +532,5 @@ public abstract class GameLauncher {
 	public void saveSettings() throws GameException {
 		Files.write(settingsFile, settingsGson.toJson(settings.serialize()).getBytes(StandardCharsets.UTF_8));
 	}
+
 }

@@ -32,35 +32,53 @@ import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 public class LWJGLDrawContext implements DrawContext {
 
 	protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
+
 	protected static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
+
 	protected static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
 
 	protected final Framebuffer framebuffer;
+
 	protected final double tx, ty, tz;
+
 	protected final double sx, sy, sz;
+
 	protected final Matrix4f projectionMatrix;
+
 	protected final Matrix4f modelMatrix = new Matrix4f();
+
 	protected final Matrix4f viewMatrix;
+
 	protected final AtomicReference<ShaderProgram> shaderProgram;
+
 	protected final AtomicReference<Projection> projection;
+
 	protected final Collection<WeakReference<LWJGLDrawContext>> children = ConcurrentHashMap.newKeySet();
+
 	protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
+
 	public boolean swapTopBottom = false;
+
 	protected final DrawContextFramebufferChangeListener listener;
 
 	// Used temporarily
 	private final Matrix4f tempMatrix4f = new Matrix4f();
-	private final Vector3f tempVector3f = new Vector3f();
+
+//	private final Vector3f tempVector3f = new Vector3f();
 	private final Vector4f colorMultiplier = new Vector4f();
+
 	private final Vector4f colorAdd = new Vector4f();
 
-	public LWJGLDrawContext(Framebuffer window) {
-		this(null, window, 0, 0, 0, 1, 1, 1);
+	// Used for combined models
+	private final Matrix4f combinedModelMMatrix4f = new Matrix4f();
+
+	public LWJGLDrawContext(Framebuffer framebuffer) {
+		this(null, framebuffer, 0, 0, 0, 1, 1, 1);
 	}
 
-	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer window, double tx, double ty, double tz, double sx,
+	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz, double sx,
 			double sy, double sz) {
-		this(parent, window, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(),
+		this(parent, framebuffer, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(),
 				new AtomicReference<>());
 	}
 
@@ -71,6 +89,7 @@ public class LWJGLDrawContext implements DrawContext {
 			parent.children.add(new WeakReference<LWJGLDrawContext>(this));
 		}
 		this.framebuffer = framebuffer;
+		System.out.println("Context: " + this.framebuffer);
 		this.listener = new DrawContextFramebufferChangeListener(this, this.framebuffer.width(),
 				this.framebuffer.height());
 		this.tx = tx;
@@ -121,11 +140,12 @@ public class LWJGLDrawContext implements DrawContext {
 		}
 	}
 
-	public void invalidateProjectionMatrix() {
+	public void invalidateProjectionMatrix() throws GameException {
 		projectionMatrixValid.set(false);
-//		runForChildren(ctx -> {
-//			ctx.invalidateProjectionMatrix();
-//		});
+		System.out.println("Invalid");
+		runForChildren(ctx -> {
+			ctx.invalidateProjectionMatrix();
+		});
 	}
 
 	@Override
@@ -151,16 +171,25 @@ public class LWJGLDrawContext implements DrawContext {
 	}
 
 	float reflectance = 5F;
+
 	float lightIntensity = 10F;
+
 	Vector3f ambientLight = new Vector3f(.1F);
+
 	Vector3f lightPosition = new Vector3f(2, 2, 2);
+
 	Vector3f lightColor = new Vector3f(1, 1, 1);
+
 	float specularPower = 200;
+
 	PointLight pointLight = new PointLight(lightColor, new Vector3f(lightPosition), lightIntensity,
 			new PointLight.Attenuation(0, 0, 1));
+
 	Vector3f directionalLightDirection = new Vector3f(0, -1, 0);
+
 	DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1),
 			new Vector3f(directionalLightDirection), 1);
+
 	float lightAngle = 0;
 
 	@Override
@@ -256,9 +285,11 @@ public class LWJGLDrawContext implements DrawContext {
 			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
 		} else if (model instanceof LWJGLCombinedModelsModel) {
 			LWJGLCombinedModelsModel comb = (LWJGLCombinedModelsModel) model;
+			combinedModelMMatrix4f.set(modelMatrix);
 			for (Model m : comb.getModels()) {
 				comb.colorMultiplier.set(colorMultiplier);
 				comb.colorAdd.set(colorAdd);
+				modelMatrix.set(combinedModelMMatrix4f);
 				pDrawModel(m, x, y, z, rx, ry, rz, sx, sy, sz, comb.colorMultiplier, comb.colorAdd);
 			}
 		} else {
@@ -321,4 +352,5 @@ public class LWJGLDrawContext implements DrawContext {
 	public ShaderProgram getProgram() {
 		return shaderProgram.get();
 	}
+
 }

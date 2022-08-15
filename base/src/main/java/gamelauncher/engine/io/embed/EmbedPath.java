@@ -1,4 +1,4 @@
-package gamelauncher.engine.file.embed;
+package gamelauncher.engine.io.embed;
 
 import java.io.File;
 import java.io.IOException;

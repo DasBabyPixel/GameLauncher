@@ -21,8 +21,11 @@ import gamelauncher.engine.util.logging.SelectiveStream.Output;
 @SuppressWarnings("javadoc")
 public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream.LogEntry<?>> implements GameResource {
 
-	private final PrintStream out;
-	private final SelectiveStream system;
+	final PrintStream out;
+
+	final SelectiveStream system;
+
+	final ErrorStream errorStream;
 
 	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
 			.toFormatter();
@@ -34,6 +37,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		this.system = Logger.system;
 		this.setName("AsyncLogStream");
 		this.out = new PrintStream(system, false);
+		this.errorStream = new ErrorStream(this);
 	}
 
 	@Override
@@ -62,36 +66,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		Threads.waitFor(exit());
 	}
 
-//	@Override
-//	public void write(int b) throws IOException {
-//		if (nextNewLine == true) {
-//			newLine = true;
-//			nextNewLine = false;
-//		}
-//		if (b == '\n') {
-//			nextNewLine = true;
-//		}
-//		lock.lock();
-//		if (newLine == true) {
-//			newLine = false;
-//			LogLevel level = logger.getCallerLevel();
-//			setSystemLevel(level);
-//			printNewLine();
-//			out.flush();
-//			StackTraceElement t = logger.getCaller();
-//			if (t != null) {
-//				out.printf("[%s] ", level.getName());
-//				printThread();
-//				if (!t.getClassName().startsWith(Throwable.class.getName())) {
-//					out.printf("[%s.%s:%s] ", t.getClassName(), t.getMethodName(), t.getLineNumber());
-//				}
-//			}
-//		}
-//		out.write(b);
-//		lock.unlock();
-//	}
-
-	private void setSystemLevel(LogLevel level) {
+	void setSystemLevel(LogLevel level) {
 		if (level.getLevel() > LogLevel.ERROR.getLevel()) {
 			system.setOutput(Output.ERR);
 		} else {
@@ -99,17 +74,13 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 	}
 
-	private void log(LogEntry<?> entry) {
+	void log(LogEntry<?> entry) {
 		Object message = entry.object;
 		if (message == null) {
 			message = "null";
 		}
-		if (message instanceof Throwable) {
-			Throwable t = (Throwable) message;
-			StackTraceElement[] stackTrace = t.getStackTrace();
-			for (StackTraceElement trace : stackTrace) {
-				logString(entry, trace.toString());
-			}
+		if (entry.isThrowable) {
+			errorStream.log(entry);
 		} else {
 			if (message.getClass().isArray()) {
 				logArray(entry.withObject((Object[]) message));
@@ -121,7 +92,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 	}
 
-	private <T> void logArray(LogEntry<T[]> entry) {
+	<T> void logArray(LogEntry<T[]> entry) {
 		logString(entry,
 				String.format("%s[%s]", entry.object.getClass().getComponentType().getName(), entry.object.length));
 		for (T t : entry.object) {
@@ -129,34 +100,34 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 	}
 
-	private void logCollection(LogEntry<Collection<?>> entry) {
+	void logCollection(LogEntry<Collection<?>> entry) {
 		logString(entry, String.format("%s<?> (Size: %s)", entry.object.getClass().getName(), entry.object.size()));
 		for (Object t : entry.object) {
 			logString(entry, String.format(" - %s", Objects.toString(t)));
 		}
 	}
 
-	private void printThread(Thread thread) {
+	void printThread(Thread thread) {
 		out.printf("[%s] ", thread.getName());
 	}
 
-	private void printLoggerName(Logger logger) {
+	void printLoggerName(Logger logger) {
 		out.printf("[%s] ", logger.toString());
 	}
 
-	private void printNewLine(TemporalAccessor time) {
+	void printNewLine(TemporalAccessor time) {
 		out.printf("[%s] ", formatter.format(time));
 	}
 
-	private void printLevel(LogLevel level) {
+	void printLevel(LogLevel level) {
 		out.printf("[%s] ", level.getName());
 	}
 
-	private void logString(LogEntry<?> parent, String string) {
+	void logString(LogEntry<?> parent, String string) {
 		logString(parent.withObject(string));
 	}
 
-	private void logString(LogEntry<String> entry) {
+	void logString(LogEntry<String> entry) {
 		setSystemLevel(entry.level);
 		for (String s1 : entry.object.split(System.lineSeparator())) {
 			for (String object : s1.split("\\n")) {
@@ -177,12 +148,22 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	static class LogEntry<T> {
-		private final Logger logger;
-		private final Thread thread;
-		private final T object;
-		private final LogLevel level;
-		private final StackTraceElement caller;
-		private final TemporalAccessor time;
+
+		final Logger logger;
+
+		final Thread thread;
+
+		final T object;
+
+		final LogLevel level;
+
+		final StackTraceElement caller;
+
+		final TemporalAccessor time;
+
+		final boolean isThrowable;
+
+		final Throwable throwable;
 
 		public LogEntry(Logger logger, Thread thread, T object, LogLevel level) {
 			this(logger, thread, object, level, null);
@@ -200,10 +181,14 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			this.level = level;
 			this.caller = caller;
 			this.time = time;
+			this.isThrowable = object instanceof Throwable;
+			this.throwable = this.isThrowable ? (Throwable) object : null;
 		}
 
 		public <V> LogEntry<V> withObject(V object) {
 			return new LogEntry<V>(logger, thread, object, level, caller, time);
 		}
+
 	}
+
 }

@@ -1,12 +1,10 @@
 package gamelauncher.engine.util.concurrent;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -14,6 +12,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 
 /**
@@ -23,6 +22,12 @@ import gamelauncher.engine.util.logging.Logger;
  */
 public class Threads implements GameResource {
 
+	/**
+	 * Wheather or not stack traces should be calculated with causes from other
+	 * threads when tasks are submitted
+	 */
+	public static final boolean calculateThreadStacks = Boolean.getBoolean("calculateThreadStacks");
+
 	private final Logger logger = Logger.getLogger();
 
 	/**
@@ -30,18 +35,19 @@ public class Threads implements GameResource {
 	 * 
 	 * @see Executors#newWorkStealingPool()
 	 */
-	public final ExecutorService workStealing;
+	public final ExecutorThreadService workStealing;
+
 	/**
 	 * A cached {@link Executor}
 	 * 
 	 * @see Executors#newCachedThreadPool()
 	 */
-	public final ExecutorService cached;
+	public final ExecutorThreadService cached;
 
 	/**
 	 * All services combined
 	 */
-	public final Collection<ExecutorService> services;
+	public final Collection<ExecutorThreadService> services;
 
 	/**
 	 * 
@@ -55,8 +61,8 @@ public class Threads implements GameResource {
 	/**
 	 * @return a new work stealing pool
 	 */
-	public ExecutorService newWorkStealingPool() {
-		ExecutorService service = Executors.newWorkStealingPool();
+	public ExecutorThreadService newWorkStealingPool() {
+		ExecutorThreadService service = new WrapperExecutorThreadService(Executors.newWorkStealingPool());
 		services.add(service);
 		return service;
 	}
@@ -64,8 +70,8 @@ public class Threads implements GameResource {
 	/**
 	 * @return a new cached thread pool
 	 */
-	public ExecutorService newCachedThreadPool() {
-		ExecutorService service = Executors.newCachedThreadPool();
+	public ExecutorThreadService newCachedThreadPool() {
+		ExecutorThreadService service = new WrapperExecutorThreadService(Executors.newCachedThreadPool());
 		services.add(service);
 		return service;
 	}
@@ -73,18 +79,22 @@ public class Threads implements GameResource {
 	/**
 	 * @param service
 	 */
-	public void shutdown(ExecutorService service) {
-		service.shutdown();
+	public void shutdown(ExecutorThreadService service) {
+		service.exit();
 		services.remove(service);
 	}
 
 	@Override
 	public void cleanup() throws GameException {
 		try {
-			for (ExecutorService service : services) {
-				service.shutdown();
-				if (!service.awaitTermination(5, TimeUnit.SECONDS)) {
-					List<Runnable> cancelled = service.shutdownNow();
+			for (ExecutorThreadService service : services) {
+				CompletableFuture<Void> fut = service.exit();
+				try {
+					fut.get(5, TimeUnit.SECONDS);
+				} catch (ExecutionException ex) {
+					ex.printStackTrace();
+				} catch (TimeoutException ex) {
+					Collection<GameRunnable> cancelled = service.exitNow();
 					logger.errorf(
 							"Terminating ExecutorService (%s) took more than 5 seconds. Enforcing termination. Cancelled %s tasks",
 							service.getClass().getSimpleName(), cancelled.size());
@@ -94,7 +104,7 @@ public class Threads implements GameResource {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * @see Thread#sleep(long)
 	 * @param millis
@@ -144,4 +154,13 @@ public class Threads implements GameResource {
 		});
 		return future.getNow(null);
 	}
+
+	/**
+	 * @return the current thread
+	 * @see Thread#currentThread()
+	 */
+	public static Thread currentThread() {
+		return Thread.currentThread();
+	}
+
 }

@@ -6,10 +6,10 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.Transformations.Projection;
-import gamelauncher.engine.render.Window;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
@@ -26,8 +26,7 @@ public class LabyrinthRender extends Renderer {
 	private ModelLoader modelLoader;
 	private ShaderLoader shaderLoader;
 	private DrawContext contexthud;
-	private Window window;
-	private Camera camera = new BasicCamera(() -> window.scheduleDraw());
+	private Camera camera = new BasicCamera();
 
 	Model model1;
 	GameItem gi1;
@@ -44,10 +43,9 @@ public class LabyrinthRender extends Renderer {
 	}
 
 	@Override
-	public void init(Window window) throws GameException {
-		this.window = window;
+	public void init(Framebuffer framebuffer) throws GameException {
 		ShaderProgram program = shaderLoader.loadShader(launcher, embedFileSystem.getPath("shaders/hud/hud.json"));
-		contexthud = launcher.createContext(window.getFramebuffer());
+		contexthud = launcher.createContext(framebuffer);
 		contexthud.setProgram(program);
 		contexthud.setProjection(new Projection.Projection2D());
 
@@ -64,7 +62,7 @@ public class LabyrinthRender extends Renderer {
 	}
 
 	@Override
-	public void render(Window window) throws GameException {
+	public void render(Framebuffer framebuffer) throws GameException {
 		contexthud.update(camera);
 		contexthud.drawModel(model1, 0, 0, 0);
 		contexthud.drawModel(model2, 0, 0, 0);
@@ -73,7 +71,7 @@ public class LabyrinthRender extends Renderer {
 	}
 
 	@Override
-	public void cleanup(Window window) throws GameException {
+	public void cleanup(Framebuffer framebuffer) throws GameException {
 		model1.cleanup();
 		model2.cleanup();
 		contexthud.getProgram().clearUniforms();

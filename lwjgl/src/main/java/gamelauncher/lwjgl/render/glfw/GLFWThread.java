@@ -8,18 +8,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.logging.Logger;
-import gamelauncher.lwjgl.LWJGLGameLauncher;
 
 @SuppressWarnings("javadoc")
 public class GLFWThread extends AbstractExecutorThread {
 
-	private final LWJGLGameLauncher launcher;
 	private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
 	private final Logger logger = Logger.getLogger();
 
-	public GLFWThread(LWJGLGameLauncher launcher) {
-		this.launcher = launcher;
+	public GLFWThread() {
+		super(null);
 		this.setName("GLFW-Thread");
 	}
 

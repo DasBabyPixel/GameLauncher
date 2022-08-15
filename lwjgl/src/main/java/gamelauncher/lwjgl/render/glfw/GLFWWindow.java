@@ -2,7 +2,10 @@ package gamelauncher.lwjgl.render.glfw;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.dasbabypixel.api.property.NumberValue;
@@ -25,28 +28,50 @@ import gamelauncher.lwjgl.render.states.StateRegistry;
 public class GLFWWindow implements Window, GLFWUser {
 
 	private final LWJGLGameLauncher launcher;
+
 	private final WindowFramebuffer framebuffer;
+
 	private final GLFWThread glfwThread;
+
 	private final CompletableFuture<Void> destroyFuture;
+
 	@Deprecated
 	private final CompletableFuture<Window> windowCloseFuture;
+
 	private final AtomicBoolean closing = new AtomicBoolean(false);
+
 	private final CompletableFuture<Window> windowCreateFuture;
+
 	private final Property<FrameRenderer> frameRenderer;
+
 	private final Property<RenderMode> renderMode;
+
 	private final LWJGLInput input;
+
 	private final LWJGLMouse mouse;
+
 	volatile long glfwId;
+
 	private final GLFWRenderThread renderThread;
+
 	private final GLFWSecondaryContext secondaryContext;
+
 	final NumberValue x;
+
 	final NumberValue y;
+
 	final NumberValue width;
+
 	final NumberValue height;
+
 	final Property<String> title;
+
 	private final Property<CloseCallback> closeCallback;
+
 	final Logger logger;
+
 	final FrameCounter frameCounter;
+
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
 	public GLFWWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
@@ -60,10 +85,10 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.windowCreateFuture = new CompletableFuture<>();
 		this.renderMode = ObjectProperty.empty();
 		this.frameRenderer = ObjectProperty.empty();
-		this.framebuffer = new WindowFramebuffer();
+		this.renderThread = new GLFWRenderThread(this);
+		this.framebuffer = new WindowFramebuffer(this);
 		this.mouse = new LWJGLMouse(this);
 		this.input = new LWJGLInput(this);
-		this.renderThread = new GLFWRenderThread(this);
 		this.secondaryContext = new GLFWSecondaryContext(this);
 		this.x = NumberValue.zero();
 		this.y = NumberValue.zero();
@@ -120,6 +145,12 @@ public class GLFWWindow implements Window, GLFWUser {
 		return destroyFuture();
 	}
 
+	public CompletableFuture<Void> hide() {
+		return glfwThread.submit(() -> {
+			glfwHideWindow(glfwId);
+		});
+	}
+
 //	public CompletableFuture<Void> closeWindow() {
 //		this.renderThread.exit().thenRun(() -> {
 //			glfwThread.submit(() -> {
@@ -147,15 +178,29 @@ public class GLFWWindow implements Window, GLFWUser {
 	}
 
 	public CompletableFuture<Void> showAndEndFrame() {
+		CyclicBarrier barrier = new CyclicBarrier(2);
+		CountDownLatch latch = new CountDownLatch(1);
 		CompletableFuture<Void> fut = new CompletableFuture<>();
 		this.glfwThread.submit(() -> {
-			glfwShowWindow(getGLFWId());
 			renderThread.submit(() -> {
+				try {
+					barrier.await();
+					latch.await();
+				} catch (InterruptedException | BrokenBarrierException ex) {
+					ex.printStackTrace();
+				}
 				if (swapBuffers.get()) {
 					glfwSwapBuffers(getGLFWId());
 				}
 				fut.complete(null);
 			});
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException ex) {
+				ex.printStackTrace();
+			}
+			glfwShowWindow(getGLFWId());
+			latch.countDown();
 		});
 		return fut;
 	}
@@ -244,6 +289,9 @@ public class GLFWWindow implements Window, GLFWUser {
 	}
 
 	public static interface CloseCallback {
+
 		void close() throws GameException;
+
 	}
+
 }

@@ -113,6 +113,7 @@ public class ResourceStream implements AutoCloseable {
 	 * @return a new {@link PNGDecoder} for this {@link ResourceStream}
 	 * @throws GameException
 	 */
+	@Deprecated
 	public PNGDecoder newPNGDecoder() throws GameException {
 		try {
 			return new PNGDecoder(in);

@@ -8,22 +8,22 @@ import gamelauncher.engine.util.GameException;
 public abstract class Renderer {
 
 	/**
-	 * @param window
+	 * @param framebuffer
 	 * @throws GameException
 	 */
-	public abstract void render(Window window) throws GameException;
+	public abstract void render(Framebuffer framebuffer) throws GameException;
 
 	/**
-	 * @param window
+	 * @param framebuffer
 	 * @throws GameException
 	 */
-	public void init(Window window) throws GameException {
+	public void init(Framebuffer framebuffer) throws GameException {
 	}
 
 	/**
-	 * @param window
+	 * @param framebuffer
 	 * @throws GameException
 	 */
-	public void cleanup(Window window) throws GameException {
+	public void cleanup(Framebuffer framebuffer) throws GameException {
 	}
 }

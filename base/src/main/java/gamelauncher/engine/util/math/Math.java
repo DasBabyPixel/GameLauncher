@@ -8,7 +8,7 @@ public class Math {
 	/**
 	 * @param v1
 	 * @param v2
-	 * @return the smaller value of the two arguments
+	 * @return the lesser value of the two arguments
 	 */
 	public static float min(float v1, float v2) {
 		return v1 < v2 ? v1 : v2;
@@ -20,6 +20,24 @@ public class Math {
 	 * @return the higher value of the two arguments
 	 */
 	public static float max(float v1, float v2) {
+		return v1 > v2 ? v1 : v2;
+	}
+
+	/**
+	 * @param v1
+	 * @param v2
+	 * @return the lesser value of the two arguments
+	 */
+	public static int min(int v1, int v2) {
+		return v1 < v2 ? v1 : v2;
+	}
+
+	/**
+	 * @param v1
+	 * @param v2
+	 * @return the higher value of the two arguments
+	 */
+	public static int max(int v1, int v2) {
 		return v1 > v2 ? v1 : v2;
 	}
 
@@ -57,4 +75,25 @@ public class Math {
 	public static float abs(float val) {
 		return val >= 0 ? val : -val;
 	}
+
+	/**
+	 * @param d
+	 * @return the largest (closest to positive infinity)floating-point value that
+	 *         less than or equal to the argumentand is equal to a mathematical
+	 *         integer.
+	 */
+	public static double floor(double d) {
+		return java.lang.Math.floor(d);
+	}
+
+	/**
+	 * @param f
+	 * @return the largest (closest to positive infinity)floating-point value that
+	 *         less than or equal to the argumentand is equal to a mathematical
+	 *         integer.
+	 */
+	public static float floor(float f) {
+		return (float) java.lang.Math.floor(f);
+	}
+
 }

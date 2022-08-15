@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.lwjgl.opengles.GLES;
-
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.render.states.StateRegistry;
@@ -44,8 +42,6 @@ public class GLFWSecondaryContext implements GameResource {
 	public void makeCurrent() {
 		lock.lock();
 		current.set(Thread.currentThread());
-		glfwMakeContextCurrent(id);
-		GLES.createCapabilities();
 		StateRegistry.setContextHoldingThread(id, Thread.currentThread());
 		lock.unlock();
 	}
@@ -53,8 +49,6 @@ public class GLFWSecondaryContext implements GameResource {
 	public void destroyCurrent() {
 		lock.lock();
 		current.set(null);
-		glfwMakeContextCurrent(0);
-		GLES.setCapabilities(null);
 		StateRegistry.setContextHoldingThread(id, null);
 		lock.unlock();
 	}

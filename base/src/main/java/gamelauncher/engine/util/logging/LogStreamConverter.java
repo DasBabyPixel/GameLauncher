@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 class LogStreamConverter extends OutputStream {
 
 	private final Lock lock = new ReentrantLock(true);
-	CallerPrintStream callerPrintStream;
+	ConverterStream converterStream;
 	private final Charset charset;
 	private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 	private boolean carriage = false;
@@ -29,7 +29,7 @@ class LogStreamConverter extends OutputStream {
 				byte[] array = out.toByteArray();
 				out.reset();
 				String string = new String(array, charset);
-				this.callerPrintStream.converted(string);
+				this.converterStream.converted(string);
 				return;
 			} else if (carriage) {
 				out.write('\r');

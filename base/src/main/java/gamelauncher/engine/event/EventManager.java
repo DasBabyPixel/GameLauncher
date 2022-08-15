@@ -75,11 +75,9 @@ public class EventManager {
 	}
 
 	private static class Listener {
-		private final Object handle;
 		private final Node[] nodes;
 
 		public Listener(Object listener) {
-			this.handle = listener;
 			this.nodes = findNodes(listener);
 		}
 
@@ -119,14 +117,6 @@ public class EventManager {
 				nodes.add(node);
 			}
 			return nodes.toArray(new Node[nodes.size()]);
-		}
-
-		public Object getHandle() {
-			return handle;
-		}
-
-		public Node[] getNodes() {
-			return nodes;
 		}
 	}
 

@@ -9,7 +9,6 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.lwjgl.stb.STBTTFontinfo;
@@ -31,13 +30,15 @@ import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 public class LWJGLGlyphProvider implements GlyphProvider {
 
 	private final LWJGLGameLauncher launcher;
+
 	private final ExecutorThread owner;
+
 	private final DynamicSizeTextureAtlas textureAtlas;
 
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher, ExecutorThread owner) {
 		this.launcher = launcher;
 		this.owner = owner;
-		this.textureAtlas = new DynamicSizeTextureAtlas(launcher, owner);
+		this.textureAtlas = new DynamicSizeTextureAtlas(this.launcher, this.owner);
 	}
 
 	@Override
@@ -60,7 +61,7 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 			}
 			e.add(entry);
 		}
-		Collection<Model> meshes = new HashSet<>();
+		Collection<Model> meshes = new ArrayList<>();
 		float xpos = 0;
 		float z = 0;
 		for (Map.Entry<LWJGLTexture, Collection<DynamicSizeTextureAtlas.Entry>> entry : entries.entrySet()) {
@@ -75,23 +76,32 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				float tt = tb + (bd.height) / (th);
 
 				GlyphData data = e.getEntry().data;
-				float pb = data.bearingY - data.height;
+				float pb = -data.bearingY - data.height;
 				float pt = pb + data.height;
 				float pl = xpos + data.bearingX;
 				float pr = pl + data.width;
 				float width = pr - pl;
 				float height = pt - pb;
 				float x = pl + width / 2F;
-				float y = pr + height / 2F;
+				float y = pt + height / 2F;
 
-				Model m = new Texture2DModel(e.getTexture(), tl, tt, tr, tb);
+				Model m = new Texture2DModel(e.getTexture(), tl, 1 - tb, tr, 1 - tt);
 				GameItem gi = new GameItem(m);
 				gi.setPosition(x, y, z);
 				gi.setScale(width, height, 1);
 				m = gi.createModel();
 				meshes.add(m);
+				xpos += e.getEntry().data.advance;
+//				return m;
+//				return m;
+//				return gi.createModel();
 			}
 		}
+//		Texture2DModel tm = new Texture2DModel(entries.keySet().stream().findAny().get());
+//		tm.getTexture().write();
+//		GameItem tgi = new GameItem(tm);
+//		tgi.setScale(300);
+//		return tgi.createModel();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[meshes.size()]));
 		GameItem gi = new GameItem(cmodel);
 		gi.setAddColor(1, 1, 1, 0);
@@ -143,9 +153,17 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 			} else {
 				apxls = new byte[0];
 			}
-			buf = memAlloc(apxls.length);
-			buf.put(apxls);
-			buf.position(0);
+			// Setup for usage by LWJGLTexture
+			buf = memCalloc(Integer.BYTES * apxls.length + Integer.BYTES * 2 + LWJGLTexture.SIGNATURE_RAW.length);
+			buf.put(LWJGLTexture.SIGNATURE_RAW);
+			buf.putInt(gdata.width);
+			buf.putInt(gdata.height);
+//			buf.put(apxls);
+			for (int i = 0; i < apxls.length; i++) {
+				buf.position(buf.position() + 3);
+				buf.put(apxls[i]);
+			}
+			buf.flip();
 
 			memFree(bw);
 			memFree(bh);
@@ -162,7 +180,6 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				throw new GameException("Could not add glyph to texture atlas");
 			}
 			entry = textureAtlas.getGlyph(id);
-//		e.getEntry().key.required.incrementAndGet();
 		}
 		entry.getEntry().key.required.incrementAndGet();
 		return entry;
@@ -176,4 +193,5 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 	public int getId(GlyphKey key) {
 		return key.hashCode();
 	}
+
 }

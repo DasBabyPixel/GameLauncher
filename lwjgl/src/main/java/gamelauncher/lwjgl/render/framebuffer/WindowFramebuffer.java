@@ -1,19 +1,23 @@
 package gamelauncher.lwjgl.render.framebuffer;
 
-import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 
 /**
  * @author DasBabyPixel
  */
-public class WindowFramebuffer implements Framebuffer {
+public class WindowFramebuffer extends AbstractFramebuffer {
 
-	private final NumberValue width = NumberValue.zero();
-	private final NumberValue height = NumberValue.zero();
+	/**
+	 * @param window
+	 */
+	public WindowFramebuffer(Window window) {
+		super(window);
+	}
 
 	@Override
 	public void cleanup() throws GameException {
+		super.cleanup();
 	}
 
 	@Override
@@ -24,13 +28,4 @@ public class WindowFramebuffer implements Framebuffer {
 	public void endFrame() {
 	}
 
-	@Override
-	public NumberValue width() {
-		return width;
-	}
-
-	@Override
-	public NumberValue height() {
-		return height;
-	}
 }

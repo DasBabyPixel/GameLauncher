@@ -13,17 +13,16 @@ import gamelauncher.lwjgl.render.states.GlStates;
 public class LWJGLShaderProgram extends ShaderProgram {
 
 	private final int programId;
+
 	final AtomicInteger refCount = new AtomicInteger(1);
-	private final LWJGLShaderLoader loader;
-	
+
 	private int vertexShaderId;
 
 	private int fragmentShaderId;
 
-	public LWJGLShaderProgram(LWJGLShaderLoader loader, GameLauncher launcher) throws GameException {
+	public LWJGLShaderProgram(GameLauncher launcher) throws GameException {
 		super(launcher);
-		this.loader = loader;
-		this.programId = glCreateProgram();
+		this.programId = GlStates.current().createProgram();
 		if (this.programId == 0) {
 			throw new GameException("Could not create Shader");
 		}
@@ -42,11 +41,11 @@ public class LWJGLShaderProgram extends ShaderProgram {
 	}
 
 	public void deleteVertexShader() {
-		glDeleteShader(vertexShaderId);
+		GlStates.current().deleteShader(vertexShaderId);
 	}
 
 	public void deleteFragmentShader() {
-		glDeleteShader(fragmentShaderId);
+		GlStates.current().deleteShader(fragmentShaderId);
 	}
 
 	protected int createShader(String shaderCode, int shaderType) throws GameException {
@@ -54,36 +53,38 @@ public class LWJGLShaderProgram extends ShaderProgram {
 		if (shaderId == 0) {
 			throw new GameException("Error creating shader. Type: " + shaderType);
 		}
+		GlStates c = GlStates.current();
 
-		glShaderSource(shaderId, shaderCode);
-		glCompileShader(shaderId);
+		c.shaderSource(shaderId, shaderCode);
+		c.compileShader(shaderId);
 
-		if (glGetShaderi(shaderId, GL_COMPILE_STATUS) == 0) {
-			throw new GameException("Error compiling Shader code: " + glGetShaderInfoLog(shaderId, 1024));
+		if (c.getShaderi(shaderId, GL_COMPILE_STATUS) == 0) {
+			throw new GameException("Error compiling Shader code: " + c.getShaderInfoLog(shaderId, 1024));
 		}
 
-		glAttachShader(programId, shaderId);
+		c.attachShader(programId, shaderId);
 
 		return shaderId;
 	}
 
 	public void link() throws GameException {
-		glLinkProgram(programId);
-		if (glGetProgrami(programId, GL_LINK_STATUS) == 0) {
-			throw new GameException("Error linking Shader code: " + glGetProgramInfoLog(programId, 1024));
+		GlStates c = GlStates.current();
+		c.linkProgram(programId);
+		if (c.getProgrami(programId, GL_LINK_STATUS) == 0) {
+			throw new GameException("Error linking Shader code: " + c.getProgramInfoLog(programId, 1024));
 		}
 
 		if (vertexShaderId != 0) {
-			glDetachShader(programId, vertexShaderId);
+			c.detachShader(programId, vertexShaderId);
 		}
 		if (fragmentShaderId != 0) {
-			glDetachShader(programId, fragmentShaderId);
+			c.detachShader(programId, fragmentShaderId);
 		}
 
 		if (launcher.isDebugMode()) {
-			glValidateProgram(programId);
-			if (glGetProgrami(programId, GL_VALIDATE_STATUS) == 0) {
-				launcher.getLogger().warnf("Warning validating Shader code: %s", glGetProgramInfoLog(programId, 1024));
+			c.validateProgram(programId);
+			if (c.getProgrami(programId, GL_VALIDATE_STATUS) == 0) {
+				launcher.getLogger().warnf("Warning validating Shader code: %s", c.getProgramInfoLog(programId, 1024));
 			}
 		}
 	}
@@ -103,8 +104,9 @@ public class LWJGLShaderProgram extends ShaderProgram {
 		if (refCount.decrementAndGet() == 0) {
 			unbind();
 			if (programId != 0) {
-				glDeleteProgram(programId);
+				GlStates.current().deleteProgram(programId);
 			}
 		}
 	}
+
 }

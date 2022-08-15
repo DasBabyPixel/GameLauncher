@@ -39,7 +39,7 @@ public class SimpleLogger extends Logger {
 
 	@Override
 	public PrintStream createPrintStream(LogLevel level) {
-		return new CallerPrintStream(level, this, logStream);
+		return new CallerPrintStream(level, logStream);
 	}
 
 	@Override

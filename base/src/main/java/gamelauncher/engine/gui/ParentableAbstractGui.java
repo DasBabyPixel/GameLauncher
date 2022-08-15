@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.function.GamePredicate;
@@ -47,23 +47,23 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@Override
-	public final void init(Window window) throws GameException {
+	public final void init(Framebuffer framebuffer) throws GameException {
 		if (initialized.compareAndSet(false, true)) {
-			doInit(window);
+			doInit(framebuffer);
 			doForGUIs(gui -> {
-				gui.init(window);
+				gui.init(framebuffer);
 			});
 		}
 	}
 
 	@Override
-	public final void cleanup(Window window) throws GameException {
+	public final void cleanup(Framebuffer framebuffer) throws GameException {
 		if (initialized.compareAndSet(true, false)) {
 			doForGUIs(gui -> {
-				gui.cleanup(window);
+				gui.cleanup(framebuffer);
 			});
-			doCleanup(window);
-			super.cleanup(window);
+			doCleanup(framebuffer);
+			super.cleanup(framebuffer);
 		}
 	}
 
@@ -85,15 +85,15 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@Override
-	public final void render(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
-		init(window);
-		preRender(window, mouseX, mouseY, partialTick);
-		if (doRender(window, mouseX, mouseY, partialTick)) {
+	public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+		init(framebuffer);
+		preRender(framebuffer, mouseX, mouseY, partialTick);
+		if (doRender(framebuffer, mouseX, mouseY, partialTick)) {
 			doForGUIs(gui -> {
-				gui.render(window, mouseX, mouseY, partialTick);
+				gui.render(framebuffer, mouseX, mouseY, partialTick);
 			});
 		}
-		postRender(window, mouseX, mouseY, partialTick);
+		postRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
@@ -245,23 +245,23 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@SuppressWarnings("unused")
-	protected void doCleanup(Window window) throws GameException {
+	protected void doCleanup(Framebuffer framebuffer) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected void doInit(Window window) throws GameException {
+	protected void doInit(Framebuffer framebuffer) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected void preRender(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected void postRender(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected boolean doRender(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
 		return true;
 	}
 

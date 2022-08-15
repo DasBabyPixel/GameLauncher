@@ -14,7 +14,7 @@ public class Renderbuffer implements GameResource {
 
 	public Renderbuffer(int format, int width, int height) {
 		this.format = format;
-		id = glGenRenderbuffers();
+		id = GlStates.current().genRenderbuffers();
 		resize(width, height);
 	}
 
@@ -25,13 +25,13 @@ public class Renderbuffer implements GameResource {
 		this.width = width;
 		this.height = height;
 		bind();
-		glRenderbufferStorage(GL_RENDERBUFFER, format, width, height);
+		GlStates.current().renderbufferStorage(GL_RENDERBUFFER, format, width, height);
 		unbind();
 	}
 
 	@Override
 	public void cleanup() {
-		glDeleteRenderbuffers(id);
+		GlStates.current().deleteRenderbuffers(id);
 	}
 
 	public int getId() {

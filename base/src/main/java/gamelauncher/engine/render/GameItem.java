@@ -26,7 +26,7 @@ public class GameItem implements GameResource {
 	/**
 	 * 
 	 */
-	public GameItem() {
+	private GameItem() {
 		position = new Vector3f(0, 0, 0);
 		scale = new Vector3f(1, 1, 1);
 		rotation = new Vector3f(0, 0, 0);

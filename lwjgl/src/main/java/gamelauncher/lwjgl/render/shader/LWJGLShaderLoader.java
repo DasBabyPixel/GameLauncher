@@ -57,7 +57,7 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			String fspathstr = root.get("fragmentShader").getAsString();
 			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream().readUTF8FullyClose();
 			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
-			LWJGLShaderProgram program = new LWJGLShaderProgram(this, launcher);
+			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher);
 			programs.put(resource, program);
 			program.createVertexShader(vscode);
 			program.createFragmentShader(fscode);

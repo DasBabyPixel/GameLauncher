@@ -18,7 +18,7 @@ public class PluginClassLoader extends URLClassLoader {
 
 	private final PluginManager pm;
 	private final Lock cll;
-	private final ClassLoader parent;
+//	private final ClassLoader parent;
 	final Map<String, Class<?>> classes = new ConcurrentHashMap<>();
 	final Collection<Plugin> plugins = ConcurrentHashMap.newKeySet();
 
@@ -31,7 +31,7 @@ public class PluginClassLoader extends URLClassLoader {
 		super(new URL[] {
 				plugin
 		}, parent);
-		this.parent = parent;
+//		this.parent = parent;
 		this.pm = pm;
 		this.cll = this.pm.classLoadingLock;
 	}

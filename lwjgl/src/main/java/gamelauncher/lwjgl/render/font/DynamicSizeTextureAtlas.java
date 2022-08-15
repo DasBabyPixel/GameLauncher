@@ -12,6 +12,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.ByteBufferBackedInputStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -19,17 +21,22 @@ import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
-import gamelauncher.lwjgl.render.texture.LWJGLTextureFormat;
 
 @SuppressWarnings("javadoc")
 public class DynamicSizeTextureAtlas implements GameResource {
 
 	private final Logger logger = Logger.getLogger();
+
 	private final Map<Integer, Entry> glyphs = new HashMap<>();
+
 	private final Map<LWJGLTexture, Collection<Entry>> byTexture = new HashMap<>();
+
 	private final Lock lock = new ReentrantLock(true);
+
 	private final LWJGLGameLauncher launcher;
+
 	private final ExecutorThread owner;
+
 	volatile int maxTextureSize;
 
 	public DynamicSizeTextureAtlas(LWJGLGameLauncher launcher, ExecutorThread owner) {
@@ -50,8 +57,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 	}
 
 	public CompletableFuture<Void> removeGlyph(int glyphId) {
-		CompletableFuture<Void> fut = new CompletableFuture<>();
-		launcher.getThreads().cached.execute(() -> {
+		return launcher.getThreads().cached.submit(() -> {
 			try {
 				lock.lock();
 				Entry entry = glyphs.remove(glyphId);
@@ -61,25 +67,18 @@ public class DynamicSizeTextureAtlas implements GameResource {
 					byTexture.remove(entry.texture);
 					entry.texture.cleanup();
 				}
-				fut.complete(null);
-			} catch (Exception ex) {
-				fut.completeExceptionally(ex);
-				launcher.handleError(ex);
 			} finally {
 				lock.unlock();
 			}
 		});
-		return fut;
 	}
 
 	public CompletableFuture<Boolean> addGlyph(int glyphId, GlyphEntry entry) {
-		CompletableFuture<Boolean> fut = new CompletableFuture<>();
-		launcher.getThreads().cached.execute(() -> {
+		return launcher.getThreads().cached.submit(() -> {
 			try {
 				lock.lock();
 				if (glyphs.containsKey(glyphId)) {
-					fut.complete(true);
-					return;
+					return true;
 				}
 				Entry e = new Entry(null, entry, new Rectangle(entry.data.width, entry.data.height));
 				for (LWJGLTexture texture : byTexture.keySet()) {
@@ -91,24 +90,21 @@ public class DynamicSizeTextureAtlas implements GameResource {
 				}
 				if (e.texture == null) {
 					e.texture = Threads.waitFor(launcher.getTextureManager().createTexture(owner));
-					e.texture.setInternalFormat(LWJGLTextureFormat.ALPHA);
-					Threads.waitFor(e.texture.allocate(1, 1));
+//					e.texture.setInternalFormat(LWJGLTextureFormat.ALPHA);
+					Threads.waitFor(e.texture.allocate(8, 8));
 					byTexture.put(e.texture, new HashSet<>());
 					add(glyphId, e);
 				}
-				fut.complete(true);
-			} catch (Exception ex) {
-				fut.completeExceptionally(ex);
-				launcher.handleError(ex);
+				return true;
 			} finally {
 				lock.unlock();
 			}
 		});
-		return fut;
 	}
 
-	private boolean add(int glyphId, Entry e) {
+	private boolean add(int glyphId, Entry e) throws GameException {
 		try {
+//			Thread.dumpStack();
 			lock.lock();
 			Rectangle textureBounds = new Rectangle(e.texture.getWidth(), e.texture.getHeight());
 			Rectangle currentBounds = textureBounds;
@@ -136,8 +132,11 @@ public class DynamicSizeTextureAtlas implements GameResource {
 					return false;
 				}
 			}
-			Threads.waitFor(
-					e.texture.uploadAsync(e.bounds.x, e.bounds.y, e.bounds.width, e.bounds.height, e.entry.buffer));
+			ResourceStream stream = new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer),
+					null);
+			Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y));
+//			Threads.waitFor(
+//					e.texture.uploadAsync(e.bounds.x, e.bounds.y, e.bounds.width, e.bounds.height, e.entry.buffer));
 			byTexture.get(e.texture).add(e);
 			glyphs.put(glyphId, e);
 			return true;
@@ -209,8 +208,11 @@ public class DynamicSizeTextureAtlas implements GameResource {
 	}
 
 	public static class Entry {
+
 		private LWJGLTexture texture;
+
 		private GlyphEntry entry;
+
 		private Rectangle bounds;
 
 		public Entry(LWJGLTexture texture, GlyphEntry entry, Rectangle bounds) {
@@ -230,5 +232,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		public LWJGLTexture getTexture() {
 			return texture;
 		}
+
 	}
+
 }

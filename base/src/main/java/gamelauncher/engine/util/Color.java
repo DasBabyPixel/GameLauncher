@@ -1,5 +1,7 @@
 package gamelauncher.engine.util;
 
+import gamelauncher.engine.util.math.Math;
+
 /**
  * @author DasBabyPixel
  */
@@ -18,7 +20,7 @@ public class Color {
 	 * @param a
 	 */
 	public Color(int r, int g, int b, int a) {
-		this(r / 255F, g / 255F, b / 255F, a / 255F);
+		this((r & 0xFF) / 255F, (g & 0xFF) / 255F, (b & 0xFF) / 255F, (a & 0xFF) / 255F);
 	}
 
 	/**
@@ -41,4 +43,44 @@ public class Color {
 	public Color withAlpha(float alpha) {
 		return new Color(r, g, b, alpha);
 	}
+
+	/**
+	 * @return the red byte
+	 */
+	public byte bred() {
+		return toByte(r);
+	}
+
+	/**
+	 * @return the green byte
+	 */
+	public byte bgreen() {
+		return toByte(g);
+	}
+
+	/**
+	 * @return the blue byte
+	 */
+	public byte bblue() {
+		return toByte(b);
+	}
+
+	/**
+	 * @return the alpha byte
+	 */
+	public byte balpha() {
+		return toByte(a);
+	}
+
+	private byte toByte(float f) {
+		return (byte) Math.floor(f >= 1.0 ? 255 : f * 256.0);
+	}
+
+	/**
+	 * @return the rgba int
+	 */
+	public int toRGBA() {
+		return (bred() & 0xFF) << 24 | (bgreen() & 0xFF) << 16 | (bblue() & 0xFF) << 8 | (balpha() & 0xFF);
+	}
+
 }

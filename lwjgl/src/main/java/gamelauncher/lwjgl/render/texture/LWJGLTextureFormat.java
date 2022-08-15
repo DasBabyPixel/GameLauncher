@@ -8,7 +8,7 @@ import static org.lwjgl.opengles.GLES20.*;
 @SuppressWarnings("javadoc")
 public enum LWJGLTextureFormat {
 
-	RGBA(GL_RGBA, 4), ALPHA(GL_RGBA, 4);
+	RGBA(GL_RGBA, 4), ALPHA(GL_ALPHA, GL_ALPHA, 1);
 
 	;
 

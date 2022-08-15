@@ -3,7 +3,7 @@ package gamelauncher.engine.gui;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 
 /**
@@ -66,7 +66,7 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
-	public void render(Window window, float mouseX, float mouseY, float partialTick) throws GameException {
+	public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
 
 	}
 
@@ -81,12 +81,12 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
-	public void init(Window window) throws GameException {
+	public void init(Framebuffer framebuffer) throws GameException {
 
 	}
 
 	@Override
-	public void cleanup(Window window) throws GameException {
+	public void cleanup(Framebuffer framebuffer) throws GameException {
 
 	}
 

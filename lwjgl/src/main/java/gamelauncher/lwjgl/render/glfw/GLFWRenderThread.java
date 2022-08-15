@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengles.GLES20.*;
 
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,8 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.lwjgl.opengles.GLES;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.FrameCounter;
@@ -43,6 +40,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	private boolean shouldDraw = false;
 
 	public GLFWRenderThread(GLFWWindow window) {
+		super(window.getLauncher().getGlThreadGroup());
 		this.window = window;
 		this.frameCounter = this.window.getFrameCounter();
 		this.setName("GLFW-RenderThread-" + names.incrementAndGet());
@@ -54,8 +52,6 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		drawPhaser.register();
 		setSize(window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
 
-		glfwMakeContextCurrent(window.getGLFWId());
-		GLES.createCapabilities();
 		StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
 		hasContext.set(true);
 		glfwSwapInterval(0);
@@ -71,8 +67,8 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 				ex.printStackTrace();
 			}
 		}
-		glfwMakeContextCurrent(0L);
-		GLES.setCapabilities(null);
+		window.getLauncher().getGlThreadGroup().terminated(this);
+		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
 	}
 
 	@Override
@@ -107,7 +103,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		workExecution();
 		hasContextLock.unlock();
 	}
-
+	
 	@Override
 	protected boolean shouldHandle(QueueEntry entry) {
 		if (entry.run instanceof ContextlessGameRunnable) {
@@ -145,7 +141,6 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 				int height = this.height.intValue();
 				window.getFramebuffer().width().setNumber(width);
 				window.getFramebuffer().height().setNumber(height);
-				glViewport(0, 0, width, height);
 				try {
 					fr.windowSizeChanged(window);
 				} catch (Throwable ex) {

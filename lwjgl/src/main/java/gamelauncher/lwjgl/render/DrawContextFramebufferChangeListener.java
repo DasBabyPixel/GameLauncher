@@ -4,6 +4,7 @@ import java.lang.ref.WeakReference;
 
 import de.dasbabypixel.api.property.NumberChangeListener;
 import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
 
 @SuppressWarnings("javadoc")
@@ -26,7 +27,11 @@ public class DrawContextFramebufferChangeListener implements NumberChangeListene
 		if (ctx == null) {
 			cleanup();
 		} else {
-			ctx.invalidateProjectionMatrix();
+			try {
+				ctx.invalidateProjectionMatrix();
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 

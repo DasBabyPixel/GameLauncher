@@ -14,7 +14,7 @@ import gamelauncher.engine.gui.GuiStack;
 import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
-import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
@@ -29,7 +29,7 @@ import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
 public class LWJGLGuiManager implements GuiManager {
 
 	private final LWJGLGameLauncher launcher;
-	private final Map<Window, GuiStack> guis = new ConcurrentHashMap<>();
+	private final Map<Framebuffer, GuiStack> guis = new ConcurrentHashMap<>();
 	private final Map<Class<? extends LauncherBasedGui>, GameSupplier<? extends LauncherBasedGui>> registeredGuis = new HashMap<>();
 	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>> converters = new HashMap<>();
 
@@ -46,25 +46,31 @@ public class LWJGLGuiManager implements GuiManager {
 		@SuppressWarnings("unchecked")
 		CompletableFuture<Void>[] futures = new CompletableFuture[guis.size()];
 		int i = 0;
-		for (Map.Entry<Window, GuiStack> entry : guis.entrySet()) {
-			futures[i++] = cleanup(entry.getKey());
+		for (Map.Entry<Framebuffer, GuiStack> entry : guis.entrySet()) {
+			futures[i++] = cleanupLater(entry.getKey());
 		}
 		Threads.waitFor(futures);
 	}
+	
+	@Override
+	public void cleanup(Framebuffer framebuffer) {
+		Threads.waitFor(cleanupLater(framebuffer));
+	}
 
 	/**
-	 * Cleanes up a window and its guis
+	 * Cleanes up a framebuffer and its guis
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @return a future for the task
 	 */
-	public CompletableFuture<Void> cleanup(Window window) {
-		GuiStack stack = guis.remove(window);
+	@Deprecated
+	public CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
+		GuiStack stack = guis.remove(framebuffer);
 		if (stack != null) {
-			return window.getRenderThread().submit(() -> {
+			return framebuffer.getRenderThread().submit(() -> {
 				GuiStack.StackEntry se;
 				while ((se = stack.popGui()) != null) {
-					se.gui.cleanup(window);
+					se.gui.cleanup(framebuffer);
 				}
 			});
 		}
@@ -87,20 +93,20 @@ public class LWJGLGuiManager implements GuiManager {
 	}
 
 	@Override
-	public Gui getCurrentGui(Window window) throws GameException {
-		if (!guis.containsKey(window)) {
+	public Gui getCurrentGui(Framebuffer framebuffer) throws GameException {
+		if (!guis.containsKey(framebuffer)) {
 			return null;
 		}
-		StackEntry e = guis.get(window).peekGui();
+		StackEntry e = guis.get(framebuffer).peekGui();
 		return e == null ? null : e.gui;
 	}
 
 	@Override
-	public void openGui(Window window, Gui gui) throws GameException {
-		GuiStack stack = guis.get(window);
+	public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
+		GuiStack stack = guis.get(framebuffer);
 		if (stack == null) {
 			stack = new GuiStack();
-			guis.put(window, stack);
+			guis.put(framebuffer, stack);
 		}
 		final boolean exit = gui == null;
 		StackEntry scurrentGui = exit ? stack.popGui() : stack.peekGui();
@@ -109,8 +115,8 @@ public class LWJGLGuiManager implements GuiManager {
 			currentGui.unfocus();
 			currentGui.onClose();
 			if (exit) {
-				window.getRenderThread().submit(() -> {
-					currentGui.cleanup(window);
+				framebuffer.getRenderThread().submit(() -> {
+					currentGui.cleanup(framebuffer);
 				});
 			}
 		} else {
@@ -119,12 +125,12 @@ public class LWJGLGuiManager implements GuiManager {
 			}
 		}
 		if (gui != null) {
-			gui.getWidthProperty().bind(window.getFramebuffer().width());
-			gui.getHeightProperty().bind(window.getFramebuffer().height());
+			gui.getWidthProperty().bind(framebuffer.width());
+			gui.getHeightProperty().bind(framebuffer.height());
 			stack.pushGui(gui);
 			gui.onOpen();
 			gui.focus();
-			window.scheduleDraw();
+			framebuffer.scheduleRedraw();
 		}
 	}
 

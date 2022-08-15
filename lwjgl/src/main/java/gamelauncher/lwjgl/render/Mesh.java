@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render;
 
 import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.opengles.GLES30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.FloatBuffer;
@@ -22,7 +21,7 @@ import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 @SuppressWarnings("javadoc")
 public class Mesh implements GameResource {
 
-	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);
+//	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);
 
 	private final List<Integer> vbos = new ArrayList<>();
 	private final int vaoId;
@@ -34,24 +33,26 @@ public class Mesh implements GameResource {
 	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices, int renderType) {
 		vertexCount = indices.length;
 		this.renderType = renderType;
+		
+		GlStates cur = GlStates.current();
 
-		vaoId = glGenVertexArrays();
-		GlStates.current().bindVertexArray(vaoId);
+		vaoId = cur.genVertexArrays();
+		cur.bindVertexArray(vaoId);
 
 		createBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW, indices);
 
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, positions);
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		cur.vertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, textCoords);
-		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+		cur.vertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 		createBuffer(GL_ARRAY_BUFFER, GL_STATIC_DRAW, normals);
-		glVertexAttribPointer(2, 3, GL_FLOAT, false, 0, 0);
+		cur.vertexAttribPointer(2, 3, GL_FLOAT, false, 0, 0);
 
 		vaoSize = 3;
 
-		GlStates.current().bindVertexArray(0);
+		cur.bindVertexArray(0);
 	}
 
 	public Mesh(float[] positions, float[] textCoords, float[] normals, int[] indices) {
@@ -75,7 +76,7 @@ public class Mesh implements GameResource {
 	}
 
 	private int createBuffer(int target) {
-		int id = glGenBuffers();
+		int id = GlStates.current().genBuffers();
 		GlStates.current().bindBuffer(target, id);
 		vbos.add(id);
 		return id;
@@ -84,32 +85,33 @@ public class Mesh implements GameResource {
 	private void upload(int target, int usage, int[] array) {
 		IntBuffer buffer = memAllocInt(array.length);
 		buffer.put(array).flip();
-		glBufferData(target, buffer, usage);
+		GlStates.current().bufferData(target, buffer, usage);
 		memFree(buffer);
 	}
 
 	private void upload(int target, int usage, float[] array) {
 		FloatBuffer buffer = memAllocFloat(array.length);
 		buffer.put(array).flip();
-		glBufferData(target, buffer, usage);
+		GlStates.current().bufferData(target, buffer, usage);
 		memFree(buffer);
 	}
 
 	public void render() {
 		if (material.texture != null) {
 			GlStates.current().activeTexture(GL_TEXTURE0);
-			material.texture.bind();
+			GlStates.current().bindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 //			glBindTexture(GL_TEXTURE_2D, material.texture.getTextureId());
 		}
 
-		GlStates.current().bindVertexArray(getVaoId());
+		GlStates cur = GlStates.current();
+		cur.bindVertexArray(getVaoId());
 		for (int i = 0; i < vaoSize; i++) {
-			glEnableVertexAttribArray(i);
+			cur.enableVertexAttribArray(i);
 		}
-		glDrawElements(this.renderType, getVertexCount(), GL_UNSIGNED_INT, 0);
+		cur.drawElements(this.renderType, getVertexCount(), GL_UNSIGNED_INT, 0);
 
 		for (int i = 0; i < vaoSize; i++) {
-			glDisableVertexAttribArray(i);
+			cur.disableVertexAttribArray(i);
 		}
 	}
 
@@ -125,11 +127,11 @@ public class Mesh implements GameResource {
 	public void cleanup() throws GameException {
 		// Delete the VBOs
 		for (int vbo : vbos) {
-			glDeleteBuffers(vbo);
+			GlStates.current().deleteBuffers(vbo);
 		}
 		vbos.clear();
 		// Delete the VAO
-		glDeleteVertexArrays(vaoId);
+		GlStates.current().deleteVertexArrays(vaoId);
 	}
 
 	public static class Material implements ProgramObject {

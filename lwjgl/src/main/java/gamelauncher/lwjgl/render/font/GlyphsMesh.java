@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render.font;
 
 import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.opengles.GLES30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.FloatBuffer;
@@ -20,52 +19,62 @@ import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 public class GlyphsMesh implements ColorMultiplierModel {
 
 	private final Color textureAddColor = Color.white.withAlpha(0F);
-	private final Vector4f vectorTextureAddColor = new Vector4f(textureAddColor.r, textureAddColor.g,
-			textureAddColor.g, textureAddColor.a);
+
+	private final Vector4f vectorTextureAddColor = new Vector4f(textureAddColor.r, textureAddColor.g, textureAddColor.g,
+			textureAddColor.a);
 
 	private final int vao;
+
 	private final int posbuffer;
+
 	private final int texbuffer;
+
 	private final int idxbuffer;
+
 	private final int vertexCount;
+
 	private final GlyphKey[] texMapIds;
+
 	private final LWJGLGlyphProvider provider;
+
 	private final LWJGLTexture texture;
+
 	private final Vector4f color;
 
-	public GlyphsMesh(LWJGLGlyphProvider provider, int[] idxA, float[] posA, float[] texA, GlyphKey[] texMapIds, LWJGLTexture texture,
-			Color color) {
+	public GlyphsMesh(LWJGLGlyphProvider provider, int[] idxA, float[] posA, float[] texA, GlyphKey[] texMapIds,
+			LWJGLTexture texture, Color color) {
 		this.provider = provider;
 		this.color = new Vector4f(color.r, color.g, color.b, color.a);
 		this.texture = texture;
 		this.texMapIds = texMapIds;
 		this.vertexCount = idxA.length;
-		vao = glGenVertexArrays();
-		GlStates.current().bindVertexArray(vao);
-		idxbuffer = glGenBuffers();
+		GlStates c = GlStates.current();
+		vao = c.genVertexArrays();
+		c.bindVertexArray(vao);
+		idxbuffer = c.genBuffers();
 		IntBuffer ibuffer = memAllocInt(idxA.length);
 		ibuffer.put(idxA).flip();
-		GlStates.current().bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL_STATIC_DRAW);
+		c.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
+		c.bufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL_STATIC_DRAW);
 		memFree(ibuffer);
 
-		posbuffer = glGenBuffers();
+		posbuffer = c.genBuffers();
 		FloatBuffer fbuffer = memAllocFloat(posA.length);
 		fbuffer.put(posA).flip();
-		GlStates.current().bindBuffer(GL_ARRAY_BUFFER, posbuffer);
-		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
+		c.bindBuffer(GL_ARRAY_BUFFER, posbuffer);
+		c.bufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 		memFree(fbuffer);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		c.vertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-		texbuffer = glGenBuffers();
+		texbuffer = c.genBuffers();
 		fbuffer = memAllocFloat(texA.length);
 		fbuffer.put(texA).flip();
-		GlStates.current().bindBuffer(GL_ARRAY_BUFFER, texbuffer);
-		glBufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
+		c.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
+		c.bufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
 		memFree(fbuffer);
 
-		glVertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+		c.vertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
 
 	}
 
@@ -76,28 +85,30 @@ public class GlyphsMesh implements ColorMultiplierModel {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
-		GlStates.current().activeTexture(GL_TEXTURE0);
-		texture.bind();
+		GlStates c = GlStates.current();
+		c.activeTexture(GL_TEXTURE0);
+		c.bindTexture(GL_TEXTURE_2D, this.texture.getTextureId());
 
 		program.utextureAddColor.set(vectorTextureAddColor);
 		program.uploadUniforms();
 
-		GlStates.current().bindVertexArray(vao);
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
+		c.bindVertexArray(vao);
+		c.enableVertexAttribArray(0);
+		c.enableVertexAttribArray(1);
+		c.drawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
+		c.disableVertexAttribArray(0);
+		c.disableVertexAttribArray(1);
 
 		program.utextureAddColor.set(0, 0, 0, 0);
 	}
 
 	@Override
 	public void cleanup() throws GameException {
-		glDeleteBuffers(idxbuffer);
-		glDeleteBuffers(posbuffer);
-		glDeleteBuffers(texbuffer);
-		glDeleteVertexArrays(vao);
+		GlStates c = GlStates.current();
+		c.deleteBuffers(idxbuffer);
+		c.deleteBuffers(posbuffer);
+		c.deleteBuffers(texbuffer);
+		c.deleteVertexArrays(vao);
 
 		for (GlyphKey key : this.texMapIds) {
 			provider.releaseGlyphKey(key);
@@ -105,8 +116,11 @@ public class GlyphsMesh implements ColorMultiplierModel {
 	}
 
 	private class Bundle {
+
 		private final float[] positions;
+
 		private final float[] texCoords;
+
 		private final int[] indices;
 
 		public Bundle(float[] positions, float[] texCoords, int[] indices) {
@@ -114,5 +128,7 @@ public class GlyphsMesh implements ColorMultiplierModel {
 			this.texCoords = texCoords;
 			this.indices = indices;
 		}
+
 	}
+
 }

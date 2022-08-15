@@ -9,28 +9,31 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author DasBabyPixel
  */
-public class CallerPrintStream extends PrintStream {
+public class CallerPrintStream extends PrintStream implements ConverterStream {
 
-	private final Logger logger;
+//	private final Logger logger;
 	private final AsyncLogStream parent;
+
 	private final LogLevel level;
+
 	private final Lock lock = new ReentrantLock(true);
+
 	private StackTraceElement caller = null;
 
 	/**
 	 * @param level
-	 * @param logger
 	 * @param out
 	 */
-	public CallerPrintStream(LogLevel level, Logger logger, AsyncLogStream out) {
+	public CallerPrintStream(LogLevel level, AsyncLogStream out) {
 		super(new LogStreamConverter(StandardCharsets.UTF_8), true);
-		((LogStreamConverter) this.out).callerPrintStream = this;
+		((LogStreamConverter) this.out).converterStream = this;
 		this.level = level;
 		this.parent = out;
-		this.logger = logger;
+//		this.logger = logger;
 	}
 
-	void converted(String line) {
+	@Override
+	public void converted(String line) {
 		parent.offerCalled(level, caller, line);
 	}
 

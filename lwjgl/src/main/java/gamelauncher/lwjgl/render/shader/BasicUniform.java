@@ -1,6 +1,5 @@
 package gamelauncher.lwjgl.render.shader;
 
-import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 import java.nio.ByteBuffer;
@@ -15,6 +14,7 @@ import org.joml.Vector4f;
 
 import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.Uniform;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 /**
  * @author DasBabyPixel
@@ -24,7 +24,6 @@ public class BasicUniform implements Uniform {
 
 	private final int id;
 	private final int size;
-	private final String name;
 	private final Type type;
 	private final ByteBuffer buffer;
 	private final IntBuffer intBuffer;
@@ -37,7 +36,6 @@ public class BasicUniform implements Uniform {
 	 * @param type
 	 */
 	public BasicUniform(String name, int id, Type type) {
-		this.name = name;
 		this.id = id;
 		this.type = type;
 		this.size = type.size;
@@ -57,28 +55,29 @@ public class BasicUniform implements Uniform {
 		if (!hasValue.get()) {
 			return this;
 		}
+		GlStates c = GlStates.current();
 		hasValue.set(false);
 		switch (type) {
 		case FLOAT1:
-			glUniform1fv(id, floatBuffer);
+			c.uniform1fv(id, floatBuffer);
 			break;
 		case FLOAT2:
-			glUniform2fv(id, floatBuffer);
+			c.uniform2fv(id, floatBuffer);
 			break;
 		case FLOAT3:
-			glUniform3fv(id, floatBuffer);
+			c.uniform3fv(id, floatBuffer);
 			break;
 		case FLOAT4:
-			glUniform4fv(id, floatBuffer);
+			c.uniform4fv(id, floatBuffer);
 			break;
 		case INT1:
-			glUniform1iv(id, intBuffer);
+			c.uniform1iv(id, intBuffer);
 			break;
 		case MAT4:
-			glUniformMatrix4fv(id, false, floatBuffer);
+			c.uniformMatrix4fv(id, false, floatBuffer);
 			break;
 		case SAMPLER2D:
-			glUniform1iv(id, intBuffer);
+			c.uniform1iv(id, intBuffer);
 			break;
 		}
 		return this;

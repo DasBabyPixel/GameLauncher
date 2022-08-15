@@ -69,5 +69,10 @@ public interface ExecutorThread {
 	 * KNOW WHAT YOU'RE DOING!
 	 */
 	void workQueue();
+	
+	/**
+	 * @return the underlying thread
+	 */
+	Thread thread();
 
 }

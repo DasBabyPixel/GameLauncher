@@ -7,7 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GlyphKey {
 
 	public final float scale;
+
 	public final int codepoint;
+
 	public final AtomicInteger required;
 
 	public GlyphKey(float scale, int codepoint) {
@@ -18,7 +20,7 @@ public class GlyphKey {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(codepoint, required, scale);
+		return Objects.hash(codepoint, scale);
 	}
 
 	@Override
@@ -30,7 +32,7 @@ public class GlyphKey {
 		if (getClass() != obj.getClass())
 			return false;
 		GlyphKey other = (GlyphKey) obj;
-		return codepoint == other.codepoint && Objects.equals(required, other.required)
-				&& Float.floatToIntBits(scale) == Float.floatToIntBits(other.scale);
+		return codepoint == other.codepoint && Float.floatToIntBits(scale) == Float.floatToIntBits(other.scale);
 	}
+
 }

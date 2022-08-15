@@ -5,11 +5,15 @@ import static org.lwjgl.opengles.GLES20.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import gamelauncher.lwjgl.render.states.GlStates;
+
 @SuppressWarnings("javadoc")
 public class GlContext {
 
 	public final DepthState depth = new DepthState();
+
 	public final BlendState blend = new BlendState();
+
 	public final CullState cull = new CullState();
 
 	public void replace(GlContext current) {
@@ -43,42 +47,57 @@ public class GlContext {
 	}
 
 	public static class CullState {
+
 		public final BooleanState enabled = new BooleanState(GL_CULL_FACE);
+
 		public final AtomicInteger cullFace = new AtomicInteger(GL_BACK);
 
 		public void applyValues() {
-			glCullFace(cullFace.get());
+			GlStates.current().cullFace(cullFace.get());
 		}
+
 	}
 
 	public static class BlendState {
+
 		public final BooleanState enabled = new BooleanState(GL_BLEND);
+
 		public final AtomicBoolean separate = new AtomicBoolean(false);
+
 		public final AtomicInteger srcrgb = new AtomicInteger(GL_SRC_ALPHA);
+
 		public final AtomicInteger dstrgb = new AtomicInteger(GL_ONE_MINUS_SRC_ALPHA);
+
 		public final AtomicInteger srcalpha = new AtomicInteger(GL_ONE);
+
 		public final AtomicInteger dstalpha = new AtomicInteger(GL_ONE);
 
 		public void applyValues() {
 			if (separate.get()) {
-				glBlendFuncSeparate(srcrgb.get(), dstrgb.get(), srcalpha.get(), dstalpha.get());
+				GlStates.current().blendFuncSeparate(srcrgb.get(), dstrgb.get(), srcalpha.get(), dstalpha.get());
 			} else {
-				glBlendFunc(srcrgb.get(), dstrgb.get());
+				GlStates.current().blendFunc(srcrgb.get(), dstrgb.get());
 			}
 		}
+
 	}
 
 	public static class DepthState {
+
 		public final BooleanState enabled = new BooleanState(GL_DEPTH_TEST);
+
 		public final AtomicInteger depthFunc = new AtomicInteger(GL_LEQUAL);
 
 		public void applyValues() {
-			glDepthFunc(depthFunc.get());
+			GlStates.current().depthFunc(depthFunc.get());
 		}
+
 	}
 
 	public static class BooleanState {
+
 		public final AtomicBoolean value = new AtomicBoolean(false);
+
 		public final int state;
 
 		public BooleanState(int state) {
@@ -87,10 +106,12 @@ public class GlContext {
 
 		public void apply() {
 			if (value.get()) {
-				glEnable(state);
+				GlStates.current().enable(state);
 			} else {
-				glDisable(state);
+				GlStates.current().disable(state);
 			}
 		}
+
 	}
+
 }

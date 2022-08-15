@@ -1,12 +1,11 @@
 package gamelauncher.lwjgl.render.shader.struct;
 
-import static org.lwjgl.opengles.GLES20.*;
-
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.lwjgl.render.shader.BasicUniform;
 import gamelauncher.lwjgl.render.shader.BasicUniform.Type;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
+import gamelauncher.lwjgl.render.states.GlStates;
 
 /**
  * @author DasBabyPixel
@@ -37,6 +36,8 @@ public class Primary implements Struct {
 
 	@Override
 	public Uniform createUniform(ShaderProgram program, String name) {
-		return new BasicUniform(name, glGetUniformLocation(((LWJGLShaderProgram) program).getProgramId(), name), type);
+		return new BasicUniform(name,
+				GlStates.current().getUniformLocation(((LWJGLShaderProgram) program).getProgramId(), name), type);
 	}
+
 }

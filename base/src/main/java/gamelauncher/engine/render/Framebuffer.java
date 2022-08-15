@@ -27,5 +27,15 @@ public interface Framebuffer extends GameResource {
 	 * @return the height property
 	 */
 	NumberValue height();
+
+	/**
+	 * @return the rendering thread for this {@link Framebuffer}
+	 */
+	RenderThread getRenderThread();
+	
+	/**
+	 * 
+	 */
+	void scheduleRedraw();
 	
 }

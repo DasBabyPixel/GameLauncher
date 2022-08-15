@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import gamelauncher.engine.file.Files;
+import gamelauncher.engine.io.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
 

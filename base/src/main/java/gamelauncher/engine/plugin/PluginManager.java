@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.file.Files;
+import gamelauncher.engine.io.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 

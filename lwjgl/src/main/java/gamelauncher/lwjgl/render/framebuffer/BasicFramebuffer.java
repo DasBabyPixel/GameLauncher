@@ -9,6 +9,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
+import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
@@ -16,18 +17,21 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 
 //	private int width, height;
 	private LWJGLTexture colorTexture;
+
 	private Renderbuffer depthStencilRenderbuffer;
 
 	public BasicFramebuffer(LWJGLGameLauncher launcher, int width, int height) throws GameException {
-		super();
+		super(launcher.getWindow());
 		width().setNumber(width);
 		height().setNumber(height);
 		bind();
-		colorTexture = Threads.waitFor(launcher.getTextureManager().createTexture((ExecutorThread) Thread.currentThread()));
+		GlStates c = GlStates.current();
+		colorTexture = Threads
+				.waitFor(launcher.getTextureManager().createTexture((ExecutorThread) Thread.currentThread()));
 		Threads.waitFor(colorTexture.allocate(width, height));
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
+		c.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
 		depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, width, height);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
+		c.framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
 				depthStencilRenderbuffer.getId());
 		checkComplete();
 //		glColorMask(true, true, true, true);
@@ -43,6 +47,7 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		height().setNumber(height);
 //		Threads.waitFor(resizeColorTexture());
 		Threads.waitFor(colorTexture.allocate(width().intValue(), height().intValue()));
+		System.out.printf("BasicFB: %s %s%n", width().intValue(), height().intValue());
 		resizeDepthStencilRenderbuffer();
 	}
 
@@ -68,4 +73,5 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		depthStencilRenderbuffer.cleanup();
 		super.cleanup();
 	}
+
 }

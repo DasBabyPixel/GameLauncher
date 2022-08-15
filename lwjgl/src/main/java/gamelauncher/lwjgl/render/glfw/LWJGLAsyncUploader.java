@@ -15,6 +15,7 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread implements GameRe
 	final Logger logger;
 
 	public LWJGLAsyncUploader(LWJGLGameLauncher launcher) {
+		super(launcher.getGlThreadGroup());
 		this.launcher = launcher;
 		this.secondaryContext = launcher.getWindow().getSecondaryContext();
 		this.logger = Logger.getLogger();
@@ -25,11 +26,12 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread implements GameRe
 	protected void startExecuting() {
 		this.secondaryContext.makeCurrent();
 		logger.debugf("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
-
+		
 	}
 
 	@Override
 	protected void stopExecuting() {
+		launcher.getGlThreadGroup().terminated(this);
 		this.secondaryContext.destroyCurrent();
 	}
 

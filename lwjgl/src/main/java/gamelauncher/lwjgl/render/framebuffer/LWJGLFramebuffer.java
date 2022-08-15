@@ -2,34 +2,22 @@ package gamelauncher.lwjgl.render.framebuffer;
 
 import static org.lwjgl.opengles.GLES20.*;
 
-import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
-public class LWJGLFramebuffer implements Framebuffer {
+public class LWJGLFramebuffer extends AbstractFramebuffer {
 
 	private final int id;
-	private final NumberValue width = NumberValue.zero();
-	private final NumberValue height = NumberValue.zero();
 
-	public LWJGLFramebuffer() {
-		this(glGenFramebuffers());
+	public LWJGLFramebuffer(Window window) {
+		this(GlStates.current().genFramebuffers(), window);
 	}
 
-	public LWJGLFramebuffer(int id) {
+	public LWJGLFramebuffer(int id, Window window) {
+		super(window);
 		this.id = id;
-	}
-
-	@Override
-	public NumberValue width() {
-		return width;
-	}
-
-	@Override
-	public NumberValue height() {
-		return height;
 	}
 
 	public void bind() {
@@ -43,7 +31,7 @@ public class LWJGLFramebuffer implements Framebuffer {
 	public boolean isComplete() {
 		try {
 			bind();
-			int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			int status = GlStates.current().checkFramebufferStatus(GL_FRAMEBUFFER);
 			return status == GL_FRAMEBUFFER_COMPLETE;
 		} finally {
 			unbind();
@@ -54,7 +42,8 @@ public class LWJGLFramebuffer implements Framebuffer {
 		if (!isComplete()) {
 			try {
 				bind();
-				throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(glCheckFramebufferStatus(GL_FRAMEBUFFER)));
+				throw new GameException("Framebuffer not complete: Error "
+						+ Integer.toHexString(GlStates.current().checkFramebufferStatus(GL_FRAMEBUFFER)));
 			} finally {
 				unbind();
 			}
@@ -71,10 +60,11 @@ public class LWJGLFramebuffer implements Framebuffer {
 
 	@Override
 	public void cleanup() throws GameException {
-		glDeleteFramebuffers(id);
+		GlStates.current().deleteFramebuffers(id);
 	}
 
 	public int getId() {
 		return id;
 	}
+
 }

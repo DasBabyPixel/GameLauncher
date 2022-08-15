@@ -4,7 +4,7 @@ import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.GameThread;
-import gamelauncher.engine.render.Window;
+import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 
@@ -41,29 +41,29 @@ public interface Gui {
 	/**
 	 * Called when the contents of the window should be initialized
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @throws GameException
 	 */
-	void init(Window window) throws GameException;
+	void init(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is rendered
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @param mouseX
 	 * @param mouseY
 	 * @param partialTick
 	 * @throws GameException
 	 */
-	void render(Window window, float mouseX, float mouseY, float partialTick) throws GameException;
+	void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException;
 
 	/**
 	 * Called when the contents of this {@link Gui} should be cleaned up
 	 * 
-	 * @param window
+	 * @param framebuffer
 	 * @throws GameException
 	 */
-	void cleanup(Window window) throws GameException;
+	void cleanup(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is closed
