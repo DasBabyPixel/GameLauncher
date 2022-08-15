@@ -27,7 +27,7 @@ import gamelauncher.engine.util.profiler.SectionHandler;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
-import gamelauncher.lwjgl.render.TestGameRenderer;
+import gamelauncher.lwjgl.render.LWJGLGameRenderer;
 import gamelauncher.lwjgl.render.font.BasicFontFactory;
 import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
@@ -70,7 +70,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		setKeybindManager(new LWJGLKeybindManager(this));
 		setResourceLoader(new SimpleResourceLoader());
 		setShaderLoader(new LWJGLShaderLoader());
-		setGameRenderer(new TestGameRenderer(this));
+		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 		setGuiManager(new LWJGLGuiManager(this));
 		setFontFactory(new BasicFontFactory());
@@ -94,7 +94,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 		asyncUploader = new LWJGLAsyncUploader(this);
 		setWindow(window);
 		window.getRenderThread().submit(() -> setGlyphProvider(new LWJGLGlyphProvider(this, asyncUploader)));
-		window.setRenderMode(RenderMode.ON_UPDATE);
+		window.setRenderMode(RenderMode.CONTINUOUSLY);
+		window.getFrameCounter().limit(60);
 		window.swapBuffers(false);
 		Threads.waitFor(window.createWindow());
 		asyncUploader.start();

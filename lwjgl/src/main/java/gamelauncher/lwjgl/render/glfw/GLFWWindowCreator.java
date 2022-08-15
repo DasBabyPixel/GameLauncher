@@ -58,8 +58,9 @@ public class GLFWWindowCreator implements GameRunnable {
 		window.x.setNumber(a0[0]);
 		window.y.setNumber(a1[0]);
 		glfwGetFramebufferSize(id, a0, a1);
-		window.getFramebuffer().width().setNumber(a0[0]);
-		window.getFramebuffer().height().setNumber(a0[0]);
+		window.windowFramebuffer.width().setNumber(a0[0]);
+		window.windowFramebuffer.height().setNumber(a0[0]);
+		window.manualFramebuffer.query();
 
 		window.windowCreateFuture().complete(null);
 
@@ -158,10 +159,12 @@ public class GLFWWindowCreator implements GameRunnable {
 		});
 		glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
 			@Override
-			public void invoke(long window, int width, int height) {
+			public void invoke(long w, int width, int height) {
 				GLFWWindowCreator.this.window.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
 				GLFWRenderThread rt = GLFWWindowCreator.this.window.getRenderThread();
-				rt.setSize(width, height);
+				window.windowFramebuffer.width().setNumber(width);
+				window.windowFramebuffer.height().setNumber(height);
+				rt.viewportChanged();
 				if (GLFWWindowCreator.this.window.getRenderMode() != RenderMode.MANUAL) {
 					GLFWWindowCreator.this.window.scheduleDraw();
 				}

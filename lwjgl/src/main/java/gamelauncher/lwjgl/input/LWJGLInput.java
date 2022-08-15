@@ -30,25 +30,28 @@ import gamelauncher.lwjgl.util.keybind.LWJGLMouseScrollKeybindEntry;
  */
 public class LWJGLInput implements Input {
 
-	private final GLFWWindow window;
-	private final LWJGLMouse mouse;
 	private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
+
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
 
 	private volatile QueueEntry fqentry = new QueueEntry(null, null);
+
 	private volatile QueueEntry lqentry = fqentry;
+
 	private final AtomicInteger qentrysize = new AtomicInteger();
+
 	private volatile Entry fentry = new Entry(0, (char) 0, null);
+
 	private volatile Entry lentry = fentry;
+
 	private final AtomicInteger entrysize = new AtomicInteger();
+
 	private final KeybindManager keybindManager;
 
 	/**
 	 * @param window
 	 */
 	public LWJGLInput(GLFWWindow window) {
-		this.window = window;
-		this.mouse = this.window.getMouse();
 		this.keybindManager = window.getLauncher().getKeybindManager();
 	}
 
@@ -319,6 +322,7 @@ public class LWJGLInput implements Input {
 	private static class QueueEntry {
 
 		private Entry entry;
+
 		private InputType type;
 
 		private QueueEntry next = this;
@@ -344,16 +348,23 @@ public class LWJGLInput implements Input {
 			QueueEntry other = (QueueEntry) obj;
 			return Objects.equals(entry, other.entry) && type == other.type;
 		}
+
 	}
 
 	private static class Entry {
 
 		private int key;
+
 		private int scancode;
+
 		private DeviceType type;
+
 		private float mx, my;
+
 		private float omx;
+
 		private float omy;
+
 		private char ch;
 
 		private Entry next = this;
@@ -394,6 +405,7 @@ public class LWJGLInput implements Input {
 			Entry other = (Entry) obj;
 			return key == other.key && type == other.type && scancode == other.scancode && ch == other.ch;
 		}
+
 	}
 
 	/**
@@ -444,4 +456,5 @@ public class LWJGLInput implements Input {
 		 */
 		KEYBOARD
 	}
+
 }

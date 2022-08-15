@@ -115,20 +115,4 @@ public class GlyphsMesh implements ColorMultiplierModel {
 		}
 	}
 
-	private class Bundle {
-
-		private final float[] positions;
-
-		private final float[] texCoords;
-
-		private final int[] indices;
-
-		public Bundle(float[] positions, float[] texCoords, int[] indices) {
-			this.positions = positions;
-			this.texCoords = texCoords;
-			this.indices = indices;
-		}
-
-	}
-
 }

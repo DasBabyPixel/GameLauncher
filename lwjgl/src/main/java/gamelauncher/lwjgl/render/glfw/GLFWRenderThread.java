@@ -9,7 +9,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
@@ -34,8 +33,6 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	final Condition hasContextCondition = hasContextLock.newCondition();
 	final Phaser drawPhaser = new Phaser();
 	private final AtomicBoolean viewportChanged = new AtomicBoolean(false);
-	private final NumberValue width = NumberValue.zero();
-	private final NumberValue height = NumberValue.zero();
 	private FrameRenderer lastFrameRenderer = null;
 	private boolean shouldDraw = false;
 
@@ -50,7 +47,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	protected void startExecuting() {
 		Threads.waitFor(window.windowCreateFuture());
 		drawPhaser.register();
-		setSize(window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+		viewportChanged();
 
 		StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
 		hasContext.set(true);
@@ -137,10 +134,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 			}
 
 			if (viewportChanged.compareAndSet(true, false)) {
-				int width = this.width.intValue();
-				int height = this.height.intValue();
-				window.getFramebuffer().width().setNumber(width);
-				window.getFramebuffer().height().setNumber(height);
+				window.manualFramebuffer.query();
 				try {
 					fr.windowSizeChanged(window);
 				} catch (Throwable ex) {
@@ -189,9 +183,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		return window;
 	}
 
-	void setSize(int width, int height) {
-		this.width.setNumber(width);
-		this.height.setNumber(height);
+	void viewportChanged() {
 		this.viewportChanged.set(true);
 	}
 

@@ -25,6 +25,7 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		width().setNumber(width);
 		height().setNumber(height);
 		bind();
+		
 		GlStates c = GlStates.current();
 		colorTexture = Threads
 				.waitFor(launcher.getTextureManager().createTexture((ExecutorThread) Thread.currentThread()));
@@ -39,15 +40,17 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		unbind();
 	}
 
-	public void resize(int width, int height) {
+	public void resize(int width, int height) throws GameException {
 		if (width().intValue() == width && height().intValue() == height) {
 			return;
 		}
 		width().setNumber(width);
 		height().setNumber(height);
-//		Threads.waitFor(resizeColorTexture());
-		Threads.waitFor(colorTexture.allocate(width().intValue(), height().intValue()));
-		System.out.printf("BasicFB: %s %s%n", width().intValue(), height().intValue());
+		Threads.waitFor(resizeColorTexture());
+		bind();
+		GlStates.current().framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
+		unbind();
+		checkComplete();
 		resizeDepthStencilRenderbuffer();
 	}
 
@@ -64,7 +67,7 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 	}
 
 	private CompletableFuture<Void> resizeColorTexture() {
-		return colorTexture.resize(width().intValue(), height().intValue());
+		return colorTexture.allocate(width().intValue(), height().intValue());
 	}
 
 	@Override

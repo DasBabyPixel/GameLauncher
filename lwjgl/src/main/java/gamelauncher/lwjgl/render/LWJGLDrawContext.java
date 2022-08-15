@@ -89,7 +89,6 @@ public class LWJGLDrawContext implements DrawContext {
 			parent.children.add(new WeakReference<LWJGLDrawContext>(this));
 		}
 		this.framebuffer = framebuffer;
-		System.out.println("Context: " + this.framebuffer);
 		this.listener = new DrawContextFramebufferChangeListener(this, this.framebuffer.width(),
 				this.framebuffer.height());
 		this.tx = tx;
@@ -142,7 +141,6 @@ public class LWJGLDrawContext implements DrawContext {
 
 	public void invalidateProjectionMatrix() throws GameException {
 		projectionMatrixValid.set(false);
-		System.out.println("Invalid");
 		runForChildren(ctx -> {
 			ctx.invalidateProjectionMatrix();
 		});

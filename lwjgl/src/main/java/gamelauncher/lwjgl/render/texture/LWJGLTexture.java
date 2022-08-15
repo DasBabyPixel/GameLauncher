@@ -253,18 +253,14 @@ public class LWJGLTexture implements Texture {
 			GlStates c = GlStates.current();
 			u.framebuffer1.bind();
 			c.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, nid, 0);
-			glClearColor(0, 0.3F, 0.6F, 0.9F);
-			glClear(GL_COLOR_BUFFER_BIT);
 			u.framebuffer1.unbind();
 			u.framebuffer2.bind();
 			c.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, oid, 0);
 			u.framebuffer2.unbind();
 
-			profiler.check();
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, u.framebuffer2.getId());
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, u.framebuffer1.getId());
-			c.blitFramebuffer(0, 0, owidth, oheight, 0, 0, owidth, oheight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-			profiler.check();
+			c.blitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 

@@ -342,7 +342,6 @@ public class GlStates {
 
 	public void viewport(int x, int y, int width, int height) {
 		glViewport(x, y, width, height);
-		Thread.dumpStack();
 	}
 
 	public void uniform1fv(int id, FloatBuffer floatBuffer) {

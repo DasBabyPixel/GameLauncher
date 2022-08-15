@@ -26,12 +26,17 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
 		};
 		handle.width().addListener(invalid);
 		handle.height().addListener(invalid);
+		query();
 	}
 
 	public void query() {
 		newValue.setValue(false);
 		width().setNumber(handle.width().getNumber());
 		height().setNumber(handle.height().getNumber());
+	}
+	
+	public BooleanValue newValue() {
+		return newValue;
 	}
 
 	@Override

@@ -151,7 +151,6 @@ public abstract class GameLauncher {
 	 * @param framebuffer
 	 * @return a new {@link DrawContext}
 	 */
-	@Deprecated
 	public abstract DrawContext createContext(Framebuffer framebuffer);
 
 	/**

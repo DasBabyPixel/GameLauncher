@@ -13,7 +13,6 @@ import de.dasbabypixel.api.property.Property;
 import de.dasbabypixel.api.property.implementation.ObjectProperty;
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
@@ -21,6 +20,7 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
+import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
@@ -29,7 +29,9 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	private final LWJGLGameLauncher launcher;
 
-	private final WindowFramebuffer framebuffer;
+	final WindowFramebuffer windowFramebuffer;
+
+	final ManualQueryFramebuffer manualFramebuffer;
 
 	private final GLFWThread glfwThread;
 
@@ -86,7 +88,8 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.renderMode = ObjectProperty.empty();
 		this.frameRenderer = ObjectProperty.empty();
 		this.renderThread = new GLFWRenderThread(this);
-		this.framebuffer = new WindowFramebuffer(this);
+		this.windowFramebuffer = new WindowFramebuffer(this);
+		this.manualFramebuffer = new ManualQueryFramebuffer(this.windowFramebuffer);
 		this.mouse = new LWJGLMouse(this);
 		this.input = new LWJGLInput(this);
 		this.secondaryContext = new GLFWSecondaryContext(this);
@@ -151,29 +154,21 @@ public class GLFWWindow implements Window, GLFWUser {
 		});
 	}
 
-//	public CompletableFuture<Void> closeWindow() {
-//		this.renderThread.exit().thenRun(() -> {
-//			glfwThread.submit(() -> {
-//				if (glfwId != 0) {
-//					System.out.println("close");
-//					destroy();
-//					StateRegistry.removeWindow(glfwId);
-//					glfwDestroyWindow(this.getGLFWId());
-//					this.glfwId = 0;
-//				}
-//			});
-//		});
-//		return windowCloseFuture.thenApply(v -> null);
-//	}
-
 	@Override
 	public void beginFrame() {
+		manualFramebuffer.query();
 	}
 
 	@Override
 	public void endFrame() {
 		if (swapBuffers.get()) {
-			glfwSwapBuffers(this.getGLFWId());
+			if (!manualFramebuffer.newValue().booleanValue()) {
+//				if (System.nanoTime() - (lastFBResizeNanos + TimeUnit.MILLISECONDS.toNanos(50)) > 0) {
+				glfwSwapBuffers(this.getGLFWId());
+//				} else {
+//					scheduleDraw();
+//				}
+			}
 		}
 	}
 
@@ -279,8 +274,9 @@ public class GLFWWindow implements Window, GLFWUser {
 	}
 
 	@Override
-	public Framebuffer getFramebuffer() {
-		return framebuffer;
+	@Deprecated
+	public ManualQueryFramebuffer getFramebuffer() {
+		return manualFramebuffer;
 	}
 
 	@Override
