@@ -125,10 +125,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 			glContext.blend.dstrgb.set(GL_ONE_MINUS_SRC_ALPHA);
 			glContext.replace(null);
 
-			mainFramebuffer = new BasicFramebuffer(launcher, window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+			mainFramebuffer = new BasicFramebuffer(launcher, window.getFramebuffer().width().intValue(),
+					window.getFramebuffer().height().intValue());
 			mainScreenItem = new GameItem(new Texture2DModel(mainFramebuffer.getColorTexture()));
 			mainScreenItemModel = mainScreenItem.createModel();
-			
+
 			contexthud = launcher.createContext(mainFramebuffer);
 			contexthud.setProgram(shaderhud);
 			contexthud.setProjection(new Transformations.Projection.Projection2D());
@@ -147,7 +148,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 		}
 
 		public void windowSizeChanged() throws GameException {
-			mainFramebuffer.resize(window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+			mainFramebuffer.resize(window.getFramebuffer().width().intValue(),
+					window.getFramebuffer().height().intValue());
 			updateScreenItems();
 		}
 
@@ -165,6 +167,8 @@ public class LWJGLGameRenderer implements GameRenderer {
 			cur.clearColor(0, 0, 0, 0);
 			cur.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			launcher.getProfiler().check();
+
 			mainFramebuffer.bind();
 
 			cur.clearColor(0.2F, 0.2F, 0.2F, 0.8F);
@@ -181,11 +185,16 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			mainFramebuffer.unbind();
 
+			launcher.getProfiler().check();
+
 			contexthud.update(camera);
 			contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
 			contexthud.getProgram().clearUniforms();
+			
+			launcher.getProfiler().check();
 
 			window.endFrame();
+			glGetError();
 		}
 
 		private void cleanup(Renderer renderer) throws GameException {

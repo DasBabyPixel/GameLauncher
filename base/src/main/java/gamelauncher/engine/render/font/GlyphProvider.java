@@ -1,6 +1,6 @@
 package gamelauncher.engine.render.font;
 
-import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
 
@@ -16,6 +16,6 @@ public interface GlyphProvider extends GameResource {
 	 * @return the model for the text
 	 * @throws GameException
 	 */
-	Model loadStaticModel(Font font, String text, int pixelHeight) throws GameException;
+	GlyphStaticModel loadStaticModel(Font font, String text, int pixelHeight) throws GameException;
 
 }

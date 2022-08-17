@@ -38,6 +38,7 @@ public class GLFWWindowCreator implements GameRunnable {
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
 		long id = glfwCreateWindow(window.width.intValue(), window.height.intValue(), window.title.getValue(), 0, 0);
 		StateRegistry.addWindow(id);
 		if (id == NULL) {

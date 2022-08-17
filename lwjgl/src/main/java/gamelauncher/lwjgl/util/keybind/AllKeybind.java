@@ -1,7 +1,5 @@
 package gamelauncher.lwjgl.util.keybind;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEntry;
@@ -20,7 +18,7 @@ public class AllKeybind implements Keybind {
 
 	/**
 	 */
-	public final AtomicInteger id = new AtomicInteger();
+	public int id = 0;
 	
 	private AllKeybind() {
 	}
@@ -32,7 +30,7 @@ public class AllKeybind implements Keybind {
 
 	@Override
 	public int getUniqueId() {
-		return id.get();
+		return id;
 	}
 
 	@Override

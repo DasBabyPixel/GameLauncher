@@ -274,8 +274,8 @@ public class ResourceStream implements AutoCloseable {
 	 * @throws GameException
 	 */
 	public byte[] readAllBytes() throws GameException {
-		byte[] buffer = new byte[16384];
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buffer = new byte[2048];
+		ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
 		int read;
 		while ((read = readBytes(buffer)) != -1) {
 			out.write(buffer, 0, read);

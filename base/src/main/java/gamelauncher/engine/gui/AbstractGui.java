@@ -5,6 +5,7 @@ import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.keybind.KeybindEntry;
 
 /**
  * @author DasBabyPixel
@@ -78,6 +79,11 @@ public abstract class AbstractGui implements Gui {
 	@Override
 	public void onOpen() throws GameException {
 
+	}
+	
+	@Override
+	public void handle(KeybindEntry entry) throws GameException {
+		
 	}
 
 	@Override

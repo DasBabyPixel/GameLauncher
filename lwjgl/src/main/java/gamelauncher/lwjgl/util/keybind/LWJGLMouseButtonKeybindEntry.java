@@ -9,9 +9,11 @@ import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 public class LWJGLMouseButtonKeybindEntry extends AbstractKeybindEntry implements MouseButtonKeybindEntry {
 
 	private final float mouseX;
+
 	private final float mouseY;
+
 	private final Type type;
-	
+
 	/**
 	 * @param keybind
 	 * @param mouseX
@@ -44,4 +46,10 @@ public class LWJGLMouseButtonKeybindEntry extends AbstractKeybindEntry implement
 	public MouseButtonKeybindEntry withType(Type type) {
 		return new LWJGLMouseButtonKeybindEntry(getKeybind(), mouseX, mouseY, type);
 	}
+
+	@Override
+	public String toString() {
+		return "MouseButtonKeybindEntry [mouseX=" + mouseX + ", mouseY=" + mouseY + ", type=" + type + "]";
+	}
+
 }

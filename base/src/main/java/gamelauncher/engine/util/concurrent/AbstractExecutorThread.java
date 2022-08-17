@@ -4,9 +4,8 @@ import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
@@ -19,22 +18,20 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 
 	private final Deque<QueueEntry> queue = new ConcurrentLinkedDeque<>();
 
-	protected final Lock lock;
-
-	protected final Condition condition;
-
 	protected final CountDownLatch exit = new CountDownLatch(1);
 
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
 
-	private boolean work = false;
+	private final AtomicBoolean work = new AtomicBoolean();
+
+	private final AtomicBoolean parked = new AtomicBoolean(false);
+
+	private final AtomicBoolean unpark = new AtomicBoolean(false);
 
 	public WrapperEntry currentEntry;
 
 	public AbstractExecutorThread(ThreadGroup group) {
 		super(group, (Runnable) null);
-		this.lock = new ReentrantLock(true);
-		this.condition = this.lock.newCondition();
 	}
 
 	public CompletableFuture<Void> exitFuture() {
@@ -47,6 +44,35 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 		return exitFuture();
 	}
 
+	@Override
+	public void park() {
+		if (Thread.currentThread() != this) {
+			throw new SecurityException("May not call this from any other thread than self");
+		}
+		if (unpark.compareAndSet(true, false)) {
+			return;
+		}
+		parked.set(true);
+		if (unpark.compareAndSet(true, false)) {
+			parked.set(false);
+			return;
+		}
+		LockSupport.park();
+	}
+
+	@Override
+	public void unpark() {
+		if (parked.compareAndSet(true, false)) {
+			LockSupport.unpark(this);
+		} else {
+			unpark.set(true);
+			if (parked.compareAndSet(true, false)) {
+				unpark.set(false);
+				LockSupport.unpark(this);
+			}
+		}
+	}
+
 	protected abstract void startExecuting();
 
 	protected abstract void stopExecuting();
@@ -54,20 +80,20 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 	protected abstract void workExecution();
 
 	protected void loop() {
-		waitForSignal();
+		if (shouldWaitForSignal()) {
+			waitForSignal();
+		}
 		workQueue();
 		workExecution();
 	}
 
 	protected void waitForSignal() {
-		this.lock.lock();
-		if (!work) {
-			if (useCondition()) {
-				this.condition.awaitUninterruptibly();
-			}
+		while (!work.compareAndSet(true, false)) {
+			Threads.park();
+//			if (useCondition()) {
+//				this.condition.awaitUninterruptibly();
+//			}
 		}
-		work = false;
-		this.lock.unlock();
 	}
 
 	@Override
@@ -127,15 +153,18 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 		return this;
 	}
 
-	protected boolean useCondition() {
+//	protected boolean useCondition() {
+//		return true;
+//	}
+
+	protected boolean shouldWaitForSignal() {
 		return true;
 	}
 
 	protected void signal() {
-		this.lock.lock();
-		work = true;
-		this.condition.signal();
-		this.lock.unlock();
+		if (work.compareAndSet(false, true)) {
+			Threads.unpark((ParkableThread) this);
+		}
 	}
 
 	@Override

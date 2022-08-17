@@ -113,10 +113,6 @@ public class LWJGLTexture implements Texture {
 					memFree(bbuf);
 					cur.flush();
 					cur.finish();
-
-//					write(this.textureId.get(), cwidth, cheight);
-
-//					write(this.textureId.get(), cwidth, cheight);
 					lock.writeLock().unlock();
 					profiler.end();
 				}).thenRun(() -> fut.complete(null));
@@ -145,22 +141,11 @@ public class LWJGLTexture implements Texture {
 		profiler.check();
 		cur.bindTexture(GL_TEXTURE_2D, 0);
 		profiler.check();
-//		write(textureId.get(), cwidth, cheight);
 		lock.writeLock().unlock();
 		profiler.end();
 	}
 
 	private static final AtomicInteger tid = new AtomicInteger();
-
-	@Deprecated
-	public static void write(int textureId, int width, int height) {
-		try {
-			ImageIO.write(getBufferedImage(textureId, width, height), "png",
-					new File("img" + tid.incrementAndGet() + ".png"));
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
 
 	public CompletableFuture<Void> write() {
 		return owner.submit(() -> {
@@ -263,9 +248,6 @@ public class LWJGLTexture implements Texture {
 			c.blitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-//			write(oid, owidth, oheight);
-//			write(nid, nwidth, nheight);
 
 			textureId.set(nid);
 			cur.deleteTextures(oid);

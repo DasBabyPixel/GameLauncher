@@ -20,6 +20,7 @@ import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.model.WrapperModel;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
@@ -70,14 +71,12 @@ public class LWJGLDrawContext implements DrawContext {
 	private final Vector4f colorAdd = new Vector4f();
 
 	// Used for combined models
-	private final Matrix4f combinedModelMMatrix4f = new Matrix4f();
-
 	public LWJGLDrawContext(Framebuffer framebuffer) {
 		this(null, framebuffer, 0, 0, 0, 1, 1, 1);
 	}
 
-	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz, double sx,
-			double sy, double sz) {
+	private LWJGLDrawContext(LWJGLDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz,
+			double sx, double sy, double sz) {
 		this(parent, framebuffer, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(),
 				new AtomicReference<>());
 	}
@@ -283,13 +282,16 @@ public class LWJGLDrawContext implements DrawContext {
 			pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
 		} else if (model instanceof LWJGLCombinedModelsModel) {
 			LWJGLCombinedModelsModel comb = (LWJGLCombinedModelsModel) model;
-			combinedModelMMatrix4f.set(modelMatrix);
+			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
+			comb.modelMatix.set(modelMatrix);
 			for (Model m : comb.getModels()) {
 				comb.colorMultiplier.set(colorMultiplier);
 				comb.colorAdd.set(colorAdd);
-				modelMatrix.set(combinedModelMMatrix4f);
-				pDrawModel(m, x, y, z, rx, ry, rz, sx, sy, sz, comb.colorMultiplier, comb.colorAdd);
+				modelMatrix.set(comb.modelMatix);
+				pDrawModel(m, 0, 0, 0, 0, 0, 0, 1, 1, 1, comb.colorMultiplier, comb.colorAdd);
 			}
+		} else if (model instanceof WrapperModel) {
+			pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
 		} else {
 			setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
 			drawMesh(model, colorMultiplier, colorAdd);

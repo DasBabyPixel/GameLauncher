@@ -73,7 +73,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		setGameRenderer(new LWJGLGameRenderer(this));
 		setModelLoader(new LWJGLModelLoader(this));
 		setGuiManager(new LWJGLGuiManager(this));
-		setFontFactory(new BasicFontFactory());
+		setFontFactory(new BasicFontFactory(this));
 		setTextureManager(new LWJGLTextureManager(this));
 		setOperatingSystem(OperatingSystem.WINDOWS);
 		this.glThreadGroup = new GlThreadGroup();

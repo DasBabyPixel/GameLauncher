@@ -8,6 +8,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
@@ -120,24 +122,56 @@ public class Threads implements GameResource {
 	 * @param futures
 	 */
 	public static void waitFor(CompletableFuture<?>... futures) {
-		Thread cur = Thread.currentThread();
-		ExecutorThread ex = null;
-		if (cur instanceof ExecutorThread) {
-			ex = (ExecutorThread) cur;
-		}
-		for (CompletableFuture<?> fut : futures) {
-			while (!fut.isDone()) {
-				try {
-					fut.get(5, TimeUnit.MILLISECONDS);
-				} catch (InterruptedException | ExecutionException ex1) {
-					ex1.printStackTrace();
-				} catch (TimeoutException ex1) {
-					if (ex != null) {
-						ex.workQueue();
-					}
-				}
+		final Thread thread = Thread.currentThread();
+		final int required = futures.length;
+		final AtomicInteger done = new AtomicInteger();
+		Runnable run = () -> {
+			if (done.incrementAndGet() == required) {
+				unpark(thread);
 			}
+		};
+		for (CompletableFuture<?> fut : futures) {
+			fut.thenRun(run);
 		}
+		while (done.get() != required) {
+			park();
+		}
+	}
+
+	/**
+	 * Parks the current thread
+	 */
+	public static void park() {
+		Thread thread = Thread.currentThread();
+		if (thread instanceof ParkableThread) {
+			((ParkableThread) thread).park();
+		} else {
+			LockSupport.park();
+		}
+	}
+
+	/**
+	 * Unparks the given thread. Calling this while the thread is not parked will
+	 * cause the next park invocation to not be executed
+	 * 
+	 * @param thread
+	 */
+	public static void unpark(Thread thread) {
+		if (thread instanceof ParkableThread) {
+			unpark((ParkableThread) thread);
+		} else {
+			LockSupport.unpark(thread);
+		}
+	}
+
+	/**
+	 * Unparks the given thread. Calling this while the thread is not parked will
+	 * cause the next park invocation to not be executed
+	 * 
+	 * @param thread
+	 */
+	public static void unpark(ParkableThread thread) {
+		thread.unpark();
 	}
 
 	/**
@@ -149,10 +183,16 @@ public class Threads implements GameResource {
 	 * @return the result from the {@link CompletableFuture}
 	 */
 	public static <T> T waitFor(CompletableFuture<T> future) {
-		waitFor(new CompletableFuture[] {
-				future
+		Thread thread = Thread.currentThread();
+		AtomicReference<T> ref = new AtomicReference<>();
+		future.thenAccept(value -> {
+			ref.set(value);
+			unpark(thread);
 		});
-		return future.getNow(null);
+		while (!future.isDone()) {
+			park();
+		}
+		return ref.get();
 	}
 
 	/**

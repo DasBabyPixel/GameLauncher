@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,7 +33,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	/**
 	 * The {@link Gui}s of this {@link ParentableAbstractGui} object
 	 */
-	public final Collection<Gui> GUIs = ConcurrentHashMap.newKeySet();
+	public final Collection<Gui> GUIs = new ConcurrentLinkedDeque<>();
 	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
 	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
 	private final AtomicBoolean initialized = new AtomicBoolean();

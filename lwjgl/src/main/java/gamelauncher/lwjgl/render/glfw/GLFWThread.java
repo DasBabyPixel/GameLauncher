@@ -53,8 +53,13 @@ public class GLFWThread extends AbstractExecutorThread {
 		glfwPollEvents();
 	}
 	
+//	@Override
+//	protected boolean useCondition() {
+//		return false;
+//	}
+	
 	@Override
-	protected boolean useCondition() {
+	protected boolean shouldWaitForSignal() {
 		return false;
 	}
 

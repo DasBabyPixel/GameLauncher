@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render.model;
 
+import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
 import gamelauncher.engine.render.model.CombinedModelsModel;
@@ -11,7 +12,11 @@ import gamelauncher.engine.util.GameException;
 public final class LWJGLCombinedModelsModel implements CombinedModelsModel {
 
 	private final Model[] models;
+
+	public final Matrix4f modelMatix = new Matrix4f();
+
 	public final Vector4f colorMultiplier = new Vector4f();
+
 	public final Vector4f colorAdd = new Vector4f();
 
 	public LWJGLCombinedModelsModel(Model... models) {
@@ -35,4 +40,5 @@ public final class LWJGLCombinedModelsModel implements CombinedModelsModel {
 	public Model[] getModels() {
 		return models;
 	}
+
 }

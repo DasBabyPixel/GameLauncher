@@ -11,7 +11,7 @@ import gamelauncher.engine.util.function.GameRunnable;
  * 
  * @author DasBabyPixel
  */
-public interface ExecutorThread {
+public interface ExecutorThread extends ParkableThread {
 
 	/**
 	 * @param runnable
@@ -65,11 +65,23 @@ public interface ExecutorThread {
 	}
 
 	/**
+	 * Parks this thread. All tasks will still execute, just the main loop wont
+	 */
+	@Override
+	void park();
+
+	/**
+	 * Unparks this thread
+	 */
+	@Override
+	void unpark();
+
+	/**
 	 * Runs all submitted tasks on the current thread. DO NOT CALL THIS UNLESS YOU
 	 * KNOW WHAT YOU'RE DOING!
 	 */
 	void workQueue();
-	
+
 	/**
 	 * @return the underlying thread
 	 */

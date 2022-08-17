@@ -14,13 +14,16 @@ import java.util.Map;
 import org.lwjgl.stb.STBTTFontinfo;
 
 import gamelauncher.engine.render.GameItem;
+import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.CombinedModelsModel;
+import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
@@ -42,12 +45,18 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 	}
 
 	@Override
-	public Model loadStaticModel(Font font, String text, int pixelHeight) throws GameException {
+	public GlyphStaticModel loadStaticModel(Font font, String text, int pixelHeight) throws GameException {
 		STBTTFontinfo finfo = STBTTFontinfo.malloc();
 		if (!stbtt_InitFont(finfo, font.data())) {
 			throw new GameException("Failed to initialize font");
 		}
 		float scale = stbtt_ScaleForPixelHeight(finfo, pixelHeight);
+		int[] aascent = new int[1];
+		int[] adescent = new int[1];
+		int[] alinegap = new int[1];
+		stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
+		float descent = adescent[0] * scale;
+		float ascent = aascent[0] * scale;
 		char[] ar = text.toCharArray();
 		Map<LWJGLTexture, Collection<DynamicSizeTextureAtlas.Entry>> entries = new HashMap<>();
 		for (int i = 0; i < ar.length; i++) {
@@ -62,7 +71,9 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 			e.add(entry);
 		}
 		Collection<Model> meshes = new ArrayList<>();
-		float xpos = 0;
+		int mwidth = 0;
+		int mheight = 0;
+		int xpos = 0;
 		float z = 0;
 		for (Map.Entry<LWJGLTexture, Collection<DynamicSizeTextureAtlas.Entry>> entry : entries.entrySet()) {
 			for (DynamicSizeTextureAtlas.Entry e : entry.getValue()) {
@@ -85,27 +96,31 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				float x = pl + width / 2F;
 				float y = pt + height / 2F;
 
-				Model m = new Texture2DModel(e.getTexture(), tl, 1 - tb, tr, 1 - tt);
+				mheight = Math.max(mheight, Math.ceil(height));
+				mwidth = Math.ceil(xpos + width);
+
+				Model m = new Texture2DModel(e.getTexture(), tl, 1 - tb, tr, 1 - tt) {
+					@Override
+					public void cleanup() throws GameException {
+						releaseGlyphKey(e.getEntry().key);
+						super.cleanup();
+					}
+				};
+
 				GameItem gi = new GameItem(m);
 				gi.setPosition(x, y, z);
 				gi.setScale(width, height, 1);
 				m = gi.createModel();
 				meshes.add(m);
 				xpos += e.getEntry().data.advance;
-//				return m;
-//				return m;
-//				return gi.createModel();
 			}
 		}
-//		Texture2DModel tm = new Texture2DModel(entries.keySet().stream().findAny().get());
-//		tm.getTexture().write();
-//		GameItem tgi = new GameItem(tm);
-//		tgi.setScale(300);
-//		return tgi.createModel();
+		entries.keySet().stream().findAny().get().write();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[meshes.size()]));
 		GameItem gi = new GameItem(cmodel);
 		gi.setAddColor(1, 1, 1, 0);
-		return gi.createModel();
+		GameItemModel gim = gi.createModel();
+		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
 	}
 
 	public void releaseGlyphKey(GlyphKey key) {

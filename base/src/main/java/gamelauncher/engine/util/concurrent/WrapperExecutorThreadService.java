@@ -71,6 +71,16 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 	}
 
 	@Override
+	public void park() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void unpark() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public CompletableFuture<Void> submitLast(GameRunnable runnable) {
 		throw new UnsupportedOperationException();
 	}

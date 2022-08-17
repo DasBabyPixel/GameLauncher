@@ -118,7 +118,7 @@ public class LWJGLInput implements Input {
 			keybindManager.post(keybind -> {
 				int id = LWJGLKeybindManager.MOUSE_ADD + mouseButton;
 				if (keybind instanceof AllKeybind) {
-					((AllKeybind) keybind).id.set(id);
+					((AllKeybind) keybind).id = id;
 				}
 				if (keybind.getUniqueId() != id) {
 					return null;
@@ -150,7 +150,7 @@ public class LWJGLInput implements Input {
 			int id = key == GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode
 					: LWJGLKeybindManager.KEYBOARD_ADD + key;
 			if (keybind instanceof AllKeybind) {
-				((AllKeybind) keybind).id.set(id);
+				((AllKeybind) keybind).id = id;
 			}
 			if (keybind.getUniqueId() != id) {
 				return null;

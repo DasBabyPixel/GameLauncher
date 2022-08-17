@@ -8,6 +8,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.event.EventHandler;
+import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
@@ -19,6 +21,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
+import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
 
@@ -29,8 +32,11 @@ import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
 public class LWJGLGuiManager implements GuiManager {
 
 	private final LWJGLGameLauncher launcher;
+
 	private final Map<Framebuffer, GuiStack> guis = new ConcurrentHashMap<>();
+
 	private final Map<Class<? extends LauncherBasedGui>, GameSupplier<? extends LauncherBasedGui>> registeredGuis = new HashMap<>();
+
 	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>> converters = new HashMap<>();
 
 	/**
@@ -38,11 +44,13 @@ public class LWJGLGuiManager implements GuiManager {
 	 */
 	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
+		this.launcher.getEventManager().registerListener(this);
 		registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
 	}
 
 	@Override
 	public void cleanup() throws GameException {
+		this.launcher.getEventManager().unregisterListener(this);
 		@SuppressWarnings("unchecked")
 		CompletableFuture<Void>[] futures = new CompletableFuture[guis.size()];
 		int i = 0;
@@ -51,7 +59,7 @@ public class LWJGLGuiManager implements GuiManager {
 		}
 		Threads.waitFor(futures);
 	}
-	
+
 	@Override
 	public void cleanup(Framebuffer framebuffer) {
 		Threads.waitFor(cleanupLater(framebuffer));
@@ -156,4 +164,21 @@ public class LWJGLGuiManager implements GuiManager {
 		}
 		return t;
 	}
+
+	@EventHandler
+	private void handle(KeybindEntryEvent event) {
+		KeybindEntry entry = event.getEntry();
+		// TODO: Gui Selection - not relevant with only one gui being able to be opened in this guimanager
+		guis.values().forEach(stack -> {
+			StackEntry e = stack.peekGui();
+			if (e != null) {
+				try {
+					e.gui.handle(entry);
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+	}
+
 }

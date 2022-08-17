@@ -10,28 +10,51 @@ import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.util.property.PropertyVector3f;
+import gamelauncher.engine.util.property.PropertyVector4f;
 
 /**
  * @author DasBabyPixel
  */
+@SuppressWarnings("javadoc")
 public class GameItem implements GameResource {
 
 	protected Model model;
-	private final Vector3f position;
-	private final Vector3f scale;
-	private final Vector3f rotation;
-	private final Vector4f color;
-	private final Vector4f addColor;
+
+	private final Vector3f cposition;
+
+	private final Vector3f cscale;
+
+	private final Vector3f crotation;
+
+	private final Vector4f ccolor;
+
+	private final Vector4f caddColor;
+
+	private final PropertyVector3f position;
+
+	private final PropertyVector3f scale;
+
+	private final PropertyVector3f rotation;
+
+	private final PropertyVector4f color;
+
+	private final PropertyVector4f addColor;
 
 	/**
 	 * 
 	 */
 	private GameItem() {
-		position = new Vector3f(0, 0, 0);
-		scale = new Vector3f(1, 1, 1);
-		rotation = new Vector3f(0, 0, 0);
-		color = new Vector4f(1, 1, 1, 1);
-		addColor = new Vector4f(0, 0, 0, 0);
+		cposition = new Vector3f();
+		position = new PropertyVector3f(0, 0, 0);
+		cscale = new Vector3f();
+		scale = new PropertyVector3f(1, 1, 1);
+		crotation = new Vector3f();
+		rotation = new PropertyVector3f(0, 0, 0);
+		ccolor = new Vector4f();
+		color = new PropertyVector4f(1, 1, 1, 1);
+		caddColor = new Vector4f();
+		addColor = new PropertyVector4f(0, 0, 0, 0);
 	}
 
 	/**
@@ -41,19 +64,39 @@ public class GameItem implements GameResource {
 		this();
 		this.model = model;
 	}
-
+	
+	public PropertyVector3f position() {
+		return position;
+	}
+	
+	public PropertyVector4f addColor() {
+		return addColor;
+	}
+	
+	public PropertyVector4f color() {
+		return color;
+	}
+	
+	public PropertyVector3f rotation() {
+		return rotation;
+	}
+	
+	public PropertyVector3f scale() {
+		return scale;
+	}
+	
 	/**
 	 * @return the position vector
 	 */
 	public Vector3f getPosition() {
-		return position;
+		return position.toVector3f(cposition);
 	}
 
 	/**
 	 * @return the addColor
 	 */
 	public Vector4f getAddColor() {
-		return addColor;
+		return addColor.toVector4f(caddColor);
 	}
 
 	/**
@@ -74,16 +117,14 @@ public class GameItem implements GameResource {
 	 * @param z
 	 */
 	public void setPosition(float x, float y, float z) {
-		this.position.x = x;
-		this.position.y = y;
-		this.position.z = z;
+		this.position.set(x, y, z);
 	}
 
 	/**
 	 * @return the scale vector
 	 */
 	public Vector3f getScale() {
-		return scale;
+		return cscale;
 	}
 
 	/**
@@ -92,9 +133,7 @@ public class GameItem implements GameResource {
 	 * @param z
 	 */
 	public void setScale(float x, float y, float z) {
-		this.scale.x = x;
-		this.scale.y = y;
-		this.scale.z = z;
+		this.scale.set(x, y, z);
 	}
 
 	/**
@@ -108,14 +147,14 @@ public class GameItem implements GameResource {
 	 * @return the rotation vector
 	 */
 	public Vector3f getRotation() {
-		return rotation;
+		return rotation.toVector3f(crotation);
 	}
 
 	/**
 	 * @return the color vector
 	 */
 	public Vector4f getColor() {
-		return color;
+		return color.toVector4f(ccolor);
 	}
 
 	/**
@@ -134,9 +173,7 @@ public class GameItem implements GameResource {
 	 * @param z
 	 */
 	public void setRotation(float x, float y, float z) {
-		this.rotation.x = x;
-		this.rotation.y = y;
-		this.rotation.z = z;
+		this.rotation.set(x, y, z);
 	}
 
 	/**
@@ -150,7 +187,7 @@ public class GameItem implements GameResource {
 	public void cleanup() throws GameException {
 		model.cleanup();
 	}
-	
+
 	/**
 	 * @return the {@link GameItemModel} for this {@link GameItem}
 	 */
@@ -162,17 +199,18 @@ public class GameItem implements GameResource {
 	 * @param transformationMatrix
 	 */
 	public void applyToTransformationMatrix(Matrix4f transformationMatrix) {
-		transformationMatrix.translate(position.x, position.y, position.z);
-		transformationMatrix.rotateX((float) Math.toRadians(-rotation.x));
-		transformationMatrix.rotateY((float) Math.toRadians(-rotation.y));
-		transformationMatrix.rotateZ((float) Math.toRadians(-rotation.z));
-		transformationMatrix.scale(scale.x, scale.y, scale.z);
+		transformationMatrix.translate(position.x.floatValue(), position.y.floatValue(), position.z.floatValue());
+		transformationMatrix.rotateX((float) Math.toRadians(-rotation.x.floatValue()));
+		transformationMatrix.rotateY((float) Math.toRadians(-rotation.y.floatValue()));
+		transformationMatrix.rotateZ((float) Math.toRadians(-rotation.z.floatValue()));
+		transformationMatrix.scale(scale.x.floatValue(), scale.y.floatValue(), scale.z.floatValue());
 	}
 
 	/**
 	 * @author DasBabyPixel
 	 */
 	public static final class GameItemModel implements ColorMultiplierModel, ColorAddModel {
+
 		/**
 		 */
 		public final GameItem gameItem;
@@ -193,7 +231,7 @@ public class GameItem implements GameResource {
 		public void render(ShaderProgram program) throws GameException {
 			gameItem.model.render(program);
 		}
-		
+
 		@Override
 		public Vector4f getAddColor() {
 			return gameItem.getAddColor();
@@ -203,5 +241,7 @@ public class GameItem implements GameResource {
 		public Vector4f getColor() {
 			return gameItem.getColor();
 		}
+
 	}
+
 }

@@ -96,4 +96,12 @@ public class Math {
 		return (float) java.lang.Math.floor(f);
 	}
 
+	/**
+	 * @param height
+	 * @return {@link Math#ceil(double)}
+	 */
+	public static int ceil(double height) {
+		return (int) java.lang.Math.ceil(height);
+	}
+
 }

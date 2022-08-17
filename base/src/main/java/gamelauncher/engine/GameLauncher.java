@@ -64,7 +64,7 @@ public abstract class GameLauncher {
 	/**
 	 * The max TPS in the {@link GameThread}
 	 */
-	public static final float MAX_TPS = 0.5F;
+	public static final float MAX_TPS = 60F;
 
 	private final EventManager eventManager;
 
