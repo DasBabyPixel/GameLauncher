@@ -2,9 +2,9 @@ package gamelauncher.engine.gui;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.function.GameSupplier;
 
 /**

@@ -1,7 +1,7 @@
 package gamelauncher.engine.render;
 
 import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.resource.GameResource;
 
 /**
  * @author DasBabyPixel
@@ -32,6 +32,11 @@ public interface Framebuffer extends GameResource {
 	 * @return the rendering thread for this {@link Framebuffer}
 	 */
 	RenderThread getRenderThread();
+	
+	/**
+	 * @return the scissorStack
+	 */
+	ScissorStack scissorStack();
 	
 	/**
 	 * 

@@ -4,10 +4,11 @@ import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.WrapperModel;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
 @SuppressWarnings("javadoc")
-public class GlyphModelWrapper implements GlyphStaticModel, WrapperModel {
+public class GlyphModelWrapper extends AbstractGameResource implements GlyphStaticModel, WrapperModel {
 
 	private final Model handle;
 
@@ -34,7 +35,7 @@ public class GlyphModelWrapper implements GlyphStaticModel, WrapperModel {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		handle.cleanup();
 	}
 

@@ -12,24 +12,24 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.ByteBufferBackedInputStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class DynamicSizeTextureAtlas implements GameResource {
+public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
 	private final Logger logger = Logger.getLogger();
 
-	private final Map<Integer, Entry> glyphs = new HashMap<>();
+	private final Map<Integer, AtlasEntry> glyphs = new HashMap<>();
 
-	private final Map<LWJGLTexture, Collection<Entry>> byTexture = new HashMap<>();
+	private final Map<LWJGLTexture, Collection<AtlasEntry>> byTexture = new HashMap<>();
 
 	private final Lock lock = new ReentrantLock(true);
 
@@ -47,7 +47,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		});
 	}
 
-	public Entry getGlyph(int id) {
+	public AtlasEntry getGlyph(int id) {
 		try {
 			lock.lock();
 			return glyphs.get(id);
@@ -60,12 +60,19 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		return launcher.getThreads().cached.submit(() -> {
 			try {
 				lock.lock();
-				Entry entry = glyphs.remove(glyphId);
-				Collection<Entry> col = byTexture.get(entry.texture);
-				col.remove(entry);
-				if (col.isEmpty()) {
-					byTexture.remove(entry.texture);
-					entry.texture.cleanup();
+				AtlasEntry entry = glyphs.remove(glyphId);
+				if (entry != null) {
+					Collection<AtlasEntry> col = byTexture.get(entry.texture);
+					col.remove(entry);
+					if (col.isEmpty()) {
+						byTexture.remove(entry.texture);
+						entry.texture.cleanup();
+					}
+				} else {
+					logger.error("Already cleaned up glyph " + glyphId);
+					GameException ex = Threads.buildStacktrace();
+					ex.initCause(new GameException());
+					logger.error(ex);
 				}
 			} finally {
 				lock.unlock();
@@ -77,10 +84,13 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		return launcher.getThreads().cached.submit(() -> {
 			try {
 				lock.lock();
+				if(isCleanedUp()) {
+					return false;
+				}
 				if (glyphs.containsKey(glyphId)) {
 					return true;
 				}
-				Entry e = new Entry(null, entry, new Rectangle(entry.data.width, entry.data.height));
+				AtlasEntry e = new AtlasEntry(null, entry, new Rectangle(entry.data.width, entry.data.height));
 				for (LWJGLTexture texture : byTexture.keySet()) {
 					e.texture = texture;
 					if (add(glyphId, e)) {
@@ -102,7 +112,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		});
 	}
 
-	private boolean add(int glyphId, Entry e) throws GameException {
+	private boolean add(int glyphId, AtlasEntry e) throws GameException {
 		try {
 //			Thread.dumpStack();
 			lock.lock();
@@ -155,7 +165,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 		return new Rectangle(newWidth, newHeight);
 	}
 
-	private boolean findFit(Entry entry, Rectangle bounds) {
+	private boolean findFit(AtlasEntry entry, Rectangle bounds) {
 		Rectangle rect = entry.bounds;
 		int ox = rect.x;
 		int oy = rect.y;
@@ -195,7 +205,7 @@ public class DynamicSizeTextureAtlas implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		Threads.waitFor(owner.submit(() -> {
 			lock.lock();
 			for (LWJGLTexture texture : byTexture.keySet()) {
@@ -205,34 +215,6 @@ public class DynamicSizeTextureAtlas implements GameResource {
 			byTexture.clear();
 			lock.unlock();
 		}));
-	}
-
-	public static class Entry {
-
-		private LWJGLTexture texture;
-
-		private GlyphEntry entry;
-
-		private Rectangle bounds;
-
-		public Entry(LWJGLTexture texture, GlyphEntry entry, Rectangle bounds) {
-			this.texture = texture;
-			this.entry = entry;
-			this.bounds = bounds;
-		}
-
-		public Rectangle getBounds() {
-			return bounds;
-		}
-
-		public GlyphEntry getEntry() {
-			return entry;
-		}
-
-		public LWJGLTexture getTexture() {
-			return texture;
-		}
-
 	}
 
 }

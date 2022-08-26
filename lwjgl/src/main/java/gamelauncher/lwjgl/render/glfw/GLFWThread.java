@@ -13,7 +13,9 @@ import gamelauncher.engine.util.logging.Logger;
 public class GLFWThread extends AbstractExecutorThread {
 
 	private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
+
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
+
 	private final Logger logger = Logger.getLogger();
 
 	public GLFWThread() {
@@ -52,12 +54,12 @@ public class GLFWThread extends AbstractExecutorThread {
 		glfwWaitEventsTimeout(0.5D);
 		glfwPollEvents();
 	}
-	
+
 //	@Override
 //	protected boolean useCondition() {
 //		return false;
 //	}
-	
+
 	@Override
 	protected boolean shouldWaitForSignal() {
 		return false;
@@ -65,7 +67,7 @@ public class GLFWThread extends AbstractExecutorThread {
 
 	@Override
 	protected void signal() {
-		if (exit.getCount() != 0) {
+		if (!exit) {
 			glfwPostEmptyEvent();
 		}
 		super.signal();
@@ -80,4 +82,5 @@ public class GLFWThread extends AbstractExecutorThread {
 		users.remove(user);
 		signal();
 	}
+
 }

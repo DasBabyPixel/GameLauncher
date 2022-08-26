@@ -8,9 +8,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.function.GamePredicate;
@@ -19,6 +21,7 @@ import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEntry;
 import gamelauncher.engine.util.keybind.ScrollKeybindEntry;
+import gamelauncher.engine.util.math.Math;
 
 /**
  * A {@link Gui} for having and handling sub-{@link Gui}s
@@ -30,15 +33,25 @@ import gamelauncher.engine.util.keybind.ScrollKeybindEntry;
 public abstract class ParentableAbstractGui extends AbstractGui {
 
 	private final AtomicReference<Gui> focusedGui = new AtomicReference<>(null);
+
 	/**
 	 * The {@link Gui}s of this {@link ParentableAbstractGui} object
 	 */
 	public final Collection<Gui> GUIs = new ConcurrentLinkedDeque<>();
+
 	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
+
 	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
+
 	private final AtomicBoolean initialized = new AtomicBoolean();
+
 	private final NumberValue lastMouseX = NumberValue.zero();
+
 	private final NumberValue lastMouseY = NumberValue.zero();
+
+	private final BooleanValue mouseInsideGui = BooleanValue.falseValue();
+
+	private final String className = getClass().getName();
 
 	/**
 	 * @param launcher
@@ -86,15 +99,28 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@Override
-	public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
-		init(framebuffer);
-		preRender(framebuffer, mouseX, mouseY, partialTick);
-		if (doRender(framebuffer, mouseX, mouseY, partialTick)) {
-			doForGUIs(gui -> {
-				gui.render(framebuffer, mouseX, mouseY, partialTick);
-			});
+	public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException {
+		try {
+			getLauncher().getProfiler().begin("render", "Gui-" + className);
+			init(framebuffer);
+			preRender(framebuffer, mouseX, mouseY, partialTick);
+			ScissorStack scissor = framebuffer.scissorStack();
+			int sx = Math.ceil(getXProperty().floatValue());
+			int sy = Math.ceil(getYProperty().floatValue());
+			int sw = Math.floor(getWidthProperty().floatValue() - 0.5F);
+			int sh = Math.floor(getHeightProperty().floatValue() - 0.5F);
+			scissor.pushScissor(sx, sy, sw, sh);
+			if (doRender(framebuffer, mouseX, mouseY, partialTick)) {
+				doForGUIs(gui -> {
+					gui.render(framebuffer, mouseX, mouseY, partialTick);
+				});
+			}
+			postRender(framebuffer, mouseX, mouseY, partialTick);
+			scissor.popScissor();
+		} finally {
+			getLauncher().getProfiler().end();
 		}
-		postRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
@@ -210,9 +236,14 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	private void mouseMove(MouseMoveKeybindEntry entry) throws GameException {
 		float mouseX = entry.mouseX();
 		float mouseY = entry.mouseY();
+		if (getX() < mouseX && getY() < mouseY && getX() + getWidth() > mouseX && getY() + getHeight() > mouseY) {
+			mouseInsideGui.setValue(true);
+		} else {
+			mouseInsideGui.setValue(false);
+		}
 		doForGUIs(gui -> {
 			gui.handle(entry);
-		}, gui -> gui.isHovering(mouseX, mouseY));
+		});
 	}
 
 	private void scroll(ScrollKeybindEntry entry) throws GameException {
@@ -254,15 +285,18 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@SuppressWarnings("unused")
-	protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException {
 	}
 
 	@SuppressWarnings("unused")
-	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException {
 		return true;
 	}
 
@@ -294,9 +328,17 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			}
 		}
 	}
-	
+
+	/**
+	 * @return the mouse inside gui property
+	 */
+	public BooleanValue mouseInsideGui() {
+		return mouseInsideGui;
+	}
+
 	@Override
 	public boolean isInitialized() {
 		return initialized.get();
 	}
+
 }

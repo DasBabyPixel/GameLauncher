@@ -1,4 +1,5 @@
 #version 320 es
+precision highp float;
 
 in vec2 outTexCoord;
 in vec3 mvVertexNormal;

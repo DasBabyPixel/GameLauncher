@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
@@ -79,6 +80,11 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 	public void unpark() {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public void park(long nanos) {
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public CompletableFuture<Void> submitLast(GameRunnable runnable) {
@@ -119,11 +125,23 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 				threadLocal.set(this);
 				fut.complete(callable.call());
 			} catch (Throwable ex) {
-				logger.error(ex);
-				fut.completeExceptionally(ex);
+				GameException ex2 = buildStacktrace();
+				ex2.initCause(ex);
+				logger.error(ex2);
+				fut.completeExceptionally(ex2);
 			} finally {
 				threadLocal.remove();
 			}
+		}
+
+		public GameException buildStacktrace() {
+			GameException ex = new GameException("Exception in ExecutorService");
+			if (entry != null) {
+				Throwable t = entry.calculateCause();
+				if (t != null)
+					ex.addSuppressed(t);
+			}
+			return ex;
 		}
 
 	}

@@ -3,9 +3,9 @@ package gamelauncher.engine.render.texture;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.CompletableFuture;
 
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 /**
  * @author DasBabyPixel

@@ -3,6 +3,7 @@ package gamelauncher.lwjgl.render.texture;
 import java.util.concurrent.CompletableFuture;
 
 import gamelauncher.engine.render.texture.TextureManager;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
@@ -10,7 +11,7 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.ContextLocal;
 
 @SuppressWarnings("javadoc")
-public class LWJGLTextureManager implements TextureManager {
+public class LWJGLTextureManager extends AbstractGameResource implements TextureManager {
 
 	public final ExecutorThreadService service;
 
@@ -36,7 +37,7 @@ public class LWJGLTextureManager implements TextureManager {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 //		launcher.getThreads().shutdown(service);
 	}
 

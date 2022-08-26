@@ -9,6 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.lwjgl.opengles.GLES;
 
+import gamelauncher.engine.util.GameException;
+
 @SuppressWarnings("javadoc")
 public class StateRegistry {
 
@@ -57,11 +59,17 @@ public class StateRegistry {
 		contextByThread.put(thread, id);
 	}
 
-	public static void removeWindow(long id) {
+	public static void removeContext(long id) throws GameException {
 		ContextDependant cd = contexts.get(id);
-		for (ContextLocal<?> cl : cd.contextLocals.keySet()) {
-			cl.remove(cd);
-		}
+		if (cd != null)
+			cd.cleanup();
+		contexts.remove(id);
+	}
+
+	public static void removeWindow(long id) throws GameException {
+		ContextDependant cd = contexts.get(id);
+		if (cd != null)
+			cd.cleanup();
 		contexts.remove(id);
 		Thread thread = contextHoldingThreads.remove(id);
 		if (thread != null) {

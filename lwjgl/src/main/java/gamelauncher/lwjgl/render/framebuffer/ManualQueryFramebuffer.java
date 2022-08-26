@@ -40,8 +40,8 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
-		super.cleanup();
+	public void cleanup0() throws GameException {
+		super.cleanup0();
 		handle.cleanup();
 	}
 

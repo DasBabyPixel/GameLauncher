@@ -2,7 +2,7 @@ package gamelauncher.engine.render.texture;
 
 import java.util.concurrent.CompletableFuture;
 
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.resource.GameResource;
 
 /**
  * @author DasBabyPixel

@@ -1,8 +1,8 @@
 package gamelauncher.engine.render.model;
 
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 /**
  * @author DasBabyPixel

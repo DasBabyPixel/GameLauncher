@@ -1,16 +1,14 @@
 package gamelauncher.engine.render;
 
 import java.util.Collection;
-import java.util.Deque;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import de.dasbabypixel.api.property.NumberValue;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 /**
  * @author DasBabyPixel
@@ -19,36 +17,19 @@ public class FrameCounter {
 
 	private static final long second = TimeUnit.SECONDS.toNanos(1);
 
-	private final Deque<Long> frames = new ConcurrentLinkedDeque<>();
-	private final Deque<Long> secondframes = new ConcurrentLinkedDeque<>();
 	private final NumberValue limit = NumberValue.zero();
-	private final NumberValue frameNanos = NumberValue.zero();
-	private final AtomicReference<Thread> sleeping = new AtomicReference<>(null);
-	private final AtomicInteger lastFps = new AtomicInteger(0);
-	private final AtomicInteger lastFrameCount = new AtomicInteger(0);
-	private final Collection<Consumer<Integer>> updateListeners = ConcurrentHashMap.newKeySet();
-	private final Collection<Consumer<Float>> avgUpdateListeners = ConcurrentHashMap.newKeySet();
 
-	private void removeOldFrames() {
-		long compareTo = System.nanoTime() - second * 5;
-		while (!frames.isEmpty()) {
-			long first = frames.peekFirst();
-			if (compareTo - first > 0) {
-				frames.pollFirst();
-				continue;
-			}
-			break;
-		}
-		compareTo = System.nanoTime() - second;
-		while (!secondframes.isEmpty()) {
-			long first = secondframes.peekFirst();
-			if (compareTo - first > 0) {
-				secondframes.pollFirst();
-				continue;
-			}
-			break;
-		}
-	}
+	private final NumberValue frameNanos = NumberValue.zero();
+
+	private final Buffer buffer = new Buffer();
+
+	private final AtomicInteger lastFps = new AtomicInteger(0);
+
+	private final AtomicInteger lastFrameCount = new AtomicInteger(0);
+
+	private final Collection<Consumer<Integer>> updateListeners = ConcurrentHashMap.newKeySet();
+
+	private final Collection<Consumer<Float>> avgUpdateListeners = ConcurrentHashMap.newKeySet();
 
 	/**
 	 * @return the update listeners
@@ -79,14 +60,12 @@ public class FrameCounter {
 	}
 
 	private void offer(long nanos) {
-		removeOldFrames();
-		frames.offer(nanos);
-		secondframes.offer(nanos);
-		int fps = secondframes.size();
+		buffer.addFrame(nanos);
+		int fps = buffer.frames1Second.size();
 		if (lastFps.getAndSet(fps) != fps) {
 			updateListeners.forEach(l -> l.accept(fps));
 		}
-		int average = frames.size();
+		int average = buffer.frames5Second.size();
 		if (lastFrameCount.getAndSet(average) != average) {
 			avgUpdateListeners.forEach(l -> l.accept(average / 5.0F));
 		}
@@ -99,27 +78,35 @@ public class FrameCounter {
 	}
 
 	/**
+	 * @param nanoSleeper 
 	 */
-	public void frame() {
+	public void frame(Consumer<Long> nanoSleeper) {
 		float limit = this.limit();
 		if (limit == 0) {
 			offer(System.nanoTime());
 		} else {
 			boolean offer = false;
 			long timeOffer = 0;
-			Long lastFrameL = frames.peekLast();
-			if (lastFrameL != null) {
+			if (!buffer.frames5Second.isEmpty()) {
 				long frameNanos = this.frameNanos.longValue();
-				long nextFrame = lastFrameL.longValue() + frameNanos;
-				if (nextFrame > System.nanoTime() + frameNanos) {
-					sleepUntil(System.nanoTime() + frameNanos);
+				long nextFrame = buffer.lastFrame.get() + frameNanos;
+				if (nextFrame - System.nanoTime() < 0) {
 					offer = true;
-					timeOffer = System.nanoTime() + frameNanos;
-				} else if (System.nanoTime() - nextFrame < 0) {
-					sleepUntil(nextFrame);
+					timeOffer = System.nanoTime();
+				} else {
 					offer = true;
+					nanoSleeper.accept(nextFrame - System.nanoTime());
 					timeOffer = nextFrame;
 				}
+//				if (nextFrame > System.nanoTime() + frameNanos) {
+//					sleepUntil(System.nanoTime() + frameNanos);
+//					offer = true;
+//					timeOffer = System.nanoTime() + frameNanos;
+//				} else if (System.nanoTime() - nextFrame < 0) {
+//					sleepUntil(nextFrame);
+//					offer = true;
+//					timeOffer = nextFrame;
+//				}
 			}
 			offer(offer ? timeOffer : System.nanoTime());
 		}
@@ -127,69 +114,24 @@ public class FrameCounter {
 
 	/**
 	 * Stops sleeping if sleeping
+	 * @param unparker 
 	 */
-	public void stopWaiting() {
-		Thread sleep = sleeping.getAndSet(null);
-		if (sleep != null) {
-			LockSupport.unpark(sleep);
-		}
-	}
-
-	private void sleepUntil(long nanos) {
-		Thread cur = Thread.currentThread();
-		if (sleeping.compareAndSet(null, cur)) {
-			boolean millis = true;
-			while (System.nanoTime() - nanos < 0) {
-				if (millis) {
-					long mls = TimeUnit.NANOSECONDS.toMillis(nanos - System.nanoTime());
-					if (mls > 1) {
-//					try {
-						if (sleeping.get() == null) {
-							return;
-						}
-						LockSupport.parkUntil(System.currentTimeMillis() + mls);
-//						Thread.sleep(mls - 1);
-//					} catch (InterruptedException ex) {
-//						ex.printStackTrace();
-//					}
-					}
-					millis = false;
-				}
-				Thread.yield();
-				if (sleeping.get() == null) {
-					return;
-				}
-			}
-			sleeping.compareAndSet(cur, null);
-		} else {
-			throw new IllegalStateException("A thread is already sleeping");
-		}
+	public void stopWaiting(Runnable unparker) {
+		unparker.run();
 	}
 
 	/**
 	 * @return the current fps
 	 */
 	public int getFps() {
-		removeOldFrames();
-		if (secondframes.size() >= 2) {
-			Long first = secondframes.peekFirst();
-			Long last = secondframes.peekLast();
-			if (first == null || last == null) {
-				return secondframes.size();
-			}
-			double diff = last.longValue() - first.longValue();
-			double mult = second / diff;
-			return (int) (mult * secondframes.size());
-		}
-		return secondframes.size();
+		return buffer.frames1Second.size();
 	}
 
 	/**
 	 * @return the average fps over the last five seconds
 	 */
 	public float getFpsAvg() {
-		removeOldFrames();
-		return frames.size() / 5F;
+		return buffer.frames5Second.size() / 5F;
 	}
 
 	/**
@@ -213,4 +155,43 @@ public class FrameCounter {
 			this.frameNanos.setNumber(second / limit);
 		}
 	}
+
+	private class Buffer {
+
+		private final LongArrayList frames1Second = new LongArrayList();
+
+		private final LongArrayList frames5Second = new LongArrayList();
+
+		private final AtomicLong lastFrame = new AtomicLong();
+
+		public void addFrame(long frame) {
+			removeOldFrames();
+			frames1Second.add(frame);
+			frames5Second.add(frame);
+			lastFrame.set(frame);
+		}
+
+		private void removeOldFrames() {
+			long compareTo = System.nanoTime() - second * 5;
+			while (!frames5Second.isEmpty()) {
+				long first = frames5Second.getLong(0);
+				if (compareTo - first > 0) {
+					frames5Second.removeLong(0);
+					continue;
+				}
+				break;
+			}
+			compareTo = System.nanoTime() - second;
+			while (!frames1Second.isEmpty()) {
+				long first = frames1Second.getLong(0);
+				if (compareTo - first > 0) {
+					frames1Second.removeLong(0);
+					continue;
+				}
+				break;
+			}
+		}
+
+	}
+
 }

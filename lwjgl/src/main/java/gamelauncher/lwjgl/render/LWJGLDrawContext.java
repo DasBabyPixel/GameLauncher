@@ -22,6 +22,7 @@ import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.WrapperModel;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.lwjgl.render.light.DirectionalLight;
@@ -30,7 +31,7 @@ import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 
 @SuppressWarnings("javadoc")
-public class LWJGLDrawContext implements DrawContext {
+public class LWJGLDrawContext extends AbstractGameResource implements DrawContext {
 
 	protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
 
@@ -261,7 +262,7 @@ public class LWJGLDrawContext implements DrawContext {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		listener.cleanup();
 		runForChildren(ctx -> ctx.cleanup());
 	}

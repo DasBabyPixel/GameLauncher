@@ -8,8 +8,8 @@ import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.property.PropertyVector3f;
 import gamelauncher.engine.util.property.PropertyVector4f;
 
@@ -17,7 +17,7 @@ import gamelauncher.engine.util.property.PropertyVector4f;
  * @author DasBabyPixel
  */
 @SuppressWarnings("javadoc")
-public class GameItem implements GameResource {
+public class GameItem extends AbstractGameResource {
 
 	protected Model model;
 
@@ -64,27 +64,27 @@ public class GameItem implements GameResource {
 		this();
 		this.model = model;
 	}
-	
+
 	public PropertyVector3f position() {
 		return position;
 	}
-	
+
 	public PropertyVector4f addColor() {
 		return addColor;
 	}
-	
+
 	public PropertyVector4f color() {
 		return color;
 	}
-	
+
 	public PropertyVector3f rotation() {
 		return rotation;
 	}
-	
+
 	public PropertyVector3f scale() {
 		return scale;
 	}
-	
+
 	/**
 	 * @return the position vector
 	 */
@@ -184,7 +184,7 @@ public class GameItem implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		model.cleanup();
 	}
 
@@ -209,7 +209,8 @@ public class GameItem implements GameResource {
 	/**
 	 * @author DasBabyPixel
 	 */
-	public static final class GameItemModel implements ColorMultiplierModel, ColorAddModel {
+	public static final class GameItemModel extends AbstractGameResource
+			implements ColorMultiplierModel, ColorAddModel {
 
 		/**
 		 */
@@ -223,7 +224,7 @@ public class GameItem implements GameResource {
 		}
 
 		@Override
-		public void cleanup() throws GameException {
+		public void cleanup0() throws GameException {
 			gameItem.cleanup();
 		}
 
@@ -240,6 +241,10 @@ public class GameItem implements GameResource {
 		@Override
 		public Vector4f getColor() {
 			return gameItem.getColor();
+		}
+
+		public GameItem getGameItem() {
+			return gameItem;
 		}
 
 	}

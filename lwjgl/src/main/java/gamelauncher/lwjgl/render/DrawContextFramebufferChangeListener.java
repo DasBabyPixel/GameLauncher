@@ -4,13 +4,14 @@ import java.lang.ref.WeakReference;
 
 import de.dasbabypixel.api.property.NumberChangeListener;
 import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 @SuppressWarnings("javadoc")
-public class DrawContextFramebufferChangeListener implements NumberChangeListener, GameResource {
+public class DrawContextFramebufferChangeListener extends AbstractGameResource implements NumberChangeListener {
 
 	private final WeakReference<LWJGLDrawContext> ref;
+
 	private final NumberValue w, h;
 
 	public DrawContextFramebufferChangeListener(LWJGLDrawContext ctx, NumberValue fbw, NumberValue fbh) {
@@ -25,7 +26,11 @@ public class DrawContextFramebufferChangeListener implements NumberChangeListene
 	public void handleChange(NumberValue value, Number oldValue, Number newValue) {
 		LWJGLDrawContext ctx = ref.get();
 		if (ctx == null) {
-			cleanup();
+			try {
+				cleanup();
+			} catch (GameException ex) {
+				throw new Error(ex);
+			}
 		} else {
 			try {
 				ctx.invalidateProjectionMatrix();
@@ -36,8 +41,9 @@ public class DrawContextFramebufferChangeListener implements NumberChangeListene
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup0() {
 		w.removeListener(this);
 		h.removeListener(this);
 	}
+
 }

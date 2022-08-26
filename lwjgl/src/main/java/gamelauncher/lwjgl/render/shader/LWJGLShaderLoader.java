@@ -36,13 +36,14 @@ public class LWJGLShaderLoader implements ShaderLoader {
 	 * The gson for shaderPrograms
 	 */
 	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
 	final Map<Resource, LWJGLShaderProgram> programs = new ConcurrentHashMap<>();
 
 	@Override
 	public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
 		ResourceLoader loader = launcher.getResourceLoader();
 		Resource resource = loader.getResource(path);
-		if(programs.containsKey(resource)) {
+		if (programs.containsKey(resource)) {
 			LWJGLShaderProgram program = programs.get(resource);
 			program.refCount.incrementAndGet();
 			return program;
@@ -93,6 +94,7 @@ public class LWJGLShaderLoader implements ShaderLoader {
 		loadUniform(p, structs, uniforms, "directionalLight", u -> p.udirectionalLight = u);
 		loadUniform(p, structs, uniforms, "textureAddColor", u -> p.utextureAddColor = u);
 		loadUniform(p, structs, uniforms, "applyLighting", u -> p.uapplyLighting = u);
+		loadUniform(p, structs, uniforms, "hasTexture", u -> p.uhasTexture = u);
 	}
 
 	private static Uniform loadUniform(LWJGLShaderProgram program, String uniform, Struct struct) {
@@ -144,4 +146,5 @@ public class LWJGLShaderLoader implements ShaderLoader {
 		}
 		throw new GameException("Struct not found: " + name);
 	}
+
 }

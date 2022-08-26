@@ -34,6 +34,8 @@ public class LWJGLInput implements Input {
 
 	private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
 
+	private final List<Entry> mousePressed = new ArrayList<>();
+
 	private volatile QueueEntry fqentry = new QueueEntry(null, null);
 
 	private volatile QueueEntry lqentry = fqentry;
@@ -63,6 +65,9 @@ public class LWJGLInput implements Input {
 			switch (qe.type) {
 			case PRESSED:
 				pressed.add(qe.entry);
+				if (qe.entry.type == DeviceType.MOUSE) {
+					mousePressed.add(qe.entry);
+				}
 				break;
 			case RELEASED:
 				int index = pressed.indexOf(qe.entry);
@@ -71,6 +76,9 @@ public class LWJGLInput implements Input {
 					break;
 				}
 				Entry inPressed = pressed.remove(index);
+				if (inPressed.type == DeviceType.MOUSE) {
+					mousePressed.remove(inPressed);
+				}
 				freeEntry(inPressed);
 			default:
 				freeEntry(qe.entry);
@@ -115,6 +123,12 @@ public class LWJGLInput implements Input {
 				return new LWJGLMouseScrollKeybindEntry(keybind, mx, my);
 			});
 		} else {
+			if (inputType == InputType.MOVE) {
+				for (Entry e : mousePressed) {
+					e.mx = mx;
+					e.my = my;
+				}
+			}
 			keybindManager.post(keybind -> {
 				int id = LWJGLKeybindManager.MOUSE_ADD + mouseButton;
 				if (keybind instanceof AllKeybind) {

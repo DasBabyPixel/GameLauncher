@@ -1,6 +1,6 @@
 package gamelauncher.engine.util.keybind;
 
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.resource.GameResource;
 
 /**
  * @author DasBabyPixel

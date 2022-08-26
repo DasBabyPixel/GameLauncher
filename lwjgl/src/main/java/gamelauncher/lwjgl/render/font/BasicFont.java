@@ -11,11 +11,12 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.font.Font;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.concurrent.Threads;
 
 @SuppressWarnings("javadoc")
-public class BasicFont implements Font {
+public class BasicFont extends AbstractGameResource implements Font {
 
 	private volatile boolean done = false;
 
@@ -36,6 +37,7 @@ public class BasicFont implements Font {
 		this.factory = factory;
 		future = launcher.getThreads().cached.submit(() -> {
 			byte[] b = stream.readAllBytes();
+			stream.cleanup();
 			data = memAlloc(b.length);
 			data.put(b).flip();
 			done = true;
@@ -51,7 +53,7 @@ public class BasicFont implements Font {
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup0() {
 		try {
 			lock.lock();
 			if (refcount.decrementAndGet() <= 0) {

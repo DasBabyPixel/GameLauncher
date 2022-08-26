@@ -6,13 +6,13 @@ import java.util.HashSet;
 import java.util.Map;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.resource.AbstractGameResource;
 
 /**
  * @author DasBabyPixel
  */
 @SuppressWarnings("javadoc")
-public abstract class ShaderProgram implements GameResource {
+public abstract class ShaderProgram extends AbstractGameResource {
 
 	protected final GameLauncher launcher;
 
@@ -33,6 +33,7 @@ public abstract class ShaderProgram implements GameResource {
 	public Uniform udirectionalLight = EmptyUniform.instance;
 	public Uniform utextureAddColor = EmptyUniform.instance;
 	public Uniform uapplyLighting = EmptyUniform.instance;
+	public Uniform uhasTexture = EmptyUniform.instance;
 
 	/**
 	 * @param launcher

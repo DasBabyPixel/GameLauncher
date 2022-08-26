@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render;
+package gamelauncher.lwjgl.render.mesh;
 
 import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.system.MemoryUtil.*;
@@ -13,13 +13,13 @@ import org.joml.Vector4f;
 
 import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class Mesh implements GameResource {
+public class Mesh extends AbstractGameResource {
 
 //	private static final Vector4f emptyColor = new Vector4f(1, 1, 1, 1);
 
@@ -124,7 +124,7 @@ public class Mesh implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		// Delete the VBOs
 		for (int vbo : vbos) {
 			GlStates.current().deleteBuffers(vbo);

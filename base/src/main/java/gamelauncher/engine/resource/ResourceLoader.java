@@ -11,7 +11,7 @@ import gamelauncher.engine.util.GameException;
 /**
  * @author DasBabyPixel
  */
-public abstract class ResourceLoader {
+public abstract class ResourceLoader extends AbstractGameResource {
 
 	private static ResourceLoader instance = null;
 	private final Map<Path, Resource> resources = new ConcurrentHashMap<>();
@@ -68,6 +68,13 @@ public abstract class ResourceLoader {
 		resources.put(path, resource);
 		lock.unlock();
 		return resource;
+	}
+	
+	@Override
+	protected void cleanup0() throws GameException {
+		for(Path path : resources.keySet()) {
+			resources.remove(path).cleanup();
+		}
 	}
 
 	/**

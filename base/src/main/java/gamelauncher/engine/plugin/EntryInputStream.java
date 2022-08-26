@@ -8,11 +8,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import gamelauncher.engine.io.Files;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 @SuppressWarnings("javadoc")
-public class EntryInputStream implements GameResource, AutoCloseable {
+public class EntryInputStream extends AbstractGameResource implements AutoCloseable {
 
 	public final boolean directory;
 	public final Path path;
@@ -56,6 +56,11 @@ public class EntryInputStream implements GameResource, AutoCloseable {
 
 	@Override
 	public void close() throws GameException {
+		cleanup();
+	}
+
+	@Override
+	public void cleanup0() throws GameException {
 		if (!directory) {
 			try {
 				zip.close();
@@ -63,11 +68,6 @@ public class EntryInputStream implements GameResource, AutoCloseable {
 				throw new GameException(ex);
 			}
 		}
-	}
-
-	@Override
-	public void cleanup() throws GameException {
-		close();
 	}
 
 	public static class Entry {

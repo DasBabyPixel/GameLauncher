@@ -2,11 +2,11 @@ package gamelauncher.lwjgl.render.framebuffer;
 
 import static org.lwjgl.opengles.GLES20.*;
 
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
-public class Renderbuffer implements GameResource {
+public class Renderbuffer extends AbstractGameResource {
 
 	private final int id;
 	private int width, height;
@@ -30,7 +30,7 @@ public class Renderbuffer implements GameResource {
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup0() {
 		GlStates.current().deleteRenderbuffers(id);
 	}
 

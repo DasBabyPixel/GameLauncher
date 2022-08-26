@@ -1,8 +1,8 @@
 package gamelauncher.engine.render.font;
 
 import gamelauncher.engine.render.model.GlyphStaticModel;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 /**
  * @author DasBabyPixel

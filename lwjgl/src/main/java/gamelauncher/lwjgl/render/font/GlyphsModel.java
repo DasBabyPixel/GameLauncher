@@ -4,10 +4,11 @@ import java.util.Arrays;
 
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
 @SuppressWarnings("javadoc")
-public class GlyphsModel implements Model {
+public class GlyphsModel extends AbstractGameResource implements Model {
 
 	private final GlyphsMesh[] meshes;
 
@@ -23,7 +24,7 @@ public class GlyphsModel implements Model {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		for (GlyphsMesh mesh : meshes) {
 			if (mesh != null) {
 				mesh.cleanup();

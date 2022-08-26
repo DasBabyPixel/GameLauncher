@@ -6,16 +6,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
-public class GLFWSecondaryContext implements GameResource {
+public class GLFWSecondaryContext extends AbstractGameResource {
 
 	private final Lock lock = new ReentrantLock(true);
+
 	private long id;
+
 	private final GLFWWindow window;
+
 	private final AtomicReference<Thread> current = new AtomicReference<>();
 
 	public GLFWSecondaryContext(GLFWWindow window) {
@@ -54,10 +57,20 @@ public class GLFWSecondaryContext implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		lock.lock();
 		StateRegistry.removeWindow(id);
 		glfwDestroyWindow(id);
 		lock.unlock();
 	}
+
+	public long getGLFWId() {
+		try {
+			lock.lock();
+			return id;
+		} finally {
+			lock.unlock();
+		}
+	}
+
 }

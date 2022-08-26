@@ -12,14 +12,13 @@ import java.util.concurrent.CompletableFuture;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
 import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 
 /**
  * @author DasBabyPixel
  */
 @SuppressWarnings("javadoc")
-public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream.LogEntry<?>> implements GameResource {
+public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream.LogEntry<?>> {
 
 	final PrintStream out;
 
@@ -49,11 +48,19 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
-		return submit(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
+		if (!exit) {
+			return submit(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
+		}
+		log(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
+		return CompletableFuture.completedFuture(null);
 	}
 
 	public CompletableFuture<Void> offerCalled(LogLevel level, StackTraceElement caller, Object message) {
-		return submit(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
+		if (!exit) {
+			return submit(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
+		}
+		log(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
+		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
@@ -62,7 +69,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup0() {
 		Threads.waitFor(exit());
 	}
 

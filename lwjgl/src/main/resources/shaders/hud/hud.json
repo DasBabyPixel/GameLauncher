@@ -6,6 +6,9 @@
 		"projectionMatrix": "mat4",
 		"texture_sampler": "sampler2D",
 		"color": "vec4",
-		"textureAddColor": "vec4"
-	}
+		"textureAddColor": "vec4",
+		"hasTexture": "int"
+	},
+	"structs": [
+	]
 }

@@ -71,10 +71,10 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		colorTexture.cleanup();
 		depthStencilRenderbuffer.cleanup();
-		super.cleanup();
+		super.cleanup0();
 	}
 
 }

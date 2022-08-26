@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import org.lwjgl.stb.STBTTFontinfo;
 
@@ -20,6 +21,7 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.CombinedModelsModel;
 import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -30,7 +32,7 @@ import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class LWJGLGlyphProvider implements GlyphProvider {
+public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
 
 	private final LWJGLGameLauncher launcher;
 
@@ -58,12 +60,12 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 		float descent = adescent[0] * scale;
 		float ascent = aascent[0] * scale;
 		char[] ar = text.toCharArray();
-		Map<LWJGLTexture, Collection<DynamicSizeTextureAtlas.Entry>> entries = new HashMap<>();
+		Map<LWJGLTexture, Collection<AtlasEntry>> entries = new HashMap<>();
 		for (int i = 0; i < ar.length; i++) {
 			char ch = ar[i];
 			GlyphKey key = new GlyphKey(scale, ch);
-			DynamicSizeTextureAtlas.Entry entry = requireGlyphKey(key, finfo, ch, pixelHeight, scale);
-			Collection<DynamicSizeTextureAtlas.Entry> e = entries.get(entry.getTexture());
+			AtlasEntry entry = requireGlyphKey(key, finfo, ch, pixelHeight, scale);
+			Collection<AtlasEntry> e = entries.get(entry.getTexture());
 			if (e == null) {
 				e = new ArrayList<>();
 				entries.put(entry.getTexture(), e);
@@ -75,8 +77,8 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 		int mheight = 0;
 		int xpos = 0;
 		float z = 0;
-		for (Map.Entry<LWJGLTexture, Collection<DynamicSizeTextureAtlas.Entry>> entry : entries.entrySet()) {
-			for (DynamicSizeTextureAtlas.Entry e : entry.getValue()) {
+		for (Map.Entry<LWJGLTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
+			for (AtlasEntry e : entry.getValue()) {
 				Rectangle bd = e.getBounds();
 
 				float tw = e.getTexture().getWidth();
@@ -89,7 +91,8 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				GlyphData data = e.getEntry().data;
 				float pb = -data.bearingY - data.height;
 				float pt = pb + data.height;
-				float pl = xpos + data.bearingX;
+//				float pl = xpos + data.bearingX;
+				float pl = xpos;
 				float pr = pl + data.width;
 				float width = pr - pl;
 				float height = pt - pb;
@@ -100,11 +103,13 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				mwidth = Math.ceil(xpos + width);
 
 				Model m = new Texture2DModel(e.getTexture(), tl, 1 - tb, tr, 1 - tt) {
+
 					@Override
-					public void cleanup() throws GameException {
-						releaseGlyphKey(e.getEntry().key);
-						super.cleanup();
+					public void cleanup0() throws GameException {
+						Threads.waitFor(releaseGlyphKey(e.getEntry().key));
+						super.cleanup0();
 					}
+
 				};
 
 				GameItem gi = new GameItem(m);
@@ -115,7 +120,7 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 				xpos += e.getEntry().data.advance;
 			}
 		}
-		entries.keySet().stream().findAny().get().write();
+//		entries.keySet().stream().findAny().get().write();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[meshes.size()]));
 		GameItem gi = new GameItem(cmodel);
 		gi.setAddColor(1, 1, 1, 0);
@@ -123,16 +128,17 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
 	}
 
-	public void releaseGlyphKey(GlyphKey key) {
+	public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
 		if (key.required.decrementAndGet() == 0) {
-			textureAtlas.removeGlyph(getId(key));
+			return textureAtlas.removeGlyph(getId(key));
 		}
+		return CompletableFuture.completedFuture(null);
 	}
 
-	public DynamicSizeTextureAtlas.Entry requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight,
-			float scale) throws GameException {
+	public AtlasEntry requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight, float scale)
+			throws GameException {
 		int id = getId(key);
-		DynamicSizeTextureAtlas.Entry entry = textureAtlas.getGlyph(id);
+		AtlasEntry entry = textureAtlas.getGlyph(id);
 		ret: {
 			if (entry != null) {
 				break ret;
@@ -201,7 +207,7 @@ public class LWJGLGlyphProvider implements GlyphProvider {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		textureAtlas.cleanup();
 	}
 

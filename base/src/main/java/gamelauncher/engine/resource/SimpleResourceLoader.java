@@ -26,7 +26,7 @@ public class SimpleResourceLoader extends ResourceLoader {
 		return new SimpleResource(() -> Files.newInputStream(path), path, false);
 	}
 
-	private static class SimpleResource implements Resource {
+	private static class SimpleResource extends AbstractGameResource implements Resource {
 
 		private final GameSupplier<InputStream> sup;
 		private final Path path;
@@ -41,6 +41,10 @@ public class SimpleResourceLoader extends ResourceLoader {
 		@Override
 		public ResourceStream newResourceStream() throws GameException {
 			return new ResourceStream(path, directory, sup.get(), null);
+		}
+
+		@Override
+		protected void cleanup0() throws GameException {
 		}
 	}
 }

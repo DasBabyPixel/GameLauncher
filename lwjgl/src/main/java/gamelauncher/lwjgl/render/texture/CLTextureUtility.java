@@ -1,15 +1,16 @@
 package gamelauncher.lwjgl.render.texture;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.framebuffer.LWJGLFramebuffer;
 import gamelauncher.lwjgl.render.states.ContextLocal;
 
 @SuppressWarnings("javadoc")
-public class CLTextureUtility implements GameResource {
+public class CLTextureUtility extends AbstractGameResource {
 
 	public final CLFramebuffer framebuffer1;
+
 	public final CLFramebuffer framebuffer2;
 
 	public CLTextureUtility(LWJGLGameLauncher launcher) {
@@ -18,7 +19,7 @@ public class CLTextureUtility implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		framebuffer1.cleanup();
 		framebuffer2.cleanup();
 	}
@@ -27,11 +28,6 @@ public class CLTextureUtility implements GameResource {
 
 		public CLFramebuffer(LWJGLGameLauncher launcher) {
 			super(launcher.getWindow());
-		}
-
-		@Override
-		public void cleanup() throws GameException {
-			super.cleanup();
 		}
 
 	}

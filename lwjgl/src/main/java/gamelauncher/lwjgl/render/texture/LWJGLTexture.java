@@ -18,6 +18,7 @@ import javax.imageio.ImageIO;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.render.texture.Texture;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
@@ -29,7 +30,7 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.GlStates;
 
 @SuppressWarnings("javadoc")
-public class LWJGLTexture implements Texture {
+public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	public static final byte[] SIGNATURE_RAW = new byte[] {
 			0x45, (byte) 0xFF, 0x61, 0x19
@@ -325,7 +326,7 @@ public class LWJGLTexture implements Texture {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		Threads.waitFor(owner.submit(() -> {
 			lock.writeLock().lock();
 			int id = textureId.getAndSet(0);

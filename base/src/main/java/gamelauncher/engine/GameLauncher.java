@@ -8,6 +8,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.ProviderNotFoundException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -20,15 +21,16 @@ import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
-import gamelauncher.engine.file.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.io.embed.EmbedFileSystem;
+import gamelauncher.engine.io.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
+import gamelauncher.engine.render.ContextProvider;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameRenderer;
@@ -38,6 +40,7 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.texture.TextureManager;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
@@ -121,7 +124,11 @@ public abstract class GameLauncher {
 
 	private GameRegistry gameRegistry;
 
+	private ContextProvider contextProvider;
+
 	private Game currentGame;
+
+	private boolean startupFailed = false;
 
 	/**
 	 * Creates a new GameLauncher
@@ -140,10 +147,14 @@ public abstract class GameLauncher {
 			URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
 			URI uri = URI.create("embed:/");
 			this.embedFileSystem = FileSystems.newFileSystem(uri, null);
+		} catch (ProviderNotFoundException ex) {
+			logger.error(ex);
+			startupFailed = true;
 		} catch (IOException ex) {
 			throw new AssertionError(ex);
 		}
 		this.eventManager = new EventManager();
+		this.contextProvider = new ContextProvider(this);
 		this.pluginManager = new PluginManager(this);
 	}
 
@@ -151,6 +162,7 @@ public abstract class GameLauncher {
 	 * @param framebuffer
 	 * @return a new {@link DrawContext}
 	 */
+	@Deprecated
 	public abstract DrawContext createContext(Framebuffer framebuffer);
 
 	/**
@@ -164,6 +176,18 @@ public abstract class GameLauncher {
 		if (window != null) {
 			return;
 		}
+		if (startupFailed) {
+
+			try {
+				if (this.embedFileSystem != null)
+					this.embedFileSystem.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			Logger.asyncLogStream.cleanup();
+			threads.cleanup();
+			return;
+		}
 
 		System.setOut(logger.createPrintStream(LogLevel.STDOUT));
 		System.setErr(logger.createPrintStream(LogLevel.STDERR));
@@ -174,14 +198,14 @@ public abstract class GameLauncher {
 
 		gameThread = new GameThread(this);
 
+		Files.createDirectories(gameDirectory);
+		Files.createDirectories(dataDirectory);
+		Files.createDirectories(pluginsDirectory);
+
 		for (Path externalPlugin : scs.externalPlugins) {
 			this.pluginManager.loadPlugin(externalPlugin);
 		}
 		this.pluginManager.loadPlugins(pluginsDirectory);
-
-		Files.createDirectories(gameDirectory);
-		Files.createDirectories(dataDirectory);
-		Files.createDirectories(pluginsDirectory);
 
 		registerSettingInsertions();
 		this.settings = new MainSettingSection(eventManager);
@@ -223,12 +247,11 @@ public abstract class GameLauncher {
 			if (gameRenderer.getRenderer() != null && !(gameRenderer.getRenderer() instanceof GuiRenderer)) {
 				logger.warn("Not using GuiRenderer: " + gameRenderer.getRenderer().getClass().getName());
 			}
-//			guiManager.openGuiByClass(window.getFramebuffer(), MainScreenGui.class);
+//			window.scheduleDrawAndWaitForFrame(); // TODO: Gotta render the frame twice in beginning, dunny why
 			window.scheduleDrawAndWaitForFrame();
 			getEventManager().post(new LauncherInitializedEvent(this));
 		});
 		gameThread.start();
-
 	}
 
 	/**
@@ -239,13 +262,16 @@ public abstract class GameLauncher {
 	public void stop() throws GameException {
 		GameRunnable r = () -> {
 			try {
-				this.guiManager.cleanup();
 				Threads.waitFor(gameThread.exit());
+				this.guiManager.cleanup();
 				this.stop0();
+				this.keybindManager.cleanup();
+				this.resourceLoader.cleanup();
 				this.pluginManager.unloadPlugins();
-				this.embedFileSystem.close();
 				this.threads.cleanup();
+				this.embedFileSystem.close();
 				Logger.asyncLogStream.cleanup();
+				AbstractGameResource.exit();
 			} catch (IOException ex) {
 				throw new GameException(ex);
 			}
@@ -514,6 +540,14 @@ public abstract class GameLauncher {
 	 */
 	public GameThread getGameThread() {
 		return gameThread;
+	}
+
+	/**
+	 * @return the {@link ContextProvider} to use for creating contexts. This is
+	 *         preferred over {@link #createContext(Framebuffer)}
+	 */
+	public ContextProvider getContextProvider() {
+		return contextProvider;
 	}
 
 	/**

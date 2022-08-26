@@ -10,13 +10,14 @@ import org.joml.Vector4f;
 
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class GlyphsMesh implements ColorMultiplierModel {
+public class GlyphsMesh extends AbstractGameResource implements ColorMultiplierModel {
 
 	private final Color textureAddColor = Color.white.withAlpha(0F);
 
@@ -103,7 +104,7 @@ public class GlyphsMesh implements ColorMultiplierModel {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		GlStates c = GlStates.current();
 		c.deleteBuffers(idxbuffer);
 		c.deleteBuffers(posbuffer);

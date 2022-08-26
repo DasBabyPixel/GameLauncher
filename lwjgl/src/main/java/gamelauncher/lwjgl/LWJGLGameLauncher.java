@@ -2,10 +2,6 @@ package gamelauncher.lwjgl;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengles.GLES;
@@ -32,7 +28,6 @@ import gamelauncher.lwjgl.render.font.BasicFontFactory;
 import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
 import gamelauncher.lwjgl.render.glfw.GLFWWindow;
-import gamelauncher.lwjgl.render.glfw.GLFWWindow.CloseCallback;
 import gamelauncher.lwjgl.render.glfw.LWJGLAsyncUploader;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
@@ -81,6 +76,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void start0() throws GameException {
+
 		getProfiler().addHandler("render", new GLSectionHandler());
 		this.glfwThread = new GLFWThread();
 		this.glfwThread.start();
@@ -94,15 +90,13 @@ public class LWJGLGameLauncher extends GameLauncher {
 		asyncUploader = new LWJGLAsyncUploader(this);
 		setWindow(window);
 		window.getRenderThread().submit(() -> setGlyphProvider(new LWJGLGlyphProvider(this, asyncUploader)));
-		window.setRenderMode(RenderMode.CONTINUOUSLY);
-		window.getFrameCounter().limit(60);
-		window.swapBuffers(false);
+		window.setRenderMode(RenderMode.ON_UPDATE);
+//		window.getFrameCounter().limit(60);
 		Threads.waitFor(window.createWindow());
 		asyncUploader.start();
-		window.getFrameCounter().addAvgUpdateListener(fps -> {
-			getLogger().debugf("FPS: %.2f", fps);
+		window.getFrameCounter().addUpdateListener(fps -> {
+			getLogger().infof("FPS: %s", fps);
 		});
-		window.getFrameCounter().limit(60F);
 		getProfiler().addHandler(null, new SectionHandler() {
 
 			@Override
@@ -114,20 +108,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 			}
 
 		});
-		window.setCloseCallback(new CloseCallback() {
-
-			@Override
-			public void close() throws GameException {
-				new Thread(() -> {
-					try {
-						window.hide();
-						LWJGLGameLauncher.this.stop();
-					} catch (GameException ex) {
-						ex.printStackTrace();
-					}
-				}).start();
-			}
-
+		window.setCloseCallback(() -> {
+			window.hide();
+			LWJGLGameLauncher.this.stop();
 		});
 		window.getRenderThread().start();
 
@@ -136,19 +119,17 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void stop0() throws GameException {
-		Collection<CompletableFuture<?>> c = new ArrayList<>();
-		c.add(window.destroy());
 		getGlyphProvider().cleanup();
 		getTextureManager().cleanup();
+
 		asyncUploader.cleanup();
-		Threads.waitFor(c.toArray(new CompletableFuture[0]));
+		Threads.waitFor(window.destroy());
 		Threads.waitFor(this.glfwThread.exit());
 	}
 
 	@SuppressWarnings("javadoc")
 	@EventHandler
 	public void handle(LauncherInitializedEvent event) {
-		window.swapBuffers(true);
 		window.showAndEndFrame();
 
 //		glfwThread.submit(() -> glfwSetWindowAttrib(window.getGLFWId(), GLFW_FLOATING, GLFW_TRUE));
@@ -156,6 +137,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	}
 
 	@Override
+	@Deprecated
 	public LWJGLDrawContext createContext(Framebuffer framebuffer) {
 		LWJGLDrawContext ctx = new LWJGLDrawContext(framebuffer);
 		return ctx;
@@ -188,6 +170,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick() throws GameException {
+//		double avgNanos = getGameThread().getAverageTickTime();
+//		long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
+//		System.out.printf("%05d%n", avgMillis);
 //		System.out.println("Tick");
 		window.getInput().handleInput();
 		mouse: if (mouseMovement) {

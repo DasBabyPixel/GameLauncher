@@ -16,7 +16,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.render.Mesh;
+import gamelauncher.lwjgl.render.mesh.Mesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;

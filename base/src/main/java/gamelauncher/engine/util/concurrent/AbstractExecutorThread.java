@@ -3,22 +3,22 @@ package gamelauncher.engine.util.concurrent;
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 
 @SuppressWarnings("javadoc")
-public abstract class AbstractExecutorThread extends Thread implements ExecutorThread {
+public abstract class AbstractExecutorThread extends AbstractGameThread implements ExecutorThread {
 
 	private static final Logger logger = Logger.getLogger(AbstractExecutorThread.class);
 
 	private final Deque<QueueEntry> queue = new ConcurrentLinkedDeque<>();
 
-	protected final CountDownLatch exit = new CountDownLatch(1);
+	protected volatile boolean exit = false;
 
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
 
@@ -39,9 +39,14 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 	}
 
 	public CompletableFuture<Void> exit() {
-		exit.countDown();
+		exit = true;
 		signal();
 		return exitFuture();
+	}
+
+	@Override
+	protected void cleanup0() throws GameException {
+		Threads.waitFor(exit());
 	}
 
 	@Override
@@ -58,6 +63,22 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 			return;
 		}
 		LockSupport.park();
+	}
+
+	@Override
+	public void park(long nanos) {
+		if (Thread.currentThread() != this) {
+			throw new SecurityException("May not call this from any other thread than self");
+		}
+		if (unpark.compareAndSet(true, false)) {
+			return;
+		}
+		parked.set(true);
+		if (unpark.compareAndSet(true, false)) {
+			parked.set(false);
+			return;
+		}
+		LockSupport.parkNanos(nanos);
 	}
 
 	@Override
@@ -88,22 +109,39 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 	}
 
 	protected void waitForSignal() {
+		if (exit)
+			return;
 		while (!work.compareAndSet(true, false)) {
 			Threads.park();
-//			if (useCondition()) {
-//				this.condition.awaitUninterruptibly();
-//			}
+		}
+	}
+
+	protected void waitForSignalTimeout(long nanos) {
+		if (exit)
+			return;
+		final long begin = System.nanoTime();
+		while (!work.compareAndSet(true, false)) {
+			long parktime = begin + nanos - System.nanoTime();
+			if (parktime < 0) {
+				break;
+			}
+			Threads.park(parktime);
 		}
 	}
 
 	@Override
 	public final void run() {
 		startExecuting();
-		while (exit.getCount() != 0L) {
+		while (!exit) {
 			loop();
 		}
+		loop();
 		stopExecuting();
 		exitFuture.complete(null);
+		if (!cleanedUp) {
+			cleanedUp = true;
+			AbstractGameResource.logCleanup(this);
+		}
 	}
 
 	@Override
@@ -129,19 +167,22 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 			run.run();
 			fut.complete(null);
 		} catch (GameException ex) {
-			String msg = ex.getLocalizedMessage();
-			GameException ex2 = new GameException("Exception in ExecutorThread" + (msg == null ? "" : (": " + msg)));
+			GameException ex2 = buildStacktrace();
 			ex2.initCause(ex);
-
-			if (currentEntry != null) {
-				Throwable t = currentEntry.calculateCause();
-				if (t != null) {
-					ex2.addSuppressed(t);
-				}
-			}
 			logger.error(ex2);
 			fut.completeExceptionally(ex2);
 		}
+	}
+
+	public GameException buildStacktrace() {
+		GameException ex = new GameException("Exception in ExecutorThread");
+		if (currentEntry != null) {
+			Throwable t = currentEntry.calculateCause();
+			if (t != null) {
+				ex.addSuppressed(t);
+			}
+		}
+		return ex;
 	}
 
 	protected boolean shouldHandle(QueueEntry entry) {
@@ -152,10 +193,6 @@ public abstract class AbstractExecutorThread extends Thread implements ExecutorT
 	public Thread thread() {
 		return this;
 	}
-
-//	protected boolean useCondition() {
-//		return true;
-//	}
 
 	protected boolean shouldWaitForSignal() {
 		return true;

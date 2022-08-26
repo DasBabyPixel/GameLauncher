@@ -90,7 +90,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 					} else if (mtll[0].startsWith("map_")) {
 						String[] mtla = mtlline.split("\\s", 2);
 						String map = mtla[1];
-						Path mapFile = file.getParent().resolve(map);
+						Path mapFile = file.resolveSibling(map);
 						byte[] texture = Files.readAllBytes(mapFile);
 						if (mtll[0].equals("map_Kd")) {
 							material.diffuseColor.texture = texture;

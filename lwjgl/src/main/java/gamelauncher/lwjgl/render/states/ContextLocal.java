@@ -20,8 +20,7 @@ public abstract class ContextLocal<T> {
 	public ContextLocal(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 	}
-	
-	
+
 	/**
 	 * @return the {@link LWJGLGameLauncher}
 	 */
@@ -48,9 +47,12 @@ public abstract class ContextLocal<T> {
 	public final void remove() {
 		remove(StateRegistry.currentContext());
 	}
-	
+
 	final void remove(ContextDependant cd) {
-		cd.contextLocals.remove(this);
+		@SuppressWarnings("unchecked")
+		T o = (T) cd.contextLocals.remove(this);
+		if (o != null)
+			valueRemoved(o);
 	}
 
 	protected abstract void valueRemoved(T value);

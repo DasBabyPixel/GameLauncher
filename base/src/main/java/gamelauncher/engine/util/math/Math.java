@@ -92,8 +92,8 @@ public class Math {
 	 *         less than or equal to the argumentand is equal to a mathematical
 	 *         integer.
 	 */
-	public static float floor(float f) {
-		return (float) java.lang.Math.floor(f);
+	public static int floor(float f) {
+		return (int) java.lang.Math.floor(f);
 	}
 
 	/**
@@ -102,6 +102,14 @@ public class Math {
 	 */
 	public static int ceil(double height) {
 		return (int) java.lang.Math.ceil(height);
+	}
+	
+	/**
+	 * @param f
+	 * @return the rounded value
+	 */
+	public static int round(float f) {
+		return java.lang.Math.round(f);
 	}
 
 }

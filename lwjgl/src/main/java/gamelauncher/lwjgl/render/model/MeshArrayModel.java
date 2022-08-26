@@ -2,14 +2,15 @@ package gamelauncher.lwjgl.render.model;
 
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.Mesh;
+import gamelauncher.lwjgl.render.mesh.Mesh;
 
 /**
  * @author DasBabyPixel
  *
  */
-public class MeshArrayModel implements Model {
+public class MeshArrayModel extends AbstractGameResource implements Model {
 
 	private final Mesh[] meshes;
 
@@ -21,7 +22,7 @@ public class MeshArrayModel implements Model {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		for (Mesh mesh : meshes) {
 			mesh.cleanup();
 		}

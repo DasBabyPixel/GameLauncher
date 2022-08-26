@@ -8,12 +8,13 @@ import java.nio.IntBuffer;
 
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 @SuppressWarnings("javadoc")
-public class Texture2DModel implements Model {
+public class Texture2DModel extends AbstractGameResource implements Model {
 
 	private final int vao;
 
@@ -81,7 +82,8 @@ public class Texture2DModel implements Model {
 	@Override
 	public void render(ShaderProgram program) throws GameException {
 		GlStates c = GlStates.current();
-		program.uapplyLighting.set(0).upload();
+		program.uapplyLighting.set(0);
+		program.uhasTexture.set(1);
 		c.activeTexture(GL_TEXTURE0);
 		c.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
 		c.bindVertexArray(vao);
@@ -95,15 +97,14 @@ public class Texture2DModel implements Model {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		GlStates c = GlStates.current();
 		c.deleteBuffers(idxbuffer);
 		c.deleteBuffers(posbuffer);
 		c.deleteBuffers(texbuffer);
 		c.deleteVertexArrays(vao);
 	}
-	
-	
+
 	public LWJGLTexture getTexture() {
 		return texture;
 	}

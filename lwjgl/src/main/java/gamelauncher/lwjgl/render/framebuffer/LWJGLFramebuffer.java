@@ -59,7 +59,8 @@ public class LWJGLFramebuffer extends AbstractFramebuffer {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
+		super.cleanup0();
 		GlStates.current().deleteFramebuffers(id);
 	}
 

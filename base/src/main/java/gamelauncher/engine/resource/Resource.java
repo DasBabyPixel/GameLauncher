@@ -5,7 +5,7 @@ import gamelauncher.engine.util.GameException;
 /**
  * @author DasBabyPixel
  */
-public interface Resource {
+public interface Resource extends GameResource {
 
 	/**
 	 * Creates a new {@link ResourceStream} for this {@link Resource}

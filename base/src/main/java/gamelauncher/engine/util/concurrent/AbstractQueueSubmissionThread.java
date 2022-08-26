@@ -3,10 +3,7 @@ package gamelauncher.engine.util.concurrent;
 import java.io.PrintWriter;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
@@ -17,18 +14,17 @@ import gamelauncher.engine.util.logging.SelectiveStream.Output;
  * @param <T>
  */
 @SuppressWarnings("javadoc")
-public abstract class AbstractQueueSubmissionThread<T> extends Thread {
+public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
 
 	protected final ConcurrentLinkedDeque<QueueEntry<T>> queue = new ConcurrentLinkedDeque<>();
-	protected final Lock lock;
-	protected final Condition condition;
-	protected final CountDownLatch exit = new CountDownLatch(1);
+
+	protected volatile boolean exit = false;
+
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
-	private boolean work = false;
+
+	private final AtomicBoolean work = new AtomicBoolean(false);
 
 	public AbstractQueueSubmissionThread() {
-		this.lock = new ReentrantLock(true);
-		this.condition = this.lock.newCondition();
 	}
 
 	public CompletableFuture<Void> exitFuture() {
@@ -36,7 +32,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends Thread {
 	}
 
 	public CompletableFuture<Void> exit() {
-		exit.countDown();
+		exit = true;
 		signal();
 		return exitFuture();
 	}
@@ -57,26 +53,24 @@ public abstract class AbstractQueueSubmissionThread<T> extends Thread {
 	}
 
 	protected void waitForSignal() {
-		this.lock.lock();
-		if (!work) {
-			if (useCondition()) {
-				this.condition.awaitUninterruptibly();
-			}
+		if (exit)
+			return;
+		while (!work.compareAndSet(true, false)) {
+			Threads.park();
 		}
-		work = false;
-		this.lock.unlock();
 	}
 
 	@Override
 	public final void run() {
 		startExecuting();
-		while (exit.getCount() != 0L) {
+		while (!exit) {
 			try {
 				loop();
 			} catch (Throwable ex) {
 				ex.printStackTrace(new PrintWriter(Logger.system.computeOutputStream(Output.ERR)));
 			}
 		}
+		loop();
 		stopExecuting();
 		exitFuture.complete(null);
 	}
@@ -104,15 +98,14 @@ public abstract class AbstractQueueSubmissionThread<T> extends Thread {
 		return true;
 	}
 
-	protected boolean useCondition() {
+	protected boolean shouldWaitForSignal() {
 		return true;
 	}
 
 	protected void signal() {
-		this.lock.lock();
-		work = true;
-		this.condition.signal();
-		this.lock.unlock();
+		if (work.compareAndSet(false, true)) {
+			Threads.unpark(this);
+		}
 	}
 
 	public final CompletableFuture<Void> submitLast(T element) {
@@ -134,12 +127,16 @@ public abstract class AbstractQueueSubmissionThread<T> extends Thread {
 	}
 
 	protected static final class QueueEntry<T> {
+
 		public final CompletableFuture<Void> fut;
+
 		public final T val;
 
 		public QueueEntry(CompletableFuture<Void> fut, T val) {
 			this.fut = fut;
 			this.val = val;
 		}
+
 	}
+
 }

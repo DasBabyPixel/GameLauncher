@@ -100,7 +100,7 @@ public class LWJGLShaderProgram extends ShaderProgram {
 	}
 
 	@Override
-	public void cleanup() {
+	public void cleanup0() {
 		if (refCount.decrementAndGet() == 0) {
 			unbind();
 			if (programId != 0) {

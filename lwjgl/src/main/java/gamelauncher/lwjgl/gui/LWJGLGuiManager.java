@@ -15,21 +15,26 @@ import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
 import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
+import gamelauncher.engine.launcher.gui.ColorGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
+import gamelauncher.engine.launcher.gui.TextureGui;
 import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.gui.impl.LWJGLMainScreenGui;
+import gamelauncher.lwjgl.launcher.gui.LWJGLColorGui;
+import gamelauncher.lwjgl.launcher.gui.LWJGLMainScreenGui;
+import gamelauncher.lwjgl.launcher.gui.LWJGLTextureGui;
 
 /**
  * @author DasBabyPixel
  *
  */
-public class LWJGLGuiManager implements GuiManager {
+public class LWJGLGuiManager extends AbstractGameResource implements GuiManager {
 
 	private final LWJGLGameLauncher launcher;
 
@@ -46,10 +51,12 @@ public class LWJGLGuiManager implements GuiManager {
 		this.launcher = launcher;
 		this.launcher.getEventManager().registerListener(this);
 		registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
+		registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
+		registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		this.launcher.getEventManager().unregisterListener(this);
 		@SuppressWarnings("unchecked")
 		CompletableFuture<Void>[] futures = new CompletableFuture[guis.size()];
@@ -152,7 +159,7 @@ public class LWJGLGuiManager implements GuiManager {
 	public <T extends LauncherBasedGui> T createGui(Class<T> clazz) throws GameException {
 		GameSupplier<? extends LauncherBasedGui> sup = registeredGuis.get(clazz);
 		if (sup == null) {
-			return null;
+			throw new GameException("Gui " + clazz.getName() + " not registered! Outdated launcher?");
 		}
 		T t = clazz.cast(sup.get());
 		if (converters.containsKey(clazz)) {
@@ -168,7 +175,8 @@ public class LWJGLGuiManager implements GuiManager {
 	@EventHandler
 	private void handle(KeybindEntryEvent event) {
 		KeybindEntry entry = event.getEntry();
-		// TODO: Gui Selection - not relevant with only one gui being able to be opened in this guimanager
+		// TODO: Gui Selection - not relevant with only one gui being able to be opened
+		// in this guimanager
 		guis.values().forEach(stack -> {
 			StackEntry e = stack.peekGui();
 			if (e != null) {

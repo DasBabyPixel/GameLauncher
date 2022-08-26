@@ -1,4 +1,4 @@
-package gamelauncher.engine.file.embed.url;
+package gamelauncher.engine.io.embed.url;
 
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;

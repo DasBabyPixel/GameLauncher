@@ -12,8 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
+import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService.WrapperCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 
@@ -22,7 +23,7 @@ import gamelauncher.engine.util.logging.Logger;
  * 
  * @author DasBabyPixel
  */
-public class Threads implements GameResource {
+public class Threads extends AbstractGameResource {
 
 	/**
 	 * Wheather or not stack traces should be calculated with causes from other
@@ -61,6 +62,22 @@ public class Threads implements GameResource {
 	}
 
 	/**
+	 * @return the stacktrace origin of thread-submitted tasks. DOES NOT HAVE THE
+	 *         STACKTRACE OF THE CURRENT THREAD!!!
+	 */
+	public static GameException buildStacktrace() {
+		Thread cur = Thread.currentThread();
+		if (cur instanceof AbstractExecutorThread) {
+			return ((AbstractExecutorThread) cur).buildStacktrace();
+		}
+		WrapperCallable<?> c;
+		if ((c = WrapperCallable.threadLocal.get()) != null) {
+			return c.buildStacktrace();
+		}
+		return new GameException();
+	}
+
+	/**
 	 * @return a new work stealing pool
 	 */
 	public ExecutorThreadService newWorkStealingPool() {
@@ -87,7 +104,7 @@ public class Threads implements GameResource {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		try {
 			for (ExecutorThreadService service : services) {
 				CompletableFuture<Void> fut = service.exit();
@@ -151,6 +168,20 @@ public class Threads implements GameResource {
 	}
 
 	/**
+	 * Parks the current thread for a specified amount of nanoseconds
+	 * 
+	 * @param nanos
+	 */
+	public static void park(long nanos) {
+		Thread thread = Thread.currentThread();
+		if (thread instanceof ParkableThread) {
+			((ParkableThread) thread).park(nanos);
+		} else {
+			LockSupport.parkNanos(nanos);
+		}
+	}
+
+	/**
 	 * Unparks the given thread. Calling this while the thread is not parked will
 	 * cause the next park invocation to not be executed
 	 * 
@@ -183,6 +214,9 @@ public class Threads implements GameResource {
 	 * @return the result from the {@link CompletableFuture}
 	 */
 	public static <T> T waitFor(CompletableFuture<T> future) {
+		if (future.isDone()) {
+			return future.getNow(null);
+		}
 		Thread thread = Thread.currentThread();
 		AtomicReference<T> ref = new AtomicReference<>();
 		future.thenAccept(value -> {

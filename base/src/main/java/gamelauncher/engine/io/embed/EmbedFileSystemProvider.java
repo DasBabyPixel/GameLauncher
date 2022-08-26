@@ -32,10 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.auto.service.AutoService;
-
 @SuppressWarnings("javadoc")
-@AutoService(FileSystemProvider.class)
 public class EmbedFileSystemProvider extends FileSystemProvider {
 
 	private volatile EmbedFileSystem embedFileSystem;

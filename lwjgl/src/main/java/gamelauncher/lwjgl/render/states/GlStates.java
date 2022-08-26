@@ -147,6 +147,10 @@ public class GlStates {
 	public void disable(int state) {
 		glDisable(state);
 	}
+	
+	public void scissor(int x, int y, int w, int h) {
+		glScissor(x, y, w, h);
+	}
 
 	public void bindRenderbuffer(int target, int renderbuffer) {
 		if (!bindRenderbuffer.containsKey(target) || bindRenderbuffer.put(target, renderbuffer) != renderbuffer) {

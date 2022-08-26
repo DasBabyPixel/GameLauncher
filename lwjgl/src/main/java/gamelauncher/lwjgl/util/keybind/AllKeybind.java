@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.util.keybind;
 
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEntry;
@@ -9,7 +10,7 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 /**
  * @author DasBabyPixel
  */
-public class AllKeybind implements Keybind {
+public class AllKeybind extends AbstractGameResource implements Keybind {
 
 	/**
 	 * The {@link ThreadLocal} of the {@link AllKeybind}
@@ -19,8 +20,13 @@ public class AllKeybind implements Keybind {
 	/**
 	 */
 	public int id = 0;
-	
+
 	private AllKeybind() {
+		try {
+			cleanup();
+		} catch (GameException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	@Override
@@ -49,11 +55,12 @@ public class AllKeybind implements Keybind {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public final void cleanup0() throws GameException {
 	}
 
 	@Override
 	public KeybindManager getManager() {
 		return null;
 	}
+
 }

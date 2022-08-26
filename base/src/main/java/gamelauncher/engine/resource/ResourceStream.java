@@ -18,14 +18,18 @@ import gamelauncher.engine.util.function.GameFunction;
 /**
  * @author DasBabyPixel
  */
-public class ResourceStream implements AutoCloseable {
+public class ResourceStream extends AbstractGameResource implements AutoCloseable {
 
 	private final Path path;
+
 	private final boolean directory;
-	private final InputStream in;
-	private final OutputStream out;
+
+	private InputStream in;
+
+	private OutputStream out;
 
 	private final Lock bufLock = new ReentrantLock(true);
+
 	private final ByteBuffer buf = ByteBuffer.allocate(4);
 
 	private static final int NULL = -1;
@@ -88,11 +92,10 @@ public class ResourceStream implements AutoCloseable {
 
 	@Override
 	public void close() throws IOException {
-		if (in != null) {
-			in.close();
-		}
-		if (out != null) {
-			out.close();
+		try {
+			cleanup();
+		} catch (GameException ex) {
+			throw new IOException(ex);
 		}
 	}
 
@@ -101,9 +104,17 @@ public class ResourceStream implements AutoCloseable {
 	 * @see OutputStream#close()
 	 * @throws GameException
 	 */
-	public void cleanup() throws GameException {
+	@Override
+	public void cleanup0() throws GameException {
 		try {
-			close();
+			if (in != null) {
+				in.close();
+				in = null;
+			}
+			if (out != null) {
+				out.close();
+				out = null;
+			}
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
@@ -248,11 +259,7 @@ public class ResourceStream implements AutoCloseable {
 	 */
 	public String readUTF8FullyClose() throws GameException {
 		String utf8 = readUTF8Fully();
-		try {
-			close();
-		} catch (IOException ex) {
-			throw new GameException(ex);
-		}
+		cleanup();
 		return utf8;
 	}
 
@@ -451,4 +458,5 @@ public class ResourceStream implements AutoCloseable {
 	public Path getPath() {
 		return path;
 	}
+
 }

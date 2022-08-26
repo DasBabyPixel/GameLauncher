@@ -17,15 +17,46 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.10.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<release>8</release>
+					<source>17</source>
+					<target>17</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<mainClass>gamelauncher.lwjgl.Start</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.3.1-SNAPSHOT</version>
+				<configuration>
+					<relocations>
+						<relocation>
+							<pattern>com.google</pattern>
+							<shadedPattern>gamelauncher.dependencies.com.google</shadedPattern>
+						</relocation>
+						<relocation>
+							<pattern>org.joml</pattern>
+							<shadedPattern>gamelauncher.dependencies.joml</shadedPattern>
+						</relocation>
+						<relocation>
+							<pattern>io.netty</pattern>
+							<shadedPattern>gamelauncher.dependencies.netty</shadedPattern>
+						</relocation>
+						<relocation>
+							<pattern>de.matthiasmann.twl.utils</pattern>
+							<shadedPattern>gamelauncher.dependencies.pngdecoder</shadedPattern>
+						</relocation>
+						<relocation>
+							<pattern>de.dasbabypixel.api.property</pattern>
+							<shadedPattern>gamelauncher.dependencies.property</shadedPattern>
+						</relocation>
+					</relocations>
+				</configuration>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -45,6 +76,12 @@
 		</plugins>
 	</build>
 
+	<pluginRepositories>
+		<pluginRepository>
+			<id>maven-snapshots</id>
+			<url>https://repository.apache.org/content/repositories/snapshots/</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<profiles>
 		<profile>
@@ -170,6 +207,12 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>

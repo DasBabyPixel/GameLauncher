@@ -3,15 +3,15 @@ package gamelauncher.engine;
 import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.LockSupport;
 
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.collection.AtomicConcurrentLinkedDeque;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 
@@ -21,14 +21,28 @@ import gamelauncher.engine.util.function.GameRunnable;
 public class GameThread extends Thread {
 
 	private final AtomicBoolean exit = new AtomicBoolean(false);
+
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
+
 	private final Queue<GameRunnable> queue = new ConcurrentLinkedQueue<>();
-	private final Deque<Long> ticks = new ConcurrentLinkedDeque<>();
+
+	private final Deque<Long> ticks = new AtomicConcurrentLinkedDeque<>();
+
+	private final Deque<Long> tickTimes = new AtomicConcurrentLinkedDeque<>();
+
 	private final GameLauncher gameLauncher;
+
 	private final AtomicInteger tick = new AtomicInteger(0);
+
 	private final long second = TimeUnit.SECONDS.toNanos(1);
+
 	private final long tickTime = (long) (second / GameLauncher.MAX_TPS);
+
 	private final AtomicLong lastTick = new AtomicLong(-1L);
+
+	private volatile long ticksTimeSum = 0;
+
+	private volatile long ticksTimeSumCount = 0;
 
 	/**
 	 * @param launcher
@@ -36,6 +50,7 @@ public class GameThread extends Thread {
 	public GameThread(GameLauncher launcher) {
 		this.gameLauncher = launcher;
 		this.setName("GameThread");
+		this.setPriority(MAX_PRIORITY);
 	}
 
 	/**
@@ -63,7 +78,7 @@ public class GameThread extends Thread {
 		mainLoop: while (true) {
 			long nanoDelay = lastTick - System.nanoTime();
 			if (nanoDelay > 0) {
-				LockSupport.parkNanos(nanoDelay);
+				Threads.park(nanoDelay);
 			}
 			while (lastTick - System.nanoTime() < 0) {
 				int tps = getTps();
@@ -81,6 +96,9 @@ public class GameThread extends Thread {
 				tick(lastTick);
 				long tickStop = System.nanoTime();
 				long tickTook = tickStop - tickStart;
+				tickTimes.offer(tickTook);
+				ticksTimeSum += tickTook;
+				ticksTimeSumCount++;
 				if (tickTook > tickTime) {
 					long tooLong = tickTook - tickTime;
 					long ticksToSkip = tooLong / tickTime;
@@ -113,6 +131,9 @@ public class GameThread extends Thread {
 			long first = ticks.peekFirst();
 			if (compareTo - first > 0) {
 				ticks.pollFirst();
+				long took = tickTimes.pollFirst();
+				ticksTimeSum -= took;
+				ticksTimeSumCount--;
 				continue;
 			}
 			break;
@@ -140,8 +161,14 @@ public class GameThread extends Thread {
 	 * @return the current tps
 	 */
 	public int getTps() {
-		removeOldTicks();
 		return ticks.size();
+	}
+
+	/**
+	 * @return the average tick time over the last second
+	 */
+	public double getAverageTickTime() {
+		return (double) ticksTimeSum / (double) ticksTimeSumCount;
 	}
 
 	/**
@@ -172,16 +199,18 @@ public class GameThread extends Thread {
 
 	private <T> void runLater(GameCallable<T> callable, CompletableFuture<T> future) {
 		queue.offer(new GameRunnable() {
+
 			@Override
 			public void run() throws GameException {
 				try {
 					T t = callable.call();
 					future.complete(t);
 				} catch (Throwable th) {
-					future.complete(null);
+					future.completeExceptionally(th);
 					throw new GameException(th);
 				}
 			}
+
 		});
 	}
 
@@ -219,4 +248,5 @@ public class GameThread extends Thread {
 	public CompletableFuture<Void> getExitFuture() {
 		return exitFuture;
 	}
+
 }

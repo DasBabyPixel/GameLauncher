@@ -6,10 +6,11 @@ import org.joml.Vector4f;
 import gamelauncher.engine.render.model.CombinedModelsModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
 @SuppressWarnings("javadoc")
-public final class LWJGLCombinedModelsModel implements CombinedModelsModel {
+public final class LWJGLCombinedModelsModel extends AbstractGameResource implements CombinedModelsModel {
 
 	private final Model[] models;
 
@@ -30,7 +31,7 @@ public final class LWJGLCombinedModelsModel implements CombinedModelsModel {
 	}
 
 	@Override
-	public void cleanup() throws GameException {
+	public void cleanup0() throws GameException {
 		for (Model model : models) {
 			model.cleanup();
 		}

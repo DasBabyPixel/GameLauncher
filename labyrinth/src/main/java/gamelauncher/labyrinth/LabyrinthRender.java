@@ -5,32 +5,41 @@ import java.nio.file.FileSystem;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
+import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.Renderer;
-import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
-import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.util.GameException;
 
 public class LabyrinthRender extends Renderer {
 
 	private Labyrinth labyrinth;
+
 	private GameLauncher launcher;
+
 	private ResourceLoader resourceLoader;
+
 	private FileSystem embedFileSystem;
+
 	private ModelLoader modelLoader;
+
 	private ShaderLoader shaderLoader;
+
 	private DrawContext contexthud;
+
 	private Camera camera = new BasicCamera();
 
 	Model model1;
+
 	GameItem gi1;
+
 	Model model2;
+
 	GameItem gi2;
 
 	public LabyrinthRender(Labyrinth labyrinth) {
@@ -44,10 +53,7 @@ public class LabyrinthRender extends Renderer {
 
 	@Override
 	public void init(Framebuffer framebuffer) throws GameException {
-		ShaderProgram program = shaderLoader.loadShader(launcher, embedFileSystem.getPath("shaders/hud/hud.json"));
-		contexthud = launcher.createContext(framebuffer);
-		contexthud.setProgram(program);
-		contexthud.setProjection(new Projection.Projection2D());
+		contexthud = launcher.getContextProvider().loadContext(framebuffer, ContextType.HUD);
 
 		Model model = modelLoader.loadModel(resourceLoader.getResource(embedFileSystem.getPath("cube.obj")));
 
@@ -74,7 +80,7 @@ public class LabyrinthRender extends Renderer {
 	public void cleanup(Framebuffer framebuffer) throws GameException {
 		model1.cleanup();
 		model2.cleanup();
-		contexthud.getProgram().clearUniforms();
-		contexthud.cleanup();
+		launcher.getContextProvider().freeContext(contexthud, ContextType.HUD);
 	}
+
 }

@@ -3,8 +3,8 @@ package gamelauncher.engine.render;
 import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 /**
  * @author DasBabyPixel

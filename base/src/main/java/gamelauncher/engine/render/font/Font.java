@@ -2,8 +2,8 @@ package gamelauncher.engine.render.font;
 
 import java.nio.ByteBuffer;
 
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameResource;
 
 /**
  * @author DasBabyPixel

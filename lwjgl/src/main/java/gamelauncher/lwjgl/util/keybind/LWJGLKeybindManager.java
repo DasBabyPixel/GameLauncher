@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
+import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.keybind.Keybind;
@@ -17,7 +18,7 @@ import gamelauncher.engine.util.keybind.KeybindManager;
  * @author DasBabyPixel
  *
  */
-public class LWJGLKeybindManager implements KeybindManager {
+public class LWJGLKeybindManager extends AbstractGameResource implements KeybindManager {
 
 	private static final String MOUSEBUTTON_PREFIX = "Button ";
 
@@ -71,6 +72,10 @@ public class LWJGLKeybindManager implements KeybindManager {
 				keybind.handle(ke);
 			}
 		}
+	}
+
+	@Override
+	protected void cleanup0() throws GameException {
 	}
 
 	private void loadKeybind(int id) {

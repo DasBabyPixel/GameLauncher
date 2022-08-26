@@ -76,6 +76,8 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
+	private final AtomicBoolean frameBegun = new AtomicBoolean(false);
+
 	public GLFWWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
 		this.launcher = launcher;
 		this.logger = Logger.getLogger();
@@ -135,7 +137,9 @@ public class GLFWWindow implements Window, GLFWUser {
 	@Override
 	public CompletableFuture<Void> destroy() {
 		if (closing.compareAndSet(false, true)) {
-			renderThread.exit().thenRun(() -> {
+			renderThread.submit(() -> {
+				manualFramebuffer.cleanup();
+			}).thenRun(() -> renderThread.exit().thenRun(() -> {
 				glfwThread.submit(() -> {
 					StateRegistry.removeWindow(glfwId);
 					glfwDestroyWindow(glfwId);
@@ -143,7 +147,7 @@ public class GLFWWindow implements Window, GLFWUser {
 					glfwThread.removeUser(this);
 					destroyFuture().complete(null);
 				});
-			});
+			}));
 		}
 		return destroyFuture();
 	}
@@ -157,17 +161,17 @@ public class GLFWWindow implements Window, GLFWUser {
 	@Override
 	public void beginFrame() {
 		manualFramebuffer.query();
+		if (!frameBegun.compareAndSet(false, true)) {
+			throw new IllegalStateException("Already rendering frame");
+		}
 	}
 
 	@Override
 	public void endFrame() {
-		if (swapBuffers.get()) {
+		boolean wasFrame = frameBegun.compareAndSet(true, false);
+		if (swapBuffers.get() && wasFrame) {
 			if (!manualFramebuffer.newValue().booleanValue()) {
-//				if (System.nanoTime() - (lastFBResizeNanos + TimeUnit.MILLISECONDS.toNanos(50)) > 0) {
 				glfwSwapBuffers(this.getGLFWId());
-//				} else {
-//					scheduleDraw();
-//				}
 			}
 		}
 	}
@@ -184,7 +188,7 @@ public class GLFWWindow implements Window, GLFWUser {
 				} catch (InterruptedException | BrokenBarrierException ex) {
 					ex.printStackTrace();
 				}
-				if (swapBuffers.get()) {
+				if (swapBuffers.compareAndSet(false, true)) {
 					glfwSwapBuffers(getGLFWId());
 				}
 				fut.complete(null);
@@ -214,6 +218,7 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.renderThread.drawPhaser.awaitAdvance(this.renderThread.drawPhaser.getPhase());
 	}
 
+	@Deprecated
 	public void swapBuffers(boolean val) {
 		this.swapBuffers.set(val);
 	}

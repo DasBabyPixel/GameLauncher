@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
@@ -25,16 +26,26 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	private static final AtomicInteger names = new AtomicInteger();
 
 	final GLFWWindow window;
-	final Lock shouldDrawLock = new ReentrantLock(true);
-	final Condition shouldDrawCondition = shouldDrawLock.newCondition();
+
 	final FrameCounter frameCounter;
+
 	final AtomicBoolean hasContext = new AtomicBoolean(false);
+
 	final Lock hasContextLock = new ReentrantLock(true);
+
 	final Condition hasContextCondition = hasContextLock.newCondition();
+
 	final Phaser drawPhaser = new Phaser();
+
 	private final AtomicBoolean viewportChanged = new AtomicBoolean(false);
+
 	private FrameRenderer lastFrameRenderer = null;
-	private boolean shouldDraw = false;
+
+	private final AtomicBoolean shouldDraw = new AtomicBoolean(false);
+
+	private final Consumer<Long> nanoSleeper = nanos -> {
+		this.waitForSignalTimeout(nanos);
+	};
 
 	public GLFWRenderThread(GLFWWindow window) {
 		super(window.getLauncher().getGlThreadGroup());
@@ -65,29 +76,24 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 			}
 		}
 		window.getLauncher().getGlThreadGroup().terminated(this);
+		try {
+			StateRegistry.removeContext(window.getGLFWId());
+		} catch (GameException ex) {
+			ex.printStackTrace();
+		}
 		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
 	}
 
 	@Override
 	protected void workExecution() {
-		shouldDrawLock.lock();
-		if (shouldDraw()) {
-			shouldDraw = false;
-			shouldDrawLock.unlock();
+		if (shouldDraw.compareAndSet(true, false) || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
 			frame();
-		} else {
-			shouldDrawCondition.awaitUninterruptibly();
-			shouldDrawLock.unlock();
 		}
 	}
 
 	@Override
 	protected void signal() {
 		super.signal();
-		shouldDrawLock.lock();
-		shouldDrawCondition.signal();
-		shouldDrawLock.unlock();
-		frameCounter.stopWaiting();
 	}
 
 	@Override
@@ -95,12 +101,13 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		workQueue();
 		hasContextLock.lock();
 		if (!hasContext.get()) {
-			hasContextCondition.awaitUninterruptibly();
+			if (!exit)
+				hasContextCondition.awaitUninterruptibly();
 		}
 		workExecution();
 		hasContextLock.unlock();
 	}
-	
+
 	@Override
 	protected boolean shouldHandle(QueueEntry entry) {
 		if (entry.run instanceof ContextlessGameRunnable) {
@@ -151,30 +158,14 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 
 		drawPhaser.arrive();
 		if (hasContext.get()) {
-			frameCounter.frame();
+			frameCounter.frame(nanoSleeper);
 		} else {
 			frameCounter.frameNoWait();
 		}
 	}
 
-	private boolean shouldDraw() {
-		shouldDrawLock.lock();
-		try {
-			RenderMode mode = window.getRenderMode();
-			if (mode == RenderMode.CONTINUOUSLY) {
-				return true;
-			}
-			return shouldDraw;
-		} finally {
-			shouldDrawLock.unlock();
-		}
-	}
-
 	public void scheduleDraw() {
-		shouldDrawLock.lock();
-		shouldDraw = true;
-		shouldDrawCondition.signalAll();
-		shouldDrawLock.unlock();
+		shouldDraw.set(true);
 		signal();
 	}
 
