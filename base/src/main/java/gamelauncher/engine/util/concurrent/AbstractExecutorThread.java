@@ -30,6 +30,8 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
 	public WrapperEntry currentEntry;
 
+	private boolean skipNextSignalWait = false;
+
 	public AbstractExecutorThread(ThreadGroup group) {
 		super(group, (Runnable) null);
 	}
@@ -111,6 +113,10 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	protected void waitForSignal() {
 		if (exit)
 			return;
+		if (skipNextSignalWait) {
+			skipNextSignalWait = false;
+			return;
+		}
 		while (!work.compareAndSet(true, false)) {
 			Threads.park();
 		}
@@ -119,10 +125,16 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	protected void waitForSignalTimeout(long nanos) {
 		if (exit)
 			return;
+		if (skipNextSignalWait) {
+			skipNextSignalWait = false;
+			return;
+		}
 		final long begin = System.nanoTime();
+		skipNextSignalWait = true;
 		while (!work.compareAndSet(true, false)) {
 			long parktime = begin + nanos - System.nanoTime();
 			if (parktime < 0) {
+				skipNextSignalWait = false;
 				break;
 			}
 			Threads.park(parktime);
