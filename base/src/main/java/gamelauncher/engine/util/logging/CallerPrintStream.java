@@ -38,10 +38,11 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
 	}
 
 	private boolean setCaller() {
+		lock.lock();
 		if (caller != null) {
+			lock.unlock();
 			return false;
 		}
-		lock.lock();
 		StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = null;
 		String cname = getClass().getName();
