@@ -5,9 +5,6 @@ import static org.lwjgl.glfw.GLFW.*;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import gamelauncher.engine.render.FrameCounter;
@@ -28,12 +25,6 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	final GLFWWindow window;
 
 	final FrameCounter frameCounter;
-
-	final AtomicBoolean hasContext = new AtomicBoolean(false);
-
-	final Lock hasContextLock = new ReentrantLock(true);
-
-	final Condition hasContextCondition = hasContextLock.newCondition();
 
 	final Phaser drawPhaser = new Phaser();
 
@@ -61,7 +52,6 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		viewportChanged();
 
 		StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
-		hasContext.set(true);
 		glfwSwapInterval(0);
 	}
 
@@ -92,31 +82,22 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	}
 
 	@Override
+	protected boolean shouldWaitForSignal() {
+//		return window.getRenderMode() != RenderMode.CONTINUOUSLY;
+		return true;
+	}
+
+	@Override
+	protected void waitForSignal() {
+		System.out.println("wait");
+		super.waitForSignal();
+		System.out.println("waitdone");
+	}
+
+	@Override
 	protected void signal() {
+		System.out.println("signal");
 		super.signal();
-	}
-
-	@Override
-	protected void loop() {
-		workQueue();
-		hasContextLock.lock();
-		if (!hasContext.get()) {
-			if (!exit)
-				hasContextCondition.awaitUninterruptibly();
-		}
-		workExecution();
-		hasContextLock.unlock();
-	}
-
-	@Override
-	protected boolean shouldHandle(QueueEntry entry) {
-		if (entry.run instanceof ContextlessGameRunnable) {
-			return true;
-		}
-		if (!hasContext.get()) {
-			return false;
-		}
-		return super.shouldHandle(entry);
 	}
 
 	private void frame() {
@@ -157,11 +138,7 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		}
 
 		drawPhaser.arrive();
-		if (hasContext.get()) {
-			frameCounter.frame(nanoSleeper);
-		} else {
-			frameCounter.frameNoWait();
-		}
+		frameCounter.frame(nanoSleeper);
 	}
 
 	public void scheduleDraw() {
