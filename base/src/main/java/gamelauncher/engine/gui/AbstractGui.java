@@ -13,10 +13,15 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 public abstract class AbstractGui implements Gui {
 
 	private final NumberValue x = NumberValue.zero();
+
 	private final NumberValue y = NumberValue.zero();
+
 	private final NumberValue w = NumberValue.zero();
+
 	private final NumberValue h = NumberValue.zero();
+
 	private final GameLauncher launcher;
+
 	private final BooleanValue focused = BooleanValue.falseValue();
 
 	/**
@@ -80,10 +85,10 @@ public abstract class AbstractGui implements Gui {
 	public void onOpen() throws GameException {
 
 	}
-	
+
 	@Override
 	public void handle(KeybindEntry entry) throws GameException {
-		
+
 	}
 
 	@Override
@@ -100,4 +105,11 @@ public abstract class AbstractGui implements Gui {
 	public void update() throws GameException {
 
 	}
+
+	@Override
+	public String toString() {
+		String cname = getClass().getSimpleName();
+		return String.format("%s[x=%s,y=%s,w=%s,h=%s]", cname, x.intValue(), y.intValue(), w.intValue(), h.intValue());
+	}
+
 }

@@ -34,6 +34,23 @@
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.3.1-SNAPSHOT</version>
 				<configuration>
+					<minimizeJar>true</minimizeJar>
+					<filters>
+						<filter>
+							<artifact>${project.groupId}:${project.artifactId}</artifact>
+							<excludeDefaults>false</excludeDefaults>
+							<includes>
+								<include>gamelauncher/lwjgl/Start</include>
+							</includes>
+						</filter>
+						<filter>
+							<artifact>gamelauncher:base</artifact>
+							<excludeDefaults>false</excludeDefaults>
+							<includes>
+								<include>gamelauncher/engine/io/embed/**</include>
+							</includes>
+						</filter>
+					</filters>
 					<relocations>
 						<relocation>
 							<pattern>com.google</pattern>
@@ -230,10 +247,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-assimp</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl-glfw</artifactId>
 		</dependency>
 		<dependency>
@@ -255,11 +268,6 @@
 		<dependency>
 			<groupId>org.lwjgl</groupId>
 			<artifactId>lwjgl</artifactId>
-			<classifier>${lwjgl.natives}</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.lwjgl</groupId>
-			<artifactId>lwjgl-assimp</artifactId>
 			<classifier>${lwjgl.natives}</classifier>
 		</dependency>
 		<dependency>

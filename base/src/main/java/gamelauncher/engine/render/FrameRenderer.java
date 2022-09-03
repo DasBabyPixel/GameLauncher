@@ -38,4 +38,16 @@ public interface FrameRenderer {
 	 * @throws GameException
 	 */
 	void cleanup(Window window) throws GameException;
+
+	/**
+	 * Refreshes this display. Used for when the current content is already rendered
+	 * to an off-screen framebuffer, but the on-screen framebuffer is not
+	 * up-to-date. In that case we only have to update the on-screen framebuffer to
+	 * contain the contents of the off-screen framebuffer
+	 * 
+	 * @param window
+	 * @throws GameException
+	 */
+	void refreshDisplay(Window window) throws GameException;
+
 }

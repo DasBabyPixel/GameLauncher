@@ -31,7 +31,7 @@ public class Threads extends AbstractGameResource {
 	 */
 	public static final boolean calculateThreadStacks = Boolean.getBoolean("calculateThreadStacks");
 
-	private final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.getLogger();
 
 	/**
 	 * A work stealing {@link Executor}.
@@ -137,22 +137,70 @@ public class Threads extends AbstractGameResource {
 	 * {@link ExecutorThread#workQueue()} will be invoked.
 	 * 
 	 * @param futures
+	 * @throws GameException
 	 */
-	public static void waitFor(CompletableFuture<?>... futures) {
+	public static void waitFor(CompletableFuture<?>... futures) throws GameException {
 		final Thread thread = Thread.currentThread();
 		final int required = futures.length;
 		final AtomicInteger done = new AtomicInteger();
+		final AtomicReference<Throwable> ex = new AtomicReference<>(null);
 		Runnable run = () -> {
 			if (done.incrementAndGet() == required) {
 				unpark(thread);
 			}
 		};
 		for (CompletableFuture<?> fut : futures) {
+			fut.exceptionally(th -> {
+				ex.set(th);
+				logger.error(th);
+				done.addAndGet(required);
+				unpark(thread);
+				return null;
+			});
 			fut.thenRun(run);
 		}
-		while (done.get() != required) {
+		while (done.get() < required) {
 			park();
 		}
+		Throwable th = ex.get();
+		if (th != null) {
+			GameException e = new GameException();
+			e.initCause(th);
+			throw e;
+		}
+	}
+
+	/**
+	 * Waits for the future to finish. This behaves like
+	 * {@link Threads#waitFor(CompletableFuture[])}
+	 * 
+	 * @param <T>
+	 * @param future
+	 * @return the result from the {@link CompletableFuture}
+	 * @throws GameException 
+	 */
+	public static <T> T waitFor(CompletableFuture<T> future) throws GameException {
+		Thread thread = Thread.currentThread();
+		AtomicReference<T> ref = new AtomicReference<>();
+		AtomicReference<Throwable> ex = new AtomicReference<>(null);
+		future.exceptionally(th -> {
+			ex.set(th);
+			unpark(thread);
+			return null;
+		}).thenAccept(value -> {
+			ref.set(value);
+			unpark(thread);
+		});
+		while (!future.isDone()) {
+			park();
+		}
+		Throwable th = ex.get();
+		if (th != null) {
+			GameException e = new GameException();
+			e.initCause(th);
+			throw e;
+		}
+		return ref.get();
 	}
 
 	/**
@@ -203,30 +251,6 @@ public class Threads extends AbstractGameResource {
 	 */
 	public static void unpark(ParkableThread thread) {
 		thread.unpark();
-	}
-
-	/**
-	 * Waits for the future to finish. This behaves like
-	 * {@link Threads#waitFor(CompletableFuture[])}
-	 * 
-	 * @param <T>
-	 * @param future
-	 * @return the result from the {@link CompletableFuture}
-	 */
-	public static <T> T waitFor(CompletableFuture<T> future) {
-		if (future.isDone()) {
-			return future.getNow(null);
-		}
-		Thread thread = Thread.currentThread();
-		AtomicReference<T> ref = new AtomicReference<>();
-		future.thenAccept(value -> {
-			ref.set(value);
-			unpark(thread);
-		});
-		while (!future.isDone()) {
-			park();
-		}
-		return ref.get();
 	}
 
 	/**

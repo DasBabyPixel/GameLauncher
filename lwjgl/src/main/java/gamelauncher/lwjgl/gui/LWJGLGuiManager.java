@@ -17,6 +17,7 @@ import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.launcher.gui.ColorGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
+import gamelauncher.engine.launcher.gui.ScrollGui;
 import gamelauncher.engine.launcher.gui.TextureGui;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -28,6 +29,7 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.launcher.gui.LWJGLColorGui;
 import gamelauncher.lwjgl.launcher.gui.LWJGLMainScreenGui;
+import gamelauncher.lwjgl.launcher.gui.LWJGLScrollGui;
 import gamelauncher.lwjgl.launcher.gui.LWJGLTextureGui;
 
 /**
@@ -53,6 +55,17 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
 		registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
 		registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
+		registerGuiCreator(ScrollGui.class, () -> new LWJGLScrollGui(launcher));
+	}
+
+	@Override
+	public void updateGuis() throws GameException {
+		for (GuiStack stack : guis.values()) {
+			GuiStack.StackEntry e = stack.peekGui();
+			if (e != null) {
+				e.gui.update();
+			}
+		}
 	}
 
 	@Override
@@ -68,7 +81,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	}
 
 	@Override
-	public void cleanup(Framebuffer framebuffer) {
+	public void cleanup(Framebuffer framebuffer) throws GameException {
 		Threads.waitFor(cleanupLater(framebuffer));
 	}
 

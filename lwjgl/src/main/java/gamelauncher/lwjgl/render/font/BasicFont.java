@@ -13,6 +13,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 
 @SuppressWarnings("javadoc")
@@ -45,7 +46,7 @@ public class BasicFont extends AbstractGameResource implements Font {
 	}
 
 	@Override
-	public ByteBuffer data() {
+	public ByteBuffer data() throws GameException {
 		if (!done) {
 			Threads.waitFor(future);
 		}
@@ -53,7 +54,7 @@ public class BasicFont extends AbstractGameResource implements Font {
 	}
 
 	@Override
-	public void cleanup0() {
+	public void cleanup0() throws GameException {
 		try {
 			lock.lock();
 			if (refcount.decrementAndGet() <= 0) {

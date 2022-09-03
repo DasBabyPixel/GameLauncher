@@ -69,7 +69,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	@Override
-	public void cleanup0() {
+	public void cleanup0() throws GameException {
 		Threads.waitFor(exit());
 	}
 

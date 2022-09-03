@@ -39,7 +39,7 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 	public AbstractFramebuffer(RenderThread render, Runnable draw) {
 		this.renderThread = render;
 		this.draw = draw;
-		this.scissor = new LWJGLScissorStack();
+		this.scissor = new LWJGLScissorStack(this);
 	}
 
 	@Override

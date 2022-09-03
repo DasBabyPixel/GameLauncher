@@ -2,6 +2,7 @@ package gamelauncher.engine.launcher.gui;
 
 import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.render.texture.Texture;
+import gamelauncher.engine.util.GameException;
 
 /**
  * @author DasBabyPixel
@@ -10,7 +11,8 @@ public interface TextureGui extends LauncherBasedGui {
 
 	/**
 	 * @return the texture
+	 * @throws GameException 
 	 */
-	Texture getTexture();
+	Texture getTexture() throws GameException;
 	
 }

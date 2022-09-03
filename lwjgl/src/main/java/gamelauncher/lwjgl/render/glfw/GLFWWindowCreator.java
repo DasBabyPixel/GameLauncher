@@ -13,6 +13,7 @@ import org.lwjgl.glfw.GLFWMouseButtonCallbackI;
 import org.lwjgl.glfw.GLFWScrollCallbackI;
 import org.lwjgl.glfw.GLFWWindowCloseCallbackI;
 import org.lwjgl.glfw.GLFWWindowPosCallbackI;
+import org.lwjgl.glfw.GLFWWindowRefreshCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 
 import gamelauncher.engine.render.RenderMode;
@@ -22,6 +23,7 @@ import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindowCreator implements GameRunnable {
+
 	private final GLFWWindow window;
 
 	public GLFWWindowCreator(GLFWWindow window) {
@@ -39,6 +41,7 @@ public class GLFWWindowCreator implements GameRunnable {
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
+		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 		long id = glfwCreateWindow(window.width.intValue(), window.height.intValue(), window.title.getValue(), 0, 0);
 		StateRegistry.addWindow(id);
 		if (id == NULL) {
@@ -66,6 +69,7 @@ public class GLFWWindowCreator implements GameRunnable {
 		window.windowCreateFuture().complete(null);
 
 		glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
+
 			@Override
 			public void invoke(long window, double xoffset, double yoffset) {
 				try {
@@ -74,8 +78,10 @@ public class GLFWWindowCreator implements GameRunnable {
 					ex.printStackTrace();
 				}
 			}
+
 		});
 		glfwSetWindowCloseCallback(id, new GLFWWindowCloseCallbackI() {
+
 			@Override
 			public void invoke(long window) {
 				try {
@@ -84,37 +90,48 @@ public class GLFWWindowCreator implements GameRunnable {
 					ex.printStackTrace();
 				}
 			}
+
 		});
 		glfwSetCursorEnterCallback(id, new GLFWCursorEnterCallbackI() {
+
 			@Override
 			public void invoke(long window, boolean entered) {
 				GLFWWindowCreator.this.window.getMouse().setInWindow(entered);
 			}
+
 		});
 		glfwSetCursorPosCallback(id, new GLFWCursorPosCallbackI() {
+
 			@Override
 			public void invoke(long window, double xpos, double ypos) {
 				float omx = (float) GLFWWindowCreator.this.window.getMouse().getX();
 				float omy = (float) GLFWWindowCreator.this.window.getMouse().getY();
+				ypos = GLFWWindowCreator.this.window.height.doubleValue() - ypos;
 				GLFWWindowCreator.this.window.getMouse().setPosition(xpos, ypos);
 				GLFWWindowCreator.this.window.getInput().mouseMove(omx, omy, (float) xpos, (float) ypos);
 			}
+
 		});
 		glfwSetWindowSizeCallback(id, new GLFWWindowSizeCallbackI() {
+
 			@Override
 			public void invoke(long window, int w, int h) {
 				GLFWWindowCreator.this.window.width.setNumber(w);
 				GLFWWindowCreator.this.window.height.setNumber(h);
 			}
+
 		});
 		glfwSetWindowPosCallback(id, new GLFWWindowPosCallbackI() {
+
 			@Override
 			public void invoke(long window, int xpos, int ypos) {
 				GLFWWindowCreator.this.window.x.setNumber(xpos);
 				GLFWWindowCreator.this.window.y.setNumber(ypos);
 			}
+
 		});
 		glfwSetMouseButtonCallback(id, new GLFWMouseButtonCallbackI() {
+
 			@Override
 			public void invoke(long window, int button, int action, int mods) {
 				switch (action) {
@@ -132,8 +149,10 @@ public class GLFWWindowCreator implements GameRunnable {
 					break;
 				}
 			}
+
 		});
 		glfwSetKeyCallback(id, new GLFWKeyCallbackI() {
+
 			@Override
 			public void invoke(long window, int key, int scancode, int action, int mods) {
 				switch (action) {
@@ -150,15 +169,27 @@ public class GLFWWindowCreator implements GameRunnable {
 					break;
 				}
 			}
+
 		});
 		glfwSetCharCallback(id, new GLFWCharCallbackI() {
+
 			@Override
 			public void invoke(long window, int codepoint) {
 				char ch = (char) codepoint;
 				GLFWWindowCreator.this.window.getInput().character(ch);
 			}
+
+		});
+		glfwSetWindowRefreshCallback(id, new GLFWWindowRefreshCallbackI() {
+
+			@Override
+			public void invoke(long window) {
+				GLFWWindowCreator.this.window.getRenderThread().refresh();
+			}
+
 		});
 		glfwSetFramebufferSizeCallback(id, new GLFWFramebufferSizeCallbackI() {
+
 			@Override
 			public void invoke(long w, int width, int height) {
 				GLFWWindowCreator.this.window.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
@@ -167,9 +198,11 @@ public class GLFWWindowCreator implements GameRunnable {
 				window.windowFramebuffer.height().setNumber(height);
 				rt.viewportChanged();
 				if (GLFWWindowCreator.this.window.getRenderMode() != RenderMode.MANUAL) {
-					GLFWWindowCreator.this.window.scheduleDraw();
+					rt.resize();
 				}
 			}
+
 		});
 	}
+
 }

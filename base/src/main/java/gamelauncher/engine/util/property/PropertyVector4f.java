@@ -1,5 +1,7 @@
 package gamelauncher.engine.util.property;
 
+import java.util.Objects;
+
 import org.joml.Vector4f;
 
 import de.dasbabypixel.api.property.NumberValue;
@@ -41,6 +43,29 @@ public class PropertyVector4f {
 		this.y.setNumber(y);
 		this.z.setNumber(z);
 		this.w.setNumber(w);
+		return this;
+	}
+
+	public PropertyVector4f set(PropertyVector4f other) {
+		this.x.setNumber(other.x.getNumber());
+		this.y.setNumber(other.y.getNumber());
+		this.z.setNumber(other.z.getNumber());
+		this.w.setNumber(other.w.getNumber());
+		return this;
+	}
+
+	public void bind(PropertyVector4f other) {
+		this.x.bind(other.x);
+		this.y.bind(other.y);
+		this.z.bind(other.z);
+		this.w.bind(other.w);
+	}
+
+	public PropertyVector4f unbind() {
+		this.x.unbind();
+		this.y.unbind();
+		this.z.unbind();
+		this.w.unbind();
 		return this;
 	}
 
@@ -86,6 +111,25 @@ public class PropertyVector4f {
 	public Vector4f toVector4f(Vector4f dest) {
 		dest.set(x.floatValue(), y.floatValue(), z.floatValue(), w.floatValue());
 		return dest;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(w, x, y, z);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PropertyVector4f other = (PropertyVector4f) obj;
+		return Objects.equals(w.getNumber(), other.w.getNumber()) && Objects.equals(x.getNumber(), other.x.getNumber())
+				&& Objects.equals(y.getNumber(), other.y.getNumber())
+				&& Objects.equals(z.getNumber(), other.z.getNumber());
 	}
 
 }

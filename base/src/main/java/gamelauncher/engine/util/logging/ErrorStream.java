@@ -39,18 +39,4 @@ class ErrorStream extends PrintStream implements ConverterStream {
 		stream.out.printf("%s%n", line);
 	}
 
-//	public void write(int b) throws IOException {
-//		boolean newLine = b == '\n';
-//		if (nextNewLine) {
-//			nextNewLine = false;
-//			stream.printNewLine(time);
-//			stream.printLoggerName(logger);
-//			stream.printThread(thread);
-//		}
-//		if (newLine) {
-//			nextNewLine = true;
-//		}
-//		stream.out.write(b);
-//	}
-
 }

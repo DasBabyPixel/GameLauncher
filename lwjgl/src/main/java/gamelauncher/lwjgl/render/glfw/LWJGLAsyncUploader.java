@@ -1,10 +1,13 @@
 package gamelauncher.lwjgl.render.glfw;
 
+import static org.lwjgl.opengles.GLES32.*;
+
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
+import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
@@ -28,6 +31,8 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread {
 	protected void startExecuting() {
 		this.secondaryContext.makeCurrent();
 		logger.debugf("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
+		GlStates.current().enable(GL_DEBUG_OUTPUT);
+		GLUtil.setupDebugMessageCallback();
 
 	}
 
@@ -40,9 +45,13 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread {
 			ex.printStackTrace();
 		}
 		this.secondaryContext.destroyCurrent();
-		Threads.waitFor(launcher.getGLFWThread().submit(() -> {
-			secondaryContext.cleanup();
-		}));
+		try {
+			Threads.waitFor(launcher.getGLFWThread().submit(() -> {
+				secondaryContext.cleanup();
+			}));
+		} catch (GameException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	@Override

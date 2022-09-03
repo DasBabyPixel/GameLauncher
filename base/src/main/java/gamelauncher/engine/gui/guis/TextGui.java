@@ -6,7 +6,6 @@ import de.dasbabypixel.api.property.ChangeListener;
 import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
-import de.dasbabypixel.api.property.implementation.NumberProperty;
 import de.dasbabypixel.api.property.implementation.ObjectProperty;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.ParentableAbstractGui;
@@ -21,6 +20,7 @@ import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector4f;
+import gamelauncher.engine.util.property.SupplierReadOnlyStorage;
 import gamelauncher.engine.util.property.WeakReferenceInvalidationListener;
 
 /**
@@ -89,18 +89,7 @@ public class TextGui extends ParentableAbstractGui {
 		getHeightProperty().setNumber(height);
 		this.text = ObjectProperty.<String>withValue(text);
 		this.camera = new BasicCamera();
-		this.cwidthprop = new NumberProperty() {
-
-			{
-				computor.set(true);
-			}
-
-			@Override
-			protected Number computeValue() {
-				return cwidth;
-			}
-
-		};
+		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> cwidth));
 		this.getWidthProperty().bind(cwidthprop);
 		this.invalidationListener = new InvalidationListener() {
 
@@ -110,18 +99,8 @@ public class TextGui extends ParentableAbstractGui {
 			}
 
 		};
-		this.baselineYOffset = new NumberProperty() {
-
-			{
-				computor.set(true);
-			}
-
-			@Override
-			protected Number computeValue() {
-				return -model.getDescent();
-			}
-
-		};
+		this.baselineYOffset = NumberValue
+				.withStorage(new SupplierReadOnlyStorage<>(() -> model == null ? 0 : -model.getDescent()));
 		this.weakListener = new WeakReferenceInvalidationListener(invalidationListener);
 		getHeightProperty().addListener(weakListener);
 		this.text.addListener(weakListener);

@@ -77,7 +77,7 @@ public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui
 	}
 
 	@Override
-	public Texture getTexture() {
+	public Texture getTexture() throws GameException {
 		if (texture == null) {
 			texture = Threads.waitFor(future);
 		}

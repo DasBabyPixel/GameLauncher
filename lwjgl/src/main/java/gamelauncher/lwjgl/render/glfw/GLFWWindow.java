@@ -17,11 +17,13 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
 import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
+import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
@@ -74,12 +76,15 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	final FrameCounter frameCounter;
 
+	private final Profiler profiler;
+
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
 	private final AtomicBoolean frameBegun = new AtomicBoolean(false);
 
 	public GLFWWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
 		this.launcher = launcher;
+		this.profiler = this.launcher.getProfiler();
 		this.logger = Logger.getLogger();
 		this.glfwId = 0;
 		this.frameCounter = new FrameCounter();
@@ -125,6 +130,10 @@ public class GLFWWindow implements Window, GLFWUser {
 		return mouse;
 	}
 
+	public void scheduleDrawRefresh() {
+		this.renderThread.scheduleDrawRefresh();
+	}
+
 	@Override
 	public FrameCounter getFrameCounter() {
 		return frameCounter;
@@ -168,12 +177,17 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	@Override
 	public void endFrame() {
+		profiler.begin("render", "endFrame");
 		boolean wasFrame = frameBegun.compareAndSet(true, false);
 		if (swapBuffers.get() && wasFrame) {
-			if (!manualFramebuffer.newValue().booleanValue()) {
-				glfwSwapBuffers(this.getGLFWId());
-			}
+//			if (!manualFramebuffer.newValue().booleanValue()) {
+			GLUtil.skip.set(true);
+			glfwSwapBuffers(this.getGLFWId());
+			GLUtil.skip.remove();
+			GlStates.current().getError();
+//			}
 		}
+		profiler.end();
 	}
 
 	public CompletableFuture<Void> showAndEndFrame() {

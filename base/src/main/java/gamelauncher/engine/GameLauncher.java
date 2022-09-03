@@ -21,6 +21,7 @@ import com.google.gson.JsonElement;
 
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
+import gamelauncher.engine.event.events.game.TickEvent;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiManager;
@@ -153,7 +154,7 @@ public abstract class GameLauncher {
 		} catch (IOException ex) {
 			throw new AssertionError(ex);
 		}
-		this.eventManager = new EventManager();
+		this.eventManager = new EventManager(this);
 		this.contextProvider = new ContextProvider(this);
 		this.pluginManager = new PluginManager(this);
 	}
@@ -279,7 +280,16 @@ public abstract class GameLauncher {
 		new Thread(r.toRunnable(), "ExitThread").start();
 	}
 
-	protected abstract void tick() throws GameException;
+	/**
+	 * @throws GameException
+	 */
+	protected final void tick() throws GameException {
+		getEventManager().post(new TickEvent.Game());
+		getGuiManager().updateGuis();
+		tick0();
+	}
+	
+	protected abstract void tick0() throws GameException;
 
 	protected abstract void start0() throws GameException;
 

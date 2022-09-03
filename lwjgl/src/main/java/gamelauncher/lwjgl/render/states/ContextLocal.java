@@ -1,5 +1,7 @@
 package gamelauncher.lwjgl.render.states;
 
+import java.util.function.BiFunction;
+
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
 /**
@@ -38,8 +40,25 @@ public abstract class ContextLocal<T> {
 			return (T) cd.contextLocals.get(this);
 		}
 		T initial = initialValue();
-		cd.contextLocals.put(this, initial);
+		if (initial != null)
+			cd.contextLocals.put(this, initial);
 		return initial;
+	}
+
+	/**
+	 * @param value
+	 */
+	public final void set(T value) {
+		ContextDependant cd = StateRegistry.currentContext();
+		cd.contextLocals.put(this, value);
+	}
+
+	/**
+	 * @return if this contextlocal has a value
+	 */
+	public final boolean has() {
+		ContextDependant cd = StateRegistry.currentContext();
+		return cd.contextLocals.containsKey(this);
 	}
 
 	/**
@@ -49,10 +68,36 @@ public abstract class ContextLocal<T> {
 	}
 
 	final void remove(ContextDependant cd) {
-		@SuppressWarnings("unchecked")
-		T o = (T) cd.contextLocals.remove(this);
-		if (o != null)
-			valueRemoved(o);
+		cd.contextLocals.computeIfPresent(this, new BiFunction<ContextLocal<?>, Object, Object>() {
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public Object apply(ContextLocal<?> t, Object u) {
+				valueRemoved((T) u);
+				return null;
+			}
+
+		});
+	}
+
+	/**
+	 * @param <T>
+	 * @param launcher
+	 * @return an empty contextlocal
+	 */
+	public static <T> ContextLocal<T> empty(LWJGLGameLauncher launcher) {
+		return new ContextLocal<T>(launcher) {
+
+			@Override
+			protected void valueRemoved(T value) {
+			}
+
+			@Override
+			protected T initialValue() {
+				return null;
+			}
+
+		};
 	}
 
 	protected abstract void valueRemoved(T value);

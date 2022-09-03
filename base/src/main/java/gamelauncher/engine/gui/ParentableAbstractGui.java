@@ -21,7 +21,6 @@ import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEntry;
 import gamelauncher.engine.util.keybind.ScrollKeybindEntry;
-import gamelauncher.engine.util.math.Math;
 
 /**
  * A {@link Gui} for having and handling sub-{@link Gui}s
@@ -51,6 +50,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	private final BooleanValue mouseInsideGui = BooleanValue.falseValue();
 
+	private Framebuffer framebuffer;
+
 	private final String className = getClass().getName();
 
 	/**
@@ -63,6 +64,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	@Override
 	public final void init(Framebuffer framebuffer) throws GameException {
 		if (initialized.compareAndSet(false, true)) {
+			this.framebuffer = framebuffer;
 			doInit(framebuffer);
 			doForGUIs(gui -> {
 				gui.init(framebuffer);
@@ -78,6 +80,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			});
 			doCleanup(framebuffer);
 			super.cleanup(framebuffer);
+			this.framebuffer = null;
 		}
 	}
 
@@ -106,11 +109,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			init(framebuffer);
 			preRender(framebuffer, mouseX, mouseY, partialTick);
 			ScissorStack scissor = framebuffer.scissorStack();
-			int sx = Math.ceil(getXProperty().floatValue());
-			int sy = Math.ceil(getYProperty().floatValue());
-			int sw = Math.floor(getWidthProperty().floatValue() - 0.5F);
-			int sh = Math.floor(getHeightProperty().floatValue() - 0.5F);
-			scissor.pushScissor(sx, sy, sw, sh);
+			scissor.pushScissor(getXProperty(), getYProperty(), getWidthProperty(), getHeightProperty());
 			if (doRender(framebuffer, mouseX, mouseY, partialTick)) {
 				doForGUIs(gui -> {
 					gui.render(framebuffer, mouseX, mouseY, partialTick);
@@ -327,6 +326,10 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 				throw ex;
 			}
 		}
+	}
+	
+	protected void redraw() {
+		this.framebuffer.scheduleRedraw();
 	}
 
 	/**

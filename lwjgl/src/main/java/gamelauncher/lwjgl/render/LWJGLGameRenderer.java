@@ -84,6 +84,13 @@ public class LWJGLGameRenderer implements GameRenderer {
 		launcher.getProfiler().end();
 	}
 
+	@Override
+	public void refreshDisplay(Window window) throws GameException {
+		launcher.getProfiler().begin("render", "refresh");
+		map.get(window).refreshDisplay(renderer.get());
+		launcher.getProfiler().end();
+	}
+
 	private class Entry extends AbstractGameResource {
 
 		private final Window window;
@@ -153,6 +160,24 @@ public class LWJGLGameRenderer implements GameRenderer {
 //			mainScreenItem.setPosition(fw / 2F, fh / 2F, 0);
 //		}
 
+		public void refreshDisplay(Renderer renderer) throws GameException {
+			GlStates cur = GlStates.current();
+			window.beginFrame();
+			launcher.getProfiler().check();
+			cur.viewport(0, 0, window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+			cur.clearColor(0, 0, 0, 0);
+			cur.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			launcher.getProfiler().check();
+
+			contexthud.update(camera);
+			launcher.getProfiler().check();
+			contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
+			launcher.getProfiler().check();
+			contexthud.getProgram().clearUniforms();
+			launcher.getProfiler().check();
+			window.endFrame();
+		}
+
 		public void renderFrame(Renderer renderer) throws GameException {
 			GlStates cur = GlStates.current();
 			window.beginFrame();
@@ -187,7 +212,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 			launcher.getProfiler().check();
 
 			window.endFrame();
-			glGetError();
 		}
 
 		private void cleanup(Renderer renderer) throws GameException {

@@ -147,7 +147,7 @@ public class GlStates {
 	public void disable(int state) {
 		glDisable(state);
 	}
-	
+
 	public void scissor(int x, int y, int w, int h) {
 		glScissor(x, y, w, h);
 	}
@@ -435,11 +435,11 @@ public class GlStates {
 	public void readBuffer(int buffer) {
 		glReadBuffer(buffer);
 	}
-	
+
 	public void drawBuffer(int buffer) {
 		glDrawBuffers(buffer);
 	}
-	
+
 	public void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1,
 			int mask, int filter) {
 		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);

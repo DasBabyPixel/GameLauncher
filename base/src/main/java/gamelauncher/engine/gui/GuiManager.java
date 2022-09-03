@@ -49,6 +49,12 @@ public interface GuiManager extends GameResource {
 	 * @return the {@link GameLauncher}
 	 */
 	GameLauncher getLauncher();
+	
+	/**
+	 * @throws GameException 
+	 * 
+	 */
+	void updateGuis() throws GameException;
 
 	/**
 	 * Creates a Gui for the given {@link Class class}.

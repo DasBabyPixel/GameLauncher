@@ -69,6 +69,16 @@ public class Math {
 	}
 
 	/**
+	 * @param n1
+	 * @param n2
+	 * @param progress
+	 * @return the interpolated number
+	 */
+	public static double lerp(double n1, double n2, double progress) {
+		return n1 + (n2 - n1) * progress;
+	}
+
+	/**
 	 * @param val
 	 * @return the absolute value of the argument
 	 */
@@ -103,7 +113,7 @@ public class Math {
 	public static int ceil(double height) {
 		return (int) java.lang.Math.ceil(height);
 	}
-	
+
 	/**
 	 * @param f
 	 * @return the rounded value

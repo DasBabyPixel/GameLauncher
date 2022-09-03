@@ -249,7 +249,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 			c.blitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
+			
 			textureId.set(nid);
 			cur.deleteTextures(oid);
 			cur.flush();

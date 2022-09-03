@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.Arrays;
+import gamelauncher.engine.util.profiler.Profiler;
 
 /**
  * @author DasBabyPixel
@@ -20,23 +22,34 @@ import gamelauncher.engine.util.Arrays;
 public class EventManager {
 
 	private final Map<Object, Listener> listeners = new ConcurrentHashMap<>();
+
 	private final Collection<Node> sorted = ConcurrentHashMap.newKeySet();
 
+	private final GameLauncher launcher;
+
+	private final Profiler profiler;
+
 	/**
+	 * @param launcher
 	 */
-	public EventManager() {
+	public EventManager(GameLauncher launcher) {
+		this.launcher = launcher;
+		this.profiler = this.launcher.getProfiler();
 	}
 
 	/**
 	 * Posts the event for this {@link EventManager}
+	 * 
 	 * @param <T>
 	 * @param event
 	 * @return the event
 	 */
 	public <T extends Event> T post(T event) {
+		profiler.begin("event", "post");
 		for (Node node : sorted) {
 			node.invoke(event);
 		}
+		profiler.end();
 		return event;
 	}
 
@@ -65,23 +78,26 @@ public class EventManager {
 			}
 		}
 		Collections.sort(nodes, new Comparator<Node>() {
+
 			@Override
 			public int compare(Node o1, Node o2) {
 				return -Integer.valueOf(o1.priority()).compareTo(Integer.valueOf(o2.priority()));
 			}
+
 		});
 		sorted.clear();
 		sorted.addAll(nodes);
 	}
 
-	private static class Listener {
+	private class Listener {
+
 		private final Node[] nodes;
 
 		public Listener(Object listener) {
 			this.nodes = findNodes(listener);
 		}
 
-		private static Node[] findNodes(Object listener) {
+		private Node[] findNodes(Object listener) {
 			List<Node> nodes = new ArrayList<>();
 			Class<?> clazz = listener.getClass();
 			Collection<Method> methods = new HashSet<>();
@@ -118,13 +134,17 @@ public class EventManager {
 			}
 			return nodes.toArray(new Node[nodes.size()]);
 		}
+
 	}
 
-	private static class MethodNode implements Node {
+	private class MethodNode implements Node {
 
 		private final Object owner;
+
 		private final Method method;
+
 		private final Class<?> param;
+
 		private final int priority;
 
 		public MethodNode(Object owner, Method method, Class<?> param, int priority) {
@@ -142,6 +162,7 @@ public class EventManager {
 
 		@Override
 		public void invoke(Event event) {
+			profiler.begin("event", event.getClass().getSimpleName());
 			if (param.isInstance(event)) {
 				try {
 					method.invoke(owner, event);
@@ -150,6 +171,9 @@ public class EventManager {
 					e.printStackTrace();
 				}
 			}
+			profiler.end();
 		}
+
 	}
+
 }

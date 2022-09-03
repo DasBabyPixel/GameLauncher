@@ -3,6 +3,7 @@ package gamelauncher.engine.render;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.util.math.Math;
 
 /**
@@ -42,6 +43,25 @@ public abstract class ScissorStack {
 		}
 		stack.addLast(new Scissor(x, y, w, h));
 		setScissor(last());
+	}
+
+	/**
+	 * @param x
+	 * @param y
+	 * @param w
+	 * @param h
+	 * @see #pushScissor(int, int, int, int)
+	 */
+	public void pushScissor(NumberValue x, NumberValue y, NumberValue w, NumberValue h) {
+		float fsx0 = x.floatValue();
+		float fsy0 = y.floatValue();
+		float fsx1 = fsx0 + w.floatValue();
+		float fsy1 = fsy0 + h.floatValue();
+		int sx = Math.floor(fsx0);
+		int sy = Math.floor(fsy0);
+		int sw = Math.round(fsx1 - sx);
+		int sh = Math.round(fsy1 - sy);
+		pushScissor(sx, sy, sw, sh);
 	}
 
 	/**
