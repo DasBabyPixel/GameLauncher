@@ -30,14 +30,16 @@ public abstract class Plugin {
 
 	/**
 	 * Called when the plugin is enabled
+	 * @throws GameException 
 	 */
-	public void onEnable() {
+	public void onEnable() throws GameException {
 	}
 
 	/**
 	 * Called when the plugin is disabled
+	 * @throws GameException 
 	 */
-	public void onDisable() {
+	public void onDisable() throws GameException {
 	}
 
 	/**

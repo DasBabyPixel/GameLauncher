@@ -1,7 +1,5 @@
 package gamelauncher.lwjgl.launcher.gui;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -20,8 +18,9 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
-import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
+import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEntry;
+import gamelauncher.engine.util.keybind.ScrollKeybindEntry;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.lwjgl.launcher.gui.LWJGLScrollGui.Scrollbar.Type;
@@ -111,10 +110,13 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			}
 			return n;
 		}).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness);
-		this.guiX.bind(this.displayX.subtract(this.horizontalScrollbar.progress.min(this.horizontalScrollbar.max)));
-		this.guiY.bind(this.displayY.add(this.displayHeight)
-				.subtract(this.guiHeight)
-				.add(this.verticalScrollbar.progress.min(this.verticalScrollbar.max)));
+		this.horizontalScrollbar.visible
+				.bind(this.getWidthProperty().mapToBoolean(n -> n.floatValue() < guiWidth.floatValue()));
+		this.verticalScrollbar.visible
+				.bind(this.getHeightProperty().mapToBoolean(n -> n.floatValue() < guiHeight.floatValue()));
+		this.guiX.bind(this.displayX.subtract(this.horizontalScrollbar.display));
+		this.guiY.bind(
+				this.displayY.add(this.displayHeight).subtract(this.guiHeight).add(this.verticalScrollbar.display));
 
 		ScrollbarGui verticalScrollbarGui = new ScrollbarGui(getLauncher(), guiWidth, guiHeight, this.verticalScrollbar,
 				this.displayWidth, this.displayHeight);
@@ -166,22 +168,22 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof KeyboardKeybindEntry) {
-			KeyboardKeybindEntry kb = (KeyboardKeybindEntry) entry;
-			if (kb.type() == KeyboardKeybindEntry.Type.HOLD) {
-				int id = kb.getKeybind().getUniqueId();
-				int glfw = id - LWJGLKeybindManager.KEYBOARD_ADD;
-				if (glfw == GLFW_KEY_LEFT) {
-					System.out.println("left");
-				} else if (glfw == GLFW_KEY_RIGHT) {
-					System.out.println("right");
-				} else if (glfw == GLFW_KEY_UP) {
-					System.out.println("up");
-				} else if (glfw == GLFW_KEY_DOWN) {
-					System.out.println("down");
-				}
-
-			}
+		if (entry instanceof ScrollKeybindEntry) {
+			ScrollKeybindEntry s = (ScrollKeybindEntry) entry;
+			float mulx = displayWidth.floatValue() / 5;
+			float muly = displayHeight.floatValue() / 5;
+			float dx = s.deltaX();
+			float dy = s.deltaY();
+			horizontalScrollbar.desireProgress(horizontalScrollbar.desiredProgress().floatValue() - dx * mulx,
+					TimeUnit.MILLISECONDS.toNanos(150));
+			verticalScrollbar.desireProgress(verticalScrollbar.desiredProgress().floatValue() - dy * muly,
+					TimeUnit.MILLISECONDS.toNanos(150));
+//			horizontalScrollbar.progress.setNumber(horizontalScrollbar.progress.floatValue() - dx * mulx);
+//			horizontalScrollbar.progress.setNumber(horizontalScrollbar.displayProgress.getNumber());
+//			verticalScrollbar.progress.setNumber(verticalScrollbar.progress.floatValue() - dy * muly);
+//			verticalScrollbar.progress.setNumber(verticalScrollbar.displayProgress.getNumber());
+			redraw();
+			return false;
 		}
 		return super.doHandle(entry);
 	}
@@ -251,6 +253,46 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		private final GradualScrollbarColor curScrollbarColor = new GradualScrollbarColor();
 
+		private final NumberValue guiWidth;
+
+		private final NumberValue guiHeight;
+
+		private final NumberValue displayWidth;
+
+		private final NumberValue displayHeight;
+
+		private final BooleanValue dragging;
+
+		private final BooleanValue highlightOrDrag;
+
+		private float dragOffset = 0;
+
+		private void drag(MouseMoveKeybindEntry entry) {
+			float newscrolled;
+			if (scrollbar.type == Scrollbar.Type.VERTICAL) {
+				float minsy = backgroundY.floatValue() + scrollbarIndent.floatValue();
+				float maxsy = minsy + maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue();
+				float newy = Math.clamp(entry.mouseY() - dragOffset, minsy, maxsy);
+				// Invert because its the vertical scrollbar
+				float newlocaly = (maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue()) - (newy - minsy);
+				float newpercentscrolled = newlocaly / (maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue());
+				newscrolled = newpercentscrolled * (guiHeight.floatValue() - displayHeight.floatValue());
+			} else if (scrollbar.type == Scrollbar.Type.HORIZONTAL) {
+				float minsx = backgroundX.floatValue() + scrollbarIndent.floatValue();
+				float maxsx = minsx + maxScrollbarWidth.floatValue() - scrollbarWidth.floatValue();
+				float newx = Math.clamp(entry.mouseX() - dragOffset, minsx, maxsx);
+				float newlocalx = newx - minsx;
+				float newpercentscrolled = newlocalx / (maxScrollbarWidth.floatValue() - scrollbarWidth.floatValue());
+				newscrolled = newpercentscrolled * (guiWidth.floatValue() - displayWidth.floatValue());
+			} else {
+				return;
+			}
+			scrollbar.desireProgress(newscrolled, 0);
+//			scrollbar.progress.setNumber(newscrolled);
+//			scrollbar.progress.setNumber(scrollbar.displayProgress.floatValue());
+			redraw();
+		}
+
 		/**
 		 * @param launcher
 		 * @param gui
@@ -262,8 +304,13 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		private ScrollbarGui(GameLauncher launcher, NumberValue guiWidth, NumberValue guiHeight, Scrollbar scrollbar,
 				NumberValue displayWidth, NumberValue displayHeight) throws GameException {
 			super(launcher);
+			this.guiWidth = guiWidth;
+			this.guiHeight = guiHeight;
+			this.displayWidth = displayWidth;
+			this.displayHeight = displayHeight;
 			this.scrollbar = scrollbar;
 			this.scrollbarIndent = NumberValue.constant(1);
+			this.dragging = BooleanValue.falseValue();
 			this.backgroundX = this.getXProperty();
 			this.backgroundY = this.getYProperty();
 			this.backgroundWidth = this.getWidthProperty();
@@ -278,7 +325,11 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			this.scrollbarHeight = hor ? maxScrollbarHeight
 					: displayHeight.divide(guiHeight).multiply(maxScrollbarHeight).min(maxScrollbarHeight);
 
-			NumberValue progress = scrollbar.progress.min(scrollbar.max).divide(scrollbar.max);
+//			NumberValue progress = scrollbar.displayProgress.divide(scrollbar.max);
+//			scrollbar.display.addListener((NumberValue nv) -> {
+//				scrollbar.setDesired(scrollbar.display.floatValue(), TimeUnit.MILLISECONDS.toNanos(400));
+//			});
+			NumberValue progress = scrollbar.display.divide(scrollbar.max);
 
 			if (ver) {
 				this.scrollbarX = backgroundX.add(scrollbarIndent);
@@ -312,21 +363,19 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			this.guiScrollbarColor.bind(this.curScrollbarColor.curcolor);
 			GUIs.add(scrollbarGui);
 
-			this.highlight.addListener(new ChangeListener<Boolean>() {
-
-				@Override
-				public void handleChange(Property<? extends Boolean> property, Boolean oldValue, Boolean newValue) {
-					if (newValue.booleanValue()) {
-						curBackgroundColor.setDesired(highlightBackgroundColor, TimeUnit.MILLISECONDS.toNanos(100));
-						curScrollbarColor.setDesired(highlightScrollbarColor, TimeUnit.MILLISECONDS.toNanos(100));
-					} else {
-						curBackgroundColor.setDesired(backgroundColor, TimeUnit.MILLISECONDS.toNanos(300));
-						curScrollbarColor.setDesired(scrollbarColor, TimeUnit.MILLISECONDS.toNanos(300));
-					}
-					redraw();
-				}
-
-			});
+			this.highlightOrDrag = this.highlight.or(this.dragging);
+			this.highlightOrDrag.addListener(p -> p.getValue());
+			this.highlightOrDrag
+					.addListener((Property<? extends Boolean> property, Boolean oldValue, Boolean newValue) -> {
+						if (newValue.booleanValue()) {
+							curBackgroundColor.setDesired(highlightBackgroundColor, TimeUnit.MILLISECONDS.toNanos(100));
+							curScrollbarColor.setDesired(highlightScrollbarColor, TimeUnit.MILLISECONDS.toNanos(100));
+						} else {
+							curBackgroundColor.setDesired(backgroundColor, TimeUnit.MILLISECONDS.toNanos(300));
+							curScrollbarColor.setDesired(scrollbarColor, TimeUnit.MILLISECONDS.toNanos(300));
+						}
+						redraw();
+					});
 		}
 
 		@Override
@@ -334,11 +383,22 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 				throws GameException {
 			curScrollbarColor.calculateCurrent();
 			curBackgroundColor.calculateCurrent();
+			scrollbar.progress.calculateCurrent();
+		}
+
+		@Override
+		protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+				throws GameException {
+			if (!scrollbar.visible.booleanValue()) {
+				return false;
+			}
+			return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 		}
 
 		@Override
 		protected void doUpdate() throws GameException {
-			if (curScrollbarColor.calculateCurrent() || curBackgroundColor.calculateCurrent()) {
+			if (curScrollbarColor.calculateCurrent() || curBackgroundColor.calculateCurrent()
+					|| scrollbar.progress.calculateCurrent()) {
 				redraw();
 			}
 		}
@@ -367,6 +427,30 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 						this.highlight.setValue(false);
 					}
 				}
+				if (dragging.booleanValue()) {
+					drag(mm);
+				}
+			} else if (entry instanceof MouseButtonKeybindEntry) {
+				MouseButtonKeybindEntry mb = (MouseButtonKeybindEntry) entry;
+				if (mb.type() == MouseButtonKeybindEntry.Type.PRESS) {
+					if (highlight.booleanValue()) {
+						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
+							if (scrollbar.type == Scrollbar.Type.VERTICAL) {
+								dragOffset = mb.mouseY() - scrollbarY.floatValue();
+								dragging.setValue(true);
+							} else if (scrollbar.type == Scrollbar.Type.HORIZONTAL) {
+								dragOffset = mb.mouseX() - scrollbarX.floatValue();
+								dragging.setValue(true);
+							}
+						}
+					}
+				} else if (mb.type() == MouseButtonKeybindEntry.Type.RELEASE) {
+					if (dragging.booleanValue()) {
+						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
+							dragging.setValue(false);
+						}
+					}
+				}
 			}
 			return super.doHandle(entry);
 		}
@@ -380,9 +464,70 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 	}
 
-	private static class GradualScrollbarColor {
+	private static class GradualProgress {
 
-		private final PropertyVector4f lastrendered = new PropertyVector4f();
+		private final NumberValue lastProgress = NumberValue.zero();
+
+		private final NumberValue curProgress = NumberValue.zero();
+
+		private final NumberValue desiredProgress = NumberValue.zero();
+
+		private final NumberValue nanotimeStarted = NumberValue.zero();
+
+		private final NumberValue nanotimeDone = NumberValue.zero();
+
+		private void set(float other) {
+			desiredProgress.setNumber(other);
+			lastProgress.setNumber(other);
+			curProgress.setNumber(other);
+			nanotimeDone.setNumber(System.nanoTime());
+			nanotimeStarted.setNumber(System.nanoTime());
+		}
+
+		private boolean calculateCurrent() {
+			long time = System.nanoTime();
+			if (nanotimeDone.longValue() - time < 0) {
+				if (curProgress.floatValue() == desiredProgress.floatValue()) {
+					return false;
+				}
+				curProgress.setNumber(desiredProgress.floatValue());
+				return true;
+			}
+			long diff = nanotimeDone.longValue() - nanotimeStarted.longValue();
+			if (diff == 0) {
+				if (curProgress.floatValue() == desiredProgress.floatValue()) {
+					return false;
+				}
+				curProgress.setNumber(desiredProgress.floatValue());
+				return true;
+			}
+			float progress = (float) (time - nanotimeStarted.longValue()) / (float) diff;
+			curProgress.setNumber(Math.lerp(lastProgress.floatValue(), desiredProgress.floatValue(), progress));
+			return true;
+		}
+
+		private void setWithoutTimer(float progress) {
+			float old = desiredProgress.floatValue();
+			if (old != progress) {
+				desiredProgress.setNumber(progress);
+			}
+		}
+
+		private void setDesired(float progress, long time) {
+			long started = System.nanoTime();
+			long done = System.nanoTime() + time;
+			nanotimeStarted.setNumber(started);
+			nanotimeDone.setNumber(done);
+			if (time == 0) {
+				curProgress.setNumber(progress);
+			}
+			lastProgress.setNumber(curProgress.floatValue());
+			desiredProgress.setNumber(progress);
+		}
+
+	}
+
+	private static class GradualScrollbarColor {
 
 		private final PropertyVector4f curcolor = new PropertyVector4f();
 
@@ -395,7 +540,6 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		private final NumberValue nanotimeStarted = NumberValue.zero();
 
 		private void set(PropertyVector4f other) {
-			lastrendered.set(other);
 			desiredColor.set(other);
 			lastColor.set(other);
 			curcolor.set(other);
@@ -446,7 +590,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		private final Type type;
 
-		private final NumberValue progress = NumberValue.withValue(50);
+		private final GradualProgress progress = new GradualProgress();
 
 		private final NumberValue max = NumberValue.zero();
 
@@ -454,18 +598,37 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		private final BooleanValue visible = BooleanValue.trueValue();
 
+		private final NumberValue display = this.progress.curProgress.max(0).min(this.max);
+
 		/**
 		 * @param type
 		 */
 		public Scrollbar(Type type) {
 			this.type = type;
+			progress.set(0);
+			this.max.addListener((NumberValue p) -> clamp());
+			this.progress.desiredProgress.addListener((NumberValue p) -> clamp());
+		}
+
+		private void clamp() {
+			progress.setWithoutTimer(Math.clamp(progress.desiredProgress.floatValue(), 0, max.floatValue()));
 		}
 
 		/**
 		 * @return the progress property
 		 */
-		public NumberValue progress() {
-			return progress;
+		public NumberValue desiredProgress() {
+			return progress.desiredProgress;
+		}
+
+		/**
+		 * Requests a progress with a time when the animation should be finished
+		 * 
+		 * @param progress
+		 * @param time
+		 */
+		public void desireProgress(float progress, long time) {
+			this.progress.setDesired(progress, time);
 		}
 
 		/**

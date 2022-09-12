@@ -12,7 +12,6 @@ import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
-import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.util.GameException;
 
@@ -27,8 +26,6 @@ public class LabyrinthRender extends Renderer {
 	private FileSystem embedFileSystem;
 
 	private ModelLoader modelLoader;
-
-	private ShaderLoader shaderLoader;
 
 	private DrawContext contexthud;
 
@@ -47,7 +44,6 @@ public class LabyrinthRender extends Renderer {
 		this.launcher = this.labyrinth.getLauncher();
 		this.resourceLoader = this.launcher.getResourceLoader();
 		this.embedFileSystem = this.launcher.getEmbedFileSystem();
-		this.shaderLoader = this.launcher.getShaderLoader();
 		this.modelLoader = this.launcher.getModelLoader();
 	}
 

@@ -1,5 +1,6 @@
 package gamelauncher.engine.game;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,8 +28,24 @@ public class GameRegistry {
 	 * @throws GameException
 	 */
 	public void register(Game game) throws GameException {
-		if (games.put(game.getKey(), game) == null) {
+		if (games.putIfAbsent(game.getKey(), game) != null) {
 			throw new GameAlreadyExistsException();
 		}
 	}
+
+	/**
+	 * @param key
+	 * @return the unregistered {@link Game} or null if no {@link Game} was found
+	 */
+	public Game unregister(Key key) {
+		return games.remove(key);
+	}
+
+	/**
+	 * @return the games
+	 */
+	public Collection<Game> getGames() {
+		return games.values();
+	}
+
 }

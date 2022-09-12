@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 
 import gamelauncher.engine.plugin.PluginManager.PluginInfo;
+import gamelauncher.engine.util.GameException;
 
 /**
  * @author DasBabyPixel
@@ -72,7 +73,11 @@ public class PluginClassLoader extends URLClassLoader {
 		for (Plugin pl : plugins) {
 			PluginInfo info = pm.infos.get(pl.getName());
 			info.lock.lock();
-			info.plugin.get().onDisable();
+			try {
+				info.plugin.get().onDisable();
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
 			info.plugin.set(null);
 			info.loader.set(null);
 			pm.infos.remove(pl.getName());

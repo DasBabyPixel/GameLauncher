@@ -77,6 +77,15 @@ public class Math {
 	public static double lerp(double n1, double n2, double progress) {
 		return n1 + (n2 - n1) * progress;
 	}
+	/**
+	 * @param n1
+	 * @param n2
+	 * @param progress
+	 * @return the interpolated number
+	 */
+	public static float lerp(float n1, float n2, float progress) {
+		return n1 + (n2 - n1) * progress;
+	}
 
 	/**
 	 * @param val

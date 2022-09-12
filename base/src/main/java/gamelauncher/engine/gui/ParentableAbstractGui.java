@@ -327,9 +327,15 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			}
 		}
 	}
-	
+
 	protected void redraw() {
 		this.framebuffer.scheduleRedraw();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f]", getClass().getSimpleName(), getX(), getY(),
+				getWidth(), getHeight());
 	}
 
 	/**

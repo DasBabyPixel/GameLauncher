@@ -25,13 +25,17 @@ import gamelauncher.engine.util.logging.Logger;
 public class PluginManager {
 
 	private static final Logger logger = Logger.getLogger();
+
 	private final GameLauncher launcher;
 
 	final Map<String, PluginInfo> infos = new ConcurrentHashMap<>();
+
 	final Collection<PluginClassLoader> loaders = ConcurrentHashMap.newKeySet();
 
 	final Map<String, Class<?>> loadedClasses = new ConcurrentHashMap<>();
+
 	final Lock classLoadingLock = new ReentrantLock();
+
 	final Lock pluginLoadLock = new ReentrantLock(true);
 
 	/**
@@ -133,7 +137,11 @@ public class PluginManager {
 				infos.put(name, info);
 				info.plugin.set(pl);
 				info.loader.set(pcl);
-				pl.onEnable();
+				try {
+					pl.onEnable();
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
 				info.lock.unlock();
 			}
 		} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
@@ -191,9 +199,13 @@ public class PluginManager {
 	 * @author DasBabyPixel
 	 */
 	public static class PluginInfo {
+
 		final String name;
+
 		final Lock lock = new ReentrantLock(true);
+
 		final AtomicReference<Plugin> plugin = new AtomicReference<>();
+
 		final AtomicReference<PluginClassLoader> loader = new AtomicReference<>();
 
 		/**
@@ -202,5 +214,7 @@ public class PluginManager {
 		public PluginInfo(String name) {
 			this.name = name;
 		}
+
 	}
+
 }

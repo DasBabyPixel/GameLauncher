@@ -22,7 +22,7 @@ import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeyboardKeybindEntry;
 import gamelauncher.lwjgl.util.keybind.LWJGLMouseButtonKeybindEntry;
 import gamelauncher.lwjgl.util.keybind.LWJGLMouseMoveKeybindEntry;
-import gamelauncher.lwjgl.util.keybind.LWJGLMouseScrollKeybindEntry;
+import gamelauncher.lwjgl.util.keybind.LWJGLScrollKeybindEntry;
 
 /**
  * @author DasBabyPixel
@@ -120,7 +120,7 @@ public class LWJGLInput implements Input {
 				if (keybind.getUniqueId() != id) {
 					return null;
 				}
-				return new LWJGLMouseScrollKeybindEntry(keybind, mx, my);
+				return new LWJGLScrollKeybindEntry(keybind, mx, my);
 			});
 		} else {
 			if (inputType == InputType.MOVE) {

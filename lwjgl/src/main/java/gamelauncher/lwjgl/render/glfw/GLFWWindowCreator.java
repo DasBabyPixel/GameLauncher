@@ -104,6 +104,9 @@ public class GLFWWindowCreator implements GameRunnable {
 
 			@Override
 			public void invoke(long window, double xpos, double ypos) {
+				// we are in the middle of the pixel. Important for guis later on so the rounding works fine
+				ypos = ypos + 0.5F;
+				xpos = xpos + 0.5F;
 				float omx = (float) GLFWWindowCreator.this.window.getMouse().getX();
 				float omy = (float) GLFWWindowCreator.this.window.getMouse().getY();
 				ypos = GLFWWindowCreator.this.window.height.doubleValue() - ypos;
