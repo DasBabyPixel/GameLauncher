@@ -20,8 +20,11 @@ import java.util.NoSuchElementException;
 public class EmbedPath implements java.nio.file.Path {
 
 	final EmbedFileSystem fileSystem;
+
 	final String[] segments;
+
 	final boolean absolute;
+
 	final boolean root;
 
 	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute) {
@@ -141,6 +144,12 @@ public class EmbedPath implements java.nio.file.Path {
 	@Override
 	public Path resolve(Path other) {
 		EmbedPath ep = checkPath(other);
+		if (ep.isAbsolute()) {
+			return ep;
+		}
+		if (ep.segments.length == 0) {
+			return this;
+		}
 		String[] segments = new String[this.segments.length + ep.segments.length];
 		for (int i = 0; i < this.segments.length; i++) {
 			segments[i] = this.segments[i];
@@ -197,6 +206,7 @@ public class EmbedPath implements java.nio.file.Path {
 	@Override
 	public Iterator<Path> iterator() {
 		return new Iterator<Path>() {
+
 			private int i = 0;
 
 			@Override
@@ -216,6 +226,7 @@ public class EmbedPath implements java.nio.file.Path {
 			public void remove() {
 				throw new ReadOnlyFileSystemException();
 			}
+
 		};
 	}
 
@@ -251,4 +262,5 @@ public class EmbedPath implements java.nio.file.Path {
 		}
 		return (EmbedPath) path;
 	}
+
 }

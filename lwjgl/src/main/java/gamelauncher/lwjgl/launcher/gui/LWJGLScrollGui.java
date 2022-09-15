@@ -111,9 +111,9 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			return n;
 		}).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness);
 		this.horizontalScrollbar.visible
-				.bind(this.getWidthProperty().mapToBoolean(n -> n.floatValue() < guiWidth.floatValue()));
+				.bind(this.displayWidth.mapToBoolean(n -> n.floatValue() < guiWidth.floatValue()));
 		this.verticalScrollbar.visible
-				.bind(this.getHeightProperty().mapToBoolean(n -> n.floatValue() < guiHeight.floatValue()));
+				.bind(this.displayHeight.mapToBoolean(n -> n.floatValue() < guiHeight.floatValue()));
 		this.guiX.bind(this.displayX.subtract(this.horizontalScrollbar.display));
 		this.guiY.bind(
 				this.displayY.add(this.displayHeight).subtract(this.guiHeight).add(this.verticalScrollbar.display));

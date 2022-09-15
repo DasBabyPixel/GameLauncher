@@ -56,11 +56,13 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		public GameGui(Game game) throws GameException {
 			super(LWJGLMainScreenGui.this.getLauncher());
 			ButtonGui buttonGui = new ButtonGui(getLauncher()) {
+
 				@Override
 				protected void buttonPressed(MouseButtonKeybindEntry e) {
 					System.out.println("press");
 					super.buttonPressed(e);
 				}
+
 			};
 			buttonGui.text().setValue(game.getKey().toString());
 			buttonGui.getXProperty().bind(getXProperty());

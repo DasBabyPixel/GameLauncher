@@ -12,6 +12,36 @@
 		<joml.version>1.10.4</joml.version>
 	</properties>
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.2.1</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+							<phase>install</phase>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>3.4.1</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+							<phase>install</phase>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -19,7 +49,6 @@
 				<configuration>
 					<source>17</source>
 					<target>17</target>
-					<java.version>17</java.version>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -39,7 +68,7 @@
 		<dependency>
 			<groupId>de.dasbabypixel.api</groupId>
 			<artifactId>property</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.joml</groupId>
