@@ -28,8 +28,11 @@ public class EmbedFileSystem extends FileSystem {
 			.unmodifiableSet(new HashSet<>(Arrays.asList("basic", "embed")));
 
 	private final EmbedFileSystemProvider provider;
+
 	private volatile boolean isOpen = true;
+
 	private final Path path;
+
 	public final ClassLoader cl;
 
 	public EmbedFileSystem(ClassLoader cl, EmbedFileSystemProvider provider, Path path) {
@@ -51,7 +54,16 @@ public class EmbedFileSystem extends FileSystem {
 
 	long size(EmbedPath path) throws IOException {
 		URL url = cl.getResource(path.toAbsolutePath().toString().substring(1));
-		URLConnection con = url.openConnection();
+		URLConnection con;
+		try {
+			con = url.openConnection();
+		} catch (IOException ex) {
+			System.out.println("ErrorURL: " + path.toAbsolutePath().toString().substring(1));
+			throw ex;
+		} catch (NullPointerException ex) {
+			System.out.println("ErrorURL: " + path.toAbsolutePath().toString().substring(1));
+			throw ex;
+		}
 		long s = con.getContentLengthLong();
 		return s;
 	}
@@ -130,12 +142,14 @@ public class EmbedFileSystem extends FileSystem {
 		}
 		regexPattern = substring2;
 		return new PathMatcher() {
+
 			@Override
 			public boolean matches(final Path path) {
 				return this.val$pattern.matcher(path.toString()).matches();
 			}
 
 			final Pattern val$pattern = Pattern.compile(regexPattern);
+
 		};
 	}
 
@@ -151,12 +165,13 @@ public class EmbedFileSystem extends FileSystem {
 		for (String m : more) {
 			l.addAll(Arrays.asList(m.split("/")));
 		}
+		boolean absolute = false;
 		if (l.get(0).isEmpty()) {
 			// Absolute path
 			l.remove(0);
 		}
 		String[] segments = l.toArray(new String[l.size()]);
-		return new EmbedPath(this, segments, true);
+		return new EmbedPath(this, segments, absolute);
 	}
 
 	@Override
