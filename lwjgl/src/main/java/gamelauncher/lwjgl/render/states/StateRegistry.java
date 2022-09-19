@@ -10,9 +10,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.lwjgl.opengles.GLES;
 
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.logging.Logger;
 
 @SuppressWarnings("javadoc")
 public class StateRegistry {
+
+	private static final Logger logger = Logger.getLogger();
 
 	private static final Collection<Long> glfwWindows = new CopyOnWriteArrayList<>();
 
@@ -44,6 +47,7 @@ public class StateRegistry {
 	}
 
 	public static void setContextHoldingThread(long id, Thread thread) {
+		logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "" : thread.getName());
 		if (thread == null) {
 			glfwMakeContextCurrent(0L);
 			GLES.setCapabilities(null);
@@ -53,6 +57,7 @@ public class StateRegistry {
 			}
 			return;
 		}
+
 		glfwMakeContextCurrent(id);
 		GLES.createCapabilities();
 		contextHoldingThreads.put(id, thread);

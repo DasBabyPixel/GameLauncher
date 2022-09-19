@@ -1,0 +1,8 @@
+{
+	"vertexShader": "vertex",
+	"fragmentShader": "fragment",
+	"uniforms": {
+	},
+	"structs": [
+	]
+}

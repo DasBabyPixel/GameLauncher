@@ -17,6 +17,7 @@ import org.lwjgl.system.Callback;
 
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.ContextLocal;
+import gamelauncher.lwjgl.render.states.StateRegistry;
 
 /** OpenGL utilities. */
 @SuppressWarnings("javadoc")
@@ -60,8 +61,17 @@ public final class GLUtil {
 			apiLog("[GL] Using OpenGL 4.3 for error logging.");
 			GLDebugMessageCallback proc = GLDebugMessageCallback
 					.create((source, type, id, severity, length, message, userParam) -> {
-						if (skip.has()) {
+						if (id == 0x20071) {
+							// Notification about buffer details
 							return;
+						}
+						if (StateRegistry.currentContext() != null) {
+							if (skip.has()) {
+								return;
+							}
+						} else {
+							stream.println("OpenGL Error on Thread without OpenGL context: "
+									+ Thread.currentThread().getName());
 						}
 						stream.println("[LWJGL] OpenGL debug message");
 						printDetail(stream, "ID", String.format("0x%X", id));
