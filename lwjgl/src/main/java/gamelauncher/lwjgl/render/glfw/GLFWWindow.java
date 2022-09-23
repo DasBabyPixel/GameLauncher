@@ -26,7 +26,6 @@ import gamelauncher.lwjgl.input.LWJGLMouse;
 import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
 import gamelauncher.lwjgl.render.states.GlStates;
-import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindow implements Window, GLFWUser {
@@ -76,7 +75,11 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	final FrameCounter frameCounter;
 
+	final GLFWWindowContext context;
+
 	private final Profiler profiler;
+
+	final GLFWWindowRenderer windowRenderer;
 
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
@@ -107,6 +110,8 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.width = NumberValue.withValue(width);
 		this.height = NumberValue.withValue(height);
 		this.closeCallback = ObjectProperty.withValue(() -> destroy());
+		this.context = new GLFWWindowContext(this);
+		this.windowRenderer = new GLFWWindowRenderer(launcher.getGlThreadGroup(), context);
 		glfwThread.addUser(this);
 
 	}
@@ -115,7 +120,9 @@ public class GLFWWindow implements Window, GLFWUser {
 		GLFWGLContext context = new GLFWGLContext(this);
 		windowCreateFuture.thenRun(() -> {
 			glfwThread.submitLast(() -> {
+				windowRenderer.grabContext();
 				context.create();
+				windowRenderer.releaseContext();
 			});
 		});
 		addContext(context);
@@ -168,18 +175,14 @@ public class GLFWWindow implements Window, GLFWUser {
 		if (closing.compareAndSet(false, true)) {
 			renderThread.submit(() -> {
 				manualFramebuffer.cleanup();
-			}).thenRun(() -> renderThread.exit().thenRun(() -> {
-				glfwThread.submit(() -> {
-					for (GLFWGLContext context : contexts) {
-						context.cleanup();
-					}
-					StateRegistry.removeWindow(glfwId);
-					glfwDestroyWindow(glfwId);
-					glfwId = 0;
-					glfwThread.removeUser(this);
-					destroyFuture().complete(null);
-				});
-			}));
+			}).thenRun(() -> renderThread.exit().thenRun(() -> glfwThread.submit(() -> {
+				for (GLFWGLContext context : contexts) {
+					context.cleanup();
+				}
+				glfwId = 0;
+				glfwThread.removeUser(this);
+				destroyFuture().complete(null);
+			})));
 		}
 		return destroyFuture();
 	}

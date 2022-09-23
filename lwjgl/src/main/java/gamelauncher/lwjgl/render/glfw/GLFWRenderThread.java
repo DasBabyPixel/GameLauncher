@@ -11,6 +11,7 @@ import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
@@ -58,6 +59,25 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 		}
 		drawPhaser.register();
 		viewportChanged();
+	}
+
+	@Override
+	protected void stopExecuting() {
+		if (lastFrameRenderer != null) {
+			try {
+				lastFrameRenderer.cleanup(window);
+				lastFrameRenderer = null;
+			} catch (GameException ex) {
+				launcher.handleError(ex);
+			}
+		}
+		launcher.getGlThreadGroup().terminated(this);
+		try {
+			StateRegistry.removeContext(window.glfwId);
+		} catch (GameException ex) {
+			launcher.handleError(ex);
+		}
+		StateRegistry.setContextHoldingThread(window.glfwId, null);
 	}
 
 	@Override

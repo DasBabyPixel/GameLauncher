@@ -13,5 +13,4 @@ class GLFWWindowContext extends GLFWGLContext {
 		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		super.applyHints();
 	}
-
 }

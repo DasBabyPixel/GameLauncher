@@ -65,6 +65,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 			return;
 		}
 		LockSupport.park();
+		parked.set(false);
 	}
 
 	@Override
@@ -81,6 +82,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 			return;
 		}
 		LockSupport.parkNanos(nanos);
+		parked.set(false);
 	}
 
 	@Override

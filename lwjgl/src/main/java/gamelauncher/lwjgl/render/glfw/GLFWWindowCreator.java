@@ -19,7 +19,6 @@ import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.function.GameRunnable;
 
 @SuppressWarnings("javadoc")
@@ -27,19 +26,16 @@ public class GLFWWindowCreator implements GameRunnable {
 
 	private final GLFWWindow window;
 
-	private final GLFWWindowContext windowContext;
-
 	public GLFWWindowCreator(GLFWWindow window) {
 		this.window = window;
-		this.windowContext = new GLFWWindowContext(window);
 	}
 
 	@Override
 	public void run() {
 		GLFWErrorCallback.createPrint().set();
-		this.windowContext.create();
-		window.addContext(windowContext);
-		long id = this.windowContext.getGLFWId();
+		this.window.context.create();
+		window.addContext(window.context);
+		long id = this.window.context.getGLFWId();
 		glfwSetWindowSize(id, window.width.intValue(), window.height.intValue());
 		glfwSetWindowTitle(id, GameLauncher.NAME);
 		if (id == NULL) {
@@ -62,7 +58,9 @@ public class GLFWWindowCreator implements GameRunnable {
 		window.windowFramebuffer.width().setNumber(a0[0]);
 		window.windowFramebuffer.height().setNumber(a0[0]);
 		window.manualFramebuffer.query();
+		window.windowRenderer.start();
 
+		window.windowCloseFuture().thenRun(()->window.windowRenderer.exit());
 		window.windowCreateFuture().complete(null);
 
 		glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
@@ -204,30 +202,6 @@ public class GLFWWindowCreator implements GameRunnable {
 			}
 
 		});
-	}
-
-	public static class WindowContextRender extends AbstractExecutorThread {
-
-		private final GLFWWindowContext context;
-
-		public WindowContextRender(ThreadGroup group, GLFWWindowContext context) {
-			super(group);
-			this.context = context;
-		}
-
-		@Override
-		protected void startExecuting() {
-			context.makeCurrent();
-		}
-
-		@Override
-		protected void stopExecuting() {
-		}
-
-		@Override
-		protected void workExecution() {
-		}
-
 	}
 
 }

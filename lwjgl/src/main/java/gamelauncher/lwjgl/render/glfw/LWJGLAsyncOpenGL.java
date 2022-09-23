@@ -30,7 +30,7 @@ public class LWJGLAsyncOpenGL extends AbstractExecutorThread {
 	@Override
 	protected void startExecuting() {
 		this.context.makeCurrent();
-		logger.debugf("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
+		logger.debugf("GL-AsyncOpenGL: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
 		GlStates.current().enable(GL_DEBUG_OUTPUT);
 		GLUtil.setupDebugMessageCallback();
 
