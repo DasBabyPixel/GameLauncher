@@ -2,8 +2,10 @@ package gamelauncher.lwjgl.render.glfw;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.Collection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,8 +60,6 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	private final GLFWRenderThread renderThread;
 
-	private final GLFWSecondaryContext secondaryContext;
-
 	final NumberValue x;
 
 	final NumberValue y;
@@ -82,6 +82,8 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	private final AtomicBoolean frameBegun = new AtomicBoolean(false);
 
+	private final Collection<GLFWGLContext> contexts = new CopyOnWriteArrayList<>();
+
 	public GLFWWindow(LWJGLGameLauncher launcher, String title, int width, int height) {
 		this.launcher = launcher;
 		this.profiler = this.launcher.getProfiler();
@@ -99,7 +101,6 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.manualFramebuffer = new ManualQueryFramebuffer(this.windowFramebuffer);
 		this.mouse = new LWJGLMouse(this);
 		this.input = new LWJGLInput(this);
-		this.secondaryContext = new GLFWSecondaryContext(this);
 		this.x = NumberValue.zero();
 		this.y = NumberValue.zero();
 		this.title = ObjectProperty.withValue(title);
@@ -108,6 +109,25 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.closeCallback = ObjectProperty.withValue(() -> destroy());
 		glfwThread.addUser(this);
 
+	}
+
+	public GLFWGLContext createNewContext() {
+		GLFWGLContext context = new GLFWGLContext(this);
+		windowCreateFuture.thenRun(() -> {
+			glfwThread.submitLast(() -> {
+				context.create();
+			});
+		});
+		addContext(context);
+		return context;
+	}
+
+	void addContext(GLFWGLContext context) {
+		contexts.add(context);
+	}
+
+	void removeContext(GLFWGLContext context) {
+		contexts.remove(context);
 	}
 
 	public NumberValue width() {
@@ -150,6 +170,9 @@ public class GLFWWindow implements Window, GLFWUser {
 				manualFramebuffer.cleanup();
 			}).thenRun(() -> renderThread.exit().thenRun(() -> {
 				glfwThread.submit(() -> {
+					for (GLFWGLContext context : contexts) {
+						context.cleanup();
+					}
 					StateRegistry.removeWindow(glfwId);
 					glfwDestroyWindow(glfwId);
 					glfwId = 0;
@@ -216,10 +239,6 @@ public class GLFWWindow implements Window, GLFWUser {
 			latch.countDown();
 		});
 		return fut;
-	}
-
-	public GLFWSecondaryContext getSecondaryContext() {
-		return secondaryContext;
 	}
 
 	@Override

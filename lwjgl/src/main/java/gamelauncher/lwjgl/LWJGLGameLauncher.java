@@ -29,7 +29,7 @@ import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
 import gamelauncher.lwjgl.render.glfw.GLFWWindow;
 import gamelauncher.lwjgl.render.glfw.GLUtil;
-import gamelauncher.lwjgl.render.glfw.LWJGLAsyncUploader;
+import gamelauncher.lwjgl.render.glfw.LWJGLAsyncOpenGL;
 import gamelauncher.lwjgl.render.modelloader.LWJGLModelLoader;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderLoader;
 import gamelauncher.lwjgl.render.texture.LWJGLTextureManager;
@@ -55,7 +55,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	private Camera camera = new BasicCamera();
 
-	private LWJGLAsyncUploader asyncUploader;
+	private LWJGLAsyncOpenGL asyncUploader;
 
 	private GlThreadGroup glThreadGroup;
 
@@ -89,15 +89,15 @@ public class LWJGLGameLauncher extends GameLauncher {
 		GL.destroy();
 
 		window = new GLFWWindow(this, NAME, 400, 400);
-		asyncUploader = new LWJGLAsyncUploader(this);
+		asyncUploader = new LWJGLAsyncOpenGL(this, window);
 		setWindow(window);
 		window.getRenderThread().submit(() -> setGlyphProvider(new LWJGLGlyphProvider(this, asyncUploader)));
-		window.setRenderMode(RenderMode.ON_UPDATE);
+		window.setRenderMode(RenderMode.CONTINUOUSLY);
 		window.getFrameCounter().limit(5);
 		Threads.waitFor(window.createWindow());
 		asyncUploader.start();
 		window.getFrameCounter().addUpdateListener(fps -> {
-			getLogger().debugf("FPS: %s", fps);
+			getLogger().infof("FPS: %s", fps);
 		});
 		getProfiler().addHandler(null, new SectionHandler() {
 
@@ -198,9 +198,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 	}
 
 	/**
-	 * @return the {@link LWJGLAsyncUploader}
+	 * @return the {@link LWJGLAsyncOpenGL}
 	 */
-	public LWJGLAsyncUploader getAsyncUploader() {
+	public LWJGLAsyncOpenGL getAsyncUploader() {
 		return asyncUploader;
 	}
 

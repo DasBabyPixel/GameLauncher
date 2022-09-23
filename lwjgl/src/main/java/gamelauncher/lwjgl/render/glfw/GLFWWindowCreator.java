@@ -16,34 +16,32 @@ import org.lwjgl.glfw.GLFWWindowPosCallbackI;
 import org.lwjgl.glfw.GLFWWindowRefreshCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.function.GameRunnable;
-import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindowCreator implements GameRunnable {
 
 	private final GLFWWindow window;
 
+	private final GLFWWindowContext windowContext;
+
 	public GLFWWindowCreator(GLFWWindow window) {
 		this.window = window;
+		this.windowContext = new GLFWWindowContext(window);
 	}
 
 	@Override
 	public void run() {
 		GLFWErrorCallback.createPrint().set();
-		glfwDefaultWindowHints();
-		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
-		glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-		long id = glfwCreateWindow(window.width.intValue(), window.height.intValue(), window.title.getValue(), 0, 0);
-		StateRegistry.addWindow(id);
+		this.windowContext.create();
+		window.addContext(windowContext);
+		long id = this.windowContext.getGLFWId();
+		glfwSetWindowSize(id, window.width.intValue(), window.height.intValue());
+		glfwSetWindowTitle(id, GameLauncher.NAME);
 		if (id == NULL) {
 			glfwTerminate();
 			System.err.println("Failed to create GLFW Window");
@@ -53,7 +51,6 @@ public class GLFWWindowCreator implements GameRunnable {
 			return;
 		}
 		window.glfwId = id;
-		this.window.getSecondaryContext().create();
 
 		glfwSetWindowSizeLimits(id, 10, 10, GLFW_DONT_CARE, GLFW_DONT_CARE);
 		int[] a0 = new int[1];
@@ -104,7 +101,8 @@ public class GLFWWindowCreator implements GameRunnable {
 
 			@Override
 			public void invoke(long window, double xpos, double ypos) {
-				// we are in the middle of the pixel. Important for guis later on so the rounding works fine
+				// we are in the middle of the pixel. Important for guis later on so the
+				// rounding works fine
 				ypos = ypos + 0.5F;
 				xpos = xpos + 0.5F;
 				float omx = (float) GLFWWindowCreator.this.window.getMouse().getX();
@@ -206,6 +204,30 @@ public class GLFWWindowCreator implements GameRunnable {
 			}
 
 		});
+	}
+
+	public static class WindowContextRender extends AbstractExecutorThread {
+
+		private final GLFWWindowContext context;
+
+		public WindowContextRender(ThreadGroup group, GLFWWindowContext context) {
+			super(group);
+			this.context = context;
+		}
+
+		@Override
+		protected void startExecuting() {
+			context.makeCurrent();
+		}
+
+		@Override
+		protected void stopExecuting() {
+		}
+
+		@Override
+		protected void workExecution() {
+		}
+
 	}
 
 }

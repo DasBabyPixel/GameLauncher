@@ -1,13 +1,7 @@
 package gamelauncher.lwjgl.render.glfw;
 
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengles.GLES32.*;
-
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import gamelauncher.engine.render.FrameCounter;
@@ -16,35 +10,30 @@ import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.lwjgl.render.states.GlStates;
-import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
-public class GLFWRenderThread extends AbstractExecutorThread implements RenderThread {
+public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 
-	private static final AtomicInteger names = new AtomicInteger();
+	private volatile boolean shouldDraw = false;
 
-	final GLFWWindow window;
+	private volatile boolean refreshAfterDraw = false;
+
+	private volatile boolean refresh = false;
+
+	private volatile boolean viewportChanged = false;
+
+	private volatile long lastResizeRefresh = 0;
+
+	private volatile long lastActualFrame = 0;
 
 	final FrameCounter frameCounter;
 
 	final Phaser drawPhaser = new Phaser();
 
-	private final AtomicBoolean viewportChanged = new AtomicBoolean(false);
+	private final GLFWWindow window;
 
 	private FrameRenderer lastFrameRenderer = null;
-
-	private final AtomicBoolean shouldDraw = new AtomicBoolean(false);
-
-	private final AtomicBoolean refreshAfterDraw = new AtomicBoolean();
-
-	private final AtomicBoolean refresh = new AtomicBoolean(false);
-
-	private final AtomicLong lastResizeRefresh = new AtomicLong(0);
-
-	private final AtomicLong lastActualFrame = new AtomicLong(0);
 
 	private boolean forceTryRender = false;
 
@@ -53,14 +42,15 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	};
 
 	public GLFWRenderThread(GLFWWindow window) {
-		super(window.getLauncher().getGlThreadGroup());
+		super(window.getLauncher(), window);
 		this.window = window;
-		this.frameCounter = this.window.getFrameCounter();
-		this.setName("GLFW-RenderThread-" + names.incrementAndGet());
+		this.frameCounter = window.frameCounter;
+		setName("GLFW-RenderThread");
 	}
 
 	@Override
 	protected void startExecuting() {
+		super.startExecuting();
 		try {
 			Threads.waitFor(window.windowCreateFuture());
 		} catch (GameException ex) {
@@ -68,55 +58,32 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		}
 		drawPhaser.register();
 		viewportChanged();
-
-		StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
-		GlStates.current().enable(GL_DEBUG_OUTPUT);
-
-		GLUtil.setupDebugMessageCallback();
-
-		glfwSwapInterval(0);
-	}
-
-	@Override
-	protected void stopExecuting() {
-		if (lastFrameRenderer != null) {
-			try {
-				lastFrameRenderer.cleanup(window);
-				lastFrameRenderer = null;
-			} catch (GameException ex) {
-				window.getLauncher().handleError(ex);
-			}
-		}
-		window.getLauncher().getGlThreadGroup().terminated(this);
-		try {
-			StateRegistry.removeContext(window.getGLFWId());
-		} catch (GameException ex) {
-			window.getLauncher().handleError(ex);
-		}
-		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
 	}
 
 	@Override
 	protected void workExecution() {
-		if (shouldDraw.compareAndSet(true, false) || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
-			if (lastResizeRefresh.get() != 0) {
-				if (((lastResizeRefresh.get() + TimeUnit.MILLISECONDS.toNanos(50)) - System.nanoTime() > 0)
-						&& !(lastActualFrame.get() + TimeUnit.MILLISECONDS.toNanos(500) - System.nanoTime() < 0)) {
+		if (shouldDraw || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
+			shouldDraw = false;
+			if (lastResizeRefresh != 0) {
+				if (((lastResizeRefresh + TimeUnit.MILLISECONDS.toNanos(50)) - System.nanoTime() > 0)
+						&& !(lastActualFrame + TimeUnit.MILLISECONDS.toNanos(0) - System.nanoTime() < 0)) {
 					if (window.getRenderMode() != RenderMode.CONTINUOUSLY) {
-						shouldDraw.set(true);
+						shouldDraw = true;
 						forceTryRender = true;
 						return;
 					}
 				}
 			}
 			forceTryRender = false;
-			refresh.set(false);
-			lastActualFrame.set(System.nanoTime());
+			refresh = false;
+			lastActualFrame = System.nanoTime();
 			frame(Type.RENDER);
-			if (refreshAfterDraw.compareAndSet(true, false)) {
+			if (refreshAfterDraw) {
+				refreshAfterDraw = false;
 				frame(Type.REFRESH);
 			}
-		} else if (refresh.compareAndSet(true, false)) {
+		} else if (refresh) {
+			refresh = false;
 			frame(Type.REFRESH);
 		}
 	}
@@ -157,7 +124,8 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 				}
 			}
 
-			viewport: if (viewportChanged.compareAndSet(true, false)) {
+			viewport: if (viewportChanged) {
+				viewportChanged = false;
 				window.manualFramebuffer.query();
 				if (window.manualFramebuffer.width().intValue() == 0
 						|| window.manualFramebuffer.height().intValue() == 0) {
@@ -190,10 +158,10 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	public void resize() {
 		try {
 			Threads.waitFor(submit(() -> {
-				lastResizeRefresh.set(System.nanoTime());
+				lastResizeRefresh = System.nanoTime();
 //				frame(Type.RENDER);
 				frame(Type.REFRESH);
-				shouldDraw.set(true);
+				shouldDraw = true;
 			}));
 		} catch (GameException ex) {
 			ex.printStackTrace();
@@ -201,19 +169,27 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 	}
 
 	public void scheduleDrawRefresh() {
-		shouldDraw.set(true);
-		refreshAfterDraw.set(true);
+		shouldDraw = true;
+		refreshAfterDraw = true;
 		signal();
 	}
 
 	public void scheduleDraw() {
-		shouldDraw.set(true);
+		shouldDraw = true;
 		signal();
 	}
 
 	public void refresh() {
-		refresh.set(true);
+		refresh = true;
 		signal();
+	}
+
+	public void viewportChanged() {
+		viewportChanged = true;
+	}
+
+	private static enum Type {
+		RENDER, REFRESH
 	}
 
 	@Override
@@ -221,106 +197,4 @@ public class GLFWRenderThread extends AbstractExecutorThread implements RenderTh
 		return window;
 	}
 
-	void viewportChanged() {
-		this.viewportChanged.set(true);
-	}
-
-	private static enum Type {
-		RENDER, REFRESH
-	}
-
-//	@Override
-//	public void run() {
-//
-//		while (!close.get()) {
-//			workQueue();
-//			if (!hasContext.get()) {
-//				hasContextLock.lock();
-//				hasContextCondition.awaitUninterruptibly();
-//				hasContextLock.unlock();
-//				continue;
-//			}
-//			if (shouldDraw()) {
-//				frame();
-//			} else {
-//				shouldDrawLock.readLock().lock();
-//				if (shouldDraw()) {
-//					shouldDrawLock.readLock().unlock();
-//					continue;
-//				}
-//				shouldDrawCondition.awaitUninterruptibly();
-//				shouldDrawLock.readLock().unlock();
-//			}
-//		}
-//		if (lastFrameRenderer != null) {
-//			try {
-//				lastFrameRenderer.cleanup(window);
-//			} catch (GameException ex) {
-//				ex.printStackTrace();
-//			}
-//			lastFrameRenderer = null;
-//		}
-//	}
-
-//	public void bindContext() {
-//		if (Thread.currentThread() == this)
-//			return;
-//		CompletableFuture<Void> f = submitFirst(new ContextlessGameRunnable() {
-//			@Override
-//			public void run() throws GameException {
-//				hasContext.set(false);
-//				glfwMakeContextCurrent(0);
-//				GLES.setCapabilities(null);
-//				StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
-//			}
-//		});
-//		Threads.waitFor(f);
-//		glfwMakeContextCurrent(window.getGLFWId());
-//		GLES.createCapabilities();
-//		StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
-//	}
-//
-//	public void releaseContext() {
-//		if (Thread.currentThread() == this)
-//			return;
-//		glfwMakeContextCurrent(0);
-//		GLES.setCapabilities(null);
-//		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
-//		CompletableFuture<Void> f = submitFirst(new ContextlessGameRunnable() {
-//			@Override
-//			public void run() throws GameException {
-//				glfwMakeContextCurrent(window.getGLFWId());
-//				GLES.createCapabilities();
-//				StateRegistry.setContextHoldingThread(window.getGLFWId(), Thread.currentThread());
-//				hasContext.set(true);
-//			}
-//		});
-//		hasContextLock.lock();
-//		hasContextCondition.signalAll();
-//		hasContextLock.unlock();
-//		Threads.waitFor(f);
-//	}
-
-//	@Override
-//	public void workQueue() {
-//		if (window.renderThreadFutures.isEmpty()) {
-//			return;
-//		}
-//		GLFWWindow.Future f;
-//		while ((f = window.renderThreadFutures.poll()) != null) {
-//			try {
-//				if (!hasContext.get()) {
-//					if (!(f.r instanceof ContextlessGameRunnable)) {
-//						window.renderThreadFutures.offerFirst(f);
-//						return;
-//					}
-//				}
-//				f.r.run();
-//				f.f.complete(null);
-//			} catch (Throwable ex) {
-//				f.f.completeExceptionally(ex);
-//				window.launcher.handleError(ex);
-//			}
-//		}
-//	}
 }

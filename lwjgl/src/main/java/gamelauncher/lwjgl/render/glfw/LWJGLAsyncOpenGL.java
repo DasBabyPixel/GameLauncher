@@ -11,25 +11,25 @@ import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
-public class LWJGLAsyncUploader extends AbstractExecutorThread {
+public class LWJGLAsyncOpenGL extends AbstractExecutorThread {
 
 	final LWJGLGameLauncher launcher;
 
-	final GLFWSecondaryContext secondaryContext;
+	final GLFWGLContext context;
 
 	final Logger logger;
 
-	public LWJGLAsyncUploader(LWJGLGameLauncher launcher) {
+	public LWJGLAsyncOpenGL(LWJGLGameLauncher launcher, GLFWWindow window) {
 		super(launcher.getGlThreadGroup());
 		this.launcher = launcher;
-		this.secondaryContext = launcher.getWindow().getSecondaryContext();
+		this.context = window.createNewContext();
 		this.logger = Logger.getLogger();
-		setName("GL-AsyncUploader");
+		setName("GL-AsyncOpenGL");
 	}
 
 	@Override
 	protected void startExecuting() {
-		this.secondaryContext.makeCurrent();
+		this.context.makeCurrent();
 		logger.debugf("GL-AsyncUploader: ThreadName: %s, Priority: %s", this.getName(), this.getPriority());
 		GlStates.current().enable(GL_DEBUG_OUTPUT);
 		GLUtil.setupDebugMessageCallback();
@@ -40,14 +40,14 @@ public class LWJGLAsyncUploader extends AbstractExecutorThread {
 	protected void stopExecuting() {
 		launcher.getGlThreadGroup().terminated(this);
 		try {
-			StateRegistry.removeContext(this.secondaryContext.getGLFWId());
+			StateRegistry.removeContext(this.context.getGLFWId());
 		} catch (GameException ex) {
 			ex.printStackTrace();
 		}
-		this.secondaryContext.destroyCurrent();
+		this.context.destroyCurrent();
 		try {
 			Threads.waitFor(launcher.getGLFWThread().submit(() -> {
-				secondaryContext.cleanup();
+				context.cleanup();
 			}));
 		} catch (GameException ex) {
 			ex.printStackTrace();
