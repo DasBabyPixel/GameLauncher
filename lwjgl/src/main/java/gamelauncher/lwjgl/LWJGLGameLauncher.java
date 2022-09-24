@@ -57,6 +57,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	private LWJGLAsyncOpenGL asyncUploader;
 
+	
 	private GlThreadGroup glThreadGroup;
 
 	/**
