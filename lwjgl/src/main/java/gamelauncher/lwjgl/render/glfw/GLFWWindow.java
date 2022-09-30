@@ -26,7 +26,6 @@ import gamelauncher.lwjgl.input.LWJGLMouse;
 import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.render.framebuffer.WindowFramebuffer;
 import gamelauncher.lwjgl.render.states.GlStates;
-import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindow implements Window, GLFWUser {
@@ -173,9 +172,13 @@ public class GLFWWindow implements Window, GLFWUser {
 					for (GLFWGLContext context : contexts) {
 						context.cleanup();
 					}
-					StateRegistry.removeWindow(glfwId);
-					glfwDestroyWindow(glfwId);
-					glfwId = 0;
+//					StateRegistry.removeWindow(glfwId);
+//					if (glfwId == 0) {
+//						new GameException("Destroying window before it was created").printStackTrace();
+//					} else {
+//						glfwDestroyWindow(glfwId);
+//					}
+//					glfwId = 0;
 					glfwThread.removeUser(this);
 					destroyFuture().complete(null);
 				});

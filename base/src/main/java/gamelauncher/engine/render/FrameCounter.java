@@ -1,6 +1,9 @@
 package gamelauncher.engine.render;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import de.dasbabypixel.api.property.NumberValue;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 /**
  * @author DasBabyPixel
@@ -78,25 +80,25 @@ public class FrameCounter {
 	}
 
 	/**
-	 * @param nanoSleeper 
+	 * @param nanoSleeper
 	 */
 	public void frame(Consumer<Long> nanoSleeper) {
 		float limit = this.limit();
 		if (limit == 0) {
 			offer(System.nanoTime());
 		} else {
-			boolean offer = false;
-			long timeOffer = 0;
+//			boolean offer = false;
+//			long timeOffer = 0;
 			if (!buffer.frames5Second.isEmpty()) {
 				long frameNanos = this.frameNanos.longValue();
 				long nextFrame = buffer.lastFrame.get() + frameNanos;
 				if (nextFrame - System.nanoTime() < 0) {
-					offer = true;
-					timeOffer = System.nanoTime();
+//					offer = true;
+//					timeOffer = System.nanoTime();
 				} else {
-					offer = true;
+//					offer = true;
 					nanoSleeper.accept(nextFrame - System.nanoTime());
-					timeOffer = nextFrame;
+//					timeOffer = nextFrame; 
 				}
 //				if (nextFrame > System.nanoTime() + frameNanos) {
 //					sleepUntil(System.nanoTime() + frameNanos);
@@ -108,13 +110,14 @@ public class FrameCounter {
 //					timeOffer = nextFrame;
 //				}
 			}
-			offer(offer ? timeOffer : System.nanoTime());
+			offer(System.nanoTime());
 		}
 	}
 
 	/**
 	 * Stops sleeping if sleeping
-	 * @param unparker 
+	 * 
+	 * @param unparker
 	 */
 	public void stopWaiting(Runnable unparker) {
 		unparker.run();
@@ -158,38 +161,63 @@ public class FrameCounter {
 
 	private class Buffer {
 
-		private final LongArrayList frames1Second = new LongArrayList();
+		private final List<LongHandle> unusedHandles = Collections.synchronizedList(new ArrayList<>());
 
-		private final LongArrayList frames5Second = new LongArrayList();
+		private final List<LongHandle> frames1Second = Collections.synchronizedList(new ArrayList<>());
+
+		private final List<LongHandle> frames5Second = Collections.synchronizedList(new ArrayList<>());
 
 		private final AtomicLong lastFrame = new AtomicLong();
 
 		public void addFrame(long frame) {
 			removeOldFrames();
-			frames1Second.add(frame);
-			frames5Second.add(frame);
+			LongHandle handle = getHandle(frame);
+			frames1Second.add(handle);
+			frames5Second.add(handle);
 			lastFrame.set(frame);
+		}
+
+		private LongHandle getHandle(long value) {
+			synchronized (unusedHandles) {
+				if (!unusedHandles.isEmpty()) {
+					LongHandle handle = unusedHandles.remove(0);
+					handle.value = value;
+					return handle;
+				}
+			}
+			LongHandle handle = new LongHandle();
+			handle.value = value;
+			return handle;
 		}
 
 		private void removeOldFrames() {
 			long compareTo = System.nanoTime() - second * 5;
-			while (!frames5Second.isEmpty()) {
-				long first = frames5Second.getLong(0);
-				if (compareTo - first > 0) {
-					frames5Second.removeLong(0);
-					continue;
+			synchronized (frames5Second) {
+				while (!frames5Second.isEmpty()) {
+					LongHandle first = frames5Second.get(0);
+					if (compareTo - first.value > 0) {
+						frames5Second.remove(0);
+						unusedHandles.add(first);
+						continue;
+					}
+					break;
 				}
-				break;
 			}
 			compareTo = System.nanoTime() - second;
 			while (!frames1Second.isEmpty()) {
-				long first = frames1Second.getLong(0);
-				if (compareTo - first > 0) {
-					frames1Second.removeLong(0);
+				LongHandle first = frames1Second.get(0);
+				if (compareTo - first.value > 0) {
+					frames1Second.remove(0);
 					continue;
 				}
 				break;
 			}
+		}
+
+		private static class LongHandle {
+
+			private long value;
+
 		}
 
 	}

@@ -3,6 +3,7 @@ package gamelauncher.engine.resource;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
+import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.GameException;
 
 /**
@@ -15,13 +16,17 @@ public abstract class AbstractGameResource implements GameResource {
 
 	private final StackTraceElement[] stack;
 
+	private final String exName;
+
 	private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
 
 	/**
 	 * 
 	 */
 	public AbstractGameResource() {
-		this.stack = new Exception().getStackTrace();
+		StackTraceElement[] es = new Exception().getStackTrace();
+		this.exName = Thread.currentThread().getName();
+		this.stack = Arrays.copyOfRange(es, 1, es.length);
 		create(this);
 	}
 
@@ -72,9 +77,9 @@ public abstract class AbstractGameResource implements GameResource {
 	public static void exit() {
 		for (GameResource resource : resources) {
 			System.out.println("Memory Leak: " + resource);
-			if (resource instanceof AbstractGameResource) {
-				Exception ex = new Exception("Stack:");
-				ex.setStackTrace(((AbstractGameResource) resource).stack);
+			if (resource instanceof AbstractGameResource aresource) {
+				Exception ex = new Exception("Stack: " + aresource.exName);
+				ex.setStackTrace(aresource.stack);
 				ex.printStackTrace();
 			}
 		}

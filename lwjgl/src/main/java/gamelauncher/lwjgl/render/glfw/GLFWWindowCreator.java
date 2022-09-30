@@ -1,7 +1,11 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengles.GLES20.*;
 import static org.lwjgl.system.MemoryUtil.*;
+
+import java.util.concurrent.Phaser;
+import java.util.function.Consumer;
 
 import org.lwjgl.glfw.GLFWCharCallbackI;
 import org.lwjgl.glfw.GLFWCursorEnterCallbackI;
@@ -17,10 +21,22 @@ import org.lwjgl.glfw.GLFWWindowRefreshCallbackI;
 import org.lwjgl.glfw.GLFWWindowSizeCallbackI;
 
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.ContextProvider.ContextType;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.EmptyCamera;
+import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.RenderMode;
+import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
+import gamelauncher.lwjgl.render.GlContext;
+import gamelauncher.lwjgl.render.LWJGLGameRenderer.Entry;
+import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
+import gamelauncher.lwjgl.render.framebuffer.LWJGLFramebuffer;
+import gamelauncher.lwjgl.render.states.GlStates;
+import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWWindowCreator implements GameRunnable {
@@ -29,9 +45,13 @@ public class GLFWWindowCreator implements GameRunnable {
 
 	private final GLFWWindowContext windowContext;
 
+	public final GLFWWindowCreator.WindowContextRender contextRender;
+
 	public GLFWWindowCreator(GLFWWindow window) {
 		this.window = window;
-		this.windowContext = new GLFWWindowContext(window);
+		this.windowContext = new GLFWWindowContext(window, this);
+		this.contextRender = new WindowContextRender(window, window.getLauncher().getGlThreadGroup(), windowContext);
+		this.contextRender.start();
 	}
 
 	@Override
@@ -210,22 +230,190 @@ public class GLFWWindowCreator implements GameRunnable {
 
 		private final GLFWWindowContext context;
 
-		public WindowContextRender(ThreadGroup group, GLFWWindowContext context) {
+		private volatile boolean shouldDraw = false;
+
+		private volatile boolean refreshAfterDraw = false;
+
+		private volatile boolean refresh = false;
+
+//		private volatile long lastResizeRefresh = 0;
+		//
+//		private volatile long lastActualFrame = 0;
+
+		final FrameCounter frameCounter;
+
+		final Phaser drawPhaser = new Phaser();
+
+		final GLFWWindow window;
+
+		BasicFBCopy basicFBCopy;
+
+		private boolean forceTryRender = false;
+
+		private Entry entry;
+
+		private DrawContext dcontext;
+
+		private final Consumer<Long> nanoSleeper = nanos -> {
+//			this.waitForSignalTimeout(nanos);
+		};
+
+		public WindowContextRender(GLFWWindow window, ThreadGroup group, GLFWWindowContext context) {
 			super(group);
+			this.window = window;
 			this.context = context;
+			this.frameCounter = new FrameCounter();
+			setName("GLFW-WindowRenderThread");
 		}
 
 		@Override
 		protected void startExecuting() {
 			context.makeCurrent();
-		}
-
-		@Override
-		protected void stopExecuting() {
+			try {
+				Threads.waitFor(window.windowCreateFuture());
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
+			drawPhaser.register();
+			// Init
+			GlContext glContext = new GlContext();
+			glContext.depth.enabled.value.set(true);
+			glContext.depth.depthFunc.set(GL_LEQUAL);
+			glContext.blend.enabled.value.set(true);
+			glContext.blend.srcrgb.set(GL_SRC_ALPHA);
+			glContext.blend.dstrgb.set(GL_ONE_MINUS_SRC_ALPHA);
+			glContext.replace(null);
 		}
 
 		@Override
 		protected void workExecution() {
+
+			if (entry == null) {
+				try {
+					entry = window.getLauncher().getGameRenderer().getEntry(window);
+					if (entry == null)
+						return;
+					basicFBCopy = new BasicFBCopy(window, entry.mainFramebuffer);
+					dcontext = window.getLauncher().getContextProvider().loadContext(basicFBCopy, ContextType.HUD);
+				} catch (GameException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			if (shouldDraw || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
+				shouldDraw = false;
+				forceTryRender = false;
+				refresh = false;
+				frame(Type.RENDER);
+				if (refreshAfterDraw) {
+					refreshAfterDraw = false;
+					frame(Type.REFRESH);
+				}
+			} else if (refresh) {
+				refresh = false;
+				frame(Type.REFRESH);
+			}
+		}
+
+		@Override
+		protected void stopExecuting() {
+			// TODO: Cleanup render
+			try {
+				window.getLauncher().getContextProvider().freeContext(dcontext, ContextType.HUD);
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
+
+			window.getLauncher().getGlThreadGroup().terminated(this);
+			try {
+				StateRegistry.removeContext(window.getGLFWId());
+			} catch (GameException ex) {
+				window.getLauncher().handleError(ex);
+			}
+			StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
+		}
+
+		private void frame(Type type) {
+			// TODO: Render
+
+			try {
+				dcontext.update(EmptyCamera.instance());
+				dcontext.drawModel(entry.mainScreenItemModel);
+				dcontext.getProgram().clearUniforms();
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
+
+			drawPhaser.arrive();
+			frameCounter.frame(nanoSleeper);
+		}
+
+		@Override
+		protected boolean shouldWaitForSignal() {
+			return !forceTryRender;
+		}
+
+		public void resize() {
+			try {
+				Threads.waitFor(submit(() -> {
+					frame(Type.RENDER);
+					frame(Type.REFRESH);
+					shouldDraw = true;
+				}));
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		public void scheduleDrawRefresh() {
+			shouldDraw = true;
+			refreshAfterDraw = true;
+			signal();
+		}
+
+		public void scheduleDraw() {
+			shouldDraw = true;
+			signal();
+		}
+
+		public void refresh() {
+			refresh = true;
+			signal();
+		}
+
+		private static enum Type {
+			RENDER, REFRESH
+		}
+
+		public Window getWindow() {
+			return window;
+		}
+
+		private static class BasicFBCopy extends LWJGLFramebuffer {
+
+			private final BasicFramebuffer bfb;
+
+			public BasicFBCopy(GLFWWindow window, BasicFramebuffer fb) throws GameException {
+				super(window);
+				this.bfb = fb;
+				width().bind(bfb.width());
+				height().bind(bfb.height());
+				bind();
+
+				GlStates c = GlStates.current();
+				c.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+						fb.getColorTexture().getTextureId(), 0);
+				checkComplete();
+				unbind();
+			}
+
+			@Override
+			protected void cleanup0() throws GameException {
+				super.cleanup0();
+				width().unbind();
+				height().unbind();
+			}
+
 		}
 
 	}

@@ -91,21 +91,25 @@ public class LWJGLGameRenderer implements GameRenderer {
 		launcher.getProfiler().end();
 	}
 
-	private class Entry extends AbstractGameResource {
+	public Entry getEntry(Window window) {
+		return map.get(window);
+	}
 
-		private final Window window;
+	public class Entry extends AbstractGameResource {
 
-		private BasicFramebuffer mainFramebuffer;
+		public final Window window;
 
-		private GameItem mainScreenItem;
+		public BasicFramebuffer mainFramebuffer;
 
-		private GameItem.GameItemModel mainScreenItemModel;
+		public GameItem mainScreenItem;
 
-		private Renderer crenderer;
+		public GameItem.GameItemModel mainScreenItemModel;
 
-		private Camera camera;
+		public Renderer crenderer;
 
-		private DrawContext contexthud;
+		public Camera camera;
+
+		public DrawContext contexthud;
 
 		public Entry(Window window) {
 			this.window = window;

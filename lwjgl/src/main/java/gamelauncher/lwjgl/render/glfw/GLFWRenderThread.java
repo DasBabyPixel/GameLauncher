@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import java.util.concurrent.Phaser;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import gamelauncher.engine.render.FrameCounter;
@@ -11,6 +10,7 @@ import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.lwjgl.render.states.StateRegistry;
 
 @SuppressWarnings("javadoc")
 public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
@@ -23,9 +23,9 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 
 	private volatile boolean viewportChanged = false;
 
-	private volatile long lastResizeRefresh = 0;
-
-	private volatile long lastActualFrame = 0;
+//	private volatile long lastResizeRefresh = 0;
+//
+//	private volatile long lastActualFrame = 0;
 
 	final FrameCounter frameCounter;
 
@@ -64,19 +64,19 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 	protected void workExecution() {
 		if (shouldDraw || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
 			shouldDraw = false;
-			if (lastResizeRefresh != 0) {
-				if (((lastResizeRefresh + TimeUnit.MILLISECONDS.toNanos(50)) - System.nanoTime() > 0)
-						&& !(lastActualFrame + TimeUnit.MILLISECONDS.toNanos(0) - System.nanoTime() < 0)) {
-					if (window.getRenderMode() != RenderMode.CONTINUOUSLY) {
-						shouldDraw = true;
-						forceTryRender = true;
-						return;
-					}
-				}
-			}
+//			if (lastResizeRefresh != 0) {
+//				if (((lastResizeRefresh + TimeUnit.MILLISECONDS.toNanos(50)) - System.nanoTime() > 0)
+//						&& !(lastActualFrame + TimeUnit.MILLISECONDS.toNanos(0) - System.nanoTime() < 0)) {
+//					if (window.getRenderMode() != RenderMode.CONTINUOUSLY) {
+//						shouldDraw = true;
+//						forceTryRender = true;
+//						return;
+//					}
+//				}
+//			}
 			forceTryRender = false;
 			refresh = false;
-			lastActualFrame = System.nanoTime();
+//			lastActualFrame = System.nanoTime();
 			frame(Type.RENDER);
 			if (refreshAfterDraw) {
 				refreshAfterDraw = false;
@@ -86,6 +86,25 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 			refresh = false;
 			frame(Type.REFRESH);
 		}
+	}
+
+	@Override
+	protected void stopExecuting() {
+		if (lastFrameRenderer != null) {
+			try {
+				lastFrameRenderer.cleanup(window);
+				lastFrameRenderer = null;
+			} catch (GameException ex) {
+				window.getLauncher().handleError(ex);
+			}
+		}
+		window.getLauncher().getGlThreadGroup().terminated(this);
+		try {
+			StateRegistry.removeContext(window.getGLFWId());
+		} catch (GameException ex) {
+			window.getLauncher().handleError(ex);
+		}
+		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
 	}
 
 	@Override
@@ -156,16 +175,12 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 	}
 
 	public void resize() {
-		try {
-			Threads.waitFor(submit(() -> {
-				lastResizeRefresh = System.nanoTime();
+		submit(() -> {
+//				lastResizeRefresh = System.nanoTime();
 //				frame(Type.RENDER);
-				frame(Type.REFRESH);
-				shouldDraw = true;
-			}));
-		} catch (GameException ex) {
-			ex.printStackTrace();
-		}
+			frame(Type.REFRESH);
+			shouldDraw = true;
+		});
 	}
 
 	public void scheduleDrawRefresh() {

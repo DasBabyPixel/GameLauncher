@@ -25,4 +25,15 @@ public class Arrays {
 	public static <T> T[] copy(T[] array) {
 		return java.util.Arrays.copyOf(array, array.length);
 	}
+
+	/**
+	 * From {@link java.util.Arrays}
+	 * @param original
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	public static StackTraceElement[] copyOfRange(StackTraceElement[] original, int from, int to) {
+		return java.util.Arrays.copyOfRange(original, from, to);
+	}
 }

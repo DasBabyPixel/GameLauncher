@@ -121,6 +121,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void stop0() throws GameException {
+
 		getGlyphProvider().cleanup();
 		getTextureManager().cleanup();
 
@@ -128,7 +129,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		Threads.waitFor(window.destroy());
 		Threads.waitFor(this.glfwThread.exit());
 	}
-	
+
 	@SuppressWarnings("javadoc")
 	@EventHandler
 	public void handle(LauncherInitializedEvent event) {
@@ -209,6 +210,11 @@ public class LWJGLGameLauncher extends GameLauncher {
 	 */
 	public GlThreadGroup getGlThreadGroup() {
 		return glThreadGroup;
+	}
+
+	@Override
+	public LWJGLGameRenderer getGameRenderer() {
+		return (LWJGLGameRenderer) super.getGameRenderer();
 	}
 
 	@Override
