@@ -61,6 +61,25 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 	}
 
 	@Override
+	protected void stopExecuting() {
+		if (lastFrameRenderer != null) {
+			try {
+				lastFrameRenderer.cleanup(window);
+				lastFrameRenderer = null;
+			} catch (GameException ex) {
+				launcher.handleError(ex);
+			}
+		}
+		launcher.getGlThreadGroup().terminated(this);
+		try {
+			StateRegistry.removeContext(window.glfwId);
+		} catch (GameException ex) {
+			launcher.handleError(ex);
+		}
+		StateRegistry.setContextHoldingThread(window.glfwId, null);
+	}
+
+	@Override
 	protected void workExecution() {
 		if (shouldDraw || window.getRenderMode() == RenderMode.CONTINUOUSLY) {
 			shouldDraw = false;
@@ -86,25 +105,6 @@ public class GLFWRenderThread extends LWJGLAsyncOpenGL implements RenderThread {
 			refresh = false;
 			frame(Type.REFRESH);
 		}
-	}
-
-	@Override
-	protected void stopExecuting() {
-		if (lastFrameRenderer != null) {
-			try {
-				lastFrameRenderer.cleanup(window);
-				lastFrameRenderer = null;
-			} catch (GameException ex) {
-				window.getLauncher().handleError(ex);
-			}
-		}
-		window.getLauncher().getGlThreadGroup().terminated(this);
-		try {
-			StateRegistry.removeContext(window.getGLFWId());
-		} catch (GameException ex) {
-			window.getLauncher().handleError(ex);
-		}
-		StateRegistry.setContextHoldingThread(window.getGLFWId(), null);
 	}
 
 	@Override

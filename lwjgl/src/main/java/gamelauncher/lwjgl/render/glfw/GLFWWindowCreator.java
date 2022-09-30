@@ -28,8 +28,11 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.Window;
 import gamelauncher.engine.util.GameException;
+<<<<<<< HEAD
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
+=======
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.lwjgl.render.GlContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer.Entry;
@@ -43,23 +46,29 @@ public class GLFWWindowCreator implements GameRunnable {
 
 	private final GLFWWindow window;
 
+<<<<<<< HEAD
 	private final GLFWWindowContext windowContext;
 
 	public final GLFWWindowCreator.WindowContextRender contextRender;
 
+=======
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 	public GLFWWindowCreator(GLFWWindow window) {
 		this.window = window;
+<<<<<<< HEAD
 		this.windowContext = new GLFWWindowContext(window, this);
 		this.contextRender = new WindowContextRender(window, window.getLauncher().getGlThreadGroup(), windowContext);
 		this.contextRender.start();
+=======
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 	}
 
 	@Override
 	public void run() {
 		GLFWErrorCallback.createPrint().set();
-		this.windowContext.create();
-		window.addContext(windowContext);
-		long id = this.windowContext.getGLFWId();
+		this.window.context.create();
+		window.addContext(window.context);
+		long id = this.window.context.getGLFWId();
 		glfwSetWindowSize(id, window.width.intValue(), window.height.intValue());
 		glfwSetWindowTitle(id, GameLauncher.NAME);
 		if (id == NULL) {
@@ -82,7 +91,9 @@ public class GLFWWindowCreator implements GameRunnable {
 		window.windowFramebuffer.width().setNumber(a0[0]);
 		window.windowFramebuffer.height().setNumber(a0[0]);
 		window.manualFramebuffer.query();
+		window.windowRenderer.start();
 
+		window.windowCloseFuture().thenRun(()->window.windowRenderer.exit());
 		window.windowCreateFuture().complete(null);
 
 		glfwSetScrollCallback(id, new GLFWScrollCallbackI() {
@@ -226,6 +237,7 @@ public class GLFWWindowCreator implements GameRunnable {
 		});
 	}
 
+<<<<<<< HEAD
 	public static class WindowContextRender extends AbstractExecutorThread {
 
 		private final GLFWWindowContext context;
@@ -418,4 +430,6 @@ public class GLFWWindowCreator implements GameRunnable {
 
 	}
 
+=======
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 }

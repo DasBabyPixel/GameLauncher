@@ -75,7 +75,11 @@ public class GLFWWindow implements Window, GLFWUser {
 
 	final FrameCounter frameCounter;
 
+	final GLFWWindowContext context;
+
 	private final Profiler profiler;
+
+	final GLFWWindowRenderer windowRenderer;
 
 	private final AtomicBoolean swapBuffers = new AtomicBoolean(false);
 
@@ -106,6 +110,8 @@ public class GLFWWindow implements Window, GLFWUser {
 		this.width = NumberValue.withValue(width);
 		this.height = NumberValue.withValue(height);
 		this.closeCallback = ObjectProperty.withValue(() -> destroy());
+		this.context = new GLFWWindowContext(this, creator);
+		this.windowRenderer = new GLFWWindowRenderer(launcher.getGlThreadGroup(), context);
 		glfwThread.addUser(this);
 
 	}
@@ -114,7 +120,9 @@ public class GLFWWindow implements Window, GLFWUser {
 		GLFWGLContext context = new GLFWGLContext(this);
 		windowCreateFuture.thenRun(() -> {
 			glfwThread.submitLast(() -> {
+				windowRenderer.grabContext();
 				context.create();
+				windowRenderer.releaseContext();
 			});
 		});
 		addContext(context);
@@ -167,6 +175,7 @@ public class GLFWWindow implements Window, GLFWUser {
 		if (closing.compareAndSet(false, true)) {
 			renderThread.submit(() -> {
 				manualFramebuffer.cleanup();
+<<<<<<< HEAD
 			}).thenRun(() -> renderThread.exit().thenRun(() -> {
 				glfwThread.submit(() -> {
 					for (GLFWGLContext context : contexts) {
@@ -183,6 +192,16 @@ public class GLFWWindow implements Window, GLFWUser {
 					destroyFuture().complete(null);
 				});
 			}));
+=======
+			}).thenRun(() -> renderThread.exit().thenRun(() -> glfwThread.submit(() -> {
+				for (GLFWGLContext context : contexts) {
+					context.cleanup();
+				}
+				glfwId = 0;
+				glfwThread.removeUser(this);
+				destroyFuture().complete(null);
+			})));
+>>>>>>> branch 'master' of https://github.com/DasBabyPixel/GameLauncher.git
 		}
 		return destroyFuture();
 	}

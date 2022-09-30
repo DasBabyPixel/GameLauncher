@@ -47,7 +47,7 @@ public class StateRegistry {
 	}
 
 	public static void setContextHoldingThread(long id, Thread thread) {
-		logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "" : thread.getName());
+		logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "null" : thread.getName());
 		if (thread == null) {
 			glfwMakeContextCurrent(0L);
 			GLES.setCapabilities(null);
