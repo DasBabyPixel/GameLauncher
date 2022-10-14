@@ -14,45 +14,45 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
 	private final BooleanValue newValue = BooleanValue.trueValue();
 
 	public ManualQueryFramebuffer(Framebuffer handle) {
-		super(handle.getRenderThread(), handle::scheduleRedraw);
+		super(handle.renderThread(), handle::scheduleRedraw);
 		this.handle = handle;
 		InvalidationListener invalid = new InvalidationListener() {
 
 			@Override
 			public void invalidated(Property<?> property) {
-				newValue.setValue(true);
+				ManualQueryFramebuffer.this.newValue.setValue(true);
 			}
 
 		};
 		handle.width().addListener(invalid);
 		handle.height().addListener(invalid);
-		query();
+		this.query();
 	}
 
 	public void query() {
-		newValue.setValue(false);
-		width().setNumber(handle.width().getNumber());
-		height().setNumber(handle.height().getNumber());
+		this.newValue.setValue(false);
+		this.width().setNumber(this.handle.width().getNumber());
+		this.height().setNumber(this.handle.height().getNumber());
 	}
 	
 	public BooleanValue newValue() {
-		return newValue;
+		return this.newValue;
 	}
 
 	@Override
 	public void cleanup0() throws GameException {
 		super.cleanup0();
-		handle.cleanup();
+		this.handle.cleanup();
 	}
 
 	@Override
 	public void beginFrame() {
-		handle.beginFrame();
+		this.handle.beginFrame();
 	}
 
 	@Override
 	public void endFrame() {
-		handle.endFrame();
+		this.handle.endFrame();
 	}
 
 }

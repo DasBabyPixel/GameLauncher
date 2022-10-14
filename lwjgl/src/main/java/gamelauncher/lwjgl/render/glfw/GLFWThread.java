@@ -17,6 +17,8 @@ public class GLFWThread extends AbstractExecutorThread {
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
 
 	private final Logger logger = Logger.getLogger();
+	
+	private final GLFWMonitorManager monitorManager = new GLFWMonitorManager();
 
 	public GLFWThread() {
 		super(null);
@@ -28,6 +30,7 @@ public class GLFWThread extends AbstractExecutorThread {
 		if (!glfwInit()) {
 			throw new ExceptionInInitializerError("Couldn't initialize GLFW");
 		}
+		monitorManager.init();
 	}
 
 	@Override
@@ -45,6 +48,7 @@ public class GLFWThread extends AbstractExecutorThread {
 		if (!users.isEmpty()) {
 			logger.errorf("Not all users of the GLFWThread have been cleared: %n%s", users);
 		}
+		monitorManager.cleanup();
 		glfwTerminate();
 		this.terminateFuture.complete(null);
 	}

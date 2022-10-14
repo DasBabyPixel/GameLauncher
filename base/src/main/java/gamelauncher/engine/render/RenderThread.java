@@ -8,9 +8,9 @@ import gamelauncher.engine.util.concurrent.ExecutorThread;
 public interface RenderThread extends ExecutorThread {
 
 	/**
-	 * @return the window of this {@link RenderThread}
+	 * @return the frame of this {@link RenderThread}
 	 */
-	Window getWindow();
+	Frame getFrame();
 	
 	/**
 	 * @return the name of this {@link Thread}

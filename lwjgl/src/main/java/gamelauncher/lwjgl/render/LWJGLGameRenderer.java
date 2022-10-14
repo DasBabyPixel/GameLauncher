@@ -1,10 +1,10 @@
 package gamelauncher.lwjgl.render;
 
-import static org.lwjgl.opengles.GLES20.*;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.lwjgl.opengles.GLES20;
 
 import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
@@ -12,10 +12,10 @@ import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.Renderer;
-import gamelauncher.engine.render.Window;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
@@ -30,7 +30,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 	private final AtomicReference<Renderer> renderer = new AtomicReference<>();
 
-	private final Map<Window, Entry> map = new ConcurrentHashMap<>();
+	private final Map<Frame, Entry> map = new ConcurrentHashMap<>();
 
 	private LWJGLGameLauncher launcher;
 
@@ -52,52 +52,52 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	@Override
-	public void init(Window window) throws GameException {
-		launcher.getProfiler().begin("render", "init");
-		launcher.getLogger().info("Initializing RenderEngine");
-		map.put(window, new Entry(window));
-		map.get(window).init();
-		launcher.getLogger().info("RenderEngine initialized");
-		launcher.getProfiler().end();
+	public void init(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "init");
+		this.launcher.getLogger().info("Initializing RenderEngine");
+		this.map.put(frame, new Entry(frame));
+		this.map.get(frame).init();
+		this.launcher.getLogger().info("RenderEngine initialized");
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
-	public void cleanup(Window window) throws GameException {
-		launcher.getProfiler().begin("render", "cleanup");
-		launcher.getLogger().info("Cleaning up RenderEngine");
-		map.remove(window).cleanup();
-		launcher.getLogger().info("RenderEngine cleaned up");
-		launcher.getProfiler().end();
+	public void cleanup(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "cleanup");
+		this.launcher.getLogger().info("Cleaning up RenderEngine");
+		this.map.remove(frame).cleanup();
+		this.launcher.getLogger().info("RenderEngine cleaned up");
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
-	public void windowSizeChanged(Window window) throws GameException {
-		launcher.getProfiler().begin("render", "windowSizeChanged");
-		map.get(window).windowSizeChanged();
-		launcher.getProfiler().end();
+	public void windowSizeChanged(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "windowSizeChanged");
+		this.map.get(frame).windowSizeChanged();
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
-	public void renderFrame(Window window) throws GameException {
-		launcher.getProfiler().begin("render", "frame");
-		map.get(window).renderFrame(renderer.get());
-		launcher.getProfiler().end();
+	public void renderFrame(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "frame");
+		this.map.get(frame).renderFrame(this.renderer.get());
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
-	public void refreshDisplay(Window window) throws GameException {
-		launcher.getProfiler().begin("render", "refresh");
-		map.get(window).refreshDisplay(renderer.get());
-		launcher.getProfiler().end();
+	public void refreshDisplay(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "refresh");
+		this.map.get(frame).refreshDisplay(this.renderer.get());
+		this.launcher.getProfiler().end();
 	}
 
-	public Entry getEntry(Window window) {
-		return map.get(window);
+	public Entry getEntry(Frame frame) {
+		return this.map.get(frame);
 	}
 
 	public class Entry extends AbstractGameResource {
 
-		public final Window window;
+		public final Frame frame;
 
 		public BasicFramebuffer mainFramebuffer;
 
@@ -111,34 +111,35 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		public DrawContext contexthud;
 
-		public Entry(Window window) {
-			this.window = window;
+		public Entry(Frame frame) {
+			this.frame = frame;
 			this.camera = new BasicCamera();
 		}
 
 		public void init() throws GameException {
 
-			glContext.depth.enabled.value.set(true);
-			glContext.depth.depthFunc.set(GL_LEQUAL);
-			glContext.blend.enabled.value.set(true);
-			glContext.blend.srcrgb.set(GL_SRC_ALPHA);
-			glContext.blend.dstrgb.set(GL_ONE_MINUS_SRC_ALPHA);
-			glContext.replace(null);
+			LWJGLGameRenderer.this.glContext.depth.enabled.value.set(true);
+			LWJGLGameRenderer.this.glContext.depth.depthFunc.set(GLES20.GL_LEQUAL);
+			LWJGLGameRenderer.this.glContext.blend.enabled.value.set(true);
+			LWJGLGameRenderer.this.glContext.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
+			LWJGLGameRenderer.this.glContext.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
+			LWJGLGameRenderer.this.glContext.replace(null);
 
-			mainFramebuffer = new BasicFramebuffer(launcher, window.getFramebuffer().width().intValue(),
-					window.getFramebuffer().height().intValue());
-			mainScreenItem = new GameItem(new Texture2DModel(mainFramebuffer.getColorTexture()));
-			mainScreenItem.scale().x.bind(mainFramebuffer.width());
-			mainScreenItem.scale().y.bind(mainFramebuffer.height());
-			mainScreenItem.position().x.bind(mainFramebuffer.width().divide(2));
-			mainScreenItem.position().y.bind(mainFramebuffer.height().divide(2));
+			this.mainFramebuffer = new BasicFramebuffer(LWJGLGameRenderer.this.launcher,
+					this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
+			this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
+			this.mainScreenItem.scale().x.bind(this.mainFramebuffer.width());
+			this.mainScreenItem.scale().y.bind(this.mainFramebuffer.height());
+			this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2));
+			this.mainScreenItem.position().y.bind(this.mainFramebuffer.height().divide(2));
 
-			mainScreenItemModel = mainScreenItem.createModel();
+			this.mainScreenItemModel = this.mainScreenItem.createModel();
 
-			contexthud = launcher.getContextProvider().loadContext(mainFramebuffer, ContextType.HUD);
-			((LWJGLDrawContext) contexthud).swapTopBottom = true;
+			this.contexthud = LWJGLGameRenderer.this.launcher.getContextProvider()
+					.loadContext(this.mainFramebuffer, ContextType.HUD);
+			((LWJGLDrawContext) this.contexthud).swapTopBottom = true;
 
-			launcher.getGuiManager().openGuiByClass(mainFramebuffer, MainScreenGui.class);
+			LWJGLGameRenderer.this.launcher.getGuiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
 
 //			updateScreenItems();
 
@@ -146,14 +147,14 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		@Override
 		public void cleanup0() throws GameException {
-			mainScreenItemModel.cleanup();
-			launcher.getContextProvider().freeContext(contexthud, ContextType.HUD);
-			mainFramebuffer.cleanup();
+			this.mainScreenItemModel.cleanup();
+			LWJGLGameRenderer.this.launcher.getContextProvider().freeContext(this.contexthud, ContextType.HUD);
+			this.mainFramebuffer.cleanup();
 		}
 
 		public void windowSizeChanged() throws GameException {
-			mainFramebuffer.resize(window.getFramebuffer().width().intValue(),
-					window.getFramebuffer().height().intValue());
+			this.mainFramebuffer.resize(this.frame.framebuffer().width().intValue(),
+					this.frame.framebuffer().height().intValue());
 //			updateScreenItems();
 		}
 
@@ -166,70 +167,72 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		public void refreshDisplay(Renderer renderer) throws GameException {
 			GlStates cur = GlStates.current();
-			window.beginFrame();
-			launcher.getProfiler().check();
-			cur.viewport(0, 0, window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+			this.frame.framebuffer().beginFrame();
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
+			cur.viewport(0, 0, this.frame.framebuffer().width().intValue(),
+					this.frame.framebuffer().height().intValue());
 			cur.clearColor(0, 0, 0, 0);
-			cur.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			launcher.getProfiler().check();
+			cur.clear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
-			contexthud.update(camera);
-			launcher.getProfiler().check();
-			contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
-			launcher.getProfiler().check();
-			contexthud.getProgram().clearUniforms();
-			launcher.getProfiler().check();
-			window.endFrame();
+			this.contexthud.update(this.camera);
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
+			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
+			this.contexthud.getProgram().clearUniforms();
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
+			this.frame.framebuffer().endFrame();
 		}
 
 		public void renderFrame(Renderer renderer) throws GameException {
 			GlStates cur = GlStates.current();
-			window.beginFrame();
-			cur.viewport(0, 0, window.getFramebuffer().width().intValue(), window.getFramebuffer().height().intValue());
+			this.frame.framebuffer().beginFrame();
+			cur.viewport(0, 0, this.frame.framebuffer().width().intValue(),
+					this.frame.framebuffer().height().intValue());
 			cur.clearColor(0, 0, 0, 0);
-			cur.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cur.clear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-			launcher.getProfiler().check();
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
-			mainFramebuffer.bind();
+			this.mainFramebuffer.bind();
 
 			cur.clearColor(0.2F, 0.2F, 0.2F, 0.8F);
-			cur.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			cur.clear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-			if (renderer != crenderer) {
-				cleanup(crenderer);
-				init(renderer);
-				crenderer = renderer;
+			if (renderer != this.crenderer) {
+				this.cleanup(this.crenderer);
+				this.init(renderer);
+				this.crenderer = renderer;
 			}
 			if (renderer != null) {
-				renderer.render(mainFramebuffer);
+				renderer.render(this.mainFramebuffer);
 			}
 
-			mainFramebuffer.unbind();
+			this.mainFramebuffer.unbind();
 
-			launcher.getProfiler().check();
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
-			contexthud.update(camera);
-			contexthud.drawModel(mainScreenItemModel, 0, 0, 0);
-			contexthud.getProgram().clearUniforms();
+			this.contexthud.update(this.camera);
+			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
+			this.contexthud.getProgram().clearUniforms();
 
-			launcher.getProfiler().check();
+			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
-			window.endFrame();
+			this.frame.framebuffer().endFrame();
 		}
 
 		private void cleanup(Renderer renderer) throws GameException {
 			if (renderer == null) {
 				return;
 			}
-			renderer.cleanup(mainFramebuffer);
+			renderer.cleanup(this.mainFramebuffer);
 		}
 
 		private void init(Renderer renderer) throws GameException {
 			if (renderer == null) {
 				return;
 			}
-			renderer.init(mainFramebuffer);
+			renderer.init(this.mainFramebuffer);
 		}
 
 	}

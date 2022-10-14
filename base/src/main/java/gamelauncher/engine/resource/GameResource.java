@@ -1,5 +1,7 @@
 package gamelauncher.engine.resource;
 
+import java.util.concurrent.CompletableFuture;
+
 import gamelauncher.engine.util.GameException;
 
 /**
@@ -19,5 +21,10 @@ public interface GameResource {
 	 * @return if this resource is cleaned up
 	 */
 	boolean isCleanedUp();
+	
+	/**
+	 * @return the future for when this object is cleaned up
+	 */
+	CompletableFuture<Void> cleanupFuture();
 
 }

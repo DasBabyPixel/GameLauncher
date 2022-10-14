@@ -14,20 +14,20 @@ public class CLTextureUtility extends AbstractGameResource {
 	public final CLFramebuffer framebuffer2;
 
 	public CLTextureUtility(LWJGLGameLauncher launcher) {
-		framebuffer1 = new CLFramebuffer(launcher);
-		framebuffer2 = new CLFramebuffer(launcher);
+		this.framebuffer1 = new CLFramebuffer(launcher);
+		this.framebuffer2 = new CLFramebuffer(launcher);
 	}
 
 	@Override
 	public void cleanup0() throws GameException {
-		framebuffer1.cleanup();
-		framebuffer2.cleanup();
+		this.framebuffer1.cleanup();
+		this.framebuffer2.cleanup();
 	}
 
 	public static class CLFramebuffer extends LWJGLFramebuffer {
 
 		public CLFramebuffer(LWJGLGameLauncher launcher) {
-			super(launcher.getWindow());
+			super(launcher.getMainFrame());
 		}
 
 	}
@@ -49,7 +49,7 @@ public class CLTextureUtility extends AbstractGameResource {
 
 			@Override
 			protected CLTextureUtility initialValue() {
-				return new CLTextureUtility(getLauncher());
+				return new CLTextureUtility(this.getLauncher());
 			}
 
 		};

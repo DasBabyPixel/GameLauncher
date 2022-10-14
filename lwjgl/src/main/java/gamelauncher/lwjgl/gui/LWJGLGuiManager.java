@@ -52,15 +52,15 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 		this.launcher.getEventManager().registerListener(this);
-		registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
-		registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
-		registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
-		registerGuiCreator(ScrollGui.class, () -> new LWJGLScrollGui(launcher));
+		this.registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
+		this.registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
+		this.registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
+		this.registerGuiCreator(ScrollGui.class, () -> new LWJGLScrollGui(launcher));
 	}
 
 	@Override
 	public void updateGuis() throws GameException {
-		for (GuiStack stack : guis.values()) {
+		for (GuiStack stack : this.guis.values()) {
 			GuiStack.StackEntry e = stack.peekGui();
 			if (e != null) {
 				e.gui.update();
@@ -72,17 +72,17 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	public void cleanup0() throws GameException {
 		this.launcher.getEventManager().unregisterListener(this);
 		@SuppressWarnings("unchecked")
-		CompletableFuture<Void>[] futures = new CompletableFuture[guis.size()];
+		CompletableFuture<Void>[] futures = new CompletableFuture[this.guis.size()];
 		int i = 0;
-		for (Map.Entry<Framebuffer, GuiStack> entry : guis.entrySet()) {
-			futures[i++] = cleanupLater(entry.getKey());
+		for (Map.Entry<Framebuffer, GuiStack> entry : this.guis.entrySet()) {
+			futures[i++] = this.cleanupLater(entry.getKey());
 		}
 		Threads.waitFor(futures);
 	}
 
 	@Override
 	public void cleanup(Framebuffer framebuffer) throws GameException {
-		Threads.waitFor(cleanupLater(framebuffer));
+		Threads.waitFor(this.cleanupLater(framebuffer));
 	}
 
 	/**
@@ -93,9 +93,9 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	 */
 	@Deprecated
 	public CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
-		GuiStack stack = guis.remove(framebuffer);
+		GuiStack stack = this.guis.remove(framebuffer);
 		if (stack != null) {
-			return framebuffer.getRenderThread().submit(() -> {
+			return framebuffer.renderThread().submit(() -> {
 				GuiStack.StackEntry se;
 				while ((se = stack.popGui()) != null) {
 					se.gui.cleanup(framebuffer);
@@ -107,34 +107,34 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	@Override
 	public <T extends LauncherBasedGui> void registerGuiCreator(Class<T> clazz, GameSupplier<T> sup) {
-		registeredGuis.put(clazz, sup);
+		this.registeredGuis.put(clazz, sup);
 	}
 
 	@Override
 	public <T extends LauncherBasedGui> void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter) {
-		Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = converters.get(clazz);
+		Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = this.converters.get(clazz);
 		if (c == null) {
 			c = new HashSet<>();
-			converters.put(clazz, c);
+			this.converters.put(clazz, c);
 		}
 		c.add(converter);
 	}
 
 	@Override
 	public Gui getCurrentGui(Framebuffer framebuffer) throws GameException {
-		if (!guis.containsKey(framebuffer)) {
+		if (!this.guis.containsKey(framebuffer)) {
 			return null;
 		}
-		StackEntry e = guis.get(framebuffer).peekGui();
+		StackEntry e = this.guis.get(framebuffer).peekGui();
 		return e == null ? null : e.gui;
 	}
 
 	@Override
 	public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
-		GuiStack stack = guis.get(framebuffer);
+		GuiStack stack = this.guis.get(framebuffer);
 		if (stack == null) {
 			stack = new GuiStack();
-			guis.put(framebuffer, stack);
+			this.guis.put(framebuffer, stack);
 		}
 		final boolean exit = gui == null;
 		StackEntry scurrentGui = exit ? stack.popGui() : stack.peekGui();
@@ -143,13 +143,13 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			currentGui.unfocus();
 			currentGui.onClose();
 			if (exit) {
-				framebuffer.getRenderThread().submit(() -> {
+				framebuffer.renderThread().submit(() -> {
 					currentGui.cleanup(framebuffer);
 				});
 			}
 		} else {
 			if (exit) {
-				gui = createGui(MainScreenGui.class);
+				gui = this.createGui(MainScreenGui.class);
 			}
 		}
 		if (gui != null) {
@@ -164,19 +164,19 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	@Override
 	public GameLauncher getLauncher() {
-		return launcher;
+		return this.launcher;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends LauncherBasedGui> T createGui(Class<T> clazz) throws GameException {
-		GameSupplier<? extends LauncherBasedGui> sup = registeredGuis.get(clazz);
+		GameSupplier<? extends LauncherBasedGui> sup = this.registeredGuis.get(clazz);
 		if (sup == null) {
 			throw new GameException("Gui " + clazz.getName() + " not registered! Outdated launcher?");
 		}
 		T t = clazz.cast(sup.get());
-		if (converters.containsKey(clazz)) {
-			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = converters.get(clazz);
+		if (this.converters.containsKey(clazz)) {
+			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = this.converters.get(clazz);
 			for (@SuppressWarnings("rawtypes")
 			GameFunction func : c) {
 				t = clazz.cast(func.apply(t));
@@ -190,7 +190,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		KeybindEntry entry = event.getEntry();
 		// TODO: Gui Selection - not relevant with only one gui being able to be opened
 		// in this guimanager
-		guis.values().forEach(stack -> {
+		this.guis.values().forEach(stack -> {
 			StackEntry e = stack.peekGui();
 			if (e != null) {
 				try {

@@ -35,53 +35,54 @@ public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui
 
 	/**
 	 * @param launcher
+	 * @throws GameException 
 	 */
-	public LWJGLTextureGui(LWJGLGameLauncher launcher) {
+	public LWJGLTextureGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
-		camera = new BasicCamera();
-		future = launcher.getTextureManager().createTexture();
-		future.thenAccept(tex -> {
-			texture = tex;
+		this.camera = new BasicCamera();
+		this.future = launcher.getTextureManager().createTexture();
+		this.future.thenAccept(tex -> {
+			this.texture = tex;
 			Texture2DModel t2d = new Texture2DModel(tex);
 			GameItem item = new GameItem(t2d);
 
-			item.position().x.bind(getXProperty().add(item.scale().x.divide(2)));
-			item.position().y.bind(getYProperty().add(item.scale().y.divide(2)));
-			item.scale().x.bind(getWidthProperty());
-			item.scale().y.bind(getHeightProperty());
+			item.position().x.bind(this.getXProperty().add(item.scale().x.divide(2)));
+			item.position().y.bind(this.getYProperty().add(item.scale().y.divide(2)));
+			item.scale().x.bind(this.getWidthProperty());
+			item.scale().y.bind(this.getHeightProperty());
 
-			model = item.createModel();
+			this.model = item.createModel();
 		});
 	}
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
-		hud = getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+		this.hud = this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
 	}
 
 	@Override
 	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 			throws GameException {
-		hud.update(camera);
-		hud.drawModel(model);
-		hud.getProgram().clearUniforms();
+		this.hud.update(this.camera);
+		this.hud.drawModel(this.model);
+		this.hud.getProgram().clearUniforms();
 		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		getTexture().cleanup();
-		model.cleanup();
-		getLauncher().getContextProvider().freeContext(hud, ContextType.HUD);
+		this.getTexture().cleanup();
+		this.model.cleanup();
+		this.getLauncher().getContextProvider().freeContext(this.hud, ContextType.HUD);
 		super.doCleanup(framebuffer);
 	}
 
 	@Override
 	public Texture getTexture() throws GameException {
-		if (texture == null) {
-			texture = Threads.waitFor(future);
+		if (this.texture == null) {
+			this.texture = Threads.waitFor(this.future);
 		}
-		return texture;
+		return this.texture;
 	}
 
 }

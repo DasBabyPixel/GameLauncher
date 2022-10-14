@@ -1,6 +1,7 @@
 package gamelauncher.engine.resource;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.util.Arrays;
@@ -17,6 +18,8 @@ public abstract class AbstractGameResource implements GameResource {
 	private final StackTraceElement[] stack;
 
 	private final String exName;
+	
+	private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
 
 	private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
 
@@ -27,7 +30,12 @@ public abstract class AbstractGameResource implements GameResource {
 		StackTraceElement[] es = new Exception().getStackTrace();
 		this.exName = Thread.currentThread().getName();
 		this.stack = Arrays.copyOfRange(es, 1, es.length);
-		create(this);
+		AbstractGameResource.create(this);
+	}
+
+	@Override
+	public CompletableFuture<Void> cleanupFuture() {
+		return this.cleanupFuture;
 	}
 
 	/**
@@ -37,10 +45,11 @@ public abstract class AbstractGameResource implements GameResource {
 	 */
 	@Override
 	public final void cleanup() throws GameException {
-		if (!isCleanedUp()) {
-			setCleanedUp();
-			cleanup0();
-			logCleanup(this);
+		if (!this.isCleanedUp()) {
+			this.setCleanedUp();
+			this.cleanup0();
+			this.cleanupFuture.complete(null);
+			AbstractGameResource.logCleanup(this);
 		} else {
 			new GameException("Multiple cleanups").printStackTrace();
 		}
@@ -48,11 +57,11 @@ public abstract class AbstractGameResource implements GameResource {
 
 	@Override
 	public boolean isCleanedUp() {
-		return cleanedUp;
+		return this.cleanedUp;
 	}
 
 	protected void setCleanedUp() {
-		cleanedUp = true;
+		this.cleanedUp = true;
 	}
 
 	protected abstract void cleanup0() throws GameException;
@@ -61,21 +70,21 @@ public abstract class AbstractGameResource implements GameResource {
 	 * @param resource
 	 */
 	public static void create(GameResource resource) {
-		resources.add(resource);
+		AbstractGameResource.resources.add(resource);
 	}
 
 	/**
 	 * @param resource
 	 */
 	public static void logCleanup(GameResource resource) {
-		resources.remove(resource);
+		AbstractGameResource.resources.remove(resource);
 	}
 
 	/**
 	 * Called on exit
 	 */
 	public static void exit() {
-		for (GameResource resource : resources) {
+		for (GameResource resource : AbstractGameResource.resources) {
 			System.out.println("Memory Leak: " + resource);
 			if (resource instanceof AbstractGameResource aresource) {
 				Exception ex = new Exception("Stack: " + aresource.exName);

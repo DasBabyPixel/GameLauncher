@@ -1,5 +1,7 @@
 package gamelauncher.engine.util.concurrent;
 
+import java.util.concurrent.CompletableFuture;
+
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
@@ -10,6 +12,8 @@ import gamelauncher.engine.util.GameException;
 public abstract class AbstractGameThread extends Thread implements GameResource {
 
 	protected volatile boolean cleanedUp = false;
+
+	protected final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
 
 	/**
 	 * 
@@ -85,16 +89,22 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
 
 	@Override
 	public final void cleanup() throws GameException {
-		if (!cleanedUp) {
-			cleanup0();
-			cleanedUp = true;
+		if (!this.cleanedUp) {
+			this.cleanup0();
+			this.cleanupFuture.complete(null);
+			this.cleanedUp = true;
 			AbstractGameResource.logCleanup(this);
 		}
 	}
 
 	@Override
+	public CompletableFuture<Void> cleanupFuture() {
+		return this.cleanupFuture;
+	}
+
+	@Override
 	public boolean isCleanedUp() {
-		return cleanedUp;
+		return this.cleanedUp;
 	}
 
 	protected abstract void cleanup0() throws GameException;

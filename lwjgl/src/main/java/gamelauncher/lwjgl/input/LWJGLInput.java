@@ -1,7 +1,5 @@
 package gamelauncher.lwjgl.input;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,13 +8,15 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.lwjgl.glfw.GLFW;
+
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
-import gamelauncher.lwjgl.render.glfw.GLFWWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.util.keybind.AllKeybind;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeyboardKeybindEntry;
@@ -38,84 +38,84 @@ public class LWJGLInput implements Input {
 
 	private volatile QueueEntry fqentry = new QueueEntry(null, null);
 
-	private volatile QueueEntry lqentry = fqentry;
+	private volatile QueueEntry lqentry = this.fqentry;
 
 	private final AtomicInteger qentrysize = new AtomicInteger();
 
 	private volatile Entry fentry = new Entry(0, (char) 0, null);
 
-	private volatile Entry lentry = fentry;
+	private volatile Entry lentry = this.fentry;
 
 	private final AtomicInteger entrysize = new AtomicInteger();
 
 	private final KeybindManager keybindManager;
 
 	/**
-	 * @param window
+	 * @param frame
 	 */
-	public LWJGLInput(GLFWWindow window) {
-		this.keybindManager = window.getLauncher().getKeybindManager();
+	public LWJGLInput(GLFWFrame frame) {
+		this.keybindManager = frame.getLauncher().getKeybindManager();
 	}
 
 	@Override
 	public void handleInput() throws GameException {
 		QueueEntry qe;
-		while ((qe = queue.poll()) != null) {
-			event(qe.entry, qe.type);
+		while ((qe = this.queue.poll()) != null) {
+			this.event(qe.entry, qe.type);
 			switch (qe.type) {
 			case PRESSED:
-				pressed.add(qe.entry);
+				this.pressed.add(qe.entry);
 				if (qe.entry.type == DeviceType.MOUSE) {
-					mousePressed.add(qe.entry);
+					this.mousePressed.add(qe.entry);
 				}
 				break;
 			case RELEASED:
-				int index = pressed.indexOf(qe.entry);
+				int index = this.pressed.indexOf(qe.entry);
 				if (index == -1) {
-					freeEntry(qe.entry);
+					this.freeEntry(qe.entry);
 					break;
 				}
-				Entry inPressed = pressed.remove(index);
+				Entry inPressed = this.pressed.remove(index);
 				if (inPressed.type == DeviceType.MOUSE) {
-					mousePressed.remove(inPressed);
+					this.mousePressed.remove(inPressed);
 				}
-				freeEntry(inPressed);
+				this.freeEntry(inPressed);
 			default:
-				freeEntry(qe.entry);
+				this.freeEntry(qe.entry);
 				break;
 			}
 			qe.next = qe;
-			lqentry.next = qe;
-			lqentry = lqentry.next;
-			qentrysize.incrementAndGet();
+			this.lqentry.next = qe;
+			this.lqentry = this.lqentry.next;
+			this.qentrysize.incrementAndGet();
 		}
-		for (Entry entry : pressed) {
-			event(entry, InputType.HELD);
+		for (Entry entry : this.pressed) {
+			this.event(entry, InputType.HELD);
 		}
 	}
 
 	private void event(Entry entry, InputType input) throws GameException {
 		switch (entry.type) {
 		case KEYBOARD:
-			keyEvent(input, entry.key, entry.scancode);
+			this.keyEvent(input, entry.key, entry.scancode);
 			break;
 		case MOUSE:
-			mouseEvent(input, entry.key, entry.omx, entry.omy, entry.mx, entry.my);
+			this.mouseEvent(input, entry.key, entry.omx, entry.omy, entry.mx, entry.my);
 			break;
 		}
 	}
 
 	private void freeEntry(Entry entry) {
 		entry.next = entry;
-		lentry.next = entry;
-		lentry = entry;
-		entrysize.incrementAndGet();
+		this.lentry.next = entry;
+		this.lentry = entry;
+		this.entrysize.incrementAndGet();
 	}
 
 	private void mouseEvent(InputType inputType, int mouseButton, float omx, float omy, float mx, float my)
 			throws GameException {
 		if (inputType == InputType.SCROLL) {
-			keybindManager.post(keybind -> {
+			this.keybindManager.post(keybind -> {
 				int id = LWJGLKeybindManager.SCROLL;
 				if (keybind.getUniqueId() != id) {
 					return null;
@@ -124,12 +124,12 @@ public class LWJGLInput implements Input {
 			});
 		} else {
 			if (inputType == InputType.MOVE) {
-				for (Entry e : mousePressed) {
+				for (Entry e : this.mousePressed) {
 					e.mx = mx;
 					e.my = my;
 				}
 			}
-			keybindManager.post(keybind -> {
+			this.keybindManager.post(keybind -> {
 				int id = LWJGLKeybindManager.MOUSE_ADD + mouseButton;
 				if (keybind instanceof AllKeybind) {
 					((AllKeybind) keybind).id = id;
@@ -160,8 +160,8 @@ public class LWJGLInput implements Input {
 	}
 
 	private void keyEvent(InputType inputType, int key, int scancode) throws GameException {
-		keybindManager.post(keybind -> {
-			int id = key == GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode
+		this.keybindManager.post(keybind -> {
+			int id = key == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode
 					: LWJGLKeybindManager.KEYBOARD_ADD + key;
 			if (keybind instanceof AllKeybind) {
 				((AllKeybind) keybind).id = id;
@@ -201,7 +201,7 @@ public class LWJGLInput implements Input {
 	 * @throws GameException
 	 */
 	public void scroll(float xoffset, float yoffset) throws GameException {
-		queue.add(newQueueEntry(newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL));
+		this.queue.add(this.newQueueEntry(this.newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL));
 	}
 
 	/**
@@ -213,7 +213,7 @@ public class LWJGLInput implements Input {
 	 * @param my
 	 */
 	public void mouseMove(float omx, float omy, float mx, float my) {
-		queue.add(newQueueEntry(newEntry(-1, omx, omy, mx, my), InputType.MOVE));
+		this.queue.add(this.newQueueEntry(this.newEntry(-1, omx, omy, mx, my), InputType.MOVE));
 	}
 
 	/**
@@ -224,7 +224,7 @@ public class LWJGLInput implements Input {
 	 * @param my
 	 */
 	public void mousePress(int key, float mx, float my) {
-		queue.add(newQueueEntry(newEntry(key, 0, 0, mx, my), InputType.PRESSED));
+		this.queue.add(this.newQueueEntry(this.newEntry(key, 0, 0, mx, my), InputType.PRESSED));
 	}
 
 	/**
@@ -235,7 +235,7 @@ public class LWJGLInput implements Input {
 	 * @param my
 	 */
 	public void mouseRelease(int key, float mx, float my) {
-		queue.add(newQueueEntry(newEntry(key, 0, 0, mx, my), InputType.RELEASED));
+		this.queue.add(this.newQueueEntry(this.newEntry(key, 0, 0, mx, my), InputType.RELEASED));
 	}
 
 	/**
@@ -246,7 +246,7 @@ public class LWJGLInput implements Input {
 	 * @param ch
 	 */
 	public void keyRepeat(int key, int scancode, char ch) {
-		queue.add(newQueueEntry(newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.REPEAT));
+		this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.REPEAT));
 	}
 
 	/**
@@ -257,7 +257,7 @@ public class LWJGLInput implements Input {
 	 * @param ch
 	 */
 	public void keyPress(int key, int scancode, char ch) {
-		queue.add(newQueueEntry(newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.PRESSED));
+		this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.PRESSED));
 	}
 
 	/**
@@ -268,7 +268,7 @@ public class LWJGLInput implements Input {
 	 * @param ch
 	 */
 	public void keyRelease(int key, int scancode, char ch) {
-		queue.add(newQueueEntry(newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.RELEASED));
+		this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch, DeviceType.KEYBOARD), InputType.RELEASED));
 	}
 
 	/**
@@ -277,16 +277,16 @@ public class LWJGLInput implements Input {
 	 * @param ch
 	 */
 	public void character(char ch) {
-		queue.add(newQueueEntry(newEntry(0, 0, ch, DeviceType.KEYBOARD), InputType.CHARACTER));
+		this.queue.add(this.newQueueEntry(this.newEntry(0, 0, ch, DeviceType.KEYBOARD), InputType.CHARACTER));
 	}
 
 	private Entry newEntry(int key, int scancode, char ch, DeviceType deviceType) {
 		Entry e = null;
-		if (fentry != lentry) {
-			e = fentry;
-			fentry = fentry.next;
+		if (this.fentry != this.lentry) {
+			e = this.fentry;
+			this.fentry = this.fentry.next;
 			e.next = e;
-			entrysize.decrementAndGet();
+			this.entrysize.decrementAndGet();
 		}
 		if (e == null) {
 			e = new Entry(key, ch, deviceType);
@@ -299,11 +299,11 @@ public class LWJGLInput implements Input {
 
 	private Entry newEntry(int key, float omx, float omy, float mx, float my) {
 		Entry e = null;
-		if (fentry != lentry) {
-			e = fentry;
-			fentry = fentry.next;
+		if (this.fentry != this.lentry) {
+			e = this.fentry;
+			this.fentry = this.fentry.next;
 			e.next = e;
-			entrysize.decrementAndGet();
+			this.entrysize.decrementAndGet();
 		}
 		if (e == null) {
 			e = new Entry(key, DeviceType.MOUSE, omx, omy, mx, my);
@@ -318,11 +318,11 @@ public class LWJGLInput implements Input {
 
 	private QueueEntry newQueueEntry(Entry entry, InputType inputType) {
 		QueueEntry e = null;
-		if (fqentry != lqentry) {
-			e = fqentry;
-			fqentry = fqentry.next;
+		if (this.fqentry != this.lqentry) {
+			e = this.fqentry;
+			this.fqentry = this.fqentry.next;
 			e.next = e;
-			qentrysize.decrementAndGet();
+			this.qentrysize.decrementAndGet();
 		}
 		if (e == null) {
 			e = new QueueEntry(entry, inputType);
@@ -348,7 +348,7 @@ public class LWJGLInput implements Input {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(entry, type);
+			return Objects.hash(this.entry, this.type);
 		}
 
 		@Override
@@ -357,10 +357,10 @@ public class LWJGLInput implements Input {
 				return true;
 			if (obj == null)
 				return false;
-			if (getClass() != obj.getClass())
+			if (this.getClass() != obj.getClass())
 				return false;
 			QueueEntry other = (QueueEntry) obj;
-			return Objects.equals(entry, other.entry) && type == other.type;
+			return Objects.equals(this.entry, other.entry) && this.type == other.type;
 		}
 
 	}
@@ -400,12 +400,12 @@ public class LWJGLInput implements Input {
 
 		@Override
 		public String toString() {
-			return "Entry [key=" + key + ", type=" + type + ", mx=" + mx + ", my=" + my + "]";
+			return "Entry [key=" + this.key + ", type=" + this.type + ", mx=" + this.mx + ", my=" + this.my + "]";
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(key, ch, scancode, type);
+			return Objects.hash(this.key, this.ch, this.scancode, this.type);
 		}
 
 		@Override
@@ -414,10 +414,10 @@ public class LWJGLInput implements Input {
 				return true;
 			if (obj == null)
 				return false;
-			if (getClass() != obj.getClass())
+			if (this.getClass() != obj.getClass())
 				return false;
 			Entry other = (Entry) obj;
-			return key == other.key && type == other.type && scancode == other.scancode && ch == other.ch;
+			return this.key == other.key && this.type == other.type && this.scancode == other.scancode && this.ch == other.ch;
 		}
 
 	}

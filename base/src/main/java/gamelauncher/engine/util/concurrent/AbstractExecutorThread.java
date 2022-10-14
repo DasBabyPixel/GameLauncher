@@ -37,18 +37,21 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	}
 
 	public CompletableFuture<Void> exitFuture() {
-		return exitFuture;
+		return this.exitFuture;
 	}
 
+	/**
+	 * @return the exit future
+	 */
 	public CompletableFuture<Void> exit() {
-		exit = true;
-		signal();
-		return exitFuture();
+		this.exit = true;
+		this.signal();
+		return this.exitFuture();
 	}
 
 	@Override
 	protected void cleanup0() throws GameException {
-		Threads.waitFor(exit());
+		Threads.waitFor(this.exit());
 	}
 
 	@Override
@@ -56,16 +59,16 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 		if (Thread.currentThread() != this) {
 			throw new SecurityException("May not call this from any other thread than self");
 		}
-		if (unpark.compareAndSet(true, false)) {
+		if (this.unpark.compareAndSet(true, false)) {
 			return;
 		}
-		parked.set(true);
-		if (unpark.compareAndSet(true, false)) {
-			parked.set(false);
+		this.parked.set(true);
+		if (this.unpark.compareAndSet(true, false)) {
+			this.parked.set(false);
 			return;
 		}
 		LockSupport.park();
-		parked.set(false);
+		this.parked.set(false);
 	}
 
 	@Override
@@ -73,70 +76,70 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 		if (Thread.currentThread() != this) {
 			throw new SecurityException("May not call this from any other thread than self");
 		}
-		if (unpark.compareAndSet(true, false)) {
+		if (this.unpark.compareAndSet(true, false)) {
 			return;
 		}
-		parked.set(true);
-		if (unpark.compareAndSet(true, false)) {
-			parked.set(false);
+		this.parked.set(true);
+		if (this.unpark.compareAndSet(true, false)) {
+			this.parked.set(false);
 			return;
 		}
 		LockSupport.parkNanos(nanos);
-		parked.set(false);
+		this.parked.set(false);
 	}
 
 	@Override
 	public void unpark() {
-		if (parked.compareAndSet(true, false)) {
+		if (this.parked.compareAndSet(true, false)) {
 			LockSupport.unpark(this);
 		} else {
-			unpark.set(true);
-			if (parked.compareAndSet(true, false)) {
-				unpark.set(false);
+			this.unpark.set(true);
+			if (this.parked.compareAndSet(true, false)) {
+				this.unpark.set(false);
 				LockSupport.unpark(this);
 			}
 		}
 	}
 
-	protected abstract void startExecuting();
+	protected abstract void startExecuting() throws GameException;
 
-	protected abstract void stopExecuting();
+	protected abstract void stopExecuting() throws GameException;
 
-	protected abstract void workExecution();
+	protected abstract void workExecution() throws GameException;
 
-	protected void loop() {
-		if (shouldWaitForSignal()) {
-			waitForSignal();
+	protected void loop() throws GameException {
+		if (this.shouldWaitForSignal()) {
+			this.waitForSignal();
 		}
-		workQueue();
-		workExecution();
+		this.workQueue();
+		this.workExecution();
 	}
 
 	protected void waitForSignal() {
-		if (exit)
+		if (this.exit)
 			return;
-		if (skipNextSignalWait) {
-			skipNextSignalWait = false;
+		if (this.skipNextSignalWait) {
+			this.skipNextSignalWait = false;
 			return;
 		}
-		while (!work.compareAndSet(true, false)) {
+		while (!this.work.compareAndSet(true, false)) {
 			Threads.park();
 		}
 	}
 
 	protected void waitForSignalTimeout(long nanos) {
-		if (exit)
+		if (this.exit)
 			return;
-		if (skipNextSignalWait) {
-			skipNextSignalWait = false;
+		if (this.skipNextSignalWait) {
+			this.skipNextSignalWait = false;
 			return;
 		}
 		final long begin = System.nanoTime();
-		skipNextSignalWait = true;
-		while (!work.compareAndSet(true, false)) {
+		this.skipNextSignalWait = true;
+		while (!this.work.compareAndSet(true, false)) {
 			long parktime = begin + nanos - System.nanoTime();
 			if (parktime < 0) {
-				skipNextSignalWait = false;
+				this.skipNextSignalWait = false;
 				break;
 			}
 			Threads.park(parktime);
@@ -145,33 +148,41 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
 	@Override
 	public final void run() {
-		startExecuting();
-		while (!exit) {
-			loop();
+		try {
+			AbstractExecutorThread.logger.info("Starting " + this.getName());
+			this.startExecuting();
+			while (!this.exit) {
+				this.loop();
+			}
+			this.loop();
+			this.stopExecuting();
+			this.exitFuture.complete(null);
+			if (!this.cleanedUp) {
+				this.cleanedUp = true;
+				AbstractGameResource.logCleanup(this);
+			}
+		} catch (Throwable ex) {
+			GameException st = this.buildStacktrace();
+			st.initCause(ex);
+			AbstractExecutorThread.logger.error(st);
 		}
-		loop();
-		stopExecuting();
-		exitFuture.complete(null);
-		if (!cleanedUp) {
-			cleanedUp = true;
-			AbstractGameResource.logCleanup(this);
-		}
+		AbstractExecutorThread.logger.info("Stopping " + this.getName());
 	}
 
 	@Override
 	public final void workQueue() {
 		QueueEntry e;
-		while ((e = queue.pollFirst()) != null) {
-			if (!shouldHandle(e)) {
-				queue.offerFirst(e);
+		while ((e = this.queue.pollFirst()) != null) {
+			if (!this.shouldHandle(e)) {
+				this.queue.offerFirst(e);
 				return;
 			}
 			if (Threads.calculateThreadStacks) {
-				currentEntry = e.entry;
+				this.currentEntry = e.entry;
 			}
-			work(e.run, e.fut);
+			this.work(e.run, e.fut);
 			if (Threads.calculateThreadStacks) {
-				currentEntry = null;
+				this.currentEntry = null;
 			}
 		}
 	}
@@ -181,17 +192,17 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 			run.run();
 			fut.complete(null);
 		} catch (GameException ex) {
-			GameException ex2 = buildStacktrace();
+			GameException ex2 = this.buildStacktrace();
 			ex2.initCause(ex);
-			logger.error(ex2);
+			AbstractExecutorThread.logger.error(ex2);
 			fut.completeExceptionally(ex2);
 		}
 	}
 
 	public GameException buildStacktrace() {
 		GameException ex = new GameException("Exception in ExecutorThread");
-		if (currentEntry != null) {
-			Throwable t = currentEntry.calculateCause();
+		if (this.currentEntry != null) {
+			Throwable t = this.currentEntry.calculateCause();
 			if (t != null) {
 				ex.addSuppressed(t);
 			}
@@ -213,7 +224,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	}
 
 	protected void signal() {
-		if (work.compareAndSet(false, true)) {
+		if (this.work.compareAndSet(false, true)) {
 			Threads.unpark((ParkableThread) this);
 		}
 	}
@@ -222,10 +233,10 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	public final CompletableFuture<Void> submitLast(GameRunnable runnable) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
 		if (Thread.currentThread() == this) {
-			work(runnable, fut);
+			this.work(runnable, fut);
 		} else {
-			queue.offerLast(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
-			signal();
+			this.queue.offerLast(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
+			this.signal();
 		}
 		return fut;
 	}
@@ -234,10 +245,10 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	public final CompletableFuture<Void> submitFirst(GameRunnable runnable) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
 		if (Thread.currentThread() == this) {
-			work(runnable, fut);
+			this.work(runnable, fut);
 		} else {
-			queue.offerFirst(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
-			signal();
+			this.queue.offerFirst(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
+			this.signal();
 		}
 		return fut;
 	}

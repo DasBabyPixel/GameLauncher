@@ -31,7 +31,7 @@ public interface Framebuffer extends GameResource {
 	/**
 	 * @return the rendering thread for this {@link Framebuffer}
 	 */
-	RenderThread getRenderThread();
+	RenderThread renderThread();
 	
 	/**
 	 * @return the scissorStack

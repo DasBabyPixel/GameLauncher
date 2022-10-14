@@ -1,13 +1,13 @@
 package gamelauncher.lwjgl.input;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.lwjgl.glfw.GLFW;
+
 import gamelauncher.engine.util.function.GameRunnable;
-import gamelauncher.lwjgl.render.glfw.GLFWWindow;
+import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 
 /**
  * @author DasBabyPixel
@@ -15,7 +15,7 @@ import gamelauncher.lwjgl.render.glfw.GLFWWindow;
  */
 public class LWJGLMouse {
 
-	private final GLFWWindow window;
+	private final GLFWFrame frame;
 	private final AtomicBoolean grabbed = new AtomicBoolean(false);
 	private final AtomicBoolean inWindow = new AtomicBoolean(false);
 	private final AtomicReference<Double> x = new AtomicReference<>(0D);
@@ -24,10 +24,10 @@ public class LWJGLMouse {
 	private final AtomicReference<Double> lasty = new AtomicReference<>(0D);
 
 	/**
-	 * @param window
+	 * @param frame
 	 */
-	public LWJGLMouse(GLFWWindow window) {
-		this.window = window;
+	public LWJGLMouse(GLFWFrame frame) {
+		this.frame = frame;
 	}
 
 	/**
@@ -37,11 +37,11 @@ public class LWJGLMouse {
 	 * @return a completionFuture
 	 */
 	public CompletableFuture<Void> grabbed(boolean grab) {
-		if (grabbed.compareAndSet(!grab, grab)) {
-			return window.getLauncher().getGLFWThread().submit(new GameRunnable() {
+		if (this.grabbed.compareAndSet(!grab, grab)) {
+			return this.frame.getLauncher().getGLFWThread().submit(new GameRunnable() {
 				@Override
 				public void run() {
-					glfwSetInputMode(window.getGLFWId(), GLFW_CURSOR, getCursorMode());
+					GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(), GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode());
 				}
 			});
 		}
@@ -52,44 +52,44 @@ public class LWJGLMouse {
 	 * @return if the mouse is grabbed
 	 */
 	public boolean isGrabbed() {
-		return grabbed.get();
+		return this.grabbed.get();
 	}
 
 	private int getCursorMode() {
-		if (grabbed.get()) {
-			return GLFW_CURSOR_DISABLED;
+		if (this.grabbed.get()) {
+			return GLFW.GLFW_CURSOR_DISABLED;
 		}
-		return GLFW_CURSOR_NORMAL;
+		return GLFW.GLFW_CURSOR_NORMAL;
 	}
 
 	/**
 	 * @return the delta x since the last call
 	 */
 	public double getDeltaX() {
-		double x = getX();
-		return x - lastx.getAndSet(x);
+		double x = this.getX();
+		return x - this.lastx.getAndSet(x);
 	}
 
 	/**
 	 * @return the delta y since the last call
 	 */
 	public double getDeltaY() {
-		double y = getY();
-		return y - lasty.getAndSet(y);
+		double y = this.getY();
+		return y - this.lasty.getAndSet(y);
 	}
 
 	/**
 	 * @return the mouse x position
 	 */
 	public double getX() {
-		return x.get();
+		return this.x.get();
 	}
 
 	/**
 	 * @return the mouse y position
 	 */
 	public double getY() {
-		return y.get();
+		return this.y.get();
 	}
 
 	/**

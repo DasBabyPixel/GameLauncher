@@ -1,10 +1,10 @@
 package gamelauncher.lwjgl.render.framebuffer;
 
 import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.ScissorStack;
-import gamelauncher.engine.render.Window;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
@@ -26,10 +26,11 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 	private final ScissorStack scissor;
 
 	/**
+	 * @param frame 
 	 * @param window
 	 */
-	public AbstractFramebuffer(Window window) {
-		this(window.getRenderThread(), window::scheduleDraw);
+	public AbstractFramebuffer(Frame frame) {
+		this(frame.framebuffer().renderThread(), frame::scheduleDraw);
 	}
 
 	/**
@@ -44,33 +45,33 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 
 	@Override
 	protected void cleanup0() throws GameException {
-		LWJGLGuiManager lgm = (LWJGLGuiManager) renderThread.getWindow().getLauncher().getGuiManager();
+		LWJGLGuiManager lgm = (LWJGLGuiManager) this.renderThread.getFrame().getLauncher().getGuiManager();
 		lgm.cleanup(this);
 	}
 
 	@Override
 	public void scheduleRedraw() {
-		draw.run();
+		this.draw.run();
 	}
 
 	@Override
 	public ScissorStack scissorStack() {
-		return scissor;
+		return this.scissor;
 	}
 
 	@Override
 	public NumberValue width() {
-		return width;
+		return this.width;
 	}
 
 	@Override
 	public NumberValue height() {
-		return height;
+		return this.height;
 	}
 
 	@Override
-	public RenderThread getRenderThread() {
-		return renderThread;
+	public RenderThread renderThread() {
+		return this.renderThread;
 	}
 
 }
