@@ -32,9 +32,13 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 
 	private final Phaser phaser;
 
+	private final Phaser refreshPhaser;
+
+	private ManualQueryFramebuffer fb;
+
 	private FrameRenderer frameRenderer = null;
 
-	private final ManualQueryFramebuffer mqfb;
+	volatile boolean cleanupContextOnExit = false;
 
 	private final Consumer<Long> nanoSleeper = nanos -> {
 		this.waitForSignalTimeout(nanos);
@@ -43,13 +47,15 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 	public GLFWFrameRenderThread(GLFWFrame frame) {
 		super(frame.launcher.getGlThreadGroup());
 		this.phaser = new Phaser(1);
-		this.mqfb = new ManualQueryFramebuffer(frame.framebuffer);
+		this.refreshPhaser = new Phaser(1);
 		this.frame = frame;
 		this.setName("GLFWFrameRenderThread-" + GLFWFrameRenderThread.ids.incrementAndGet());
 	}
 
 	@Override
 	protected void startExecuting() throws GameException {
+		this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
+		this.fb.query();
 		this.frame.context.makeCurrent();
 
 		GlContext glContext = new GlContext();
@@ -63,12 +69,25 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 
 	@Override
 	protected void stopExecuting() throws GameException {
+		this.fb.cleanup();
+		if (this.frameRenderer != null) {
+			try {
+				this.frameRenderer.cleanup(this.frame);
+			} catch (Exception ex) {
+				this.frame.launcher.handleError(ex);
+			}
+		}
 		this.frame.launcher.getGlThreadGroup().terminated(this);
-		this.frame.context.destroyCurrent();
+		if (this.cleanupContextOnExit) {
+			this.frame.context.cleanup();
+		} else {
+			this.frame.context.destroyCurrent();
+		}
 	}
 
 	@Override
 	protected void workExecution() throws GameException {
+		this.frame.manualFramebuffer.query();
 		if (this.draw || this.frame.renderMode() == RenderMode.CONTINUOUSLY) {
 			this.lock();
 			boolean refresh = this.drawRefresh;
@@ -76,29 +95,34 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 				this.drawRefresh = false;
 			this.draw = false;
 			this.unlock();
-			this.frame(FrameType.RENDER);
+			this.frame(FrameType.RENDER, !refresh);
 			if (refresh)
-				this.frame(FrameType.REFRESH);
+				this.frame(FrameType.REFRESH, true);
 		}
 		if (this.refresh) {
 			this.lock();
 			this.refresh = false;
 			this.unlock();
-			this.frame(FrameType.REFRESH);
+			this.frame(FrameType.REFRESH, false);
 		}
 	}
 
-	private void frame(FrameType type) {
+	@Override
+	protected boolean shouldWaitForSignal() {
+		return super.shouldWaitForSignal() && this.frame.renderMode() != RenderMode.CONTINUOUSLY;
+	}
+
+	private void frame(FrameType type, boolean wait) {
 		FrameRenderer cfr = this.frame.frameRenderer();
-		if (cfr != null) {
+		cfr: if (cfr != null) {
 			if (type == FrameType.REFRESH) {
-				this.mqfb.query();
 				try {
 					cfr.refreshDisplay(this.frame);
+					this.refreshPhaser.arrive();
 				} catch (GameException ex) {
 					this.frame.launcher.handleError(ex);
 				}
-				return;
+				break cfr;
 			}
 			if (this.frameRenderer != cfr) {
 				if (this.frameRenderer != null) {
@@ -118,9 +142,9 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 				}
 			}
 
-			vp: if (this.mqfb.newValue().booleanValue()) {
-				this.mqfb.query();
-				if (this.mqfb.width().intValue() == 0 || this.mqfb.height().intValue() == 0) {
+			vp: if (this.fb.newValue().booleanValue()) {
+				this.fb.query();
+				if (this.fb.width().intValue() == 0 || this.fb.height().intValue() == 0) {
 					break vp;
 				}
 				try {
@@ -129,23 +153,18 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 					this.frame.launcher.handleError(ex);
 				}
 			}
-			frame: {
-				if (this.mqfb.width().intValue() == 0 || this.mqfb.height().intValue() == 0) {
-					break frame;
+			try {
+				cfr.renderFrame(this.frame);
+				this.phaser.arrive();
+				if (wait) {
+					this.frame.frameCounter().frame(this.nanoSleeper);
+				} else {
+					this.frame.frameCounter.frameNoWait();
 				}
-				try {
-					cfr.renderFrame(this.frame);
-				} catch (GameException ex) {
-					this.frame.launcher.handleError(ex);
-				}
+			} catch (GameException ex) {
+				this.frame.launcher.handleError(ex);
 			}
 		}
-		this.phaser.arrive();
-		this.frame.frameCounter().frame(this.nanoSleeper);
-	}
-	
-	protected boolean hasWindow() {
-		return false;
 	}
 
 	void scheduleDraw() {
@@ -155,7 +174,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 		this.signal();
 	}
 
-	void scheduleDrawWaitForFrame() {
+	void scheduleDrawWait() {
 		int frame = this.phaser.getPhase();
 		this.scheduleDraw();
 		this.phaser.awaitAdvance(frame);
@@ -172,6 +191,12 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 		this.signal();
 	}
 
+	void refreshWait() {
+		int phase = this.refreshPhaser.getPhase();
+		this.refresh();
+		this.refreshPhaser.awaitAdvance(phase);
+	}
+
 	void scheduleDrawRefresh() {
 		this.lock();
 		this.drawRefresh = true;
@@ -181,9 +206,11 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 	}
 
 	void scheduleDrawRefreshWait() {
-		int frame = this.phaser.getPhase();
+		int drawPhase = this.phaser.getPhase();
+		int refreshPhase = this.refreshPhaser.getPhase();
 		this.scheduleDrawRefresh();
-		this.phaser.awaitAdvance(frame);
+		this.phaser.awaitAdvance(drawPhase);
+		this.refreshPhaser.awaitAdvance(refreshPhase);
 	}
 
 	@Override

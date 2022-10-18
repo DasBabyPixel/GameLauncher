@@ -21,7 +21,7 @@ public class GLFWGLContext extends AbstractGameResource {
 
 	private static final LogLevel level = new LogLevel("GL", 10);
 
-	private volatile long glfwId;
+	volatile long glfwId;
 
 	ExecutorThread owner = null;
 
@@ -80,17 +80,21 @@ public class GLFWGLContext extends AbstractGameResource {
 	}
 
 	synchronized void destroyCurrent() {
-		StateRegistry.setContextHoldingThread(this.glfwId, null);
-		this.owned = false;
-		this.owner = null;
+		if (this.owned) {
+			StateRegistry.setContextHoldingThread(this.glfwId, null);
+			this.owned = false;
+			this.owner = null;
+		}
 	}
 
 	synchronized void makeCurrent() {
-		this.owned = true;
-		this.owner = (ExecutorThread) Thread.currentThread();
-		StateRegistry.setContextHoldingThread(this.glfwId, Thread.currentThread());
-		GlStates.current().enable(GLES32.GL_DEBUG_OUTPUT);
-		GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+		if (!this.owned) {
+			this.owned = true;
+			this.owner = (ExecutorThread) Thread.currentThread();
+			StateRegistry.setContextHoldingThread(this.glfwId, Thread.currentThread());
+			GlStates.current().enable(GLES32.GL_DEBUG_OUTPUT);
+			GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+		}
 	}
 
 }

@@ -27,7 +27,6 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 
 	/**
 	 * @param frame 
-	 * @param window
 	 */
 	public AbstractFramebuffer(Frame frame) {
 		this(frame.framebuffer().renderThread(), frame::scheduleDraw);

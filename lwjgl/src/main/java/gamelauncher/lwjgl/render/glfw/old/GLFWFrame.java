@@ -71,8 +71,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 		this.renderThread = new GLFWFrameRenderThread(this);
 		this.frameCounter = new FrameCounter();
 		this.launcher = parent.launcher;
-		this.input = new LWJGLInput(this);
-		this.mouse = new LWJGLMouse(this);
+//		this.input = new LWJGLInput(this);
+//		this.mouse = new LWJGLMouse(this);
+		this.input = null;
+		this.mouse = null;
 		this.renderThread.start();
 	}
 
@@ -81,8 +83,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 		this.launcher = launcher;
 		this.renderThread = new GLFWFrameRenderThread(this);
 		this.frameCounter = new FrameCounter();
-		this.input = new LWJGLInput(this);
-		this.mouse = new LWJGLMouse(this);
+//		this.input = new LWJGLInput(this);
+//		this.mouse = new LWJGLMouse(this);
+		this.input = null;
+		this.mouse = null;
 		this.renderThread.start();
 	}
 

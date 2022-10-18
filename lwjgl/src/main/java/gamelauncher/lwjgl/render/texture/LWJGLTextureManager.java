@@ -8,7 +8,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.render.glfw.old.AsyncOpenGL;
+import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.states.ContextLocal;
 
 @SuppressWarnings("javadoc")
@@ -20,23 +20,22 @@ public class LWJGLTextureManager extends AbstractGameResource implements Texture
 
 	public final ContextLocal<CLTextureUtility> clTextureUtility;
 
-	private AsyncOpenGL asyncOpenGL;
+	private GLFWFrame frame;
 
-	public LWJGLTextureManager(LWJGLGameLauncher launcher) throws GameException {
+	public LWJGLTextureManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 		this.clTextureUtility = CLTextureUtility.local(launcher);
 		this.service = launcher.getThreads().cached;
-		this.asyncOpenGL = null;
+		this.frame = null;
 	}
 
 	@Override
 	public CompletableFuture<LWJGLTexture> createTexture() throws GameException {
-		synchronized (this.asyncOpenGL) {
-			if (this.asyncOpenGL == null) {
-				this.asyncOpenGL = new AsyncOpenGL(this.launcher.getMainFrame());
-				this.asyncOpenGL.start();
+		synchronized (this.frame) {
+			if (this.frame == null) {
+				this.frame = this.launcher.getMainFrame().newFrame();
 			}
-			return this.createTexture(this.asyncOpenGL);
+			return this.createTexture(this.frame.renderThread());
 		}
 //		return createTexture(launcher.getWindow().getRenderThread());
 	}

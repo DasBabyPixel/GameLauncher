@@ -1,12 +1,11 @@
 package gamelauncher.lwjgl.render.states;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengles.GLES;
 
 import gamelauncher.engine.util.GameException;
@@ -26,61 +25,61 @@ public class StateRegistry {
 	private static final Map<Thread, Long> contextByThread = new ConcurrentHashMap<>();
 
 	public static void addWindow(long id) {
-		glfwWindows.add(id);
-		contexts.put(id, new ContextDependant(id));
+		StateRegistry.glfwWindows.add(id);
+		StateRegistry.contexts.put(id, new ContextDependant(id));
 	}
 
 	public static Thread getContextHolder(long id) {
-		return contextHoldingThreads.get(id);
+		return StateRegistry.contextHoldingThreads.get(id);
 	}
 
 	public static long getHeldContext(Thread thread) {
-		return contextByThread.get(thread);
+		return StateRegistry.contextByThread.get(thread);
 	}
 
 	public static ContextDependant currentContext() {
-		if (contextByThread.containsKey(Thread.currentThread())) {
-			long c = contextByThread.get(Thread.currentThread());
-			return contexts.get(c);
+		if (StateRegistry.contextByThread.containsKey(Thread.currentThread())) {
+			long c = StateRegistry.contextByThread.get(Thread.currentThread());
+			return StateRegistry.contexts.get(c);
 		}
 		return null;
 	}
 
 	public static void setContextHoldingThread(long id, Thread thread) {
-		logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "null" : thread.getName());
+		StateRegistry.logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "null" : thread.getName());
 		if (thread == null) {
-			glfwMakeContextCurrent(0L);
+			GLFW.glfwMakeContextCurrent(0L);
 			GLES.setCapabilities(null);
-			Thread th = contextHoldingThreads.remove(id);
+			Thread th = StateRegistry.contextHoldingThreads.remove(id);
 			if (th != null) {
-				contextByThread.remove(th);
+				StateRegistry.contextByThread.remove(th);
 			}
 			return;
 		}
 
-		glfwMakeContextCurrent(id);
+		GLFW.glfwMakeContextCurrent(id);
 		GLES.createCapabilities();
-		contextHoldingThreads.put(id, thread);
-		contextByThread.put(thread, id);
+		StateRegistry.contextHoldingThreads.put(id, thread);
+		StateRegistry.contextByThread.put(thread, id);
 	}
 
 	public static void removeContext(long id) throws GameException {
-		ContextDependant cd = contexts.get(id);
+		ContextDependant cd = StateRegistry.contexts.get(id);
 		if (cd != null)
 			cd.cleanup();
-		contexts.remove(id);
+		StateRegistry.contexts.remove(id);
 	}
 
 	public static void removeWindow(long id) throws GameException {
-		ContextDependant cd = contexts.get(id);
+		ContextDependant cd = StateRegistry.contexts.get(id);
 		if (cd != null)
 			cd.cleanup();
-		contexts.remove(id);
-		Thread thread = contextHoldingThreads.remove(id);
+		StateRegistry.contexts.remove(id);
+		Thread thread = StateRegistry.contextHoldingThreads.remove(id);
 		if (thread != null) {
-			contextByThread.remove(thread);
+			StateRegistry.contextByThread.remove(thread);
 		}
-		glfwWindows.remove(id);
+		StateRegistry.glfwWindows.remove(id);
 	}
 
 }

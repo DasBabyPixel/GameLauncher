@@ -18,7 +18,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.math.Math;
-import gamelauncher.engine.util.profiler.SectionHandler;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
@@ -52,8 +51,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 	private GLFWThread glfwThread;
 
 	private Camera camera = new BasicCamera();
-
-//	private LWJGLAsyncOpenGL asyncUploader;
 
 	private GlThreadGroup glThreadGroup;
 
@@ -90,23 +87,12 @@ public class LWJGLGameLauncher extends GameLauncher {
 //		this.asyncUploader = new LWJGLAsyncOpenGL(this, this.mainFrame);
 		this.setFrame(this.mainFrame);
 		this.mainFrame.framebuffer().renderThread().submit(() -> this.setGlyphProvider(new LWJGLGlyphProvider(this)));
-		this.mainFrame.renderMode(RenderMode.CONTINUOUSLY);
-		this.mainFrame.frameCounter().limit(5);
+		this.mainFrame.renderMode(RenderMode.ON_UPDATE);
+//		this.mainFrame.frameCounter().limit(500);
 //		Threads.waitFor(this.mainFrame.createWindow());
 //		this.asyncUploader.start(); 
 		this.mainFrame.frameCounter().addUpdateListener(fps -> {
 			this.getLogger().infof("FPS: %s", fps);
-		});
-		this.getProfiler().addHandler(null, new SectionHandler() {
-
-			@Override
-			public void handleEnd(String type, String section, long tookNanos) {
-			}
-
-			@Override
-			public void handleBegin(String type, String section) {
-			}
-
 		});
 		this.mainFrame.closeCallback().setValue(frame -> {
 			this.mainFrame.hideWindow();
@@ -137,7 +123,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	@EventHandler
 	public void handle(LauncherInitializedEvent event) {
 		try {
-			this.mainFrame.showEndFrame();
+			Threads.waitFor(this.mainFrame.showWindow());
 		} catch (GameException ex) {
 			ex.printStackTrace();
 		}

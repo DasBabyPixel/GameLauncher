@@ -26,6 +26,7 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
+import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 
 @SuppressWarnings("javadoc")
 public class GLFWFrame extends AbstractGameResource implements Frame {
@@ -35,8 +36,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	private static final GameConsumer<Frame> simpleCCB = f -> {
 		((GLFWFrame) f).close0();
 	};
-
-	volatile long glfwId;
 
 	final LWJGLGameLauncher launcher;
 
@@ -60,99 +59,125 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
 	final Collection<GLFWGLContext> contexts;
 
-	final Property<GLFWWindowRenderThread> windowRenderThread;
-
 	final Property<GameConsumer<Frame>> closeCallback = ObjectProperty.withValue(GLFWFrame.simpleCCB);
+
+	final NumberValue windowWidth = NumberValue.zero();
+
+	final NumberValue windowHeight = NumberValue.zero();
+
+	final ManualQueryFramebuffer manualFramebuffer;
+
+	private boolean created = false;
 
 	public GLFWFrame(LWJGLGameLauncher launcher) throws GameException {
 		super();
 		this.launcher = launcher;
 		this.contexts = Collections.synchronizedCollection(new HashSet<>());
-		this.windowRenderThread = ObjectProperty.empty();
 		this.frameCounter = new FrameCounter();
 		this.closeFuture = new CompletableFuture<>();
 		this.renderMode = ObjectProperty.empty();
 		this.frameRenderer = ObjectProperty.empty();
 		this.mouse = new LWJGLMouse(this);
-		this.renderThread = new GLFWFrameRenderThread(this);
-		this.input = new LWJGLInput(this);
 		this.framebuffer = new GLFWFrameFramebuffer(this);
+		this.renderThread = new GLFWFrameRenderThread(this);
+		this.manualFramebuffer = new ManualQueryFramebuffer(this.framebuffer);
+		this.input = new LWJGLInput(this);
 		this.context = new GLFWGLContext(Collections.synchronizedCollection(new HashSet<>()));
 		Threads.waitFor(this.launcher.getGLFWThread().submit(() -> this.context.create(this)));
 		this.renderThread.start();
+		this.created = true;
 	}
 
 	public GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
 		super();
 		this.launcher = launcher;
 		this.contexts = Collections.synchronizedCollection(new HashSet<>());
-		this.windowRenderThread = ObjectProperty.empty();
 		this.frameCounter = new FrameCounter();
 		this.closeFuture = new CompletableFuture<>();
 		this.renderMode = ObjectProperty.empty();
 		this.frameRenderer = ObjectProperty.empty();
 		this.mouse = new LWJGLMouse(this);
-		this.renderThread = new GLFWFrameRenderThread(this);
-		this.input = new LWJGLInput(this);
 		this.framebuffer = new GLFWFrameFramebuffer(this);
+		this.renderThread = new GLFWFrameRenderThread(this);
+		this.manualFramebuffer = new ManualQueryFramebuffer(this.framebuffer);
+		this.input = new LWJGLInput(this);
 		this.context = context;
 		this.renderThread.start();
+		this.created = true;
 	}
 
 	/**
 	 * Called from the default closecallback
 	 */
 	private void close0() {
-		// TODO
+		new Thread(() -> {
+			try {
+				this.cleanup();
+			} catch (GameException ex) {
+				ex.printStackTrace();
+			}
+		});
 	}
 
 	@Override
 	protected void cleanup0() throws GameException {
-		(this.context.parent != null ? this.context.parent : this).freeContextManual(this.context);
+		this.renderThread.cleanupContextOnExit = true;
+		Threads.waitFor(this.renderThread.exit());
+		(this.context.parent != null ? this.context.parent : this).freeContextManual(this.context, true);
 		for (GLFWGLContext context : this.contexts) {
 			context.parent.freeContext(context);
 		}
+		this.manualFramebuffer.cleanup();
+		this.framebuffer.cleanup();
 		this.contexts.clear();
-		Threads.waitFor(this.renderThread.exit());
 	}
 
 	@Override
 	public void scheduleDraw() {
-		// TODO
+		this.renderThread.scheduleDraw();
 	}
 
 	@Override
 	public void waitForFrame() {
-		// TODO
+		this.renderThread.waitForFrame();
 	}
 
 	@Override
 	public void scheduleDrawWaitForFrame() {
-		// TODO
+		this.renderThread.scheduleDrawWait();
+	}
+
+	public GLFWFrameRenderThread renderThread() {
+		return this.renderThread;
 	}
 
 	public CompletableFuture<Void> showWindow() {
-		return this.launcher.getGLFWThread().submit(() -> GLFW.glfwShowWindow(this.glfwId));
-	}
-
-	public CompletableFuture<Void> showWindowEndFrame() {
-
+		return this.launcher.getGLFWThread().submit(() -> {
+			this.framebuffer.swapBuffers().setValue(true);
+			GLFW.glfwShowWindow(this.context.glfwId);
+			this.renderThread.scheduleDrawRefreshWait();
+		});
 	}
 
 	public CompletableFuture<Void> hideWindow() {
-		return this.launcher.getGLFWThread().submit(() -> GLFW.glfwHideWindow(this.glfwId));
+		return this.launcher.getGLFWThread().submit(() -> {
+			this.framebuffer.swapBuffers().setValue(false);
+			GLFW.glfwHideWindow(this.context.glfwId);
+		});
 	}
 
 	public void freeContext(GLFWGLContext context) throws GameException {
 		if (!this.contexts.contains(context)) {
 			throw new IllegalStateException("Frame does not contain context");
 		}
-		this.freeContextManual(context);
+		this.freeContextManual(context, false);
 		this.contexts.remove(context);
 	}
 
-	public void freeContextManual(GLFWGLContext context) throws GameException {
-		context.cleanup();
+	public void freeContextManual(GLFWGLContext context, boolean renderThreadCleanedUp) throws GameException {
+		if (!renderThreadCleanedUp) {
+			context.cleanup();
+		}
 	}
 
 	public GLFWGLContext newContext() throws GameException {
@@ -177,7 +202,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	}
 
 	public long getGLFWId() {
-		return this.glfwId;
+		return this.context.glfwId;
 	}
 
 	@Override
@@ -198,8 +223,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	}
 
 	@Override
-	public GLFWFrameFramebuffer framebuffer() {
-		return this.framebuffer;
+	public ManualQueryFramebuffer framebuffer() {
+		return this.manualFramebuffer;
 	}
 
 	@Override
@@ -246,13 +271,17 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
 		public long glfwId;
 
-		public final NumberValue width = NumberValue.withValue(400);
+		public final NumberValue width = NumberValue.withValue(1600 / 2);
 
-		public final NumberValue height = NumberValue.withValue(400);
+		public final NumberValue height = NumberValue.withValue(900 / 2);
 
 		public final NumberValue fbwidth = NumberValue.zero();
 
 		public final NumberValue fbheight = NumberValue.zero();
+
+		public final NumberValue scaleX = NumberValue.zero();
+
+		public final NumberValue scaleY = NumberValue.zero();
 
 		public Creator(GLFWFrame frame) {
 			this.frame = frame;
@@ -268,6 +297,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_DEBUG, GLFW.GLFW_TRUE);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
 			GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE);
+
 			this.glfwId = GLFW.glfwCreateWindow(this.width.intValue(), this.height.intValue(), GameLauncher.NAME, 0,
 					this.frame.context.getGLFWId());
 			GLFW.glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
@@ -276,9 +306,22 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			GLFW.glfwGetWindowSize(this.glfwId, a0, a1);
 			this.width.setNumber(a0[0]);
 			this.height.setNumber(a1[0]);
+			if (!this.frame.created) {
+				this.frame.windowWidth.bind(this.width);
+				this.frame.windowHeight.bind(this.height);
+			}
 			GLFW.glfwGetFramebufferSize(this.glfwId, a0, a1);
 			this.fbwidth.setNumber(a0[0]);
 			this.fbheight.setNumber(a1[0]);
+			if (!this.frame.created) {
+				this.frame.framebuffer.width().bind(this.fbwidth);
+				this.frame.framebuffer.height().bind(this.fbheight);
+			}
+			float[] f0 = new float[1];
+			float[] f1 = new float[1];
+			GLFW.glfwGetWindowContentScale(this.glfwId, f0, f1);
+			this.scaleX.setNumber(f0[0]);
+			this.scaleY.setNumber(f1[0]);
 			GLFW.glfwSetScrollCallback(this.glfwId, (wid, xo, yo) -> {
 				try {
 					this.frame.input.scroll((float) xo, (float) yo);
@@ -304,7 +347,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 				xpos = xpos + 0.5F;
 				float omx = (float) this.frame.getMouse().getX();
 				float omy = (float) this.frame.getMouse().getY();
-				ypos = this.frame.height.doubleValue() - ypos;
+				ypos = this.height.doubleValue() - ypos;
 				this.frame.getMouse().setPosition(xpos, ypos);
 				this.frame.input.mouseMove(omx, omy, (float) xpos, (float) ypos);
 			});
@@ -341,20 +384,24 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 					break;
 				}
 			});
+			GLFW.glfwSetWindowContentScaleCallback(this.glfwId, (window, xscale, yscale) -> {
+				this.scaleX.setNumber(xscale);
+				this.scaleY.setNumber(yscale);
+			});
 			GLFW.glfwSetCharCallback(this.glfwId, (wid, codepoint) -> {
 				this.frame.input.character((char) codepoint);
 			});
-			GLFW.glfwSetWindowRefreshCallback(this.glfwId, (wid) -> {
-				this.frame.renderThread.refresh();
+			GLFW.glfwSetWindowRefreshCallback(this.glfwId, wid -> {
+				this.frame.renderThread.refreshWait();
 			});
 			GLFW.glfwSetFramebufferSizeCallback(this.glfwId, (wid, width, height) -> {
 				GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
 				GLFWFrameRenderThread rt = this.frame.renderThread;
-				this.frame.framebuffer.width().setNumber(width);
-				this.frame.framebuffer.height().setNumber(height);
+				this.fbwidth.setNumber(width);
+				this.fbheight.setNumber(height);
 //				rt.viewportChanged();
 				if (this.frame.renderMode() != RenderMode.MANUAL) {
-					rt.scheduleDrawRefreshWait();
+					rt.scheduleDrawWait();
 				}
 			});
 		}

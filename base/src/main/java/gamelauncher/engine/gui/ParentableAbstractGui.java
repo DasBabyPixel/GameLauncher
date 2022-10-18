@@ -50,9 +50,9 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	private final BooleanValue mouseInsideGui = BooleanValue.falseValue();
 
-	private Framebuffer framebuffer;
+	protected Framebuffer framebuffer;
 
-	private final String className = getClass().getName();
+	private final String className = this.getClass().getName();
 
 	/**
 	 * @param launcher
@@ -63,10 +63,10 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void init(Framebuffer framebuffer) throws GameException {
-		if (initialized.compareAndSet(false, true)) {
+		if (this.initialized.compareAndSet(false, true)) {
 			this.framebuffer = framebuffer;
-			doInit(framebuffer);
-			doForGUIs(gui -> {
+			this.doInit(framebuffer);
+			this.doForGUIs(gui -> {
 				gui.init(framebuffer);
 			});
 		}
@@ -74,11 +74,11 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void cleanup(Framebuffer framebuffer) throws GameException {
-		if (initialized.compareAndSet(true, false)) {
-			doForGUIs(gui -> {
+		if (this.initialized.compareAndSet(true, false)) {
+			this.doForGUIs(gui -> {
 				gui.cleanup(framebuffer);
 			});
-			doCleanup(framebuffer);
+			this.doCleanup(framebuffer);
 			super.cleanup(framebuffer);
 			this.framebuffer = null;
 		}
@@ -86,10 +86,10 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public final void update() throws GameException {
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			gui.update();
 		});
-		doUpdate();
+		this.doUpdate();
 	}
 
 	@Override
@@ -105,104 +105,104 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 			throws GameException {
 		try {
-			getLauncher().getProfiler().begin("render", "Gui-" + className);
-			init(framebuffer);
-			preRender(framebuffer, mouseX, mouseY, partialTick);
+			this.getLauncher().getProfiler().begin("render", "Gui-" + this.className);
+			this.init(framebuffer);
+			this.preRender(framebuffer, mouseX, mouseY, partialTick);
 			ScissorStack scissor = framebuffer.scissorStack();
-			scissor.pushScissor(getXProperty(), getYProperty(), getWidthProperty(), getHeightProperty());
-			if (doRender(framebuffer, mouseX, mouseY, partialTick)) {
-				doForGUIs(gui -> {
+			scissor.pushScissor(this.getXProperty(), this.getYProperty(), this.getWidthProperty(),
+					this.getHeightProperty());
+			if (this.doRender(framebuffer, mouseX, mouseY, partialTick)) {
+				this.doForGUIs(gui -> {
 					gui.render(framebuffer, mouseX, mouseY, partialTick);
 				});
 			}
-			postRender(framebuffer, mouseX, mouseY, partialTick);
+			this.postRender(framebuffer, mouseX, mouseY, partialTick);
 			scissor.popScissor();
 		} finally {
-			getLauncher().getProfiler().end();
+			this.getLauncher().getProfiler().end();
 		}
 	}
 
 	@Override
 	public final void handle(KeybindEntry entry) throws GameException {
-		if (doHandle(entry)) {
-			if (entry instanceof KeyboardKeybindEntry) {
-				KeyboardKeybindEntry c = (KeyboardKeybindEntry) entry;
+		if (this.doHandle(entry)) {
+			if (entry instanceof KeyboardKeybindEntry c) {
 				switch (c.type()) {
 				case HOLD:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				case PRESS:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				case RELEASE:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				case REPEAT:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				case CHARACTER:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				}
-			} else if (entry instanceof MouseButtonKeybindEntry) {
-				MouseButtonKeybindEntry c = (MouseButtonKeybindEntry) entry;
-				lastMouseX.setNumber(c.mouseX());
-				lastMouseY.setNumber(c.mouseY());
+			} else if (entry instanceof MouseButtonKeybindEntry c) {
+				this.lastMouseX.setNumber(c.mouseX());
+				this.lastMouseY.setNumber(c.mouseY());
 				switch (c.type()) {
 				case HOLD:
-					forFocused(c);
+					this.forFocused(c);
 					break;
 				case PRESS:
-					mouseClicked(c);
+					this.mouseClicked(c);
 					break;
 				case RELEASE:
-					mouseReleased(c);
+					this.mouseReleased(c);
 					break;
 				}
-			} else if (entry instanceof MouseMoveKeybindEntry) {
-				MouseMoveKeybindEntry c = (MouseMoveKeybindEntry) entry;
-				lastMouseX.setNumber(c.mouseX());
-				lastMouseY.setNumber(c.mouseY());
-				mouseMove(c);
-			} else if (entry instanceof ScrollKeybindEntry) {
-				ScrollKeybindEntry c = (ScrollKeybindEntry) entry;
-				scroll(c);
+			} else if (entry instanceof MouseMoveKeybindEntry c) {
+				this.lastMouseX.setNumber(c.mouseX());
+				this.lastMouseY.setNumber(c.mouseY());
+				this.mouseMove(c);
+			} else if (entry instanceof ScrollKeybindEntry c) {
+				this.scroll(c);
 			}
-			postDoHandle(entry);
+			this.postDoHandle(entry);
 		}
 	}
 
 	private void mouseClicked(MouseButtonKeybindEntry entry) throws GameException {
 		int id = entry.getKeybind().getUniqueId();
-		if (mouseButtons.contains(id)) {
-			handle(entry.withType(MouseButtonKeybindEntry.Type.RELEASE));
+		if (this.mouseButtons.contains(id)) {
+			this.handle(entry.withType(MouseButtonKeybindEntry.Type.RELEASE));
 		}
-		mouseButtons.add(id);
+		this.mouseButtons.add(id);
 		Collection<Gui> guis = new ArrayList<>();
 		AtomicBoolean hasFoundFocusedGui = new AtomicBoolean(false);
 		float mouseX = entry.mouseX();
 		float mouseY = entry.mouseY();
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			if (!hasFoundFocusedGui.get()) {
 				if (gui.isHovering(mouseX, mouseY)) {
-					if (gui == focusedGui.get()) {
+					if (gui == this.focusedGui.get()) {
 						if (!gui.isFocused()) {
 							gui.focus();
+						}
+						if (!gui.isFocused()) {
+							return;
 						}
 						hasFoundFocusedGui.set(true);
 						gui.handle(entry);
 						guis.add(gui);
 					} else if (!gui.isFocused()) {
-						if (focusedGui.get() != null) {
-							focusedGui.get().unfocus();
-							if (focusedGui.get().isFocused()) {
+						if (this.focusedGui.get() != null) {
+							this.focusedGui.get().unfocus();
+							if (this.focusedGui.get().isFocused()) {
 								return;
 							}
 						}
 						gui.focus();
 						if (gui.isFocused()) {
 							hasFoundFocusedGui.set(true);
-							focusedGui.set(gui);
+							this.focusedGui.set(gui);
 							gui.handle(entry);
 							guis.add(gui);
 						}
@@ -210,20 +210,20 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 				}
 			}
 		});
-		if (!hasFoundFocusedGui.get() && focusedGui.get() != null) {
-			focusedGui.get().unfocus();
-			if (!focusedGui.get().isFocused()) {
-				focusedGui.set(null);
+		if (!hasFoundFocusedGui.get() && this.focusedGui.get() != null) {
+			this.focusedGui.get().unfocus();
+			if (!this.focusedGui.get().isFocused()) {
+				this.focusedGui.set(null);
 			}
 		}
-		mouseDownGuis.put(id, guis);
+		this.mouseDownGuis.put(id, guis);
 	}
 
 	private void mouseReleased(MouseButtonKeybindEntry entry) throws GameException {
 		int id = entry.getKeybind().getUniqueId();
-		if (mouseButtons.contains(id)) {
-			mouseButtons.remove(id);
-			Collection<Gui> guis = mouseDownGuis.remove(id);
+		if (this.mouseButtons.contains(id)) {
+			this.mouseButtons.remove(id);
+			Collection<Gui> guis = this.mouseDownGuis.remove(id);
 			if (guis != null) {
 				for (Gui gui : guis) {
 					gui.handle(entry);
@@ -235,27 +235,28 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	private void mouseMove(MouseMoveKeybindEntry entry) throws GameException {
 		float mouseX = entry.mouseX();
 		float mouseY = entry.mouseY();
-		if (getX() < mouseX && getY() < mouseY && getX() + getWidth() > mouseX && getY() + getHeight() > mouseY) {
-			mouseInsideGui.setValue(true);
+		if (this.getX() < mouseX && this.getY() < mouseY && this.getX() + this.getWidth() > mouseX
+				&& this.getY() + this.getHeight() > mouseY) {
+			this.mouseInsideGui.setValue(true);
 		} else {
-			mouseInsideGui.setValue(false);
+			this.mouseInsideGui.setValue(false);
 		}
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			gui.handle(entry);
 		});
 	}
 
 	private void scroll(ScrollKeybindEntry entry) throws GameException {
 		AtomicBoolean done = new AtomicBoolean();
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			if (done.compareAndSet(false, true)) {
 				gui.handle(entry);
 			}
-		}, gui -> gui.isHovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
+		}, gui -> gui.isHovering(this.lastMouseX.floatValue(), this.lastMouseY.floatValue()));
 	}
 
 	private void forFocused(KeybindEntry e) throws GameException {
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			if (gui.isFocused()) {
 				gui.handle(e);
 			}
@@ -300,20 +301,20 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	protected final void doForGUIs(GameConsumer<Gui> cons) throws GameException {
-		doForGUIs(cons, t -> true);
+		this.doForGUIs(cons, t -> true);
 	}
 
 	protected final void doForGUIs(GameConsumer<Gui> cons, GamePredicate<Gui> pred) throws GameException {
-		doForGUIs(cons, pred, Gui.class);
+		this.doForGUIs(cons, pred, Gui.class);
 	}
 
 	protected final <V> void doForGUIs(GameConsumer<V> cons, Class<V> clazz) throws GameException {
-		doForGUIs(cons, v -> true, clazz);
+		this.doForGUIs(cons, v -> true, clazz);
 	}
 
 	protected final <V> void doForGUIs(GameConsumer<V> cons, GamePredicate<V> pred, Class<V> clazz)
 			throws GameException {
-		for (Gui gui : GUIs) {
+		for (Gui gui : this.GUIs) {
 			try {
 				if (!clazz.isAssignableFrom(gui.getClass())) {
 					continue;
@@ -334,20 +335,20 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	@Override
 	public String toString() {
-		return String.format("%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f]", getClass().getSimpleName(), getX(), getY(),
-				getWidth(), getHeight());
+		return String.format("%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f]", this.getClass().getSimpleName(), this.getX(),
+				this.getY(), this.getWidth(), this.getHeight());
 	}
 
 	/**
 	 * @return the mouse inside gui property
 	 */
 	public BooleanValue mouseInsideGui() {
-		return mouseInsideGui;
+		return this.mouseInsideGui;
 	}
 
 	@Override
 	public boolean isInitialized() {
-		return initialized.get();
+		return this.initialized.get();
 	}
 
 }

@@ -53,7 +53,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 	private final NumberValue guiY;
 
-	private Gui currentGui;
+//	private Gui currentGui;
 
 	/**
 	 * @param launcher
@@ -66,26 +66,23 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		this.guiHeight = NumberValue.zero();
 		this.guiX = NumberValue.zero();
 		this.guiY = NumberValue.zero();
-		this.gui.addListener(new ChangeListener<Gui>() {
-
-			@Override
-			public void handleChange(Property<? extends Gui> property, Gui oldValue, Gui newValue) {
-				if (oldValue != null) {
-					guiWidth.unbind();
-					guiHeight.unbind();
-					guiWidth.setNumber(0);
-					guiHeight.setNumber(0);
-					oldValue.getXProperty().unbind();
-					oldValue.getYProperty().unbind();
-				}
-				if (newValue != null) {
-					guiWidth.bind(newValue.getWidthProperty());
-					guiHeight.bind(newValue.getHeightProperty());
-					newValue.getXProperty().bind(guiX);
-					newValue.getYProperty().bind(guiY);
-				}
+		this.gui.addListener((ChangeListener<Gui>) (property, oldValue, newValue) -> {
+			if (oldValue != null) {
+				LWJGLScrollGui.this.guiWidth.unbind();
+				LWJGLScrollGui.this.guiHeight.unbind();
+				LWJGLScrollGui.this.guiWidth.setNumber(0);
+				LWJGLScrollGui.this.guiHeight.setNumber(0);
+				oldValue.getXProperty().unbind();
+				oldValue.getYProperty().unbind();
+				this.GUIs.remove(oldValue);
 			}
-
+			if (newValue != null) {
+				LWJGLScrollGui.this.guiWidth.bind(newValue.getWidthProperty());
+				LWJGLScrollGui.this.guiHeight.bind(newValue.getHeightProperty());
+				newValue.getXProperty().bind(LWJGLScrollGui.this.guiX);
+				newValue.getYProperty().bind(LWJGLScrollGui.this.guiY);
+				this.GUIs.add(newValue);
+			}
 		});
 		this.verticalScrollbar = new Scrollbar(Scrollbar.Type.VERTICAL);
 		this.horizontalScrollbar = new Scrollbar(Scrollbar.Type.HORIZONTAL);
@@ -111,78 +108,64 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			return n;
 		}).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness);
 		this.horizontalScrollbar.visible
-				.bind(this.displayWidth.mapToBoolean(n -> n.floatValue() < guiWidth.floatValue()));
+				.bind(this.displayWidth.mapToBoolean(n -> n.floatValue() < this.guiWidth.floatValue()));
 		this.verticalScrollbar.visible
-				.bind(this.displayHeight.mapToBoolean(n -> n.floatValue() < guiHeight.floatValue()));
+				.bind(this.displayHeight.mapToBoolean(n -> n.floatValue() < this.guiHeight.floatValue()));
 		this.guiX.bind(this.displayX.subtract(this.horizontalScrollbar.display));
 		this.guiY.bind(
 				this.displayY.add(this.displayHeight).subtract(this.guiHeight).add(this.verticalScrollbar.display));
 
-		ScrollbarGui verticalScrollbarGui = new ScrollbarGui(getLauncher(), guiWidth, guiHeight, this.verticalScrollbar,
-				this.displayWidth, this.displayHeight);
-		verticalScrollbarGui.getXProperty().bind(getXProperty().add(displayWidth));
-		verticalScrollbarGui.getYProperty().bind(getYProperty().mapToNumber(n -> {
+		ScrollbarGui verticalScrollbarGui = new ScrollbarGui(this.getLauncher(), this.guiWidth, this.guiHeight,
+				this.verticalScrollbar, this.displayWidth, this.displayHeight);
+		verticalScrollbarGui.getXProperty().bind(this.getXProperty().add(this.displayWidth));
+		verticalScrollbarGui.getYProperty().bind(this.getYProperty().mapToNumber(n -> {
 			if (this.horizontalScrollbar.visible.booleanValue()) {
 				return n.doubleValue() + this.horizontalScrollbar.thickness.doubleValue();
 			}
 			return n;
 		}).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness));
-		verticalScrollbarGui.getWidthProperty().bind(verticalScrollbar.thickness);
-		verticalScrollbarGui.getHeightProperty().bind(displayHeight);
-		GUIs.add(verticalScrollbarGui);
+		verticalScrollbarGui.getWidthProperty().bind(this.verticalScrollbar.thickness);
+		verticalScrollbarGui.getHeightProperty().bind(this.displayHeight);
+		this.GUIs.add(verticalScrollbarGui);
 
-		ScrollbarGui horizontalScrollbarGui = new ScrollbarGui(getLauncher(), guiWidth, guiHeight,
+		ScrollbarGui horizontalScrollbarGui = new ScrollbarGui(this.getLauncher(), this.guiWidth, this.guiHeight,
 				this.horizontalScrollbar, this.displayWidth, this.displayHeight);
-		horizontalScrollbarGui.getXProperty().bind(getXProperty());
-		horizontalScrollbarGui.getYProperty().bind(getYProperty());
-		horizontalScrollbarGui.getWidthProperty().bind(displayWidth);
-		horizontalScrollbarGui.getHeightProperty().bind(horizontalScrollbar.thickness);
-		GUIs.add(horizontalScrollbarGui);
+		horizontalScrollbarGui.getXProperty().bind(this.getXProperty());
+		horizontalScrollbarGui.getYProperty().bind(this.getYProperty());
+		horizontalScrollbarGui.getWidthProperty().bind(this.displayWidth);
+		horizontalScrollbarGui.getHeightProperty().bind(this.horizontalScrollbar.thickness);
+		this.GUIs.add(horizontalScrollbarGui);
 	}
 
 	@Override
 	protected final boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 			throws GameException {
-		Gui cgui = this.gui.getValue();
-		if (cgui != currentGui) {
-			if (cgui != null) {
-				cgui.cleanup(framebuffer);
-			}
-			currentGui = cgui;
-			if (cgui != null) {
-				cgui.init(framebuffer);
-			}
-		}
+		final Gui cgui = this.gui.getValue();
 		if (cgui != null) {
 			ScissorStack scissor = framebuffer.scissorStack();
-			scissor.pushScissor(displayX, displayY, displayWidth, displayHeight);
+			scissor.pushScissor(this.displayX, this.displayY, this.displayWidth, this.displayHeight);
 			cgui.render(framebuffer, mouseX, mouseY, partialTick);
 			scissor.popScissor();
 		}
 
-		doForGUIs(gui -> {
+		this.doForGUIs(gui -> {
 			gui.render(framebuffer, mouseX, mouseY, partialTick);
-		});
+		}, gui -> gui != cgui);
 		return false;
 	}
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof ScrollKeybindEntry) {
-			ScrollKeybindEntry s = (ScrollKeybindEntry) entry;
-			float mulx = displayWidth.floatValue() / 5;
-			float muly = displayHeight.floatValue() / 5;
+		if (entry instanceof ScrollKeybindEntry s) {
+			float mulx = this.displayWidth.floatValue() / 5;
+			float muly = this.displayHeight.floatValue() / 5;
 			float dx = s.deltaX();
 			float dy = s.deltaY();
-			horizontalScrollbar.desireProgress(horizontalScrollbar.desiredProgress().floatValue() - dx * mulx,
+			this.horizontalScrollbar.desireProgress(this.horizontalScrollbar.desiredProgress().floatValue() - dx * mulx,
 					TimeUnit.MILLISECONDS.toNanos(150));
-			verticalScrollbar.desireProgress(verticalScrollbar.desiredProgress().floatValue() - dy * muly,
+			this.verticalScrollbar.desireProgress(this.verticalScrollbar.desiredProgress().floatValue() - dy * muly,
 					TimeUnit.MILLISECONDS.toNanos(150));
-//			horizontalScrollbar.progress.setNumber(horizontalScrollbar.progress.floatValue() - dx * mulx);
-//			horizontalScrollbar.progress.setNumber(horizontalScrollbar.displayProgress.getNumber());
-//			verticalScrollbar.progress.setNumber(verticalScrollbar.progress.floatValue() - dy * muly);
-//			verticalScrollbar.progress.setNumber(verticalScrollbar.displayProgress.getNumber());
-			redraw();
+			this.redraw();
 			return false;
 		}
 		return super.doHandle(entry);
@@ -190,10 +173,6 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		if (currentGui != null) {
-			currentGui.cleanup(framebuffer);
-			currentGui = null;
-		}
 	}
 
 	/**
@@ -201,7 +180,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 	 */
 	@Override
 	public Property<Gui> gui() {
-		return gui;
+		return this.gui;
 	}
 
 	/**
@@ -269,28 +248,31 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		private void drag(MouseMoveKeybindEntry entry) {
 			float newscrolled;
-			if (scrollbar.type == Scrollbar.Type.VERTICAL) {
-				float minsy = backgroundY.floatValue() + scrollbarIndent.floatValue();
-				float maxsy = minsy + maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue();
-				float newy = Math.clamp(entry.mouseY() - dragOffset, minsy, maxsy);
+			if (this.scrollbar.type == Scrollbar.Type.VERTICAL) {
+				float minsy = this.backgroundY.floatValue() + this.scrollbarIndent.floatValue();
+				float maxsy = minsy + this.maxScrollbarHeight.floatValue() - this.scrollbarHeight.floatValue();
+				float newy = Math.clamp(entry.mouseY() - this.dragOffset, minsy, maxsy);
 				// Invert because its the vertical scrollbar
-				float newlocaly = (maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue()) - (newy - minsy);
-				float newpercentscrolled = newlocaly / (maxScrollbarHeight.floatValue() - scrollbarHeight.floatValue());
-				newscrolled = newpercentscrolled * (guiHeight.floatValue() - displayHeight.floatValue());
-			} else if (scrollbar.type == Scrollbar.Type.HORIZONTAL) {
-				float minsx = backgroundX.floatValue() + scrollbarIndent.floatValue();
-				float maxsx = minsx + maxScrollbarWidth.floatValue() - scrollbarWidth.floatValue();
-				float newx = Math.clamp(entry.mouseX() - dragOffset, minsx, maxsx);
+				float newlocaly = (this.maxScrollbarHeight.floatValue() - this.scrollbarHeight.floatValue())
+						- (newy - minsy);
+				float newpercentscrolled = newlocaly
+						/ (this.maxScrollbarHeight.floatValue() - this.scrollbarHeight.floatValue());
+				newscrolled = newpercentscrolled * (this.guiHeight.floatValue() - this.displayHeight.floatValue());
+			} else if (this.scrollbar.type == Scrollbar.Type.HORIZONTAL) {
+				float minsx = this.backgroundX.floatValue() + this.scrollbarIndent.floatValue();
+				float maxsx = minsx + this.maxScrollbarWidth.floatValue() - this.scrollbarWidth.floatValue();
+				float newx = Math.clamp(entry.mouseX() - this.dragOffset, minsx, maxsx);
 				float newlocalx = newx - minsx;
-				float newpercentscrolled = newlocalx / (maxScrollbarWidth.floatValue() - scrollbarWidth.floatValue());
-				newscrolled = newpercentscrolled * (guiWidth.floatValue() - displayWidth.floatValue());
+				float newpercentscrolled = newlocalx
+						/ (this.maxScrollbarWidth.floatValue() - this.scrollbarWidth.floatValue());
+				newscrolled = newpercentscrolled * (this.guiWidth.floatValue() - this.displayWidth.floatValue());
 			} else {
 				return;
 			}
-			scrollbar.desireProgress(newscrolled, 0);
+			this.scrollbar.desireProgress(newscrolled, 0);
 //			scrollbar.progress.setNumber(newscrolled);
 //			scrollbar.progress.setNumber(scrollbar.displayProgress.floatValue());
-			redraw();
+			this.redraw();
 		}
 
 		/**
@@ -316,14 +298,14 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			this.backgroundWidth = this.getWidthProperty();
 			this.backgroundHeight = this.getHeightProperty();
 			this.highlight = BooleanValue.falseValue();
-			this.maxScrollbarWidth = this.backgroundWidth.subtract(scrollbarIndent.multiply(2)).max(0);
-			this.maxScrollbarHeight = this.backgroundHeight.subtract(scrollbarIndent.multiply(2)).max(0);
+			this.maxScrollbarWidth = this.backgroundWidth.subtract(this.scrollbarIndent.multiply(2)).max(0);
+			this.maxScrollbarHeight = this.backgroundHeight.subtract(this.scrollbarIndent.multiply(2)).max(0);
 			boolean hor = scrollbar.type == Type.HORIZONTAL;
 			boolean ver = scrollbar.type == Type.VERTICAL;
-			this.scrollbarWidth = ver ? maxScrollbarWidth
-					: displayWidth.divide(guiWidth).multiply(maxScrollbarWidth).min(maxScrollbarWidth);
-			this.scrollbarHeight = hor ? maxScrollbarHeight
-					: displayHeight.divide(guiHeight).multiply(maxScrollbarHeight).min(maxScrollbarHeight);
+			this.scrollbarWidth = ver ? this.maxScrollbarWidth
+					: displayWidth.divide(guiWidth).multiply(this.maxScrollbarWidth).min(this.maxScrollbarWidth);
+			this.scrollbarHeight = hor ? this.maxScrollbarHeight
+					: displayHeight.divide(guiHeight).multiply(this.maxScrollbarHeight).min(this.maxScrollbarHeight);
 
 //			NumberValue progress = scrollbar.displayProgress.divide(scrollbar.max);
 //			scrollbar.display.addListener((NumberValue nv) -> {
@@ -332,14 +314,14 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			NumberValue progress = scrollbar.display.divide(scrollbar.max);
 
 			if (ver) {
-				this.scrollbarX = backgroundX.add(scrollbarIndent);
-				this.scrollbarY = backgroundY.add(scrollbarIndent)
+				this.scrollbarX = this.backgroundX.add(this.scrollbarIndent);
+				this.scrollbarY = this.backgroundY.add(this.scrollbarIndent)
 						.add(this.maxScrollbarHeight.subtract(this.scrollbarHeight)
 								.subtract(this.maxScrollbarHeight.subtract(this.scrollbarHeight).multiply(progress)));
 			} else if (hor) {
-				this.scrollbarX = backgroundX.add(scrollbarIndent)
+				this.scrollbarX = this.backgroundX.add(this.scrollbarIndent)
 						.add(this.maxScrollbarWidth.subtract(this.scrollbarWidth).multiply(progress));
-				this.scrollbarY = backgroundY.add(scrollbarIndent);
+				this.scrollbarY = this.backgroundY.add(this.scrollbarIndent);
 			} else {
 				throw new IllegalArgumentException();
 			}
@@ -351,45 +333,48 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			this.curBackgroundColor.set(this.backgroundColor);
 			this.guiBackgroundColor = backgroundGui.getColor();
 			this.guiBackgroundColor.bind(this.curBackgroundColor.curcolor);
-			GUIs.add(backgroundGui);
+			this.GUIs.add(backgroundGui);
 
 			ColorGui scrollbarGui = launcher.getGuiManager().createGui(ColorGui.class);
 			scrollbarGui.getXProperty().bind(this.scrollbarX);
 			scrollbarGui.getYProperty().bind(this.scrollbarY);
 			scrollbarGui.getWidthProperty().bind(this.scrollbarWidth);
 			scrollbarGui.getHeightProperty().bind(this.scrollbarHeight);
-			this.curScrollbarColor.set(scrollbarColor);
+			this.curScrollbarColor.set(this.scrollbarColor);
 			this.guiScrollbarColor = scrollbarGui.getColor();
 			this.guiScrollbarColor.bind(this.curScrollbarColor.curcolor);
-			GUIs.add(scrollbarGui);
+			this.GUIs.add(scrollbarGui);
 
 			this.highlightOrDrag = this.highlight.or(this.dragging);
-			this.highlightOrDrag.addListener(p -> p.getValue());
+			this.highlightOrDrag.addListener(Property::getValue);
 			this.highlightOrDrag
 					.addListener((Property<? extends Boolean> property, Boolean oldValue, Boolean newValue) -> {
 						if (newValue.booleanValue()) {
-							curBackgroundColor.setDesired(highlightBackgroundColor, TimeUnit.MILLISECONDS.toNanos(100));
-							curScrollbarColor.setDesired(highlightScrollbarColor, TimeUnit.MILLISECONDS.toNanos(100));
+							this.curBackgroundColor.setDesired(this.highlightBackgroundColor,
+									TimeUnit.MILLISECONDS.toNanos(100));
+							this.curScrollbarColor.setDesired(this.highlightScrollbarColor,
+									TimeUnit.MILLISECONDS.toNanos(100));
 						} else {
-							curBackgroundColor.setDesired(backgroundColor, TimeUnit.MILLISECONDS.toNanos(300));
-							curScrollbarColor.setDesired(scrollbarColor, TimeUnit.MILLISECONDS.toNanos(300));
+							this.curBackgroundColor.setDesired(this.backgroundColor,
+									TimeUnit.MILLISECONDS.toNanos(300));
+							this.curScrollbarColor.setDesired(this.scrollbarColor, TimeUnit.MILLISECONDS.toNanos(300));
 						}
-						redraw();
+						this.redraw();
 					});
 		}
 
 		@Override
 		protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 				throws GameException {
-			curScrollbarColor.calculateCurrent();
-			curBackgroundColor.calculateCurrent();
-			scrollbar.progress.calculateCurrent();
+			this.curScrollbarColor.calculateCurrent();
+			this.curBackgroundColor.calculateCurrent();
+			this.scrollbar.progress.calculateCurrent();
 		}
 
 		@Override
 		protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 				throws GameException {
-			if (!scrollbar.visible.booleanValue()) {
+			if (!this.scrollbar.visible.booleanValue()) {
 				return false;
 			}
 			return super.doRender(framebuffer, mouseX, mouseY, partialTick);
@@ -397,57 +382,54 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		@Override
 		protected void doUpdate() throws GameException {
-			if (curScrollbarColor.calculateCurrent() || curBackgroundColor.calculateCurrent()
-					|| scrollbar.progress.calculateCurrent()) {
-				redraw();
+			if (this.curScrollbarColor.calculateCurrent() || this.curBackgroundColor.calculateCurrent()
+					|| this.scrollbar.progress.calculateCurrent()) {
+				this.redraw();
 			}
 		}
 
 		@Override
 		protected void doInit(Framebuffer framebuffer) throws GameException {
-			framebuffers.add(framebuffer);
+			this.framebuffers.add(framebuffer);
 		}
 
 		@Override
 		protected void doCleanup(Framebuffer framebuffer) throws GameException {
-			framebuffers.remove(framebuffer);
+			this.framebuffers.remove(framebuffer);
 		}
 
 		@Override
 		protected boolean doHandle(KeybindEntry entry) throws GameException {
-			if (entry instanceof MouseMoveKeybindEntry) {
-				MouseMoveKeybindEntry mm = (MouseMoveKeybindEntry) entry;
-				if (Gui.isHovering(scrollbarX.floatValue(), scrollbarY.floatValue(), scrollbarWidth.floatValue(),
-						scrollbarHeight.floatValue(), mm.mouseX(), mm.mouseY())) {
+			if (entry instanceof MouseMoveKeybindEntry mm) {
+				if (Gui.isHovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(),
+						this.scrollbarWidth.floatValue(), this.scrollbarHeight.floatValue(), mm.mouseX(),
+						mm.mouseY())) {
 					if (!this.highlight.booleanValue()) {
 						this.highlight.setValue(true);
 					}
-				} else {
-					if (this.highlight.booleanValue()) {
-						this.highlight.setValue(false);
-					}
+				} else if (this.highlight.booleanValue()) {
+					this.highlight.setValue(false);
 				}
-				if (dragging.booleanValue()) {
-					drag(mm);
+				if (this.dragging.booleanValue()) {
+					this.drag(mm);
 				}
-			} else if (entry instanceof MouseButtonKeybindEntry) {
-				MouseButtonKeybindEntry mb = (MouseButtonKeybindEntry) entry;
+			} else if (entry instanceof MouseButtonKeybindEntry mb) {
 				if (mb.type() == MouseButtonKeybindEntry.Type.PRESS) {
-					if (highlight.booleanValue()) {
+					if (this.highlight.booleanValue()) {
 						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
-							if (scrollbar.type == Scrollbar.Type.VERTICAL) {
-								dragOffset = mb.mouseY() - scrollbarY.floatValue();
-								dragging.setValue(true);
-							} else if (scrollbar.type == Scrollbar.Type.HORIZONTAL) {
-								dragOffset = mb.mouseX() - scrollbarX.floatValue();
-								dragging.setValue(true);
+							if (this.scrollbar.type == Scrollbar.Type.VERTICAL) {
+								this.dragOffset = mb.mouseY() - this.scrollbarY.floatValue();
+								this.dragging.setValue(true);
+							} else if (this.scrollbar.type == Scrollbar.Type.HORIZONTAL) {
+								this.dragOffset = mb.mouseX() - this.scrollbarX.floatValue();
+								this.dragging.setValue(true);
 							}
 						}
 					}
 				} else if (mb.type() == MouseButtonKeybindEntry.Type.RELEASE) {
-					if (dragging.booleanValue()) {
+					if (this.dragging.booleanValue()) {
 						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
-							dragging.setValue(false);
+							this.dragging.setValue(false);
 						}
 					}
 				}
@@ -459,7 +441,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		 * @return the scrollbar for this gui
 		 */
 		public Scrollbar getScrollbar() {
-			return scrollbar;
+			return this.scrollbar;
 		}
 
 	}
@@ -477,52 +459,53 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		private final NumberValue nanotimeDone = NumberValue.zero();
 
 		private void set(float other) {
-			desiredProgress.setNumber(other);
-			lastProgress.setNumber(other);
-			curProgress.setNumber(other);
-			nanotimeDone.setNumber(System.nanoTime());
-			nanotimeStarted.setNumber(System.nanoTime());
+			this.desiredProgress.setNumber(other);
+			this.lastProgress.setNumber(other);
+			this.curProgress.setNumber(other);
+			this.nanotimeDone.setNumber(System.nanoTime());
+			this.nanotimeStarted.setNumber(System.nanoTime());
 		}
 
 		private boolean calculateCurrent() {
 			long time = System.nanoTime();
-			if (nanotimeDone.longValue() - time < 0) {
-				if (curProgress.floatValue() == desiredProgress.floatValue()) {
+			if (this.nanotimeDone.longValue() - time < 0) {
+				if (this.curProgress.floatValue() == this.desiredProgress.floatValue()) {
 					return false;
 				}
-				curProgress.setNumber(desiredProgress.floatValue());
+				this.curProgress.setNumber(this.desiredProgress.floatValue());
 				return true;
 			}
-			long diff = nanotimeDone.longValue() - nanotimeStarted.longValue();
+			long diff = this.nanotimeDone.longValue() - this.nanotimeStarted.longValue();
 			if (diff == 0) {
-				if (curProgress.floatValue() == desiredProgress.floatValue()) {
+				if (this.curProgress.floatValue() == this.desiredProgress.floatValue()) {
 					return false;
 				}
-				curProgress.setNumber(desiredProgress.floatValue());
+				this.curProgress.setNumber(this.desiredProgress.floatValue());
 				return true;
 			}
-			float progress = (float) (time - nanotimeStarted.longValue()) / (float) diff;
-			curProgress.setNumber(Math.lerp(lastProgress.floatValue(), desiredProgress.floatValue(), progress));
+			float progress = (float) (time - this.nanotimeStarted.longValue()) / (float) diff;
+			this.curProgress
+					.setNumber(Math.lerp(this.lastProgress.floatValue(), this.desiredProgress.floatValue(), progress));
 			return true;
 		}
 
 		private void setWithoutTimer(float progress) {
-			float old = desiredProgress.floatValue();
+			float old = this.desiredProgress.floatValue();
 			if (old != progress) {
-				desiredProgress.setNumber(progress);
+				this.desiredProgress.setNumber(progress);
 			}
 		}
 
 		private void setDesired(float progress, long time) {
 			long started = System.nanoTime();
 			long done = System.nanoTime() + time;
-			nanotimeStarted.setNumber(started);
-			nanotimeDone.setNumber(done);
+			this.nanotimeStarted.setNumber(started);
+			this.nanotimeDone.setNumber(done);
 			if (time == 0) {
-				curProgress.setNumber(progress);
+				this.curProgress.setNumber(progress);
 			}
-			lastProgress.setNumber(curProgress.floatValue());
-			desiredProgress.setNumber(progress);
+			this.lastProgress.setNumber(this.curProgress.floatValue());
+			this.desiredProgress.setNumber(progress);
 		}
 
 	}
@@ -540,45 +523,49 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		private final NumberValue nanotimeStarted = NumberValue.zero();
 
 		private void set(PropertyVector4f other) {
-			desiredColor.set(other);
-			lastColor.set(other);
-			curcolor.set(other);
-			nanotimeDone.setNumber(System.nanoTime());
-			nanotimeStarted.setNumber(System.nanoTime());
+			this.desiredColor.set(other);
+			this.lastColor.set(other);
+			this.curcolor.set(other);
+			this.nanotimeDone.setNumber(System.nanoTime());
+			this.nanotimeStarted.setNumber(System.nanoTime());
 		}
 
 		private boolean calculateCurrent() {
 			long time = System.nanoTime();
-			if (nanotimeDone.longValue() - time < 0) {
-				if (curcolor.equals(desiredColor)) {
+			if (this.nanotimeDone.longValue() - time < 0) {
+				if (this.curcolor.equals(this.desiredColor)) {
 					return false;
 				}
-				curcolor.set(desiredColor);
+				this.curcolor.set(this.desiredColor);
 				return true;
 			}
-			long diff = nanotimeDone.longValue() - nanotimeStarted.longValue();
+			long diff = this.nanotimeDone.longValue() - this.nanotimeStarted.longValue();
 			if (diff == 0) {
-				if (curcolor.equals(desiredColor)) {
+				if (this.curcolor.equals(this.desiredColor)) {
 					return false;
 				}
-				curcolor.set(desiredColor);
+				this.curcolor.set(this.desiredColor);
 				return true;
 			}
-			float progress = (float) (time - nanotimeStarted.longValue()) / (float) diff;
-			curcolor.x.setNumber(Math.lerp(lastColor.x.doubleValue(), desiredColor.x.doubleValue(), progress));
-			curcolor.y.setNumber(Math.lerp(lastColor.y.doubleValue(), desiredColor.y.doubleValue(), progress));
-			curcolor.z.setNumber(Math.lerp(lastColor.z.doubleValue(), desiredColor.z.doubleValue(), progress));
-			curcolor.w.setNumber(Math.lerp(lastColor.w.doubleValue(), desiredColor.w.doubleValue(), progress));
+			float progress = (float) (time - this.nanotimeStarted.longValue()) / (float) diff;
+			this.curcolor.x
+					.setNumber(Math.lerp(this.lastColor.x.doubleValue(), this.desiredColor.x.doubleValue(), progress));
+			this.curcolor.y
+					.setNumber(Math.lerp(this.lastColor.y.doubleValue(), this.desiredColor.y.doubleValue(), progress));
+			this.curcolor.z
+					.setNumber(Math.lerp(this.lastColor.z.doubleValue(), this.desiredColor.z.doubleValue(), progress));
+			this.curcolor.w
+					.setNumber(Math.lerp(this.lastColor.w.doubleValue(), this.desiredColor.w.doubleValue(), progress));
 			return true;
 		}
 
 		private void setDesired(PropertyVector4f other, long time) {
 			long started = System.nanoTime();
 			long done = System.nanoTime() + time;
-			nanotimeStarted.setNumber(started);
-			nanotimeDone.setNumber(done);
-			lastColor.set(curcolor);
-			desiredColor.set(other);
+			this.nanotimeStarted.setNumber(started);
+			this.nanotimeDone.setNumber(done);
+			this.lastColor.set(this.curcolor);
+			this.desiredColor.set(other);
 		}
 
 	}
@@ -605,20 +592,21 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		 */
 		public Scrollbar(Type type) {
 			this.type = type;
-			progress.set(0);
-			this.max.addListener((NumberValue p) -> clamp());
-			this.progress.desiredProgress.addListener((NumberValue p) -> clamp());
+			this.progress.set(0);
+			this.max.addListener((NumberValue p) -> this.clamp());
+			this.progress.desiredProgress.addListener((NumberValue p) -> this.clamp());
 		}
 
 		private void clamp() {
-			progress.setWithoutTimer(Math.clamp(progress.desiredProgress.floatValue(), 0, max.floatValue()));
+			this.progress
+					.setWithoutTimer(Math.clamp(this.progress.desiredProgress.floatValue(), 0, this.max.floatValue()));
 		}
 
 		/**
 		 * @return the progress property
 		 */
 		public NumberValue desiredProgress() {
-			return progress.desiredProgress;
+			return this.progress.desiredProgress;
 		}
 
 		/**
@@ -635,28 +623,28 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		 * @return the thickness property
 		 */
 		public NumberValue thickness() {
-			return thickness;
+			return this.thickness;
 		}
 
 		/**
 		 * @return the max property
 		 */
 		public NumberValue max() {
-			return max;
+			return this.max;
 		}
 
 		/**
 		 * @return the visible property
 		 */
 		public BooleanValue visible() {
-			return visible;
+			return this.visible;
 		}
 
 		/**
 		 * @return the type
 		 */
 		public Type getType() {
-			return type;
+			return this.type;
 		}
 
 		/**

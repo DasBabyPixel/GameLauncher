@@ -25,7 +25,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.render.glfw.old.AsyncOpenGL;
+import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
@@ -35,14 +35,14 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 
 	private final LWJGLGameLauncher launcher;
 
-	private final AsyncOpenGL owner;
+	private final GLFWFrame frame;
 
 	private final DynamicSizeTextureAtlas textureAtlas;
-	
+
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
 		this.launcher = launcher;
-		this.owner = new AsyncOpenGL(launcher.getMainFrame());
-		this.textureAtlas = new DynamicSizeTextureAtlas(this.launcher, this.owner);
+		this.frame = launcher.getMainFrame().newFrame();
+		this.textureAtlas = new DynamicSizeTextureAtlas(this.launcher, this.frame.renderThread());
 	}
 
 	@Override
@@ -71,6 +71,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			}
 			e.add(entry);
 		}
+		finfo.free();
 		Collection<Model> meshes = new ArrayList<>();
 		int mwidth = 0;
 		int mheight = 0;
@@ -174,7 +175,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				apxls = new byte[0];
 			}
 			// Setup for usage by LWJGLTexture
-			buf = MemoryUtil.memCalloc(Integer.BYTES * apxls.length + Integer.BYTES * 2 + LWJGLTexture.SIGNATURE_RAW.length);
+			buf = MemoryUtil
+					.memCalloc(Integer.BYTES * apxls.length + Integer.BYTES * 2 + LWJGLTexture.SIGNATURE_RAW.length);
 			buf.put(LWJGLTexture.SIGNATURE_RAW);
 			buf.putInt(gdata.width);
 			buf.putInt(gdata.height);
@@ -208,7 +210,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 	@Override
 	public void cleanup0() throws GameException {
 		this.textureAtlas.cleanup();
-		Threads.waitFor(this.owner.exit());
+		this.frame.cleanup();
 	}
 
 	public int getId(GlyphKey key) {

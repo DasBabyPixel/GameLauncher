@@ -201,6 +201,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
 	public GameException buildStacktrace() {
 		GameException ex = new GameException("Exception in ExecutorThread");
+		ex.setStackTrace(new StackTraceElement[0]);
 		if (this.currentEntry != null) {
 			Throwable t = this.currentEntry.calculateCause();
 			if (t != null) {

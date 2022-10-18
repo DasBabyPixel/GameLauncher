@@ -22,7 +22,6 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 
 	public BasicFramebuffer(LWJGLGameLauncher launcher, int width, int height) throws GameException {
 		super(launcher.getMainFrame());
-		System.out.println(width + " | " + height);
 		this.width().setNumber(width);
 		this.height().setNumber(height);
 		this.bind();
@@ -31,7 +30,6 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 		this.colorTexture = Threads
 				.waitFor(launcher.getTextureManager().createTexture((ExecutorThread) Threads.currentThread()));
 		Threads.waitFor(this.colorTexture.allocate(this.width().intValue(), this.height().intValue()));
-		System.out.println(this.colorTexture.getTextureId());
 		c.framebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,
 				this.colorTexture.getTextureId(), 0);
 		this.depthStencilRenderbuffer = new Renderbuffer(GLES30.GL_DEPTH24_STENCIL8, this.width().intValue(),

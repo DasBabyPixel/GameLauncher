@@ -1,11 +1,11 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengles.GLES20;
 
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
@@ -36,7 +36,11 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
 	@Override
 	public void endFrame() {
 		if (this.swapBuffers.booleanValue()) {
-			GLFW.glfwSwapBuffers(this.frame.glfwId);
+			this.frame.launcher.getProfiler().check();
+			GLUtil.skip.set(true);
+			GLFW.glfwSwapBuffers(this.frame.context.glfwId);
+			GLUtil.skip.remove();
+			GLES20.glGetError();
 		}
 	}
 
@@ -49,8 +53,8 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
 	}
 
 	@Override
-	public RenderThread renderThread() {
-		return null;
+	public GLFWFrameRenderThread renderThread() {
+		return this.frame.renderThread;
 	}
 
 	@Override

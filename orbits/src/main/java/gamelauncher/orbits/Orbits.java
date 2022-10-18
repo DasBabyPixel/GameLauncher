@@ -13,10 +13,6 @@ public class Orbits extends Plugin {
 	@Override
 	public void onEnable() {
 		System.out.println("Enable");
-		System.out.println("test2");
-		System.out.println(getLauncher().getCurrentTick());
-		System.out.println("test3");
-		System.out.println("test4");
 	}
 
 	@Override

@@ -1,10 +1,10 @@
 package gamelauncher.lwjgl.render.glfw;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.lwjgl.glfw.GLFW;
 
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.logging.Logger;
@@ -17,7 +17,7 @@ public class GLFWThread extends AbstractExecutorThread {
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
 
 	private final Logger logger = Logger.getLogger();
-	
+
 	private final GLFWMonitorManager monitorManager = new GLFWMonitorManager();
 
 	public GLFWThread() {
@@ -27,36 +27,36 @@ public class GLFWThread extends AbstractExecutorThread {
 
 	@Override
 	protected void startExecuting() {
-		if (!glfwInit()) {
+		if (!GLFW.glfwInit()) {
 			throw new ExceptionInInitializerError("Couldn't initialize GLFW");
 		}
-		monitorManager.init();
+		this.monitorManager.init();
 	}
 
 	@Override
 	protected void stopExecuting() {
-		for (GLFWUser user : users) {
+		for (GLFWUser user : this.users) {
 			user.destroy();
 		}
 		while (true) {
-			waitForSignal();
-			workQueue();
-			if (users.isEmpty()) {
+			this.waitForSignal();
+			this.workQueue();
+			if (this.users.isEmpty()) {
 				break;
 			}
 		}
-		if (!users.isEmpty()) {
-			logger.errorf("Not all users of the GLFWThread have been cleared: %n%s", users);
+		if (!this.users.isEmpty()) {
+			this.logger.errorf("Not all users of the GLFWThread have been cleared: %n%s", this.users);
 		}
-		monitorManager.cleanup();
-		glfwTerminate();
+		this.monitorManager.cleanup();
+		GLFW.glfwTerminate();
 		this.terminateFuture.complete(null);
 	}
 
 	@Override
 	protected void workExecution() {
-		glfwWaitEventsTimeout(0.5D);
-		glfwPollEvents();
+		GLFW.glfwWaitEventsTimeout(0.5D);
+		GLFW.glfwPollEvents();
 	}
 
 //	@Override
@@ -69,22 +69,26 @@ public class GLFWThread extends AbstractExecutorThread {
 		return false;
 	}
 
+	public GLFWMonitorManager getMonitorManager() {
+		return this.monitorManager;
+	}
+
 	@Override
 	protected void signal() {
-		if (!exit) {
-			glfwPostEmptyEvent();
+		if (!this.exit) {
+			GLFW.glfwPostEmptyEvent();
 		}
 		super.signal();
 	}
 
 	void addUser(GLFWUser user) {
-		users.add(user);
-		signal();
+		this.users.add(user);
+		this.signal();
 	}
 
 	void removeUser(GLFWUser user) {
-		users.remove(user);
-		signal();
+		this.users.remove(user);
+		this.signal();
 	}
 
 }

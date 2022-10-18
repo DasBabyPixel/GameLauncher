@@ -2,6 +2,9 @@ package gamelauncher.example;
 
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.plugin.Plugin;
+import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.example.gui.ExampleGameGui;
 
 public class ExampleGame extends Game {
 
@@ -10,8 +13,9 @@ public class ExampleGame extends Game {
 	}
 
 	@Override
-	protected void launch0() {
+	protected void launch0(Framebuffer framebuffer) throws GameException {
 		System.out.println("launch example game");
+		this.getLauncher().getGuiManager().openGui(framebuffer, new ExampleGameGui(this.getLauncher()));
 	}
 
 	@Override

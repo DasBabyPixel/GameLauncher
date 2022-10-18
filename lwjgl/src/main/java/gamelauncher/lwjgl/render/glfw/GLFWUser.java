@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.glfw.old;
+package gamelauncher.lwjgl.render.glfw;
 
 import java.util.concurrent.CompletableFuture;
 

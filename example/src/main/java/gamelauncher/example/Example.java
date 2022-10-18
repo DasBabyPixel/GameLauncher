@@ -14,12 +14,12 @@ public class Example extends Plugin {
 
 	@Override
 	public void onEnable() throws GameException {
-		getLauncher().getGameRegistry().register(new ExampleGame(this));
+		this.getLauncher().getGameRegistry().register(new ExampleGame(this));
 	}
 
 	@Override
 	public void onDisable() {
-		getLauncher().getGameRegistry().unregister(new Key(this, "example"));
+		this.getLauncher().getGameRegistry().unregister(new Key(this, "example"));
 	}
 
 }

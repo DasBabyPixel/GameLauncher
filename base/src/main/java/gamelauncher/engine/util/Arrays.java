@@ -31,9 +31,9 @@ public class Arrays {
 	 * @param original
 	 * @param from
 	 * @param to
-	 * @return
+	 * @return a copy of the array with the range
 	 */
-	public static StackTraceElement[] copyOfRange(StackTraceElement[] original, int from, int to) {
+	public static <T> T[] copyOfRange(T[] original, int from, int to) {
 		return java.util.Arrays.copyOfRange(original, from, to);
 	}
 }

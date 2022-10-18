@@ -2,6 +2,8 @@ package gamelauncher.engine.game;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.plugin.Plugin;
+import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 
 /**
@@ -11,6 +13,7 @@ import gamelauncher.engine.util.Key;
 public abstract class Game {
 
 	private final GameLauncher launcher;
+
 	private final Key key;
 
 	/**
@@ -33,32 +36,44 @@ public abstract class Game {
 	 * @return the game {@link Key}
 	 */
 	public Key getKey() {
-		return key;
+		return this.key;
 	}
 
-	protected abstract void launch0();
+	/**
+	 * @return the {@link GameLauncher}
+	 */
+	public GameLauncher getLauncher() {
+		return this.launcher;
+	}
+
+	protected abstract void launch0(Framebuffer framebuffer) throws GameException;
 
 	/**
-	 * @throws WrongGameException
+	 * Launches a {@link Game} on a {@link Framebuffer}
+	 * 
+	 * @param framebuffer
+	 * @throws GameException
 	 */
-	public final void launch() throws WrongGameException {
-		if (launcher.getCurrentGame() != null) {
-			launcher.getCurrentGame().close();
+	public final void launch(Framebuffer framebuffer) throws GameException {
+		if (this.launcher.getCurrentGame() != null) {
+			this.launcher.getCurrentGame().close();
 		}
-		launcher.setCurrentGame(this);
-		launch0();
+		this.launcher.setCurrentGame(this);
+		this.launch0(framebuffer);
 	}
 
-	protected abstract void close0();
+	protected abstract void close0() throws GameException;
 
 	/**
+	 * @throws GameException
 	 * @throws WrongGameException
 	 */
-	public final void close() throws WrongGameException {
-		if (launcher.getCurrentGame() != this) {
+	public final void close() throws GameException {
+		if (this.launcher.getCurrentGame() != this) {
 			throw new WrongGameException();
 		}
-		close0();
-		launcher.setCurrentGame(null);
+		this.close0();
+		this.launcher.setCurrentGame(null);
 	}
+
 }

@@ -24,52 +24,56 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 		GuiContainer container = new GuiContainer(launcher);
 
-		NumberValue currentY = container.getYProperty().subtract(spacing);
+		NumberValue currentY = container.getYProperty().subtract(this.spacing);
 
 		for (Game game : launcher.getGameRegistry().getGames()) {
 			GameGui gui = new GameGui(game);
-			gui.getYProperty().bind(currentY.add(spacing));
+			gui.getYProperty().bind(currentY.add(this.spacing));
 			currentY = gui.getYProperty().add(gui.getHeightProperty());
 			gui.getXProperty().bind(container.getXProperty());
-			gui.setHeight(50);
-			gui.setWidth(300);
+			gui.setHeight(600);
+			gui.setWidth(3000);
 			container.addGui(gui);
 		}
-		System.out.println(container);
 
 		ScrollGui scrollGui = launcher.getGuiManager().createGui(ScrollGui.class);
 		scrollGui.gui().setValue(container);
 		scrollGui.getXProperty()
-				.bind(getXProperty().add(getWidthProperty().divide(2))
+				.bind(this.getXProperty()
+						.add(this.getWidthProperty().divide(2))
 						.subtract(scrollGui.getWidthProperty().divide(2)));
 		scrollGui.getYProperty()
-				.bind(getYProperty().add(getHeightProperty().divide(2))
+				.bind(this.getYProperty()
+						.add(this.getHeightProperty().divide(2))
 						.subtract(scrollGui.getHeightProperty().divide(2)));
-		scrollGui.getWidthProperty().bind(getWidthProperty().divide(2));
-		scrollGui.getHeightProperty().bind(getHeightProperty().divide(2));
+		scrollGui.getWidthProperty().bind(this.getWidthProperty().divide(2));
+		scrollGui.getHeightProperty().bind(this.getHeightProperty().divide(2));
 
-		GUIs.add(scrollGui);
+		this.GUIs.add(scrollGui);
 	}
 
 	private class GameGui extends ParentableAbstractGui {
 
 		public GameGui(Game game) throws GameException {
 			super(LWJGLMainScreenGui.this.getLauncher());
-			ButtonGui buttonGui = new ButtonGui(getLauncher()) {
+			ButtonGui buttonGui = new ButtonGui(this.getLauncher()) {
 
 				@Override
 				protected void buttonPressed(MouseButtonKeybindEntry e) {
-					System.out.println("press");
-					super.buttonPressed(e);
+					try {
+						game.launch(this.framebuffer);
+					} catch (GameException ex) {
+						ex.printStackTrace();
+					}
 				}
 
 			};
 			buttonGui.text().setValue(game.getKey().toString());
-			buttonGui.getXProperty().bind(getXProperty());
-			buttonGui.getYProperty().bind(getYProperty());
-			buttonGui.getWidthProperty().bind(getWidthProperty());
-			buttonGui.getHeightProperty().bind(getHeightProperty());
-			GUIs.add(buttonGui);
+			buttonGui.getXProperty().bind(this.getXProperty());
+			buttonGui.getYProperty().bind(this.getYProperty());
+			buttonGui.getWidthProperty().bind(this.getWidthProperty());
+			buttonGui.getHeightProperty().bind(this.getHeightProperty());
+			this.GUIs.add(buttonGui);
 		}
 
 	}
