@@ -74,7 +74,7 @@ public class GameThread extends Thread {
 		workQueue();
 		long lastTick = System.nanoTime();
 		long tpsTrySkipCounter = 0;
-
+		
 		mainLoop: while (true) {
 			long nanoDelay = lastTick - System.nanoTime();
 			if (nanoDelay > 0) {

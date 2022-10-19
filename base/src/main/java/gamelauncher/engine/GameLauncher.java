@@ -174,6 +174,8 @@ public abstract class GameLauncher {
 	 */
 	public final void start(String[] args) throws GameException {
 
+		System.out.println("ello!");
+		
 		if (this.frame != null) {
 			return;
 		}
