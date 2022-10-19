@@ -173,8 +173,6 @@ public abstract class GameLauncher {
 	 * @throws GameException
 	 */
 	public final void start(String[] args) throws GameException {
-
-		System.out.println("ello!");
 		
 		if (this.frame != null) {
 			return;
