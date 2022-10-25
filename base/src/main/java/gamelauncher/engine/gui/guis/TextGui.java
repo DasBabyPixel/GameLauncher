@@ -200,7 +200,7 @@ public class TextGui extends ParentableAbstractGui {
 				.getResource(launcher.getEmbedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
 				.newResourceStream();
 		Font font = launcher.getFontFactory().createFont(stream);
-		stream.cleanup();
+//		stream.cleanup();
 		return font;
 	}
 
