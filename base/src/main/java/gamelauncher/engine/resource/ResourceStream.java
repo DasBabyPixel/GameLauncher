@@ -56,28 +56,28 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @return if this {@link ResourceStream} has an {@link InputStream}
 	 */
 	public boolean hasInputStream() {
-		return in != null;
+		return this.in != null;
 	}
 
 	/**
 	 * @return the {@link InputStream} of this {@link ResourceStream}
 	 */
 	public InputStream getInputStream() {
-		return in;
+		return this.in;
 	}
 
 	/**
 	 * @return if this {@link ResourceStream} has an {@link OutputStream}
 	 */
 	public boolean hasOutputStream() {
-		return out != null;
+		return this.out != null;
 	}
 
 	/**
 	 * @return the {@link OutputStream} of this {@link ResourceStream}
 	 */
 	public OutputStream getOutputStream() {
-		return out;
+		return this.out;
 	}
 
 	/**
@@ -86,9 +86,9 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public void skip(long n) throws GameException {
-		if (in != null) {
+		if (this.in != null) {
 			try {
-				in.skip(n);
+				this.in.skip(n);
 			} catch (IOException ex) {
 				throw new GameException(ex);
 			}
@@ -98,7 +98,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	@Override
 	public void close() throws IOException {
 		try {
-			cleanup();
+			this.cleanup();
 		} catch (GameException ex) {
 			throw new IOException(ex);
 		}
@@ -112,16 +112,16 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	@Override
 	protected void cleanup0() throws GameException {
 		try {
-			if (in != null) {
-				in.close();
-				in = null;
+			if (this.in != null) {
+				this.in.close();
+				this.in = null;
 			}
-			if (out != null) {
-				out.close();
-				out = null;
+			if (this.out != null) {
+				this.out.close();
+				this.out = null;
 			}
 		} catch (IOException ex) {
-			throw closeError = new GameException(ex);
+			throw this.closeError = new GameException(ex);
 		}
 	}
 
@@ -132,7 +132,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	@Deprecated
 	public PNGDecoder newPNGDecoder() throws GameException {
 		try {
-			return new PNGDecoder(in);
+			return new PNGDecoder(this.in);
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
@@ -144,7 +144,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public String readUTF8(int length) throws GameException {
-		return new String(readBytes(length), StandardCharsets.UTF_8);
+		return new String(this.readBytes(length), StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public void writeUTF8(String string) throws GameException {
-		writeBytes(string.getBytes(StandardCharsets.UTF_8));
+		this.writeBytes(string.getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public String readUTF8Fully() throws GameException {
-		return new String(readAllBytes(), StandardCharsets.UTF_8);
+		return new String(this.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	/**
@@ -169,9 +169,9 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void swriteUTF8(String string) throws GameException {
 		if (string == null) {
-			swriteBytes(null);
+			this.swriteBytes(null);
 		} else {
-			swriteBytes(string.getBytes(StandardCharsets.UTF_8));
+			this.swriteBytes(string.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 
@@ -180,7 +180,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public String sreadUTF8() throws GameException {
-		byte[] b = sreadBytes();
+		byte[] b = this.sreadBytes();
 		if (b == null)
 			return null;
 		return new String(b, StandardCharsets.UTF_8);
@@ -192,10 +192,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void swriteFloats(float[] floats) throws GameException {
 		if (floats == null) {
-			writeInt(NULL);
+			this.writeInt(ResourceStream.NULL);
 		} else {
-			writeInt(floats.length);
-			writeFloats(floats);
+			this.writeInt(floats.length);
+			this.writeFloats(floats);
 		}
 	}
 
@@ -204,10 +204,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public float[] sreadFloats() throws GameException {
-		int len = readInt();
-		if (len == NULL)
+		int len = this.readInt();
+		if (len == ResourceStream.NULL)
 			return null;
-		return readFloats(len);
+		return this.readFloats(len);
 	}
 
 	/**
@@ -216,10 +216,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void swriteInts(int[] ints) throws GameException {
 		if (ints == null) {
-			writeInt(NULL);
+			this.writeInt(ResourceStream.NULL);
 		} else {
-			writeInt(ints.length);
-			writeInts(ints);
+			this.writeInt(ints.length);
+			this.writeInts(ints);
 		}
 	}
 
@@ -228,10 +228,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public int[] sreadInts() throws GameException {
-		int len = readInt();
-		if (len == NULL)
+		int len = this.readInt();
+		if (len == ResourceStream.NULL)
 			return null;
-		return readInts(len);
+		return this.readInts(len);
 	}
 
 	/**
@@ -240,10 +240,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void swriteBytes(byte[] bytes) throws GameException {
 		if (bytes == null) {
-			writeInt(NULL);
+			this.writeInt(ResourceStream.NULL);
 		} else {
-			writeInt(bytes.length);
-			writeBytes(bytes);
+			this.writeInt(bytes.length);
+			this.writeBytes(bytes);
 		}
 	}
 
@@ -252,10 +252,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public byte[] sreadBytes() throws GameException {
-		int len = readInt();
-		if (len == NULL)
+		int len = this.readInt();
+		if (len == ResourceStream.NULL)
 			return null;
-		return readBytes(len);
+		return this.readBytes(len);
 	}
 
 	/**
@@ -263,8 +263,8 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public String readUTF8FullyClose() throws GameException {
-		String utf8 = readUTF8Fully();
-		cleanup();
+		String utf8 = this.readUTF8Fully();
+		this.cleanup();
 		return utf8;
 	}
 
@@ -275,7 +275,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public int readBytes(byte[] bytes) throws GameException {
 		try {
-			return in.read(bytes);
+			return this.in.read(bytes);
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
@@ -289,7 +289,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 		byte[] buffer = new byte[2048];
 		ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
 		int read;
-		while ((read = readBytes(buffer)) != -1) {
+		while ((read = this.readBytes(buffer)) != -1) {
 			out.write(buffer, 0, read);
 		}
 		return out.toByteArray();
@@ -301,7 +301,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public byte readByte() throws GameException {
 		try {
-			int read = in.read();
+			int read = this.in.read();
 			if (read == -1) {
 				throw new GameException("End of stream");
 			}
@@ -317,7 +317,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void writeByte(byte b) throws GameException {
 		try {
-			out.write(b);
+			this.out.write(b);
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
@@ -329,7 +329,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void writeBytes(byte[] b) throws GameException {
 		try {
-			out.write(b);
+			this.out.write(b);
 		} catch (IOException ex) {
 			throw new GameException(ex);
 		}
@@ -340,8 +340,8 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public int readInt() throws GameException {
-		return byteBuffer(buf -> {
-			buf.put(readBytes(4));
+		return this.byteBuffer(buf -> {
+			buf.put(this.readBytes(4));
 			buf.rewind();
 			return buf.getInt();
 		});
@@ -352,10 +352,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public void writeInt(int i) throws GameException {
-		byteBuffer(buf -> {
+		this.byteBuffer(buf -> {
 			buf.putInt(i);
 			buf.rewind();
-			writeBytes(buf.array());
+			this.writeBytes(buf.array());
 			return null;
 		});
 	}
@@ -365,8 +365,8 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public float readFloat() throws GameException {
-		return byteBuffer(buf -> {
-			buf.put(readBytes(4));
+		return this.byteBuffer(buf -> {
+			buf.put(this.readBytes(4));
 			buf.rewind();
 			return buf.getFloat();
 		});
@@ -377,10 +377,10 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @throws GameException
 	 */
 	public void writeFloat(float f) throws GameException {
-		byteBuffer(buf -> {
+		this.byteBuffer(buf -> {
 			buf.putFloat(f);
 			buf.rewind();
-			writeBytes(buf.array());
+			this.writeBytes(buf.array());
 			return null;
 		});
 	}
@@ -391,7 +391,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void writeFloats(float[] floats) throws GameException {
 		for (float f : floats) {
-			writeFloat(f);
+			this.writeFloat(f);
 		}
 	}
 
@@ -403,7 +403,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	public float[] readFloats(int length) throws GameException {
 		float[] floats = new float[length];
 		for (int i = 0; i < floats.length; i++) {
-			floats[i] = readFloat();
+			floats[i] = this.readFloat();
 		}
 		return floats;
 	}
@@ -414,7 +414,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public void writeInts(int[] ints) throws GameException {
 		for (int f : ints) {
-			writeInt(f);
+			this.writeInt(f);
 		}
 	}
 
@@ -426,16 +426,16 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	public int[] readInts(int length) throws GameException {
 		int[] ints = new int[length];
 		for (int i = 0; i < ints.length; i++) {
-			ints[i] = readInt();
+			ints[i] = this.readInt();
 		}
 		return ints;
 	}
 
 	private <T> T byteBuffer(GameFunction<ByteBuffer, T> function) throws GameException {
-		bufLock.lock();
-		buf.rewind();
-		T t = function.apply(buf);
-		bufLock.unlock();
+		this.bufLock.lock();
+		this.buf.rewind();
+		T t = function.apply(this.buf);
+		this.bufLock.unlock();
 		return t;
 	}
 
@@ -446,7 +446,7 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 */
 	public byte[] readBytes(int length) throws GameException {
 		byte[] bytes = new byte[length];
-		length = readBytes(bytes);
+		length = this.readBytes(bytes);
 		return Arrays.copyOf(bytes, length);
 	}
 
@@ -454,14 +454,14 @@ public class ResourceStream extends AbstractGameResource implements AutoCloseabl
 	 * @return if this {@link ResourceStream} is a directory
 	 */
 	public boolean isDirectory() {
-		return directory;
+		return this.directory;
 	}
 
 	/**
 	 * @return the path
 	 */
 	public Path getPath() {
-		return path;
+		return this.path;
 	}
 
 }

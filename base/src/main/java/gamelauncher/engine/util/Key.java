@@ -9,11 +9,9 @@ import gamelauncher.engine.plugin.Plugin;
  */
 public class Key {
 
-	@SuppressWarnings("javadoc")
-	public final Plugin plugin;
+	private final Plugin plugin;
 
-	@SuppressWarnings("javadoc")
-	public final String key;
+	private final String key;
 
 	/**
 	 * @param plugin

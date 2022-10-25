@@ -9,24 +9,16 @@ import gamelauncher.lwjgl.render.shader.BasicUniform.Type;
  */
 public interface Struct {
 
-	@SuppressWarnings("javadoc")
 	Struct sint = new Primary(Type.INT1);
-	@SuppressWarnings("javadoc")
 	Struct sfloat = new Primary(Type.FLOAT1);
-	@SuppressWarnings("javadoc")
 	Struct svec2 = new Primary(Type.FLOAT2);
-	@SuppressWarnings("javadoc")
 	Struct svec3 = new Primary(Type.FLOAT3);
-	@SuppressWarnings("javadoc")
 	Struct svec4 = new Primary(Type.FLOAT4);
-	@SuppressWarnings("javadoc")
 	Struct smat4 = new Primary(Type.MAT4);
-	@SuppressWarnings("javadoc")
 	Struct ssampler2D = new Primary(Type.SAMPLER2D);
 
-	@SuppressWarnings("javadoc")
 	Struct[] primitives = new Struct[] {
-			sint, sfloat, svec2, svec3, svec4, smat4, ssampler2D
+			Struct.sint, Struct.sfloat, Struct.svec2, Struct.svec3, Struct.svec4, Struct.smat4, Struct.ssampler2D
 	};
 
 	/**

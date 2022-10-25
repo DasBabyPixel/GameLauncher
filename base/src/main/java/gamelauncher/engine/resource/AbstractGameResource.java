@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.logging.Logger;
 
 /**
  * @author DasBabyPixel
@@ -13,12 +14,14 @@ import gamelauncher.engine.util.GameException;
  */
 public abstract class AbstractGameResource implements GameResource {
 
+	private static Logger logger;
+
 	private volatile boolean cleanedUp = false;
 
 	private final StackTraceElement[] stack;
 
 	private final String exName;
-	
+
 	private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
 
 	private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
@@ -48,10 +51,12 @@ public abstract class AbstractGameResource implements GameResource {
 		if (!this.isCleanedUp()) {
 			this.setCleanedUp();
 			this.cleanup0();
-			this.cleanupFuture.complete(null);
-			AbstractGameResource.logCleanup(this);
+			if (this.isCleanedUp()) {
+				this.cleanupFuture.complete(null);
+				AbstractGameResource.logCleanup(this);
+			}
 		} else {
-			new GameException("Multiple cleanups").printStackTrace();
+			AbstractGameResource.logger().error(new GameException("Multiple cleanups"));
 		}
 	}
 
@@ -80,16 +85,24 @@ public abstract class AbstractGameResource implements GameResource {
 		AbstractGameResource.resources.remove(resource);
 	}
 
+	private static Logger logger() {
+		if (AbstractGameResource.logger == null) {
+			return AbstractGameResource.logger = Logger.getLogger();
+		}
+		return AbstractGameResource.logger;
+	}
+
 	/**
 	 * Called on exit
 	 */
 	public static void exit() {
 		for (GameResource resource : AbstractGameResource.resources) {
-			System.out.println("Memory Leak: " + resource);
 			if (resource instanceof AbstractGameResource aresource) {
 				Exception ex = new Exception("Stack: " + aresource.exName);
 				ex.setStackTrace(aresource.stack);
-				ex.printStackTrace();
+				AbstractGameResource.logger().errorf("Memory Leak: %s%n%s", resource, ex);
+			} else {
+				AbstractGameResource.logger().errorf("Memory Leak: %s", resource);
 			}
 		}
 	}

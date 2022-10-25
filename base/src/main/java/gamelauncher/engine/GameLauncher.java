@@ -15,6 +15,8 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
 
+import org.fusesource.jansi.AnsiConsole;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -78,7 +80,6 @@ public abstract class GameLauncher {
 
 	private Frame frame;
 
-//	private FileSystem fileSystem;
 	private FileSystem embedFileSystem;
 
 	private Path gameDirectory;
@@ -135,6 +136,7 @@ public abstract class GameLauncher {
 	 * Creates a new GameLauncher
 	 */
 	public GameLauncher() {
+		AnsiConsole.systemInstall();
 		Logger.asyncLogStream.start();
 		this.logger = Logger.getLogger(this.getClass());
 		this.threads = new Threads();
@@ -273,6 +275,7 @@ public abstract class GameLauncher {
 				this.embedFileSystem.close();
 				Logger.asyncLogStream.cleanup();
 				AbstractGameResource.exit();
+				AnsiConsole.systemUninstall();
 			} catch (IOException ex) {
 				throw new GameException(ex);
 			}

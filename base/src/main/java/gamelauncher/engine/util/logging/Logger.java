@@ -13,14 +13,16 @@ public abstract class Logger {
 	 * The System Streams ({@link System#in} and {@link System#out})
 	 */
 	public static final SelectiveStream system = new SelectiveStream();
+
 	/**
-	 * The {@link AsyncLogStream} for submitting to the {@link #system system stream}
+	 * The {@link AsyncLogStream} for submitting to the {@link #system system
+	 * stream}
 	 */
 	public static final AsyncLogStream asyncLogStream;
 
 	static {
-		system.addEntry(System.out, Output.OUT);
-		system.addEntry(System.err, Output.ERR);
+		Logger.system.addEntry(System.out, Output.OUT);
+		Logger.system.addEntry(System.err, Output.ERR);
 		asyncLogStream = new AsyncLogStream();
 	}
 
@@ -28,7 +30,7 @@ public abstract class Logger {
 	 * @param message
 	 */
 	public void info(Object message) {
-		log(LogLevel.INFO, message);
+		this.log(LogLevel.INFO, message);
 	}
 
 	/**
@@ -36,14 +38,14 @@ public abstract class Logger {
 	 * @param args
 	 */
 	public void infof(String message, Object... args) {
-		log(LogLevel.INFO, String.format(message, args));
+		this.logf(LogLevel.INFO, message, args);
 	}
 
 	/**
 	 * @param message
 	 */
 	public void error(Object message) {
-		log(LogLevel.ERROR, message);
+		this.log(LogLevel.ERROR, message);
 	}
 
 	/**
@@ -51,14 +53,14 @@ public abstract class Logger {
 	 * @param args
 	 */
 	public void errorf(String message, Object... args) {
-		log(LogLevel.ERROR, String.format(message, args));
+		this.logf(LogLevel.ERROR, message, args);
 	}
 
 	/**
 	 * @param message
 	 */
 	public void debug(Object message) {
-		log(LogLevel.DEBUG, message);
+		this.log(LogLevel.DEBUG, message);
 	}
 
 	/**
@@ -66,14 +68,14 @@ public abstract class Logger {
 	 * @param args
 	 */
 	public void debugf(String message, Object... args) {
-		log(LogLevel.DEBUG, String.format(message, args));
+		this.logf(LogLevel.DEBUG, message, args);
 	}
 
 	/**
 	 * @param message
 	 */
 	public void warn(Object message) {
-		log(LogLevel.WARN, message);
+		this.log(LogLevel.WARN, message);
 	}
 
 	/**
@@ -81,7 +83,7 @@ public abstract class Logger {
 	 * @param args
 	 */
 	public void warnf(String message, Object... args) {
-		log(LogLevel.WARN, String.format(message, args));
+		this.logf(LogLevel.WARN, message, args);
 	}
 
 	/**
@@ -93,8 +95,21 @@ public abstract class Logger {
 	/**
 	 * @param level
 	 * @param message
+	 * @param args
 	 */
-	public abstract void log(LogLevel level, Object message);
+	public void logf(LogLevel level, String message, Object... args) {
+		this.log0(level, new Formatted(message, args));
+	}
+
+	/**
+	 * @param level
+	 * @param message
+	 */
+	public void log(LogLevel level, Object message) {
+		this.log0(level, new Formatted("%s", message));
+	}
+
+	protected abstract void log0(LogLevel level, Formatted message);
 
 	/**
 	 * @return the {@link PrintStream}
@@ -126,9 +141,7 @@ public abstract class Logger {
 			}
 		}
 		int index = caller.getClassName().lastIndexOf('.');
-		return getLogger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
-//		int index = t.getClassName().indexOf('.');
-//		return getLogger(t.getClassName().substring(index == -1 ? 0 : index));
+		return Logger.getLogger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
 	}
 
 	/**
@@ -136,7 +149,7 @@ public abstract class Logger {
 	 * @return {@link Logger}
 	 */
 	public static Logger getLogger(Class<?> clazz) {
-		return getLogger(clazz.getSimpleName());
+		return Logger.getLogger(clazz.getSimpleName());
 	}
 
 	/**
@@ -144,6 +157,7 @@ public abstract class Logger {
 	 * @return {@link Logger}
 	 */
 	public static Logger getLogger(String name) {
-		return new SimpleLogger(name, asyncLogStream);
+		return new SimpleLogger(name, Logger.asyncLogStream);
 	}
+
 }

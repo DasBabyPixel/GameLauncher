@@ -2,6 +2,7 @@ package gamelauncher.engine.plugin;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
@@ -24,7 +25,7 @@ public abstract class Plugin {
 	 * @param name
 	 */
 	public Plugin(String name) {
-		this.logger = Logger.getLogger(getClass());
+		this.logger = Logger.getLogger(this.getClass());
 		this.name = name;
 	}
 
@@ -55,21 +56,21 @@ public abstract class Plugin {
 	 * @return the {@link GameLauncher}
 	 */
 	public GameLauncher getLauncher() {
-		return launcher;
+		return this.launcher;
 	}
 
 	/**
 	 * @return the {@link Logger} of this plugin
 	 */
 	public Logger getLogger() {
-		return logger;
+		return this.logger;
 	}
 
 	/**
 	 * @return the name of this plugin
 	 */
 	public String getName() {
-		return name;
+		return this.name;
 	}
 
 	/**
@@ -80,5 +81,22 @@ public abstract class Plugin {
 	@Retention(RetentionPolicy.RUNTIME)
 	public static @interface GamePlugin {
 
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.name);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (this.getClass() != obj.getClass())
+			return false;
+		Plugin other = (Plugin) obj;
+		return Objects.equals(this.name, other.name);
 	}
 }

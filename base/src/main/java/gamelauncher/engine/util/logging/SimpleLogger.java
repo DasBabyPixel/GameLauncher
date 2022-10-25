@@ -8,16 +8,18 @@ import java.io.PrintStream;
 public class SimpleLogger extends Logger {
 
 	private int level = 0;
+
 	private final String name;
+
 	private final AsyncLogStream logStream;
 
 	/**
 	 * @param name
-	 * @param stream 
+	 * @param stream
 	 */
 	public SimpleLogger(String name, AsyncLogStream stream) {
 		this.name = name;
-		this.logStream =stream;
+		this.logStream = stream;
 	}
 
 	@Override
@@ -26,24 +28,25 @@ public class SimpleLogger extends Logger {
 	}
 
 	@Override
-	public void log(LogLevel level, Object message) {
-		if (shouldDisplay(level)) {
-			logStream.offerLog(this, level, message);
+	public void log0(LogLevel level, Formatted message) {
+		if (this.shouldDisplay(level)) {
+			this.logStream.offerLog(this, level, message);
 		}
 	}
 
 	@Override
 	public PrintStream createPrintStream() {
-		return createPrintStream(LogLevel.STDOUT);
+		return this.createPrintStream(LogLevel.STDOUT);
 	}
 
 	@Override
 	public PrintStream createPrintStream(LogLevel level) {
-		return new CallerPrintStream(level, logStream);
+		return new CallerPrintStream(level, this.logStream);
 	}
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
+
 }

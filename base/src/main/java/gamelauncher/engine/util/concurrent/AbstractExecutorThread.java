@@ -11,7 +11,9 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 
-@SuppressWarnings("javadoc")
+/**
+ * @author DasBabyPixel
+ */
 public abstract class AbstractExecutorThread extends AbstractGameThread implements ExecutorThread {
 
 	private static final Logger logger = Logger.getLogger(AbstractExecutorThread.class);
@@ -28,14 +30,23 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
 	private final AtomicBoolean unpark = new AtomicBoolean(false);
 
+	/**
+	 * the current entry
+	 */
 	public WrapperEntry currentEntry;
 
 	private boolean skipNextSignalWait = false;
 
+	/**
+	 * @param group
+	 */
 	public AbstractExecutorThread(ThreadGroup group) {
 		super(group, (Runnable) null);
 	}
 
+	/**
+	 * @return the exit future
+	 */
 	public CompletableFuture<Void> exitFuture() {
 		return this.exitFuture;
 	}
@@ -199,6 +210,9 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 		}
 	}
 
+	/**
+	 * @return the stacktrace of the current {@link #currentEntry}
+	 */
 	public GameException buildStacktrace() {
 		GameException ex = new GameException("Exception in ExecutorThread");
 		ex.setStackTrace(new StackTraceElement[0]);

@@ -1,5 +1,7 @@
 package gamelauncher.engine.game;
 
+import java.util.Objects;
+
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.render.Framebuffer;
@@ -10,7 +12,7 @@ import gamelauncher.engine.util.Key;
  * @author DasBabyPixel
  *
  */
-public abstract class Game {
+public abstract class Game implements Comparable<Game> {
 
 	private final GameLauncher launcher;
 
@@ -29,7 +31,29 @@ public abstract class Game {
 	 */
 	public Game(Key key) {
 		this.key = key;
-		this.launcher = key.plugin.getLauncher();
+		this.launcher = key.getPlugin().getLauncher();
+	}
+
+	@Override
+	public int compareTo(Game o) {
+		return -Integer.compare(this.hashCode(), o.hashCode());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.key);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (this.getClass() != obj.getClass())
+			return false;
+		Game other = (Game) obj;
+		return Objects.equals(this.key, other.key);
 	}
 
 	/**

@@ -9,7 +9,6 @@ import de.dasbabypixel.api.property.NumberValue;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class PropertyVector4f {
 
 	public final NumberValue x;
@@ -24,10 +23,10 @@ public class PropertyVector4f {
 	 * 
 	 */
 	public PropertyVector4f() {
-		x = NumberValue.zero();
-		y = NumberValue.zero();
-		z = NumberValue.zero();
-		w = NumberValue.zero();
+		this.x = NumberValue.zero();
+		this.y = NumberValue.zero();
+		this.z = NumberValue.zero();
+		this.w = NumberValue.zero();
 	}
 
 	public PropertyVector4f(float x, float y, float z, float w) {
@@ -73,35 +72,35 @@ public class PropertyVector4f {
 	 * @return w
 	 */
 	public NumberValue getW() {
-		return w;
+		return this.w;
 	}
 
 	/**
 	 * @return x
 	 */
 	public NumberValue getX() {
-		return x;
+		return this.x;
 	}
 
 	/**
 	 * @return y
 	 */
 	public NumberValue getY() {
-		return y;
+		return this.y;
 	}
 
 	/**
 	 * @return z
 	 */
 	public NumberValue getZ() {
-		return z;
+		return this.z;
 	}
 
 	/**
 	 * @return a new vector4f
 	 */
 	public Vector4f toVector4f() {
-		return toVector4f(new Vector4f());
+		return this.toVector4f(new Vector4f());
 	}
 
 	/**
@@ -109,13 +108,13 @@ public class PropertyVector4f {
 	 * @return the vector4f
 	 */
 	public Vector4f toVector4f(Vector4f dest) {
-		dest.set(x.floatValue(), y.floatValue(), z.floatValue(), w.floatValue());
+		dest.set(this.x.floatValue(), this.y.floatValue(), this.z.floatValue(), this.w.floatValue());
 		return dest;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(w, x, y, z);
+		return Objects.hash(this.w, this.x, this.y, this.z);
 	}
 
 	@Override
@@ -124,12 +123,12 @@ public class PropertyVector4f {
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (this.getClass() != obj.getClass())
 			return false;
 		PropertyVector4f other = (PropertyVector4f) obj;
-		return Objects.equals(w.getNumber(), other.w.getNumber()) && Objects.equals(x.getNumber(), other.x.getNumber())
-				&& Objects.equals(y.getNumber(), other.y.getNumber())
-				&& Objects.equals(z.getNumber(), other.z.getNumber());
+		return Objects.equals(this.w.getNumber(), other.w.getNumber()) && Objects.equals(this.x.getNumber(), other.x.getNumber())
+				&& Objects.equals(this.y.getNumber(), other.y.getNumber())
+				&& Objects.equals(this.z.getNumber(), other.z.getNumber());
 	}
 
 }

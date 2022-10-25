@@ -1,7 +1,5 @@
 package gamelauncher.lwjgl.render.shader;
 
-import static org.lwjgl.system.MemoryUtil.*;
-
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -11,6 +9,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.system.MemoryUtil;
 
 import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.Uniform;
@@ -39,45 +38,45 @@ public class BasicUniform implements Uniform {
 		this.id = id;
 		this.type = type;
 		this.size = type.size;
-		this.buffer = memAlloc(this.size);
+		this.buffer = MemoryUtil.memAlloc(this.size);
 		this.intBuffer = this.buffer.asIntBuffer();
 		this.floatBuffer = this.buffer.asFloatBuffer();
 	}
 
 	@Override
 	public Uniform clear() {
-		hasValue.set(false);
+		this.hasValue.set(false);
 		return this;
 	}
 
 	@Override
 	public Uniform upload() {
-		if (!hasValue.get()) {
+		if (!this.hasValue.get()) {
 			return this;
 		}
 		GlStates c = GlStates.current();
-		hasValue.set(false);
-		switch (type) {
+		this.hasValue.set(false);
+		switch (this.type) {
 		case FLOAT1:
-			c.uniform1fv(id, floatBuffer);
+			c.uniform1fv(this.id, this.floatBuffer);
 			break;
 		case FLOAT2:
-			c.uniform2fv(id, floatBuffer);
+			c.uniform2fv(this.id, this.floatBuffer);
 			break;
 		case FLOAT3:
-			c.uniform3fv(id, floatBuffer);
+			c.uniform3fv(this.id, this.floatBuffer);
 			break;
 		case FLOAT4:
-			c.uniform4fv(id, floatBuffer);
+			c.uniform4fv(this.id, this.floatBuffer);
 			break;
 		case INT1:
-			c.uniform1iv(id, intBuffer);
+			c.uniform1iv(this.id, this.intBuffer);
 			break;
 		case MAT4:
-			c.uniformMatrix4fv(id, false, floatBuffer);
+			c.uniformMatrix4fv(this.id, false, this.floatBuffer);
 			break;
 		case SAMPLER2D:
-			c.uniform1iv(id, intBuffer);
+			c.uniform1iv(this.id, this.intBuffer);
 			break;
 		}
 		return this;
@@ -167,7 +166,6 @@ public class BasicUniform implements Uniform {
 		return this.set(vec.x, vec.y, vec.z, vec.w);
 	}
 
-	@SuppressWarnings("javadoc")
 	public static enum Type {
 		INT1("int", Integer.BYTES),
 		FLOAT1("float", Float.BYTES),
@@ -188,11 +186,11 @@ public class BasicUniform implements Uniform {
 		}
 
 		public String getGlName() {
-			return glName;
+			return this.glName;
 		}
 
 		public int getSize() {
-			return size;
+			return this.size;
 		}
 	}
 }

@@ -2,7 +2,6 @@ package gamelauncher.engine.gui.guis;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import de.dasbabypixel.api.property.ChangeListener;
 import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
@@ -18,6 +17,7 @@ import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.model.GlyphStaticModel;
+import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.engine.util.property.SupplierReadOnlyStorage;
@@ -71,8 +71,8 @@ public class TextGui extends ParentableAbstractGui {
 	 * @throws GameException
 	 */
 	public TextGui(GameLauncher launcher, String text, int height) throws GameException {
-		this(launcher, defaultFont(launcher), text, height);
-		createdFont = true;
+		this(launcher, TextGui.defaultFont(launcher), text, height);
+		this.createdFont = true;
 	}
 
 	/**
@@ -84,144 +84,124 @@ public class TextGui extends ParentableAbstractGui {
 	 */
 	public TextGui(GameLauncher launcher, Font font, String text, int height) throws GameException {
 		super(launcher);
-		createdFont = false;
-		this.font = ObjectProperty.<Font>withValue(font);
-		getHeightProperty().setNumber(height);
-		this.text = ObjectProperty.<String>withValue(text);
+		this.createdFont = true;
+		this.font = ObjectProperty.withValue(font);
+		this.getHeightProperty().setNumber(height);
+		this.text = ObjectProperty.withValue(text);
 		this.camera = new BasicCamera();
-		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> cwidth));
-		this.getWidthProperty().bind(cwidthprop);
-		this.invalidationListener = new InvalidationListener() {
-
-			@Override
-			public void invalidated(Property<?> property) {
-				recreateModel.set(true);
-			}
-
-		};
+		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> this.cwidth));
+		this.getWidthProperty().bind(this.cwidthprop);
+		this.invalidationListener = property -> TextGui.this.recreateModel.set(true);
 		this.baselineYOffset = NumberValue
-				.withStorage(new SupplierReadOnlyStorage<>(() -> model == null ? 0 : -model.getDescent()));
-		this.weakListener = new WeakReferenceInvalidationListener(invalidationListener);
-		getHeightProperty().addListener(weakListener);
-		this.text.addListener(weakListener);
-		this.font.addListener(new ChangeListener<Font>() {
-
-			@Override
-			public void handleChange(Property<? extends Font> property, Font oldValue, Font newValue) {
-				if (createdFont) {
-					fontToDelete = oldValue;
-					deleteFont = true;
-				}
-				createdFont = false;
-				if (!recreating) {
-					recreateModel.set(true);
-				}
+				.withStorage(new SupplierReadOnlyStorage<>(() -> this.model == null ? 0 : -this.model.getDescent()));
+		this.weakListener = new WeakReferenceInvalidationListener(this.invalidationListener);
+		this.getHeightProperty().addListener(this.weakListener);
+		this.text.addListener(this.weakListener);
+		this.font.addListener((property, oldValue, newValue) -> {
+			if (TextGui.this.createdFont) {
+				TextGui.this.fontToDelete = oldValue;
+				TextGui.this.deleteFont = true;
 			}
-
+			TextGui.this.createdFont = false;
+			if (!TextGui.this.recreating) {
+				TextGui.this.recreateModel.set(true);
+			}
 		});
-		this.font.addListener(weakListener);
-
-//		TextureGui textureGui = launcher.getGuiManager().createGui(TextureGui.class);
-//		textureGui.getTexture()
-//				.uploadAsync(launcher.getResourceLoader()
-//						.getResource(launcher.getEmbedFileSystem().getPath("pixel64x64.png"))
-//						.newResourceStream());
-//		textureGui.getXProperty().bind(getXProperty());
-//		textureGui.getYProperty().bind(getYProperty());
-//		textureGui.getWidthProperty().bind(getWidthProperty());
-//		textureGui.getHeightProperty().bind(getHeightProperty());
-//		GUIs.add(textureGui);
+		this.font.addListener(this.weakListener);
 	}
 
 	@Override
 	protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 			throws GameException {
-		ensureModel();
+		this.ensureModel();
 		super.preRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
 	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
 			throws GameException {
-		hud.update(camera);
-		hud.drawModel(itemModel, getX(), getY() + baselineYOffset.floatValue(), 0);
-		hud.getProgram().clearUniforms();
+		this.hud.update(this.camera);
+		this.hud.drawModel(this.itemModel, this.getX(), this.getY() + this.baselineYOffset.floatValue(), 0);
+		this.hud.getProgram().clearUniforms();
 		return true;
 	}
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
-		hud = getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+		this.hud = this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
 	}
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		if (itemModel != null)
-			itemModel.cleanup();
-		if (createdFont) {
-			font.getValue().cleanup();
+		if (this.itemModel != null)
+			this.itemModel.cleanup();
+		if (this.createdFont) {
+			this.font.getValue().cleanup();
 		}
-		if (deleteFont) {
-			fontToDelete.cleanup();
-			deleteFont = false;
+		if (this.deleteFont) {
+			this.fontToDelete.cleanup();
+			this.deleteFont = false;
 		}
-		getLauncher().getContextProvider().freeContext(hud, ContextType.HUD);
+		this.getLauncher().getContextProvider().freeContext(this.hud, ContextType.HUD);
 	}
 
 	/**
 	 * @return text
 	 */
 	public Property<String> text() {
-		return text;
+		return this.text;
 	}
 
 	/**
 	 * @return font
 	 */
 	public Property<Font> font() {
-		return font;
+		return this.font;
 	}
 
 	/**
 	 * @return the color property vector
 	 */
 	public PropertyVector4f color() {
-		return color;
+		return this.color;
 	}
 
 	private void ensureModel() throws GameException {
-		if (deleteFont) {
-			fontToDelete.cleanup();
-			deleteFont = false;
+		if (this.deleteFont) {
+			this.fontToDelete.cleanup();
+			this.deleteFont = false;
 		}
-		if (recreateModel.compareAndSet(true, false)) {
-			recreating = true;
-			GameItemModel oldModel = itemModel;
+		if (this.recreateModel.compareAndSet(true, false)) {
+			this.recreating = true;
+			GameItemModel oldModel = this.itemModel;
 
-			model = getLauncher().getGlyphProvider()
-					.loadStaticModel(font.getValue(), text.getValue(), getHeightProperty().intValue());
-			item = new GameItem(model);
-			item.color().x.bind(color.x);
-			item.color().y.bind(color.y);
-			item.color().z.bind(color.z);
-			item.color().w.bind(color.w);
-			itemModel = item.createModel();
-			cwidth = model.getWidth();
-			cwidthprop.invalidate();
-			baselineYOffset.invalidate();
+			this.model = this.getLauncher()
+					.getGlyphProvider()
+					.loadStaticModel(this.font.getValue(), this.text.getValue(), this.getHeightProperty().intValue());
+			this.item = new GameItem(this.model);
+			this.item.color().x.bind(this.color.x);
+			this.item.color().y.bind(this.color.y);
+			this.item.color().z.bind(this.color.z);
+			this.item.color().w.bind(this.color.w);
+			this.itemModel = this.item.createModel();
+			this.cwidth = this.model.getWidth();
+			this.cwidthprop.invalidate();
+			this.baselineYOffset.invalidate();
 
 			if (oldModel != null) {
 				oldModel.cleanup();
 			}
-			recreating = false;
+			this.recreating = false;
 		}
 	}
 
 	private static Font defaultFont(GameLauncher launcher) throws GameException {
-		return launcher.getFontFactory()
-				.createFont(launcher.getResourceLoader()
-						.getResource(launcher.getEmbedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
-						.newResourceStream());
+		ResourceStream stream = launcher.getResourceLoader()
+				.getResource(launcher.getEmbedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
+				.newResourceStream();
+		Font font = launcher.getFontFactory().createFont(stream);
+		stream.cleanup();
+		return font;
 	}
 
 }

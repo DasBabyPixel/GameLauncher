@@ -7,10 +7,8 @@ import gamelauncher.engine.util.math.Math;
  */
 public class Color {
 
-	@SuppressWarnings("javadoc")
 	public static final Color white = new Color(1F, 1F, 1F, 1F);
 
-	@SuppressWarnings("javadoc")
 	public final float r, g, b, a;
 
 	/**
@@ -21,6 +19,10 @@ public class Color {
 	 */
 	public Color(int r, int g, int b, int a) {
 		this((r & 0xFF) / 255F, (g & 0xFF) / 255F, (b & 0xFF) / 255F, (a & 0xFF) / 255F);
+	}
+
+	public Color(int r, int g, int b) {
+		this(r, g, b, 255);
 	}
 
 	/**
@@ -41,35 +43,52 @@ public class Color {
 	 * @return the new color
 	 */
 	public Color withAlpha(float alpha) {
-		return new Color(r, g, b, alpha);
+		return new Color(this.r, this.g, this.b, alpha);
 	}
 
 	/**
 	 * @return the red byte
 	 */
 	public byte bred() {
-		return toByte(r);
+		return this.toByte(this.r);
 	}
 
 	/**
 	 * @return the green byte
 	 */
 	public byte bgreen() {
-		return toByte(g);
+		return this.toByte(this.g);
 	}
 
 	/**
 	 * @return the blue byte
 	 */
 	public byte bblue() {
-		return toByte(b);
+		return this.toByte(this.b);
 	}
 
 	/**
 	 * @return the alpha byte
 	 */
 	public byte balpha() {
-		return toByte(a);
+		return this.toByte(this.a);
+	}
+
+	public int ired() {
+		return this.toInt(this.r);
+	}
+
+	public int igreen() {
+		return this.toInt(this.g);
+	}
+
+	public int iblue() {
+		return this.toInt(this.b);
+	}
+
+	private int toInt(float f) {
+		f = f * 256;
+		return Math.round(f >= 255 ? 255 : f);
 	}
 
 	private byte toByte(float f) {
@@ -80,7 +99,8 @@ public class Color {
 	 * @return the rgba int
 	 */
 	public int toRGBA() {
-		return (bred() & 0xFF) << 24 | (bgreen() & 0xFF) << 16 | (bblue() & 0xFF) << 8 | (balpha() & 0xFF);
+		return (this.bred() & 0xFF) << 24 | (this.bgreen() & 0xFF) << 16 | (this.bblue() & 0xFF) << 8
+				| (this.balpha() & 0xFF);
 	}
 
 }

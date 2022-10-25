@@ -13,7 +13,6 @@ import gamelauncher.engine.util.logging.SelectiveStream.Output;
  * @author DasBabyPixel
  * @param <T>
  */
-@SuppressWarnings("javadoc")
 public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
 
 	protected final ConcurrentLinkedDeque<QueueEntry<T>> queue = new ConcurrentLinkedDeque<>();
@@ -24,17 +23,26 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 
 	private final AtomicBoolean work = new AtomicBoolean(false);
 
+	/**
+	 * 
+	 */
 	public AbstractQueueSubmissionThread() {
 	}
 
+	/**
+	 * @return the exitfuture
+	 */
 	public CompletableFuture<Void> exitFuture() {
-		return exitFuture;
+		return this.exitFuture;
 	}
 
+	/**
+	 * @return the exitfuture
+	 */
 	public CompletableFuture<Void> exit() {
-		exit = true;
-		signal();
-		return exitFuture();
+		this.exit = true;
+		this.signal();
+		return this.exitFuture();
 	}
 
 	protected void startExecuting() {
@@ -47,45 +55,48 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 	}
 
 	protected void loop() {
-		waitForSignal();
-		workQueue();
-		workExecution();
+		this.waitForSignal();
+		this.workQueue();
+		this.workExecution();
 	}
 
 	protected void waitForSignal() {
-		if (exit)
+		if (this.exit)
 			return;
-		while (!work.compareAndSet(true, false)) {
+		while (!this.work.compareAndSet(true, false)) {
 			Threads.park();
 		}
 	}
 
 	@Override
 	public final void run() {
-		startExecuting();
-		while (!exit) {
+		this.startExecuting();
+		while (!this.exit) {
 			try {
-				loop();
+				this.loop();
 			} catch (Throwable ex) {
 				ex.printStackTrace(new PrintWriter(Logger.system.computeOutputStream(Output.ERR)));
 			}
 		}
-		loop();
-		stopExecuting();
-		exitFuture.complete(null);
+		this.loop();
+		this.stopExecuting();
+		this.exitFuture.complete(null);
 	}
 
 	protected abstract void handleElement(T element) throws GameException;
 
+	/**
+	 * Works off all the elements in the queue
+	 */
 	public final void workQueue() {
 		QueueEntry<T> e;
-		while ((e = queue.pollFirst()) != null) {
-			if (!shouldHandle(e)) {
-				queue.offerFirst(e);
+		while ((e = this.queue.pollFirst()) != null) {
+			if (!this.shouldHandle(e)) {
+				this.queue.offerFirst(e);
 				return;
 			}
 			try {
-				handleElement(e.val);
+				this.handleElement(e.val);
 				e.fut.complete(null);
 			} catch (GameException ex) {
 				e.fut.completeExceptionally(ex);
@@ -103,27 +114,39 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 	}
 
 	protected void signal() {
-		if (work.compareAndSet(false, true)) {
+		if (this.work.compareAndSet(false, true)) {
 			Threads.unpark(this);
 		}
 	}
 
+	/**
+	 * @param element
+	 * @return a new future for the submitted element
+	 */
 	public final CompletableFuture<Void> submitLast(T element) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
-		queue.offerLast(new QueueEntry<T>(fut, element));
-		signal();
+		this.queue.offerLast(new QueueEntry<T>(fut, element));
+		this.signal();
 		return fut;
 	}
 
+	/**
+	 * @param element
+	 * @return a new future for the submitted element
+	 */
 	public final CompletableFuture<Void> submitFirst(T element) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
-		queue.offerFirst(new QueueEntry<T>(fut, element));
-		signal();
+		this.queue.offerFirst(new QueueEntry<T>(fut, element));
+		this.signal();
 		return fut;
 	}
 
+	/**
+	 * @param element
+	 * @return a new future from the submitted element
+	 */
 	public final CompletableFuture<Void> submit(T element) {
-		return submitLast(element);
+		return this.submitLast(element);
 	}
 
 	protected static final class QueueEntry<T> {

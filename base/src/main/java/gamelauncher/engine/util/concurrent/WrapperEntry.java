@@ -5,25 +5,41 @@ import gamelauncher.engine.util.GameException;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class WrapperEntry {
 
+	/**
+	 * the stacktrace for this entry
+	 */
 	public StackTraceElement[] stacktrace;
 
+	/**
+	 * the cause of this entry
+	 */
 	public WrapperEntry cause;
 
+	/**
+	 * the thread for this entry
+	 */
 	public Thread thread;
 
+	/**
+	 * @param stacktrace
+	 * @param cause
+	 * @param thread
+	 */
 	public WrapperEntry(StackTraceElement[] stacktrace, WrapperEntry cause, Thread thread) {
 		this.stacktrace = stacktrace;
 		this.cause = cause;
 		this.thread = thread;
 	}
 
+	/**
+	 * @return a new Throwable with the given cause and stacktrace for utility
+	 */
 	public Throwable calculateCause() {
-		GameException c = new GameException("Thread: " + thread.getName());
-		c.setStackTrace(stacktrace);
-		if (cause != null) {
+		GameException c = new GameException("Thread: " + this.thread.getName());
+		c.setStackTrace(this.stacktrace);
+		if (this.cause != null) {
 			Throwable cause = this.cause.calculateCause();
 			if (cause != null)
 				c.initCause(cause);
@@ -33,14 +49,17 @@ public class WrapperEntry {
 
 	@Override
 	public String toString() {
-		return "WrapperEntry [cause=" + cause + ", thread=" + thread.getName() + "]";
+		return "WrapperEntry [cause=" + this.cause + ", thread=" + this.thread.getName() + "]";
 	}
 
+	/**
+	 * @return a new {@link WrapperEntry} for this thread
+	 */
 	public static WrapperEntry newEntry() {
 		if (Threads.calculateThreadStacks) {
-			return new WrapperEntry(new Throwable().getStackTrace(), cause(), Thread.currentThread());
+			return new WrapperEntry(new Throwable().getStackTrace(), WrapperEntry.cause(), Thread.currentThread());
 		}
-		return new WrapperEntry(null, cause(), Thread.currentThread());
+		return new WrapperEntry(null, WrapperEntry.cause(), Thread.currentThread());
 	}
 
 	private static WrapperEntry cause() {

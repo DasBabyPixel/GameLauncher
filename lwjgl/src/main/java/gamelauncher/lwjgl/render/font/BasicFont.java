@@ -1,13 +1,13 @@
 package gamelauncher.lwjgl.render.font;
 
-import static org.lwjgl.system.MemoryUtil.*;
-
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.lwjgl.system.MemoryUtil;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.font.Font;
@@ -16,7 +16,6 @@ import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 
-@SuppressWarnings("javadoc")
 public class BasicFont extends AbstractGameResource implements Font {
 
 	private volatile boolean done = false;
@@ -36,38 +35,38 @@ public class BasicFont extends AbstractGameResource implements Font {
 	BasicFont(BasicFontFactory factory, GameLauncher launcher, ResourceStream stream) {
 		this.path = stream.getPath();
 		this.factory = factory;
-		future = launcher.getThreads().cached.submit(() -> {
+		this.future = launcher.getThreads().cached.submit(() -> {
 			byte[] b = stream.readAllBytes();
 			stream.cleanup();
-			data = memAlloc(b.length);
-			data.put(b).flip();
-			done = true;
+			this.data = MemoryUtil.memAlloc(b.length);
+			this.data.put(b).flip();
+			this.done = true;
 		});
 	}
 
 	@Override
 	public ByteBuffer data() throws GameException {
-		if (!done) {
-			Threads.waitFor(future);
+		if (!this.done) {
+			Threads.waitFor(this.future);
 		}
-		return data;
+		return this.data;
 	}
 
 	@Override
 	public void cleanup0() throws GameException {
 		try {
-			lock.lock();
-			if (refcount.decrementAndGet() <= 0) {
-				if (path != null) {
-					factory.fonts.remove(path);
+			this.lock.lock();
+			if (this.refcount.decrementAndGet() <= 0) {
+				if (this.path != null) {
+					this.factory.fonts.remove(this.path);
 				}
-				if (!done) {
-					Threads.waitFor(future);
+				if (!this.done) {
+					Threads.waitFor(this.future);
 				}
-				memFree(data);
+				MemoryUtil.memFree(this.data);
 			}
 		} finally {
-			lock.unlock();
+			this.lock.unlock();
 		}
 	}
 

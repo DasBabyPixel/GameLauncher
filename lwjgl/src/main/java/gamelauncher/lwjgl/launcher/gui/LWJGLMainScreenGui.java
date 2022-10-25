@@ -1,5 +1,7 @@
 package gamelauncher.lwjgl.launcher.gui;
 
+import java.util.stream.Collectors;
+
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
@@ -14,7 +16,6 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScreenGui {
 
 	private final NumberValue spacing = NumberValue.withValue(5);
@@ -26,13 +27,13 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 		NumberValue currentY = container.getYProperty().subtract(this.spacing);
 
-		for (Game game : launcher.getGameRegistry().getGames()) {
+		for (Game game : launcher.getGameRegistry().getGames().stream().sorted().collect(Collectors.toList())) {
 			GameGui gui = new GameGui(game);
 			gui.getYProperty().bind(currentY.add(this.spacing));
 			currentY = gui.getYProperty().add(gui.getHeightProperty());
 			gui.getXProperty().bind(container.getXProperty());
-			gui.setHeight(600);
-			gui.setWidth(3000);
+			gui.setHeight(100);
+			gui.setWidth(600);
 			container.addGui(gui);
 		}
 
@@ -52,8 +53,9 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		this.GUIs.add(scrollGui);
 	}
 
+	private static int id = 0;
 	private class GameGui extends ParentableAbstractGui {
-
+		
 		public GameGui(Game game) throws GameException {
 			super(LWJGLMainScreenGui.this.getLauncher());
 			ButtonGui buttonGui = new ButtonGui(this.getLauncher()) {
@@ -68,7 +70,11 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 				}
 
 			};
-			buttonGui.text().setValue(game.getKey().toString());
+			LWJGLMainScreenGui.id++;
+//			String s = game.getKey().getKey();
+			String s = LWJGLMainScreenGui.id!=1?"labyrinthgame":"example";
+			System.out.println(s);
+			buttonGui.text().setValue(s);
 			buttonGui.getXProperty().bind(this.getXProperty());
 			buttonGui.getYProperty().bind(this.getYProperty());
 			buttonGui.getWidthProperty().bind(this.getWidthProperty());

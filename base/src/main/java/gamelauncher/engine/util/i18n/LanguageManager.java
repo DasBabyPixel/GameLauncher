@@ -10,13 +10,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class LanguageManager {
 
 	private final Collection<Language> languages = new CopyOnWriteArrayList<>();
-	private final Collection<Language> languagesUnmodifiable = Collections.unmodifiableCollection(languages);
+
+	private final Collection<Language> languagesUnmodifiable = Collections.unmodifiableCollection(this.languages);
 
 	/**
 	 * @return an unmodifiable collection of all languages
 	 */
 	public Collection<Language> getLanguages() {
-		return languagesUnmodifiable;
+		return this.languagesUnmodifiable;
 	}
 
 }

@@ -29,7 +29,6 @@ public interface MouseButtonKeybindEntry extends KeybindEntry {
 	/**
 	 * @author DasBabyPixel
 	 */
-	@SuppressWarnings("javadoc")
 	public static enum Type {
 		PRESS, RELEASE, HOLD
 	}

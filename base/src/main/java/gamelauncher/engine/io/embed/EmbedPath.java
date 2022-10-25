@@ -15,8 +15,8 @@ import java.nio.file.WatchService;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
-@SuppressWarnings("javadoc")
 public class EmbedPath implements java.nio.file.Path {
 
 	final EmbedFileSystem fileSystem;
@@ -42,32 +42,49 @@ public class EmbedPath implements java.nio.file.Path {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(this.segments);
+		result = prime * result + Objects.hash(this.absolute, this.root);
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof EmbedPath && Arrays.equals(segments, ((EmbedPath) obj).segments);
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (this.getClass() != obj.getClass())
+			return false;
+		EmbedPath other = (EmbedPath) obj;
+		return this.absolute == other.absolute && this.root == other.root
+				&& Arrays.equals(this.segments, other.segments);
 	}
 
 	@Override
 	public Path getRoot() {
-		return new EmbedPath(fileSystem, new String[0], true);
+		return new EmbedPath(this.fileSystem, new String[0], true);
 	}
 
 	@Override
 	public Path getParent() {
-		if (absolute) {
-			if (segments.length == 1) {
-				return new EmbedPath(fileSystem, new String[0], true, true);
+		if (this.absolute) {
+			if (this.segments.length == 1) {
+				return new EmbedPath(this.fileSystem, new String[0], true, true);
 			}
-			if (root) {
+			if (this.root) {
 				return null;
 			}
 		}
-		return new EmbedPath(fileSystem, Arrays.copyOf(segments, segments.length - 1), absolute);
+		return new EmbedPath(this.fileSystem, Arrays.copyOf(this.segments, this.segments.length - 1), this.absolute);
 	}
 
 	@Override
 	public Path getName(int index) {
-		return new EmbedPath(fileSystem, new String[] {
-				segments[index]
+		return new EmbedPath(this.fileSystem, new String[] {
+				this.segments[index]
 		}, false);
 	}
 
@@ -76,64 +93,64 @@ public class EmbedPath implements java.nio.file.Path {
 		if (beginIndex < 0) {
 			throw new IllegalArgumentException();
 		}
-		if (endIndex >= segments.length) {
+		if (endIndex >= this.segments.length) {
 			throw new IllegalArgumentException();
 		}
 		String[] seg = new String[endIndex - beginIndex];
 		for (int i = 0; i < seg.length; i++) {
-			seg[i] = segments[i + beginIndex];
+			seg[i] = this.segments[i + beginIndex];
 		}
-		return new EmbedPath(fileSystem, seg, false);
+		return new EmbedPath(this.fileSystem, seg, false);
 	}
 
 	@Override
 	public boolean startsWith(Path other) {
-		return endsWith(checkPath(other).toString());
+		return this.endsWith(this.checkPath(other).toString());
 	}
 
 	@Override
 	public boolean startsWith(String other) {
-		return toString().startsWith(other);
+		return this.toString().startsWith(other);
 	}
 
 	@Override
 	public boolean endsWith(Path other) {
-		return endsWith(checkPath(other).toString());
+		return this.endsWith(this.checkPath(other).toString());
 	}
 
 	@Override
 	public boolean endsWith(String other) {
-		return toString().endsWith(other);
+		return this.toString().endsWith(other);
 	}
 
 	@Override
 	public EmbedFileSystem getFileSystem() {
-		return fileSystem;
+		return this.fileSystem;
 	}
 
 	@Override
 	public String toString() {
-		if (absolute) {
-			return "/" + String.join("/", segments);
+		if (this.absolute) {
+			return "/" + String.join("/", this.segments);
 		}
-		return String.join("/", segments);
+		return String.join("/", this.segments);
 	}
 
 	@Override
 	public boolean isAbsolute() {
-		return absolute;
+		return this.absolute;
 	}
 
 	@Override
 	public Path getFileName() {
-		return new EmbedPath(fileSystem, new String[] {
+		return new EmbedPath(this.fileSystem, new String[] {
 				this.segments[this.segments.length - 1]
 		}, false);
 	}
 
 	@Override
 	public int getNameCount() {
-		return segments.length;
+		return this.segments.length;
 	}
 
 	@Override
@@ -143,7 +160,7 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public Path resolve(Path other) {
-		EmbedPath ep = checkPath(other);
+		EmbedPath ep = this.checkPath(other);
 		if (ep.isAbsolute()) {
 			return ep;
 		}
@@ -157,22 +174,22 @@ public class EmbedPath implements java.nio.file.Path {
 		for (int i = 0; i < ep.segments.length; i++) {
 			segments[this.segments.length + i] = ep.segments[i];
 		}
-		return new EmbedPath(fileSystem, segments, absolute);
+		return new EmbedPath(this.fileSystem, segments, this.absolute);
 	}
 
 	@Override
 	public Path resolve(String other) {
-		return resolve(getFileSystem().getPath(other));
+		return this.resolve(this.getFileSystem().getPath(other));
 	}
 
 	@Override
 	public Path resolveSibling(Path other) {
-		return getParent().resolve(other);
+		return this.getParent().resolve(other);
 	}
 
 	@Override
 	public Path resolveSibling(String other) {
-		return getParent().resolve(other);
+		return this.getParent().resolve(other);
 	}
 
 	@Override
@@ -182,10 +199,10 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public EmbedPath toAbsolutePath() {
-		if (absolute) {
+		if (this.absolute) {
 			return this;
 		}
-		return new EmbedPath(fileSystem, segments, true);
+		return new EmbedPath(this.fileSystem, this.segments, true);
 	}
 
 	@Override
@@ -197,7 +214,7 @@ public class EmbedPath implements java.nio.file.Path {
 	public URI toUri() {
 		try {
 			return new URI(this.fileSystem.provider().getScheme(),
-					this.fileSystem.getEmbedPath().toUri() + "#" + toAbsolutePath().toString(), null);
+					this.fileSystem.getEmbedPath().toUri() + "#" + this.toAbsolutePath().toString(), null);
 		} catch (URISyntaxException ex) {
 			throw new AssertionError(ex);
 		}
@@ -211,13 +228,13 @@ public class EmbedPath implements java.nio.file.Path {
 
 			@Override
 			public boolean hasNext() {
-				return i < getNameCount();
+				return this.i < EmbedPath.this.getNameCount();
 			}
 
 			@Override
 			public Path next() {
-				if (hasNext()) {
-					return getName(i++);
+				if (this.hasNext()) {
+					return EmbedPath.this.getName(this.i++);
 				}
 				throw new NoSuchElementException();
 			}
@@ -250,7 +267,7 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public int compareTo(Path other) {
-		return String.join("/", segments).compareTo(String.join("/", checkPath(other).segments));
+		return String.join("/", this.segments).compareTo(String.join("/", this.checkPath(other).segments));
 	}
 
 	private EmbedPath checkPath(Path path) {

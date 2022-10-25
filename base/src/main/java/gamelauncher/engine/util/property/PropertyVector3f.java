@@ -4,7 +4,6 @@ import org.joml.Vector3f;
 
 import de.dasbabypixel.api.property.NumberValue;
 
-@SuppressWarnings("javadoc")
 public class PropertyVector3f {
 
 	public final NumberValue x;
@@ -17,9 +16,9 @@ public class PropertyVector3f {
 	 * 
 	 */
 	public PropertyVector3f() {
-		x = NumberValue.zero();
-		y = NumberValue.zero();
-		z = NumberValue.zero();
+		this.x = NumberValue.zero();
+		this.y = NumberValue.zero();
+		this.z = NumberValue.zero();
 	}
 
 	public PropertyVector3f(float x, float y, float z) {
@@ -40,28 +39,28 @@ public class PropertyVector3f {
 	 * @return x
 	 */
 	public NumberValue getX() {
-		return x;
+		return this.x;
 	}
 
 	/**
 	 * @return y
 	 */
 	public NumberValue getY() {
-		return y;
+		return this.y;
 	}
 
 	/**
 	 * @return z
 	 */
 	public NumberValue getZ() {
-		return z;
+		return this.z;
 	}
 
 	/**
 	 * @return a new vector4f
 	 */
 	public Vector3f toVector3f() {
-		return toVector3f(new Vector3f());
+		return this.toVector3f(new Vector3f());
 	}
 
 	/**
@@ -69,7 +68,7 @@ public class PropertyVector3f {
 	 * @return the vector4f
 	 */
 	public Vector3f toVector3f(Vector3f dest) {
-		dest.set(x.floatValue(), y.floatValue(), z.floatValue());
+		dest.set(this.x.floatValue(), this.y.floatValue(), this.z.floatValue());
 		return dest;
 	}
 

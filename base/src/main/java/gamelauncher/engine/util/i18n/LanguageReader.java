@@ -43,7 +43,7 @@ class LanguageReader {
 				String str = stream.readUTF8Fully();
 				JsonObject obj;
 				try {
-					obj = gson.fromJson(str, JsonObject.class);
+					obj = LanguageReader.gson.fromJson(str, JsonObject.class);
 				} catch (JsonSyntaxException ex) {
 					throw new GameException("Invalid language", ex);
 				}
@@ -51,7 +51,7 @@ class LanguageReader {
 					throw new GameException("Language file has no id");
 				}
 				jobjects[i] = obj;
-				adata[i] = new LanguageData(localeFromId(obj.get("id").getAsString()), stream.getPath());
+				adata[i] = new LanguageData(LanguageReader.localeFromId(obj.get("id").getAsString()), stream.getPath());
 			} finally {
 				stream.cleanup();
 			}
@@ -73,7 +73,7 @@ class LanguageReader {
 					for (LanguageData d : adata) {
 						if (d == data)
 							continue;
-						if (idFromLocale(d.locale).equals(sfallback)) {
+						if (LanguageReader.idFromLocale(d.locale).equals(sfallback)) {
 							data.fallbacks.add(d);
 							break;
 						}
@@ -82,7 +82,7 @@ class LanguageReader {
 			}
 			if (o.has("data")) {
 				JsonElement edata = o.get("data");
-				loadAsync(launcher, phaser, data, edata);
+				LanguageReader.loadAsync(launcher, phaser, data, edata);
 			}
 		}
 		Map<LanguageData, Language> languageMap = new HashMap<>();
@@ -110,7 +110,7 @@ class LanguageReader {
 			throws GameException {
 		if (edata.isJsonArray()) {
 			for (JsonElement e : edata.getAsJsonArray()) {
-				loadAsync(launcher, phaser, data, e);
+				LanguageReader.loadAsync(launcher, phaser, data, e);
 			}
 		} else if (edata.isJsonPrimitive()) {
 			final String spath = edata.getAsJsonPrimitive().getAsString();

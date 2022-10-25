@@ -9,17 +9,17 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.logging.LogColor;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.states.StateRegistry;
 
-@SuppressWarnings("javadoc")
 public class GLFWGLContext extends AbstractGameResource {
 
 	private static final Logger logger = Logger.getLogger();
 
-	private static final LogLevel level = new LogLevel("GL", 10);
+	private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
 
 	volatile long glfwId;
 

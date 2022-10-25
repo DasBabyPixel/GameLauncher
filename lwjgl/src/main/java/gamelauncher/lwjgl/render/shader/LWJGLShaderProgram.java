@@ -1,27 +1,30 @@
 package gamelauncher.lwjgl.render.shader;
 
-import static org.lwjgl.opengles.GLES20.*;
-
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.lwjgl.opengles.GLES20;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 
-@SuppressWarnings("javadoc")
 public class LWJGLShaderProgram extends ShaderProgram {
 
 	private final int programId;
 
 	final AtomicInteger refCount = new AtomicInteger(1);
 
+	final Path path;
+
 	private int vertexShaderId;
 
 	private int fragmentShaderId;
 
-	public LWJGLShaderProgram(GameLauncher launcher) throws GameException {
+	public LWJGLShaderProgram(GameLauncher launcher, Path path) throws GameException {
 		super(launcher);
+		this.path = path;
 		this.programId = GlStates.current().createProgram();
 		if (this.programId == 0) {
 			throw new GameException("Could not create Shader");
@@ -29,27 +32,27 @@ public class LWJGLShaderProgram extends ShaderProgram {
 	}
 
 	public void createVertexShader(String shaderCode) throws GameException {
-		vertexShaderId = createShader(shaderCode, GL_VERTEX_SHADER);
+		this.vertexShaderId = this.createShader(shaderCode, GLES20.GL_VERTEX_SHADER);
 	}
 
 	public void createFragmentShader(String shaderCode) throws GameException {
-		fragmentShaderId = createShader(shaderCode, GL_FRAGMENT_SHADER);
+		this.fragmentShaderId = this.createShader(shaderCode, GLES20.GL_FRAGMENT_SHADER);
 	}
 
 	public int getProgramId() {
-		return programId;
+		return this.programId;
 	}
 
 	public void deleteVertexShader() {
-		GlStates.current().deleteShader(vertexShaderId);
+		GlStates.current().deleteShader(this.vertexShaderId);
 	}
 
 	public void deleteFragmentShader() {
-		GlStates.current().deleteShader(fragmentShaderId);
+		GlStates.current().deleteShader(this.fragmentShaderId);
 	}
 
 	protected int createShader(String shaderCode, int shaderType) throws GameException {
-		int shaderId = glCreateShader(shaderType);
+		int shaderId = GLES20.glCreateShader(shaderType);
 		if (shaderId == 0) {
 			throw new GameException("Error creating shader. Type: " + shaderType);
 		}
@@ -58,40 +61,41 @@ public class LWJGLShaderProgram extends ShaderProgram {
 		c.shaderSource(shaderId, shaderCode);
 		c.compileShader(shaderId);
 
-		if (c.getShaderi(shaderId, GL_COMPILE_STATUS) == 0) {
+		if (c.getShaderi(shaderId, GLES20.GL_COMPILE_STATUS) == 0) {
 			throw new GameException("Error compiling Shader code: " + c.getShaderInfoLog(shaderId, 1024));
 		}
 
-		c.attachShader(programId, shaderId);
+		c.attachShader(this.programId, shaderId);
 
 		return shaderId;
 	}
 
 	public void link() throws GameException {
 		GlStates c = GlStates.current();
-		c.linkProgram(programId);
-		if (c.getProgrami(programId, GL_LINK_STATUS) == 0) {
-			throw new GameException("Error linking Shader code: " + c.getProgramInfoLog(programId, 1024));
+		c.linkProgram(this.programId);
+		if (c.getProgrami(this.programId, GLES20.GL_LINK_STATUS) == 0) {
+			throw new GameException("Error linking Shader code: " + c.getProgramInfoLog(this.programId, 1024));
 		}
 
-		if (vertexShaderId != 0) {
-			c.detachShader(programId, vertexShaderId);
+		if (this.vertexShaderId != 0) {
+			c.detachShader(this.programId, this.vertexShaderId);
 		}
-		if (fragmentShaderId != 0) {
-			c.detachShader(programId, fragmentShaderId);
+		if (this.fragmentShaderId != 0) {
+			c.detachShader(this.programId, this.fragmentShaderId);
 		}
 
-		if (launcher.isDebugMode()) {
-			c.validateProgram(programId);
-			if (c.getProgrami(programId, GL_VALIDATE_STATUS) == 0) {
-				launcher.getLogger().warnf("Warning validating Shader code: %s", c.getProgramInfoLog(programId, 1024));
+		if (this.launcher.isDebugMode()) {
+			c.validateProgram(this.programId);
+			if (c.getProgrami(this.programId, GLES20.GL_VALIDATE_STATUS) == 0) {
+				this.launcher.getLogger()
+						.warnf("Warning validating Shader code: %s", c.getProgramInfoLog(this.programId, 1024));
 			}
 		}
 	}
 
 	@Override
 	public void bind() {
-		GlStates.current().useProgram(programId);
+		GlStates.current().useProgram(this.programId);
 	}
 
 	@Override
@@ -100,11 +104,16 @@ public class LWJGLShaderProgram extends ShaderProgram {
 	}
 
 	@Override
+	public boolean isCleanedUp() {
+		return this.refCount.get() == 0;
+	}
+
+	@Override
 	public void cleanup0() {
-		if (refCount.decrementAndGet() == 0) {
-			unbind();
-			if (programId != 0) {
-				GlStates.current().deleteProgram(programId);
+		if (this.refCount.decrementAndGet() == 0) {
+			this.unbind();
+			if (this.programId != 0) {
+				GlStates.current().deleteProgram(this.programId);
 			}
 		}
 	}

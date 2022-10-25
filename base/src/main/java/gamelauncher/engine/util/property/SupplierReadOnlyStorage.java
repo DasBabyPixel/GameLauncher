@@ -4,7 +4,6 @@ import java.util.function.Supplier;
 
 import de.dasbabypixel.api.property.ReadOnlyStorage;
 
-@SuppressWarnings("javadoc")
 public class SupplierReadOnlyStorage<T> implements ReadOnlyStorage<T> {
 
 	private final Supplier<T> supplier;
@@ -15,7 +14,7 @@ public class SupplierReadOnlyStorage<T> implements ReadOnlyStorage<T> {
 
 	@Override
 	public T read() {
-		return supplier.get();
+		return this.supplier.get();
 	}
 
 }
