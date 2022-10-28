@@ -22,7 +22,7 @@ public class BasicFont extends AbstractGameResource implements Font {
 
 	private final CompletableFuture<Void> future;
 
-	final AtomicInteger refcount = new AtomicInteger();
+	final AtomicInteger refcount = new AtomicInteger(0);
 
 	private final Path path;
 
@@ -33,9 +33,11 @@ public class BasicFont extends AbstractGameResource implements Font {
 	final Lock lock = new ReentrantLock(true);
 
 	BasicFont(BasicFontFactory factory, GameLauncher launcher, ResourceStream stream) {
+		launcher.getLogger().info("create font " + stream);
 		this.path = stream.getPath();
 		this.factory = factory;
 		this.future = launcher.getThreads().cached.submit(() -> {
+			launcher.getLogger().info("cleanup fontstream " + stream);
 			byte[] b = stream.readAllBytes();
 			stream.cleanup();
 			this.data = MemoryUtil.memAlloc(b.length);
@@ -50,6 +52,11 @@ public class BasicFont extends AbstractGameResource implements Font {
 			Threads.waitFor(this.future);
 		}
 		return this.data;
+	}
+
+	@Override
+	public boolean isCleanedUp() {
+		return this.refcount.get() == 0;
 	}
 
 	@Override

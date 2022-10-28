@@ -9,10 +9,12 @@ import gamelauncher.engine.util.GameException;
 public interface FontFactory {
 
 	/**
+	 * This method will close the given ResourceStream eventually
+	 * 
 	 * @param stream
 	 * @return a font created with the given {@link ResourceStream}
-	 * @throws GameException 
+	 * @throws GameException
 	 */
 	Font createFont(ResourceStream stream) throws GameException;
-	
+
 }

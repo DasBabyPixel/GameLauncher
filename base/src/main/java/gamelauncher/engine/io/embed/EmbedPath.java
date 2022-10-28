@@ -17,6 +17,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+/**
+ * @author DasBabyPixel
+ */
 public class EmbedPath implements java.nio.file.Path {
 
 	final EmbedFileSystem fileSystem;
@@ -27,14 +30,14 @@ public class EmbedPath implements java.nio.file.Path {
 
 	final boolean root;
 
-	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute) {
+	EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute) {
 		this.fileSystem = fileSystem;
 		this.segments = segments;
 		this.absolute = absolute;
 		this.root = false;
 	}
 
-	public EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute, boolean root) {
+	EmbedPath(EmbedFileSystem fileSystem, String[] segments, boolean absolute, boolean root) {
 		this.fileSystem = fileSystem;
 		this.segments = segments;
 		this.absolute = absolute;

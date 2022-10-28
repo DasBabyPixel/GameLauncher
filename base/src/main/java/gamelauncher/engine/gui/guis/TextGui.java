@@ -84,7 +84,6 @@ public class TextGui extends ParentableAbstractGui {
 	 */
 	public TextGui(GameLauncher launcher, Font font, String text, int height) throws GameException {
 		super(launcher);
-		this.createdFont = true;
 		this.font = ObjectProperty.withValue(font);
 		this.getHeightProperty().setNumber(height);
 		this.text = ObjectProperty.withValue(text);
@@ -200,7 +199,6 @@ public class TextGui extends ParentableAbstractGui {
 				.getResource(launcher.getEmbedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
 				.newResourceStream();
 		Font font = launcher.getFontFactory().createFont(stream);
-//		stream.cleanup();
 		return font;
 	}
 
