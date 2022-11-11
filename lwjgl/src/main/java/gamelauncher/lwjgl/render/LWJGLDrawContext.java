@@ -30,6 +30,7 @@ import gamelauncher.lwjgl.render.light.PointLight;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 
+@SuppressWarnings("javadoc")
 public class LWJGLDrawContext extends AbstractGameResource implements DrawContext {
 
 	protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
@@ -85,7 +86,7 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 			double sx, double sy, double sz, AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix,
 			Matrix4f viewMatrix, AtomicReference<Projection> projection) {
 		if (parent != null) {
-			parent.children.add(new WeakReference<LWJGLDrawContext>(this));
+			parent.children.add(new WeakReference<>(this));
 		}
 		this.framebuffer = framebuffer;
 		this.listener = new DrawContextFramebufferChangeListener(this, this.framebuffer.width(),
@@ -151,18 +152,17 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 		if (projection == null) {
 			return;
 		}
-		if (projection instanceof Transformations.Projection.Projection3D) {
-			Transformations.Projection.Projection3D p3d = (Transformations.Projection.Projection3D) projection;
+		if (projection instanceof Transformations.Projection.Projection3D p3d) {
 			float aspectRatio = this.framebuffer.width().floatValue() / this.framebuffer.height().floatValue();
 			this.projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
 		} else if (projection instanceof Transformations.Projection.Projection2D) {
 			this.projectionMatrix.identity();
 			if (this.swapTopBottom) {
-				this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), 0, this.framebuffer.height().floatValue(),
-						-10000, 10000);
+				this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), 0,
+						this.framebuffer.height().floatValue(), -10000, 10000);
 			} else {
-				this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), this.framebuffer.height().floatValue(), 0,
-						-10000, 10000);
+				this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(),
+						this.framebuffer.height().floatValue(), 0, -10000, 10000);
 			}
 		}
 	}
@@ -219,19 +219,18 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 //		dir.mul(viewMatrix);
 //		currDirLight.direction = new Vector3f(dir.x, dir.y, dir.z);
 		shaderProgram.udirectionalLight.set(this.directionalLight);
-
 	}
 
 	@Override
 	public LWJGLDrawContext translate(double x, double y, double z) {
-		return new LWJGLDrawContext(this, this.framebuffer, this.tx + x, this.ty + y, this.tz + z, this.sx, this.sy, this.sz, this.shaderProgram,
-				this.projectionMatrix, this.viewMatrix, this.projection);
+		return new LWJGLDrawContext(this, this.framebuffer, this.tx + x, this.ty + y, this.tz + z, this.sx, this.sy,
+				this.sz, this.shaderProgram, this.projectionMatrix, this.viewMatrix, this.projection);
 	}
 
 	@Override
 	public LWJGLDrawContext scale(double x, double y, double z) {
-		return new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx * x, this.sy * y, this.sz * z, this.shaderProgram,
-				this.projectionMatrix, this.viewMatrix, this.projection);
+		return new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx * x, this.sy * y,
+				this.sz * z, this.shaderProgram, this.projectionMatrix, this.viewMatrix, this.projection);
 	}
 
 	public LWJGLDrawContext withProgram(LWJGLShaderProgram program) {
@@ -241,14 +240,14 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 
 	@Override
 	public DrawContext withProgram(ShaderProgram program) throws GameException {
-		return new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz, new AtomicReference<>(program),
-				this.projectionMatrix, this.viewMatrix, this.projection);
+		return new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz,
+				new AtomicReference<>(program), this.projectionMatrix, this.viewMatrix, this.projection);
 	}
 
 	@Override
 	public LWJGLDrawContext withProjection(Projection projection) throws GameException {
-		LWJGLDrawContext ctx = new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz, this.shaderProgram,
-				new Matrix4f(), this.viewMatrix, new AtomicReference<>(projection));
+		LWJGLDrawContext ctx = new LWJGLDrawContext(this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy,
+				this.sz, this.shaderProgram, new Matrix4f(), this.viewMatrix, new AtomicReference<>(projection));
 		ctx.reloadProjectionMatrix();
 		return ctx;
 	}
@@ -263,7 +262,7 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 	@Override
 	public void cleanup0() throws GameException {
 		this.listener.cleanup();
-		this.runForChildren(ctx -> ctx.cleanup());
+		this.runForChildren(LWJGLDrawContext::cleanup);
 	}
 
 	private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx,
@@ -280,8 +279,7 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 			GameItem item = ((GameItemModel) model).gameItem;
 			item.applyToTransformationMatrix(this.modelMatrix);
 			this.pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
-		} else if (model instanceof LWJGLCombinedModelsModel) {
-			LWJGLCombinedModelsModel comb = (LWJGLCombinedModelsModel) model;
+		} else if (model instanceof LWJGLCombinedModelsModel comb) {
 			this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
 			comb.modelMatix.set(this.modelMatrix);
 			for (Model m : comb.getModels()) {
@@ -291,7 +289,8 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 				this.pDrawModel(m, 0, 0, 0, 0, 0, 0, 1, 1, 1, comb.colorMultiplier, comb.colorAdd);
 			}
 		} else if (model instanceof WrapperModel) {
-			this.pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
+			this.pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier,
+					colorAdd);
 		} else {
 			this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
 			this.drawMesh(model, colorMultiplier, colorAdd);
@@ -319,7 +318,8 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 	private void setupModelMatrix(double x, double y, double z, double rx, double ry, double rz, double sx, double sy,
 			double sz) {
 		this.modelMatrix.translate((float) (x + this.tx), (float) (y + this.ty), (float) (z + this.tz));
-		this.modelMatrix.rotateXYZ((float) Math.toRadians(-rx), (float) Math.toRadians(-ry), (float) Math.toRadians(-rz));
+		this.modelMatrix.rotateXYZ((float) Math.toRadians(-rx), (float) Math.toRadians(-ry),
+				(float) Math.toRadians(-rz));
 		this.modelMatrix.scale((float) (sx * this.sx), (float) (sy * this.sy), (float) (sz * this.sz));
 	}
 

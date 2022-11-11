@@ -10,6 +10,7 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 
+@SuppressWarnings("javadoc")
 public class LWJGLShaderProgram extends ShaderProgram {
 
 	private final int programId;

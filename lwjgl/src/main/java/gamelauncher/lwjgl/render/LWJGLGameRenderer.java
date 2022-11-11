@@ -168,19 +168,14 @@ public class LWJGLGameRenderer implements GameRenderer {
 		public void refreshDisplay(Renderer renderer) throws GameException {
 			GlStates cur = GlStates.current();
 			this.frame.framebuffer().beginFrame();
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 			cur.viewport(0, 0, this.frame.framebuffer().width().intValue(),
 					this.frame.framebuffer().height().intValue());
 			cur.clearColor(0, 0, 0, 0);
 			cur.clear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
 			this.contexthud.update(this.camera);
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 			this.contexthud.getProgram().clearUniforms();
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 			this.frame.framebuffer().endFrame();
 		}
 
@@ -191,8 +186,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 					this.frame.framebuffer().height().intValue());
 			cur.clearColor(0, 0, 0, 0);
 			cur.clear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
 			this.mainFramebuffer.bind();
 
@@ -210,13 +203,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			this.mainFramebuffer.unbind();
 
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
-
 			this.contexthud.update(this.camera);
 			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
 			this.contexthud.getProgram().clearUniforms();
-
-			LWJGLGameRenderer.this.launcher.getProfiler().check();
 
 			this.frame.framebuffer().endFrame();
 		}

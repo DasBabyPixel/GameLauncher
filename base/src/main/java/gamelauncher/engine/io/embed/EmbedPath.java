@@ -15,7 +15,6 @@ import java.nio.file.WatchService;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
 /**
  * @author DasBabyPixel
@@ -44,27 +43,27 @@ public class EmbedPath implements java.nio.file.Path {
 		this.root = root;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(this.segments);
-		result = prime * result + Objects.hash(this.absolute, this.root);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (this.getClass() != obj.getClass())
-			return false;
-		EmbedPath other = (EmbedPath) obj;
-		return this.absolute == other.absolute && this.root == other.root
-				&& Arrays.equals(this.segments, other.segments);
-	}
+//	@Override
+//	public int hashCode() {
+//		final int prime = 31;
+//		int result = 1;
+//		result = prime * result + Arrays.hashCode(this.segments);
+//		result = prime * result + Objects.hash(this.absolute, this.root);
+//		return result;
+//	}
+//
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (this == obj)
+//			return true;
+//		if (obj == null)
+//			return false;
+//		if (this.getClass() != obj.getClass())
+//			return false;
+//		EmbedPath other = (EmbedPath) obj;
+//		return this.absolute == other.absolute && this.root == other.root
+//				&& Arrays.equals(this.segments, other.segments);
+//	}
 
 	@Override
 	public Path getRoot() {
@@ -225,7 +224,7 @@ public class EmbedPath implements java.nio.file.Path {
 
 	@Override
 	public Iterator<Path> iterator() {
-		return new Iterator<Path>() {
+		return new Iterator<>() {
 
 			private int i = 0;
 
