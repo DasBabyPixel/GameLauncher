@@ -22,16 +22,16 @@ public class MeshModel extends AbstractGameResource implements Model {
 
 	@Override
 	protected void cleanup0() throws GameException {
-		mesh.cleanup();
+		this.mesh.cleanup();
 	}
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
-		if (mesh.getMaterial() != null) {
-			program.umaterial.set(mesh.getMaterial());
+		if (this.mesh.getMaterial() != null) {
+			program.umaterial.set(this.mesh.getMaterial());
 		}
-		program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0);
+		program.uapplyLighting.set(this.mesh.applyLighting() ? 1 : 0);
 		program.uploadUniforms();
-		mesh.render();
+		this.mesh.render();
 	}
 }

@@ -166,6 +166,7 @@ public class BasicUniform implements Uniform {
 		return this.set(vec.x, vec.y, vec.z, vec.w);
 	}
 
+	@SuppressWarnings("javadoc")
 	public static enum Type {
 		INT1("int", Integer.BYTES),
 		FLOAT1("float", Float.BYTES),

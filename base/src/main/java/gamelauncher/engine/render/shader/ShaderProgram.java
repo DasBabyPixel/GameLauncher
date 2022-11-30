@@ -77,6 +77,7 @@ public abstract class ShaderProgram extends AbstractGameResource {
 		for (Uniform uniform : this.uploadUniforms) {
 			uniform.upload();
 		}
+		this.clearUniforms();
 	}
 
 	/**

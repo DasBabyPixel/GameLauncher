@@ -43,7 +43,8 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
-		this.context = this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+		this.context =
+				this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
 
 		Mesh mesh = new PlaneMesh();
 		Mesh.Material mat = mesh.getMaterial();
@@ -63,8 +64,8 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 	}
 
 	@Override
-	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
-			throws GameException {
+	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
+			float partialTick) throws GameException {
 		this.context.update(EmptyCamera.instance());
 		this.context.drawModel(this.model);
 		this.context.getProgram().clearUniforms();

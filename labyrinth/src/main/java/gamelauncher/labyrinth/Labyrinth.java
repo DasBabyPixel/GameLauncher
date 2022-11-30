@@ -3,6 +3,7 @@ package gamelauncher.labyrinth;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
+import gamelauncher.engine.launcher.gui.ColorGui;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.plugin.Plugin.GamePlugin;
 import gamelauncher.engine.render.Framebuffer;
@@ -31,8 +32,25 @@ public class Labyrinth extends Plugin {
 						ButtonGui g = new ButtonGui(this.getLauncher()) {
 
 							@Override
-							protected void buttonPressed(gamelauncher.engine.util.keybind.MouseButtonKeybindEntry e) {
-								System.out.println("pressed");
+							protected void buttonPressed(gamelauncher.engine.util.keybind.MouseButtonKeybindEntry e)
+									throws GameException {
+								this.getLauncher()
+										.getGuiManager()
+										.openGui(this.framebuffer, new ParentableAbstractGui(this.getLauncher()) {
+
+											{
+												ColorGui g = this.getLauncher()
+														.getGuiManager()
+														.createGui(ColorGui.class);
+												g.getColor().set(1, 0, 1, 0.5F);
+												g.getWidthProperty().bind(this.getWidthProperty());
+												g.getHeightProperty().bind(this.getHeightProperty());
+												g.getXProperty().bind(this.getXProperty());
+												g.getYProperty().bind(this.getYProperty());
+												this.GUIs.add(g);
+											}
+
+										});
 							}
 
 						};

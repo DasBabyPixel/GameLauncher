@@ -2,11 +2,14 @@ package gamelauncher.engine.render;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.logging.Logger;
 
 /**
  * @author DasBabyPixel
  */
 public class ContextProvider {
+
+	private static final Logger logger = Logger.getLogger();
 
 	private final GameLauncher launcher;
 
@@ -26,9 +29,10 @@ public class ContextProvider {
 	 * @throws GameException
 	 */
 	public DrawContext loadContext(Framebuffer framebuffer, ContextType type) throws GameException {
+		ContextProvider.logger.info("Loading context");
 		@SuppressWarnings("deprecation")
-		DrawContext ctx = launcher.createContext(framebuffer);
-		type.load(launcher, ctx);
+		DrawContext ctx = this.launcher.createContext(framebuffer);
+		type.load(this.launcher, ctx);
 		return ctx;
 	}
 
@@ -36,10 +40,11 @@ public class ContextProvider {
 	 * Frees a context
 	 * 
 	 * @param context
-	 * @param type 
-	 * @throws GameException 
+	 * @param type
+	 * @throws GameException
 	 */
 	public void freeContext(DrawContext context, ContextType type) throws GameException {
+		ContextProvider.logger.info("Freeing context");
 		type.cleanup(context);
 		context.cleanup();
 	}
@@ -48,7 +53,7 @@ public class ContextProvider {
 	 * @return the launcher
 	 */
 	public GameLauncher getLauncher() {
-		return launcher;
+		return this.launcher;
 	}
 
 	/**

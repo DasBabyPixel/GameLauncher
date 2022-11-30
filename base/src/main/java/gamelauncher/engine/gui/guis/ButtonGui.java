@@ -38,14 +38,10 @@ public class ButtonGui extends ParentableAbstractGui {
 		this.GUIs.add(colorGui);
 
 		TextGui textGui = new TextGui(launcher, "no text set", 50);
-		textGui.getXProperty()
-				.bind(this.getXProperty()
-						.add(this.getWidthProperty().divide(2))
-						.subtract(textGui.getWidthProperty().divide(2)));
-		textGui.getYProperty()
-				.bind(this.getYProperty()
-						.add(this.getHeightProperty().divide(2))
-						.subtract(textGui.getHeightProperty().divide(2)));
+		textGui.getXProperty().bind(this.getXProperty().add(this.getWidthProperty().divide(2))
+				.subtract(textGui.getWidthProperty().divide(2)));
+		textGui.getYProperty().bind(this.getYProperty().add(this.getHeightProperty().divide(2))
+				.subtract(textGui.getHeightProperty().divide(2)));
 		textGui.getHeightProperty().bind(this.getHeightProperty());
 		Runnable recalc = () -> {
 			PropertyVector4f c = textGui.color();
@@ -64,13 +60,17 @@ public class ButtonGui extends ParentableAbstractGui {
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof MouseButtonKeybindEntry) {
-			MouseButtonKeybindEntry mb = (MouseButtonKeybindEntry) entry;
+		if (entry instanceof MouseButtonKeybindEntry mb) {
 			if (mb.type() == Type.RELEASE) {
 				if (this.getX() < mb.mouseX() && this.getY() < mb.mouseY()
 						&& this.getX() + this.getWidth() > mb.mouseX()
 						&& this.getY() + this.getHeight() > mb.mouseY()) {
-					this.buttonPressed(mb);
+					try {
+						this.buttonPressed(mb);
+					} catch (GameException ex) {
+						this.pressing.setValue(false);
+						throw ex;
+					}
 				}
 				this.pressing.setValue(false);
 			} else if (mb.type() == Type.PRESS) {
@@ -87,7 +87,6 @@ public class ButtonGui extends ParentableAbstractGui {
 		return this.text;
 	}
 
-	protected void buttonPressed(MouseButtonKeybindEntry e) {
-	}
+	protected void buttonPressed(MouseButtonKeybindEntry e) throws GameException {}
 
 }
