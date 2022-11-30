@@ -1,10 +1,10 @@
 package gamelauncher.lwjgl.render.model;
 
-import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.system.MemoryUtil.*;
-
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+
+import org.lwjgl.opengles.GLES20;
+import org.lwjgl.system.MemoryUtil;
 
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
@@ -13,7 +13,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
-@SuppressWarnings("javadoc")
 public class Texture2DModel extends AbstractGameResource implements Model {
 
 	private final int vao;
@@ -39,43 +38,43 @@ public class Texture2DModel extends AbstractGameResource implements Model {
 		textureBottom = 1 - textureBottom;
 		GlStates c = GlStates.current();
 		//@formatter:off
-		vao = c.genVertexArrays();
-		c.bindVertexArray(vao);
-		idxbuffer = c.genBuffers();
-		IntBuffer ibuffer = memAllocInt(6);
+		this.vao = c.genVertexArrays();
+		c.bindVertexArray(this.vao);
+		this.idxbuffer = c.genBuffers();
+		IntBuffer ibuffer = MemoryUtil.memAllocInt(6);
 		ibuffer.put(new int[] {
 				0, 2, 1,
 				0, 3, 2
 		}).flip();
-		vertexCount = 6;
-		c.bindBuffer(GL_ELEMENT_ARRAY_BUFFER, idxbuffer);
-		c.bufferData(GL_ELEMENT_ARRAY_BUFFER, ibuffer, GL_STATIC_DRAW);
-		memFree(ibuffer);
-		posbuffer = c.genBuffers();
-		FloatBuffer fbuffer = memAllocFloat(12);
+		this.vertexCount = 6;
+		c.bindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, this.idxbuffer);
+		c.bufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, ibuffer, GLES20.GL_STATIC_DRAW);
+		MemoryUtil.memFree(ibuffer);
+		this.posbuffer = c.genBuffers();
+		FloatBuffer fbuffer = MemoryUtil.memAllocFloat(12);
 		fbuffer.put(new float[] {
 				-0.5F, -0.5F, 0F,
 				-0.5F, 0.5F, 0F,
 				0.5F, 0.5F, 0F,
 				0.5F, -0.5F, 0F
 		}).flip();
-		c.bindBuffer(GL_ARRAY_BUFFER, posbuffer);
-		c.bufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
-		memFree(fbuffer);
-		c.vertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+		c.bindBuffer(GLES20.GL_ARRAY_BUFFER, this.posbuffer);
+		c.bufferData(GLES20.GL_ARRAY_BUFFER, fbuffer, GLES20.GL_STATIC_DRAW);
+		MemoryUtil.memFree(fbuffer);
+		c.vertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 0, 0);
 		
-		texbuffer = c.genBuffers();
-		fbuffer = memAllocFloat(8);
+		this.texbuffer = c.genBuffers();
+		fbuffer = MemoryUtil.memAllocFloat(8);
 		fbuffer.put(new float[] {
 				textureLeft, textureBottom,
 				textureLeft, textureTop,
 				textureRight, textureTop,
 				textureRight, textureBottom
 		}).flip();
-		c.bindBuffer(GL_ARRAY_BUFFER, texbuffer);
-		c.bufferData(GL_ARRAY_BUFFER, fbuffer, GL_STATIC_DRAW);
-		memFree(fbuffer);
-		c.vertexAttribPointer(1, 2, GL_FLOAT, false, 0, 0);
+		c.bindBuffer(GLES20.GL_ARRAY_BUFFER, this.texbuffer);
+		c.bufferData(GLES20.GL_ARRAY_BUFFER, fbuffer, GLES20.GL_STATIC_DRAW);
+		MemoryUtil.memFree(fbuffer);
+		c.vertexAttribPointer(1, 2, GLES20.GL_FLOAT, false, 0, 0);
 		//@formatter:on
 	}
 
@@ -84,14 +83,14 @@ public class Texture2DModel extends AbstractGameResource implements Model {
 		GlStates c = GlStates.current();
 		program.uapplyLighting.set(0);
 		program.uhasTexture.set(1);
-		c.activeTexture(GL_TEXTURE0);
-		c.bindTexture(GL_TEXTURE_2D, texture.getTextureId());
-		c.bindVertexArray(vao);
+		c.activeTexture(GLES20.GL_TEXTURE0);
+		c.bindTexture(GLES20.GL_TEXTURE_2D, this.texture.getTextureId());
+		c.bindVertexArray(this.vao);
 
 		program.uploadUniforms();
 		c.enableVertexAttribArray(0);
 		c.enableVertexAttribArray(1);
-		c.drawElements(GL_TRIANGLES, this.vertexCount, GL_UNSIGNED_INT, 0);
+		c.drawElements(GLES20.GL_TRIANGLES, this.vertexCount, GLES20.GL_UNSIGNED_INT, 0);
 		c.disableVertexAttribArray(0);
 		c.disableVertexAttribArray(1);
 	}
@@ -99,14 +98,14 @@ public class Texture2DModel extends AbstractGameResource implements Model {
 	@Override
 	public void cleanup0() throws GameException {
 		GlStates c = GlStates.current();
-		c.deleteBuffers(idxbuffer);
-		c.deleteBuffers(posbuffer);
-		c.deleteBuffers(texbuffer);
-		c.deleteVertexArrays(vao);
+		c.deleteBuffers(this.idxbuffer);
+		c.deleteBuffers(this.posbuffer);
+		c.deleteBuffers(this.texbuffer);
+		c.deleteVertexArrays(this.vao);
 	}
 
 	public LWJGLTexture getTexture() {
-		return texture;
+		return this.texture;
 	}
 
 }

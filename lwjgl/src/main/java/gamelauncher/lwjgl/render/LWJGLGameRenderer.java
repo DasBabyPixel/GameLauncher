@@ -23,7 +23,6 @@ import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.states.GlStates;
 
-@SuppressWarnings("javadoc")
 public class LWJGLGameRenderer implements GameRenderer {
 
 //	public static final boolean WIREFRAMES = false;

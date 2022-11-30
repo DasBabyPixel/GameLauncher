@@ -51,9 +51,9 @@ public class BasicUniform implements Uniform {
 
 	@Override
 	public Uniform upload() {
-		if (!this.hasValue.get()) {
-			return this;
-		}
+//		if (!this.hasValue.get()) {
+//			return this;
+//		}
 		GlStates c = GlStates.current();
 		this.hasValue.set(false);
 		switch (this.type) {

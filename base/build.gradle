@@ -1,0 +1,9 @@
+dependencies {
+    api jansi
+    api guava
+    api fastutil
+    api property
+    api joml
+    api gson
+    api pngdecoder
+}

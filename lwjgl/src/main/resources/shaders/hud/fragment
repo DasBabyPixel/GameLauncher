@@ -20,4 +20,5 @@ void main()
     }
     
     fragColor = color * (textureAddColor + fc);
+    //fragColor = textureAddColor + fc;
 }

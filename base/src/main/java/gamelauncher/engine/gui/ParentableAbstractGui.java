@@ -330,7 +330,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	protected void redraw() {
-		this.framebuffer.scheduleRedraw();
+		if (this.framebuffer != null)
+			this.framebuffer.scheduleRedraw();
 	}
 
 	@Override

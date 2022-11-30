@@ -40,7 +40,7 @@ public class LWJGLShaderLoader implements ShaderLoader {
 
 	private static final Logger logger = Logger.getLogger();
 
-	final Map<Resource, LWJGLShaderProgram> programs = new ConcurrentHashMap<>();
+	private final Map<Resource, LWJGLShaderProgram> programs = new ConcurrentHashMap<>();
 
 	@Override
 	public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
@@ -63,6 +63,7 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
 			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher, path);
 			this.programs.put(resource, program);
+			program.cleanupFuture().thenRun(() -> this.programs.remove(resource));
 			program.createVertexShader(vscode);
 			program.createFragmentShader(fscode);
 			program.link();

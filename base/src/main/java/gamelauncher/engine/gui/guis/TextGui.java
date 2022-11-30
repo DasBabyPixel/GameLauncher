@@ -90,7 +90,10 @@ public class TextGui extends ParentableAbstractGui {
 		this.camera = new BasicCamera();
 		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> this.cwidth));
 		this.getWidthProperty().bind(this.cwidthprop);
-		this.invalidationListener = property -> TextGui.this.recreateModel.set(true);
+		this.invalidationListener = property -> {
+			TextGui.this.recreateModel.set(true);
+			this.redraw();
+		};
 		this.baselineYOffset = NumberValue
 				.withStorage(new SupplierReadOnlyStorage<>(() -> this.model == null ? 0 : -this.model.getDescent()));
 		this.weakListener = new WeakReferenceInvalidationListener(this.invalidationListener);
@@ -107,6 +110,10 @@ public class TextGui extends ParentableAbstractGui {
 			}
 		});
 		this.font.addListener(this.weakListener);
+		this.color.x.addListener((NumberValue p) -> this.redraw());
+		this.color.y.addListener((NumberValue p) -> this.redraw());
+		this.color.z.addListener((NumberValue p) -> this.redraw());
+		this.color.w.addListener((NumberValue p) -> this.redraw());
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
-@SuppressWarnings("javadoc")
 public final class LWJGLCombinedModelsModel extends AbstractGameResource implements CombinedModelsModel {
 
 	private final Model[] models;
@@ -32,14 +31,14 @@ public final class LWJGLCombinedModelsModel extends AbstractGameResource impleme
 
 	@Override
 	public void cleanup0() throws GameException {
-		for (Model model : models) {
+		for (Model model : this.models) {
 			model.cleanup();
 		}
 	}
 
 	@Override
 	public Model[] getModels() {
-		return models;
+		return this.models;
 	}
 
 }

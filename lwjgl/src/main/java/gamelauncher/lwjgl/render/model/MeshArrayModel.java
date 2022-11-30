@@ -23,20 +23,20 @@ public class MeshArrayModel extends AbstractGameResource implements Model {
 
 	@Override
 	public void cleanup0() throws GameException {
-		for (Mesh mesh : meshes) {
+		for (Mesh mesh : this.meshes) {
 			mesh.cleanup();
 		}
 	}
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
-		program.uploadUniforms();
-		for (Mesh mesh : meshes) {
+		for (Mesh mesh : this.meshes) {
 			if (mesh.getMaterial() != null) {
 				program.umaterial.set(mesh.getMaterial());
 			}
-			program.umaterial.upload();
-			program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0).upload();
+//			program.umaterial.upload();
+			program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0);
+			program.uploadUniforms();
 			mesh.render();
 		}
 	}

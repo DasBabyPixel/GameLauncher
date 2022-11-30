@@ -11,6 +11,7 @@ import gamelauncher.engine.resource.AbstractGameResource;
 /**
  * @author DasBabyPixel
  */
+@SuppressWarnings("javadoc")
 public abstract class ShaderProgram extends AbstractGameResource {
 
 	protected final GameLauncher launcher;
@@ -72,13 +73,20 @@ public abstract class ShaderProgram extends AbstractGameResource {
 	 * Uploads all {@link Uniform}s in this {@link ShaderProgram}
 	 */
 	public void uploadUniforms() {
+		this.clearUniforms();
 		for (Uniform uniform : this.uploadUniforms) {
 			uniform.upload();
 		}
 	}
 
+	/**
+	 * 
+	 */
 	public abstract void bind();
 
+	/**
+	 * 
+	 */
 	public abstract void unbind();
 
 }

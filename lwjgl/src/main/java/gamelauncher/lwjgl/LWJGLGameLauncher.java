@@ -22,6 +22,7 @@ import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
+import gamelauncher.lwjgl.render.LWJGLTestRenderer;
 import gamelauncher.lwjgl.render.font.BasicFontFactory;
 import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
@@ -61,7 +62,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		this.setKeybindManager(new LWJGLKeybindManager(this));
 		this.setResourceLoader(new SimpleResourceLoader());
 		this.setShaderLoader(new LWJGLShaderLoader());
-		this.setGameRenderer(new LWJGLGameRenderer(this));
+		this.setGameRenderer(new LWJGLTestRenderer(this));
 		this.setModelLoader(new LWJGLModelLoader(this));
 		this.setGuiManager(new LWJGLGuiManager(this));
 		this.setFontFactory(new BasicFontFactory(this));

@@ -4,3 +4,4 @@ run/
 .classpath
 .project
 .settings/
+/.gradle/

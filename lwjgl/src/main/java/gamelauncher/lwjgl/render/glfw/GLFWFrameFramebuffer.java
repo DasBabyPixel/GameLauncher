@@ -11,7 +11,6 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.LWJGLScissorStack;
 
-@SuppressWarnings("javadoc")
 public class GLFWFrameFramebuffer extends AbstractGameResource implements Framebuffer {
 
 	private final NumberValue width = NumberValue.zero();
@@ -36,7 +35,6 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
 	@Override
 	public void endFrame() {
 		if (this.swapBuffers.booleanValue()) {
-			this.frame.launcher.getProfiler().check();
 			GLUtil.skip.set(true);
 			GLFW.glfwSwapBuffers(this.frame.context.glfwId);
 			GLUtil.skip.remove();

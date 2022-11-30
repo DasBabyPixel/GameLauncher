@@ -15,7 +15,6 @@ import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.lwjgl.render.GlContext;
 import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
 
-@SuppressWarnings("javadoc")
 public class GLFWFrameRenderThread extends AbstractExecutorThread implements RenderThread {
 
 	private static final AtomicInteger ids = new AtomicInteger();
