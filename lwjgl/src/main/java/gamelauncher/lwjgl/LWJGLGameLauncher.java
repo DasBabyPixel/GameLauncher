@@ -5,7 +5,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengles.GLES;
 import org.lwjgl.system.Configuration;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
@@ -85,13 +84,14 @@ public class LWJGLGameLauncher extends GameLauncher {
 		GL.destroy();
 
 		this.mainFrame = new GLFWFrame(this);
-//		this.asyncUploader = new LWJGLAsyncOpenGL(this, this.mainFrame);
+		// this.asyncUploader = new LWJGLAsyncOpenGL(this, this.mainFrame);
 		this.setFrame(this.mainFrame);
-		this.mainFrame.framebuffer().renderThread().submit(() -> this.setGlyphProvider(new LWJGLGlyphProvider(this)));
+		this.mainFrame.framebuffer().renderThread()
+				.submit(() -> this.setGlyphProvider(new LWJGLGlyphProvider(this)));
 		this.mainFrame.renderMode(RenderMode.ON_UPDATE);
-//		this.mainFrame.frameCounter().limit(500);
-//		Threads.waitFor(this.mainFrame.createWindow());
-//		this.asyncUploader.start(); 
+		// this.mainFrame.frameCounter().limit(500);
+		// Threads.waitFor(this.mainFrame.createWindow());
+		// this.asyncUploader.start();
 		this.mainFrame.frameCounter().addUpdateListener(fps -> {
 			this.getLogger().infof("FPS: %s", fps);
 		});
@@ -103,7 +103,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 				ex.printStackTrace();
 			}
 		});
-//		this.mainFrame.getRenderThread().start();
+		// this.mainFrame.getRenderThread().start();
 
 		this.getEventManager().registerListener(this);
 	}
@@ -114,8 +114,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 		this.getGlyphProvider().cleanup();
 		this.getTextureManager().cleanup();
 
-//		this.asyncUploader.cleanup();
-//		Threads.waitFor(this.mainFrame.destroy());
+		// this.asyncUploader.cleanup();
+		// Threads.waitFor(this.mainFrame.destroy());
 		this.mainFrame.cleanup();
 		Threads.waitFor(this.glfwThread.exit());
 	}
@@ -129,7 +129,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 			ex.printStackTrace();
 		}
 
-//		glfwThread.submit(() -> glfwSetWindowAttrib(window.getGLFWId(), GLFW_FLOATING, GLFW_TRUE));
+		// glfwThread.submit(() -> glfwSetWindowAttrib(window.getGLFWId(), GLFW_FLOATING,
+		// GLFW_TRUE));
 		this.mouseMovement(false);
 	}
 
@@ -168,10 +169,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick0() throws GameException {
-//		double avgNanos = getGameThread().getAverageTickTime();
-//		long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
-//		System.out.printf("%05d%n", avgMillis);
-//		System.out.println("Tick");
+		// double avgNanos = getGameThread().getAverageTickTime();
+		// long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
+		// System.out.printf("%05d%n", avgMillis);
+		// System.out.println("Tick");
 		this.mainFrame.getInput().handleInput();
 		mouse: if (this.mouseMovement) {
 			Camera cam = this.camera;
@@ -192,13 +193,13 @@ public class LWJGLGameLauncher extends GameLauncher {
 	public GLFWThread getGLFWThread() {
 		return this.glfwThread;
 	}
-//
-//	/**
-//	 * @return the {@link LWJGLAsyncOpenGL}
-//	 */
-//	public LWJGLAsyncOpenGL getAsyncUploader() {
-//		return this.asyncUploader;
-//	}
+	//
+	// /**
+	// * @return the {@link LWJGLAsyncOpenGL}
+	// */
+	// public LWJGLAsyncOpenGL getAsyncUploader() {
+	// return this.asyncUploader;
+	// }
 
 	/**
 	 * @return the {@link GlThreadGroup}
