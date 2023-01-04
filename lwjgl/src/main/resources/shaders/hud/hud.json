@@ -1,6 +1,6 @@
 {
-	"vertexShader": "vertex",
-	"fragmentShader": "fragment",
+	"vertexShader": "vertex.glsl",
+	"fragmentShader": "fragment.glsl",
 	"uniforms": {
 		"modelMatrix": "mat4",
 		"projectionMatrix": "mat4",

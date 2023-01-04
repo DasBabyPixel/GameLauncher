@@ -46,9 +46,6 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>> converters = new HashMap<>();
 
-	/**
-	 * @param launcher
-	 */
 	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 		this.launcher.getEventManager().registerListener(this);

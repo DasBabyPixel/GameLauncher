@@ -7,6 +7,7 @@ import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.gui.guis.GuiContainer;
+import gamelauncher.engine.gui.guis.TextGui;
 import gamelauncher.engine.launcher.gui.MainScreenGui;
 import gamelauncher.engine.launcher.gui.ScrollGui;
 import gamelauncher.engine.util.GameException;
@@ -23,11 +24,16 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
 
+		TextGui tg = new TextGui(launcher, "ABCDE", 300);
+		GUIs.add(tg);
+		if (!GUIs.isEmpty())
+			return;
+
 		GuiContainer container = new GuiContainer(launcher);
 
 		NumberValue currentY = container.getYProperty().subtract(this.spacing);
 
-		for (Game game : launcher.getGameRegistry().getGames().stream().sorted().collect(Collectors.toList())) {
+		for (Game game : launcher.getGameRegistry().getGames().stream().sorted().toList()) {
 			GameGui gui = new GameGui(game);
 			gui.getYProperty().bind(currentY.add(this.spacing));
 			currentY = gui.getYProperty().add(gui.getHeightProperty());
@@ -39,14 +45,10 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 		ScrollGui scrollGui = launcher.getGuiManager().createGui(ScrollGui.class);
 		scrollGui.gui().setValue(container);
-		scrollGui.getXProperty()
-				.bind(this.getXProperty()
-						.add(this.getWidthProperty().divide(2))
-						.subtract(scrollGui.getWidthProperty().divide(2)));
-		scrollGui.getYProperty()
-				.bind(this.getYProperty()
-						.add(this.getHeightProperty().divide(2))
-						.subtract(scrollGui.getHeightProperty().divide(2)));
+		scrollGui.getXProperty().bind(this.getXProperty().add(this.getWidthProperty().divide(2))
+				.subtract(scrollGui.getWidthProperty().divide(2)));
+		scrollGui.getYProperty().bind(this.getYProperty().add(this.getHeightProperty().divide(2))
+				.subtract(scrollGui.getHeightProperty().divide(2)));
 		scrollGui.getWidthProperty().bind(this.getWidthProperty().divide(2));
 		scrollGui.getHeightProperty().bind(this.getHeightProperty().divide(2));
 
@@ -54,8 +56,10 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 	}
 
 	private static int id = 0;
+
+
 	private class GameGui extends ParentableAbstractGui {
-		
+
 		public GameGui(Game game) throws GameException {
 			super(LWJGLMainScreenGui.this.getLauncher());
 			ButtonGui buttonGui = new ButtonGui(this.getLauncher()) {
@@ -71,8 +75,8 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 			};
 			LWJGLMainScreenGui.id++;
-//			String s = game.getKey().getKey();
-			String s = LWJGLMainScreenGui.id!=1?"labyrinthgame":"example";
+			//			String s = game.getKey().getKey();
+			String s = LWJGLMainScreenGui.id != 1 ? "labyrinthgame" : "example";
 			System.out.println(s);
 			buttonGui.text().setValue(s);
 			buttonGui.getXProperty().bind(this.getXProperty());

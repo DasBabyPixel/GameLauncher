@@ -34,7 +34,6 @@ public abstract class ShaderProgram extends AbstractGameResource {
 	public Uniform utextureAddColor = EmptyUniform.instance;
 	public Uniform uapplyLighting = EmptyUniform.instance;
 	public Uniform uhasTexture = EmptyUniform.instance;
-	public Uniform uhasPixelTextureCoords = EmptyUniform.instance;
 
 	/**
 	 * @param launcher

@@ -10,15 +10,14 @@ uniform sampler2D texture_sampler;
 uniform vec4 color;
 uniform vec4 textureAddColor;
 
-void main()
-{
+void main() {
     vec4 fc;
-    if(hasTexture==1) {
-    	fc = texture(texture_sampler, outTexCoord);
+    if (hasTexture==1) {
+        fc = texture(texture_sampler, outTexCoord);
     } else {
-    	fc = vec4(1, 1, 1, 1);
+        fc = vec4(1, 1, 1, 1);
     }
-    
+
     fragColor = color * (textureAddColor + fc);
     //fragColor = textureAddColor + fc;
 }

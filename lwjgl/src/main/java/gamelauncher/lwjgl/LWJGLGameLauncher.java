@@ -58,7 +58,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 		this.setKeybindManager(new LWJGLKeybindManager(this));
 		this.setResourceLoader(new SimpleResourceLoader());
 		this.setShaderLoader(new LWJGLShaderLoader());
-		this.setGameRenderer(new LWJGLTestRenderer(this));
+		this.setGameRenderer(new LWJGLGameRenderer(this));
 		this.setModelLoader(new LWJGLModelLoader(this));
 		this.setGuiManager(new LWJGLGuiManager(this));
 		this.setFontFactory(new BasicFontFactory(this));
@@ -89,9 +89,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 		// this.mainFrame.frameCounter().limit(500);
 		// Threads.waitFor(this.mainFrame.createWindow());
 		// this.asyncUploader.start();
-		this.mainFrame.frameCounter().addUpdateListener(fps -> {
-			this.getLogger().infof("FPS: %s", fps);
-		});
+//		this.mainFrame.frameCounter().addUpdateListener(fps -> {
+//			this.getLogger().infof("FPS: %s", fps);
+//		});
 		this.mainFrame.closeCallback().setValue(frame -> {
 			this.mainFrame.hideWindow();
 			try {

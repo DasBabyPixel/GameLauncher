@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.imageio.ImageIO;
 
+import de.dasbabypixel.api.property.NumberValue;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -44,9 +45,9 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	private final AtomicInteger textureId = new AtomicInteger();
 
-	private final AtomicInteger width = new AtomicInteger();
+	private final NumberValue width = NumberValue.zero();
 
-	private final AtomicInteger height = new AtomicInteger();
+	private final NumberValue height = NumberValue.zero();
 
 	private final Profiler profiler;
 
@@ -165,8 +166,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	@Override
 	public CompletableFuture<Void> resize(int width, int height) {
-		this.width.set(width);
-		this.height.set(height);
+		this.width.setValue(width);
+		this.height.setValue(height);
 		return owner.submit(() -> {
 			try {
 				lock.writeLock().lock();
@@ -188,8 +189,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	@Override
 	public CompletableFuture<Void> allocate(int width, int height) {
-		this.width.set(width);
-		this.height.set(height);
+		this.width.setValue(width);
+		this.height.setValue(height);
 		return owner.submit(() -> {
 			lock.writeLock().lock();
 			safeCreate();
@@ -345,13 +346,13 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	@Override
-	public int getWidth() {
-		return width.get();
+	public NumberValue getWidth() {
+		return width;
 	}
 
 	@Override
-	public int getHeight() {
-		return height.get();
+	public NumberValue getHeight() {
+		return height;
 	}
 
 	private int createTexture() {

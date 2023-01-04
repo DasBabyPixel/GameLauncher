@@ -29,7 +29,6 @@ import gamelauncher.lwjgl.render.shader.struct.Struct;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class LWJGLShaderLoader implements ShaderLoader {
 
@@ -59,8 +58,10 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			root = LWJGLShaderLoader.gson.fromJson(rootutf8, JsonObject.class);
 			String vspathstr = root.get("vertexShader").getAsString();
 			String fspathstr = root.get("fragmentShader").getAsString();
-			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream().readUTF8FullyClose();
-			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream().readUTF8FullyClose();
+			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream()
+					.readUTF8FullyClose();
+			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream()
+					.readUTF8FullyClose();
 			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher, path);
 			this.programs.put(resource, program);
 			program.cleanupFuture().thenRun(() -> this.programs.remove(resource));
@@ -75,31 +76,44 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			} else {
 				structs = Arrays.asList(Struct.primitives);
 			}
-			LWJGLShaderLoader.loadUniforms(program, root.get("uniforms").getAsJsonObject(), structs);
+			LWJGLShaderLoader.loadUniforms(program, root.get("uniforms").getAsJsonObject(),
+					structs);
 			return program;
 		} catch (JsonSyntaxException ex) {
 			throw new GameException("Invalid Json File", ex);
 		}
 	}
 
-	private static void loadUniforms(LWJGLShaderProgram p, JsonObject uniforms, Collection<Struct> structs)
-			throws GameException {
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "material", u -> p.umaterial = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "modelMatrix", u -> p.umodelMatrix = u, false);
+	private static void loadUniforms(LWJGLShaderProgram p, JsonObject uniforms,
+			Collection<Struct> structs) throws GameException {
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "material", u -> p.umaterial = u,
+				false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "modelMatrix", u -> p.umodelMatrix = u,
+				false);
 		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "color", u -> p.ucolor = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "modelViewMatrix", u -> p.umodelViewMatrix = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "viewMatrix", u -> p.uviewMatrix = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "projectionMatrix", u -> p.uprojectionMatrix = u, true);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "camera_pos", u -> p.ucamera_pos = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "ambientLight", u -> p.uambientLight = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "texture_sampler", u -> p.utexture_sampler = u, true);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "specularPower", u -> p.uspecularPower = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "pointLight", u -> p.upointLight = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "directionalLight", u -> p.udirectionalLight = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "textureAddColor", u -> p.utextureAddColor = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "applyLighting", u -> p.uapplyLighting = u, false);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "hasTexture", u -> p.uhasTexture = u, true);
-		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "hasPixelTextureCoords", u -> p.uhasPixelTextureCoords = u,
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "modelViewMatrix",
+				u -> p.umodelViewMatrix = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "viewMatrix", u -> p.uviewMatrix = u,
+				false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "projectionMatrix",
+				u -> p.uprojectionMatrix = u, true);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "camera_pos", u -> p.ucamera_pos = u,
+				false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "ambientLight",
+				u -> p.uambientLight = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "texture_sampler",
+				u -> p.utexture_sampler = u, true);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "specularPower",
+				u -> p.uspecularPower = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "pointLight", u -> p.upointLight = u,
+				false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "directionalLight",
+				u -> p.udirectionalLight = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "textureAddColor",
+				u -> p.utextureAddColor = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "applyLighting",
+				u -> p.uapplyLighting = u, false);
+		LWJGLShaderLoader.loadUniform(p, structs, uniforms, "hasTexture", u -> p.uhasTexture = u,
 				true);
 	}
 
@@ -109,19 +123,22 @@ public class LWJGLShaderLoader implements ShaderLoader {
 		if (struct instanceof Custom) {
 			Custom c = (Custom) struct;
 			for (Map.Entry<String, Struct> variable : c.getVariables().entrySet()) {
-				LWJGLShaderLoader.loadUniform(program, uniform + "." + variable.getKey(), variable.getValue());
+				LWJGLShaderLoader.loadUniform(program, uniform + "." + variable.getKey(),
+						variable.getValue());
 			}
 		}
 		return u;
 	}
 
-	private static void loadUniform(LWJGLShaderProgram program, Collection<Struct> structs, JsonObject ouniforms,
-			String uniform, GameConsumer<Uniform> successConsumer, boolean required) throws GameException {
+	private static void loadUniform(LWJGLShaderProgram program, Collection<Struct> structs,
+			JsonObject ouniforms, String uniform, GameConsumer<Uniform> successConsumer,
+			boolean required) throws GameException {
 		if (!ouniforms.has(uniform)) {
 			if (required) {
-				LWJGLShaderLoader.logger
-						.errorf("ShaderProgram %s does not contain a uniform named %s! This is NOT recommended. "
-								+ "Fix this as soon as possible!%n%s", program.path, uniform, new GameException());
+				LWJGLShaderLoader.logger.errorf(
+						"ShaderProgram %s does not contain a uniform named %s! This is NOT recommended. "
+								+ "Fix this as soon as possible!%n%s", program.path, uniform,
+						new GameException());
 			}
 			return;
 		}

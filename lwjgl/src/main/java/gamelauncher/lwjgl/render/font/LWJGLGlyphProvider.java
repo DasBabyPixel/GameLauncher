@@ -9,6 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import de.dasbabypixel.api.property.BooleanValue;
+import de.dasbabypixel.api.property.NumberInvalidationListener;
+import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryUtil;
@@ -30,23 +34,20 @@ import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
-@SuppressWarnings("javadoc")
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
-
-	private final LWJGLGameLauncher launcher;
 
 	private final GLFWFrame frame;
 
 	private final DynamicSizeTextureAtlas textureAtlas;
 
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
-		this.launcher = launcher;
 		this.frame = launcher.getMainFrame().newFrame();
-		this.textureAtlas = new DynamicSizeTextureAtlas(this.launcher, this.frame.renderThread());
+		this.textureAtlas = new DynamicSizeTextureAtlas(launcher, this.frame.renderThread());
 	}
 
 	@Override
-	public GlyphStaticModel loadStaticModel(Font font, String text, int pixelHeight) throws GameException {
+	public GlyphStaticModel loadStaticModel(Font font, String text, int pixelHeight)
+			throws GameException {
 		STBTTFontinfo finfo = STBTTFontinfo.malloc();
 		if (!STBTruetype.stbtt_InitFont(finfo, font.data())) {
 			throw new GameException("Failed to initialize font");
@@ -60,15 +61,11 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		float ascent = aascent[0] * scale;
 		char[] ar = text.toCharArray();
 		Map<LWJGLTexture, Collection<AtlasEntry>> entries = new HashMap<>();
-		for (int i = 0; i < ar.length; i++) {
-			char ch = ar[i];
+		for (char ch : ar) {
 			GlyphKey key = new GlyphKey(scale, ch);
 			AtlasEntry entry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
-			Collection<AtlasEntry> e = entries.get(entry.getTexture());
-			if (e == null) {
-				e = new ArrayList<>();
-				entries.put(entry.getTexture(), e);
-			}
+			Collection<AtlasEntry> e =
+					entries.computeIfAbsent(entry.getTexture(), k -> new ArrayList<>());
 			e.add(entry);
 		}
 		finfo.free();
@@ -81,17 +78,17 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			for (AtlasEntry e : entry.getValue()) {
 				Rectangle bd = e.getBounds();
 
-				float tw = e.getTexture().getWidth();
-				float th = e.getTexture().getHeight();
-				float tl = (bd.x) / (tw);
-				float tb = (bd.y) / (th);
-				float tr = tl + (bd.width) / (tw);
-				float tt = tb + (bd.height) / (th);
+				NumberValue tw = e.getTexture().getWidth();
+				NumberValue th = e.getTexture().getHeight();
+				NumberValue tl = NumberValue.constant(bd.x).divide(tw);
+				NumberValue tb = NumberValue.constant(bd.y).divide(th);
+				NumberValue tr = tl.add(bd.width).divide(tw);
+				NumberValue tt = tb.add(bd.height).divide(th);
 
 				GlyphData data = e.getEntry().data;
 				float pb = -data.bearingY - data.height;
 				float pt = pb + data.height;
-//				float pl = xpos + data.bearingX;
+				//				float pl = xpos + data.bearingX;
 				float pl = xpos;
 				float pr = pl + data.width;
 				float width = pr - pl;
@@ -100,32 +97,71 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				float y = pt + height / 2F;
 
 				mheight = Math.max(mheight, Math.ceil(height));
-				mwidth = Math.ceil(xpos + width);
-
-				Model m = new Texture2DModel(e.getTexture(), tl, 1 - tb, tr, 1 - tt) {
-
-					@Override
-					public void cleanup0() throws GameException {
-						Threads.waitFor(LWJGLGlyphProvider.this.releaseGlyphKey(e.getEntry().key));
-						super.cleanup0();
-					}
-
-				};
+				mwidth = Math.max(mwidth, Math.ceil(xpos + width));
+				DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
 				GameItem gi = new GameItem(m);
 				gi.setPosition(x, y, z);
 				gi.setScale(width, height, 1);
-				m = gi.createModel();
-				meshes.add(m);
+				meshes.add(gi.createModel());
 				xpos += e.getEntry().data.advance;
 			}
 		}
-//		entries.keySet().stream().findAny().get().write();
-		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[meshes.size()]));
+
+		//		entries.keySet().stream().findAny().get().write();
+		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[0]));
 		GameItem gi = new GameItem(cmodel);
 		gi.setAddColor(1, 1, 1, 0);
 		GameItemModel gim = gi.createModel();
 		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
+	}
+
+	private class DynamicModel extends AbstractGameResource implements Model {
+
+		private final AtlasEntry e;
+		private final NumberValue tl;
+		private final NumberValue tr;
+		private final NumberValue tt;
+		private final NumberValue tb;
+		private final BooleanValue invalid = BooleanValue.trueValue();
+
+		private Texture2DModel texture2DModel;
+
+		public DynamicModel(AtlasEntry e, NumberValue tl, NumberValue tr, NumberValue tt,
+				NumberValue tb) {
+			this.e = e;
+			this.tl = tl;
+			this.tr = tr;
+			this.tt = tt;
+			this.tb = tb;
+			NumberInvalidationListener invalidationListener = property -> invalid.setValue(true);
+			tl.addListener(invalidationListener);
+			tr.addListener(invalidationListener);
+			tt.addListener(invalidationListener);
+			tb.addListener(invalidationListener);
+		}
+
+		@Override
+		public void render(ShaderProgram program) throws GameException {
+			if (invalid.booleanValue()) {
+				invalid.setValue(false);
+				if (texture2DModel != null) {
+					texture2DModel.cleanup();
+				}
+				System.out.println("regenerate");
+				texture2DModel =
+						new Texture2DModel(e.getTexture(), tl.floatValue(), 1 - tb.floatValue(),
+								tr.floatValue(), 1 - tt.floatValue());
+			}
+			texture2DModel.render(program);
+		}
+
+		@Override
+		protected void cleanup0() throws GameException {
+			Threads.waitFor(releaseGlyphKey(e.getEntry().key));
+			if (texture2DModel != null)
+				texture2DModel.cleanup();
+		}
 	}
 
 	public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
@@ -135,16 +171,16 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		return CompletableFuture.completedFuture(null);
 	}
 
-	public AtlasEntry requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight, float scale)
-			throws GameException {
+	public AtlasEntry requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight,
+			float scale) throws GameException {
 		int id = this.getId(key);
 		AtlasEntry entry = this.textureAtlas.getGlyph(id);
-		ret: {
+		ret:
+		{
 			if (entry != null) {
 				break ret;
 			}
 			int gindex = STBTruetype.stbtt_FindGlyphIndex(finfo, id);
-			int codepoint = ch;
 			IntBuffer x0 = MemoryUtil.memAllocInt(1);
 			IntBuffer y0 = MemoryUtil.memAllocInt(1);
 			IntBuffer x1 = MemoryUtil.memAllocInt(1);
@@ -152,8 +188,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			IntBuffer advance = MemoryUtil.memAllocInt(1);
 			IntBuffer lsb = MemoryUtil.memAllocInt(1);
 			GlyphData gdata = new GlyphData();
-			STBTruetype.stbtt_GetCodepointBitmapBox(finfo, codepoint, scale, scale, x0, y0, x1, y1);
-			STBTruetype.stbtt_GetCodepointHMetrics(finfo, codepoint, advance, lsb);
+			STBTruetype.stbtt_GetCodepointBitmapBox(finfo, ch, scale, scale, x0, y0, x1, y1);
+			STBTruetype.stbtt_GetCodepointHMetrics(finfo, ch, advance, lsb);
 			gdata.advance = (int) (advance.get(0) * scale);
 			gdata.bearingX = x0.get(0);
 			gdata.bearingY = y1.get(0);
@@ -163,8 +199,10 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			IntBuffer bh = MemoryUtil.memAllocInt(1);
 			IntBuffer xoff = MemoryUtil.memAllocInt(1);
 			IntBuffer yoff = MemoryUtil.memAllocInt(1);
-			ByteBuffer buf = STBTruetype.stbtt_GetCodepointBitmap(finfo, scale, scale, codepoint, bw, bh, xoff, yoff);
-			byte[] apxls = null;
+			ByteBuffer buf =
+					STBTruetype.stbtt_GetCodepointBitmap(finfo, scale, scale, ch, bw, bh, xoff,
+							yoff);
+			byte[] apxls;
 
 			if (buf != null) {
 				apxls = new byte[buf.capacity()];
@@ -175,15 +213,15 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				apxls = new byte[0];
 			}
 			// Setup for usage by LWJGLTexture
-			buf = MemoryUtil
-					.memCalloc(Integer.BYTES * apxls.length + Integer.BYTES * 2 + LWJGLTexture.SIGNATURE_RAW.length);
+			buf = MemoryUtil.memCalloc(Integer.BYTES * apxls.length + Integer.BYTES * 2
+					+ LWJGLTexture.SIGNATURE_RAW.length);
 			buf.put(LWJGLTexture.SIGNATURE_RAW);
 			buf.putInt(gdata.width);
 			buf.putInt(gdata.height);
-//			buf.put(apxls);
-			for (int i = 0; i < apxls.length; i++) {
+			//			buf.put(apxls);
+			for (byte apxl : apxls) {
 				buf.position(buf.position() + 3);
-				buf.put(apxls[i]);
+				buf.put(apxl);
 			}
 			buf.flip();
 

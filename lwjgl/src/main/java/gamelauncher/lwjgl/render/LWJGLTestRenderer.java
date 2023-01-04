@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render;
 
+import gamelauncher.engine.gui.guis.TextGui;
 import org.lwjgl.opengles.GLES20;
 
 import gamelauncher.engine.gui.GuiRenderer;
@@ -37,7 +38,7 @@ public class LWJGLTestRenderer implements GameRenderer {
 	}
 
 	@Override
-	public void windowSizeChanged(Frame frame) throws GameException {
+	public void windowSizeChanged(Frame frame) {
 	}
 
 	@Override
@@ -50,20 +51,27 @@ public class LWJGLTestRenderer implements GameRenderer {
 		this.glContext.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
 		this.glContext.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.glContext.replace(null);
-		this.launcher.getGuiManager().openGui(this.framebuffer, new ParentableAbstractGui(this.launcher) {
+		this.launcher.getGuiManager()
+				.openGui(this.framebuffer, new ParentableAbstractGui(this.launcher) {
 
-			{
-				ColorGui colorGui = LWJGLTestRenderer.this.launcher.getGuiManager().createGui(ColorGui.class);
-				colorGui.getXProperty().bind(this.getXProperty());
-				colorGui.getYProperty().bind(this.getYProperty());
-				colorGui.getWidthProperty().bind(this.getWidthProperty());
-				colorGui.getHeightProperty().bind(this.getHeightProperty());
-				colorGui.getColor().set(1, 1, 1, 1);
-				colorGui.getColor().w.bind(this.getHeightProperty().divide(this.getWidthProperty()).min(1));
-				this.GUIs.add(colorGui);
-			}
+					{
+						ColorGui colorGui = LWJGLTestRenderer.this.launcher.getGuiManager()
+								.createGui(ColorGui.class);
+						colorGui.getXProperty().bind(this.getXProperty());
+						colorGui.getYProperty().bind(this.getYProperty());
+						colorGui.getWidthProperty().bind(this.getWidthProperty());
+						colorGui.getHeightProperty().bind(this.getHeightProperty());
+						colorGui.getColor().set(1, 1, 1, 1);
+						colorGui.getColor().w.bind(
+								this.getHeightProperty().divide(this.getWidthProperty()).min(1));
+						this.GUIs.add(colorGui);
+						TextGui tg = new TextGui(launcher, "A", 100);
+						tg.getXProperty().bind(this.getXProperty());
+						tg.getYProperty().bind(this.getYProperty());
+						GUIs.add(tg);
+					}
 
-		});
+				});
 	}
 
 	@Override
