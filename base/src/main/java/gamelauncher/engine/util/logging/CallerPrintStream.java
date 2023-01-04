@@ -47,8 +47,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
 		StackTraceElement caller = null;
 		String cname = getClass().getName();
 		boolean next = false;
-		for (int i = 0; i < st.length; i++) {
-			StackTraceElement t = st[i];
+		for (StackTraceElement t : st) {
 			if (t.getClassName().equals(cname)) {
 				next = true;
 			} else if (next) {

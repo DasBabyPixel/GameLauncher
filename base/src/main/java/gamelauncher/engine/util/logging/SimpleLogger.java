@@ -13,10 +13,6 @@ public class SimpleLogger extends Logger {
 
 	private final AsyncLogStream logStream;
 
-	/**
-	 * @param name
-	 * @param stream
-	 */
 	public SimpleLogger(String name, AsyncLogStream stream) {
 		this.name = name;
 		this.logStream = stream;

@@ -78,7 +78,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	void setSystemLevel(LogLevel level) {
-		if (level.getLevel() > LogLevel.ERROR.getLevel()) {
+		if (level.level() > LogLevel.ERROR.level()) {
 			this.system.setOutput(Output.ERR);
 		} else {
 			this.system.setOutput(Output.OUT);
@@ -206,7 +206,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	void printLevel(LogLevel level) {
-		this.out.printf(this.ansi0(level.displayColor()), level.getName());
+		this.out.printf(this.ansi0(level.displayColor()), level.name());
 	}
 
 	private String ansi0(LogColor color) {

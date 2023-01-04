@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class SelectiveStream extends OutputStream {
 
-	private final NavigableSet<Entry> entries = Collections.synchronizedNavigableSet(new TreeSet<>());
+	private final NavigableSet<Entry> entries =
+			Collections.synchronizedNavigableSet(new TreeSet<>());
 
 	private final AtomicReference<Output> output = new AtomicReference<>(null);
 
@@ -44,6 +45,7 @@ public class SelectiveStream extends OutputStream {
 
 	/**
 	 * @param output
+	 *
 	 * @return a new {@link OutputStream} for the given {@link Output}
 	 */
 	public OutputStream computeOutputStream(Output output) {
@@ -100,6 +102,7 @@ public class SelectiveStream extends OutputStream {
 
 	}
 
+
 	/**
 	 * @author DasBabyPixel
 	 */
@@ -124,7 +127,7 @@ public class SelectiveStream extends OutputStream {
 		 * @param level
 		 */
 		public Output(LogLevel level) {
-			this(level.getLevel());
+			this(level.level());
 		}
 
 		/**

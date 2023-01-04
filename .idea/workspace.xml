@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="288b5401-1ca8-4202-b507-4810893c95dd" name="Changes" comment="intellij" />
+    <list default="true" id="288b5401-1ca8-4202-b507-4810893c95dd" name="Changes" comment="intellij">
+      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/GameLauncher__classes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Start_LWJGL.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Start_LWJGL.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/base/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/AsyncLogStream.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/AsyncLogStream.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/CallerPrintStream.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/CallerPrintStream.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/LogLevel.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/LogLevel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/LogStreamConverter.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/LogStreamConverter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/SelectiveStream.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/SelectiveStream.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/SimpleLogger.java" beforeDir="false" afterPath="$PROJECT_DIR$/base/src/main/java/gamelauncher/engine/util/logging/SimpleLogger.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -38,6 +51,9 @@
       </state>
     </system>
   </component>
+  <component name="Git.Merge.Settings">
+    <option name="BRANCH" value="master" />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
@@ -64,20 +80,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/dasba/Documents/GameLauncher/run&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.34950584&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.Mappings&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "C:/Users/dasba/Documents/GameLauncher/example/build/classes/java/main",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.34950584",
+    "settings.editor.selected.configurable": "project.propVCSSupport.Mappings"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\dasba\Documents\GameLauncher\orbits" />
@@ -87,13 +103,13 @@
       <recent name="C:\Users\dasba\Documents\GameLauncher\base" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.Start LWJGL">
     <configuration name="GameLauncher [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
+        <option name="scriptParameters" value="" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -109,6 +125,11 @@
       <DebugAllEnabled>false</DebugAllEnabled>
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Application.Start LWJGL" />
+      <item itemvalue="Gradle.GameLauncher [classes]" />
+      <item itemvalue="Gradle.GameLauncher [build]" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.GameLauncher [build]" />
@@ -138,8 +159,33 @@
       <option name="project" value="LOCAL" />
       <updated>1672794209033</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="intellij">
+      <created>1672794573285</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1672794573285</updated>
+    </task>
+    <task id="LOCAL-00004" summary="intellij">
+      <created>1672794651752</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1672794651752</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

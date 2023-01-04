@@ -2,6 +2,7 @@
   <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" activateToolWindowBeforeRun="false">
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="GameLauncher.lwjgl.main" />
+    <option name="PROGRAM_PARAMETERS" value="externalPlugin:../orbits/build/classes/java/main externalPlugin:../example/build/classes/java/main" />
     <option name="VM_PARAMETERS" value="-DcalculateThreadStacks=true -Djansi.passthrough=true" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <extension name="coverage">
@@ -11,7 +12,7 @@
       </pattern>
     </extension>
     <method v="2">
-      <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="GameLauncher [classes]" run_configuration_type="GradleRunConfiguration" />
     </method>
   </configuration>
 </component>
