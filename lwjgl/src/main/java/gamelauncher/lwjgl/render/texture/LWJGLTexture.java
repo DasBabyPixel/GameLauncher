@@ -29,18 +29,16 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.GlStates;
 
-@SuppressWarnings("javadoc")
 public class LWJGLTexture extends AbstractGameResource implements Texture {
 
-	public static final byte[] SIGNATURE_RAW = new byte[] {
-			0x45, (byte) 0xFF, 0x61, 0x19
-	};
+	public static final byte[] SIGNATURE_RAW = new byte[] {0x45, (byte) 0xFF, 0x61, 0x19};
 
 	private final ExecutorThread owner;
 
 	private final ExecutorThreadService service;
 
-	private final AtomicReference<LWJGLTextureFormat> format = new AtomicReference<>(LWJGLTextureFormat.RGBA);
+	private final AtomicReference<LWJGLTextureFormat> format =
+			new AtomicReference<>(LWJGLTextureFormat.RGBA);
 
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
 
@@ -58,7 +56,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	private int cheight = 0;
 
-	public LWJGLTexture(LWJGLGameLauncher launcher, ExecutorThread owner, ExecutorThreadService service) {
+	public LWJGLTexture(LWJGLGameLauncher launcher, ExecutorThread owner,
+			ExecutorThreadService service) {
 		this.manager = launcher.getTextureManager();
 		this.owner = owner;
 		this.service = service;
@@ -66,7 +65,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	@Override
-	public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) throws GameException {
+	public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
 		service.submit(() -> {
 			profiler.begin("render", "upload_texture_worker");
@@ -77,7 +76,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 				int width;
 				int height;
-				ByteBuffer bbuf;
+				ByteBuffer buff;
 				if (isRaw(data)) {
 					bin.skip(SIGNATURE_RAW.length);
 					ByteBuffer tbbuf = memAlloc(2 * Integer.BYTES);
@@ -86,17 +85,17 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 					width = tbbuf.getInt();
 					height = tbbuf.getInt();
 					memFree(tbbuf);
-					bbuf = memAlloc(width * height * format.get().size);
-					bbuf.put(data, SIGNATURE_RAW.length + 2 * Integer.BYTES,
+					buff = memAlloc(width * height * format.get().size);
+					buff.put(data, SIGNATURE_RAW.length + 2 * Integer.BYTES,
 							data.length - SIGNATURE_RAW.length - 2 * Integer.BYTES);
-					bbuf.flip();
+					buff.flip();
 				} else {
 					PNGDecoder dec = new PNGDecoder(bin);
 					width = dec.getWidth();
 					height = dec.getHeight();
-					bbuf = memAlloc(4 * width * height);
-					dec.decode(bbuf, width * 4, PNGDecoder.Format.RGBA);
-					bbuf.flip();
+					buff = memAlloc(4 * width * height);
+					dec.decode(buff, width * 4, PNGDecoder.Format.RGBA);
+					buff.flip();
 				}
 				bin.close();
 
@@ -110,8 +109,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 						allocateCreated(x + width, y + height);
 					}
 
-					upload0(bbuf, x, y, width, height);
-					memFree(bbuf);
+					upload0(buff, x, y, width, height);
+					memFree(buff);
 					cur.flush();
 					cur.finish();
 					lock.writeLock().unlock();
@@ -127,7 +126,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		return fut;
 	}
 
-	private void upload0(ByteBuffer buffer, int x, int y, int width, int height) throws InvalidSizeException {
+	private void upload0(ByteBuffer buffer, int x, int y, int width, int height)
+			throws InvalidSizeException {
 		profiler.begin("render", "upload");
 		lock.writeLock().lock();
 		int mintw = x + width;
@@ -138,7 +138,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		GlStates cur = GlStates.current();
 		cur.bindTexture(GL_TEXTURE_2D, textureId.get());
 		profiler.check();
-		cur.texSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, format.get().gl, GL_UNSIGNED_BYTE, buffer);
+		cur.texSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, format.get().gl, GL_UNSIGNED_BYTE,
+				buffer);
 		profiler.check();
 		cur.bindTexture(GL_TEXTURE_2D, 0);
 		profiler.check();
@@ -215,13 +216,11 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 			}
 
 			int nid = createTexture();
-			int nwidth = width;
-			int nheight = height;
-			cwidth = nwidth;
-			cheight = nheight;
+			cwidth = width;
+			cheight = height;
 
-			int copyw = Math.min(owidth, nwidth);
-			int copyh = Math.min(oheight, nheight);
+			int copyw = Math.min(owidth, width);
+			int copyh = Math.min(oheight, height);
 
 			LWJGLTextureFormat format = this.format.get();
 
@@ -231,8 +230,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 			cur.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			cur.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-			cur.texImage2D(GL_TEXTURE_2D, 0, format.glInternal, nwidth, nheight, 0, format.gl, GL_UNSIGNED_BYTE,
-					(ByteBuffer) null);
+			cur.texImage2D(GL_TEXTURE_2D, 0, format.glInternal, width, height, 0, format.gl,
+					GL_UNSIGNED_BYTE, null);
 			cur.bindTexture(GL_TEXTURE_2D, 0);
 
 			CLTextureUtility u = manager.clTextureUtility.get();
@@ -246,10 +245,11 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, u.framebuffer2.getId());
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, u.framebuffer1.getId());
-			c.blitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			c.blitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT,
+					GL_NEAREST);
 			c.bindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			c.bindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			
+
 			textureId.set(nid);
 			cur.deleteTextures(oid);
 			cur.flush();
@@ -279,40 +279,37 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		cur.pixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		cur.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		cur.texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		cur.texImage2D(GL_TEXTURE_2D, 0, format.glInternal, cwidth, cheight, 0, format.gl, GL_UNSIGNED_BYTE,
-				(ByteBuffer) null);
+		cur.texImage2D(GL_TEXTURE_2D, 0, format.glInternal, cwidth, cheight, 0, format.gl,
+				GL_UNSIGNED_BYTE, null);
 		cur.bindTexture(GL_TEXTURE_2D, 0);
 		lock.writeLock().unlock();
 		profiler.end();
 	}
 
 	@Override
-	public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height)
-			throws GameException {
-		if (!(other instanceof LWJGLTexture)) {
+	public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY,
+			int width, int height) throws GameException {
+		if (!(other instanceof final LWJGLTexture lwjgl)) {
 			ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
 			GameException ge = new GameException(cause);
 			ge.setStackTrace(new StackTraceElement[0]);
 			throw ge;
 		}
-		final LWJGLTexture lwjgl = (LWJGLTexture) other;
 		return owner.submit(() -> {
 			lock.readLock().lock();
 			lwjgl.lock.writeLock().lock();
 			int id = textureId.get();
 			int oid = lwjgl.textureId.get();
 
-			int trycopyw = width;
 			int maxcopyw = Math.min(cwidth - srcX, lwjgl.cwidth - dstX);
-			int copyw = Math.min(trycopyw, maxcopyw);
-			int trycopyh = width;
+			int copyw = Math.min(width, maxcopyw);
 			int maxcopyh = Math.min(cheight - srcY, lwjgl.cheight - dstY);
-			int copyh = Math.min(trycopyh, maxcopyh);
+			int copyh = Math.min(width, maxcopyh);
 
 			if (copyw >= 1 && copyh >= 1) {
 				GlStates.current()
-						.copyImageSubData(id, GL_TEXTURE_2D, 0, srcX, srcY, 0, oid, GL_TEXTURE_2D, 0, dstX, dstY, 0,
-								copyw, copyh, 1);
+						.copyImageSubData(id, GL_TEXTURE_2D, 0, srcX, srcY, 0, oid, GL_TEXTURE_2D,
+								0, dstX, dstY, 0, copyw, copyh, 1);
 			}
 
 			lwjgl.lock.writeLock().unlock();
@@ -321,7 +318,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	@Override
-	public CompletableFuture<Void> uploadAsync(ResourceStream stream) throws GameException {
+	public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
 		return uploadSubAsync(stream, 0, 0);
 	}
 
@@ -358,8 +355,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	private int createTexture() {
-		int id = GlStates.current().genTextures();
-		return id;
+		return GlStates.current().genTextures();
 	}
 
 	private static BufferedImage getBufferedImage(int texture, int width, int height) {
@@ -367,7 +363,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
-				int r = pixels.get((y * width + x) * Integer.BYTES + 0);
+				int r = pixels.get((y * width + x) * Integer.BYTES);
 				int g = pixels.get((y * width + x) * Integer.BYTES + 1);
 				int b = pixels.get((y * width + x) * Integer.BYTES + 2);
 				int a = pixels.get((y * width + x) * Integer.BYTES + 3);
@@ -381,8 +377,6 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	private static ByteBuffer getBufferedImageBuffer(int texture, int width, int height) {
-//		profiler.begin("render", "query_texture");
-//		GL.create();
 		GlStates cur = GlStates.current();
 		ByteBuffer pixels = memAlloc(4 * width * height);
 		cur.bindTexture(GL_TEXTURE_2D, texture);
@@ -393,13 +387,11 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		cur.bindFramebuffer(GL_FRAMEBUFFER, 0);
 		cur.deleteFramebuffers(fbo);
 		cur.bindTexture(GL_TEXTURE_2D, 0);
-//		GL.destroy();
-//		profiler.end();
 		return pixels;
 	}
 
 	@Override
-	public CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException {
+	public CompletableFuture<Void> uploadAsync(BufferedImage image) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -410,8 +402,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	public int getTextureId() {
-		int id = textureId.get();
-		return id;
+		return textureId.get();
 	}
 
 	/*
@@ -430,7 +421,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	 * Integer.toHexString(error) + ")"); } abuf.set(buf1); });
 	 * Threads.waitFor(fut2); abuf.get().put(bbuf); bbuf.position(0);
 	 * abuf.get().flip(); CompletableFuture<Void> fut3 = submit(new GameRunnable() {
-	 * 
+	 *
 	 * @Override public void run() { int buf = aibuf.get();
 	 * GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
 	 * glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER); bind(); glTexParameteri(GL_TEXTURE_2D,
@@ -442,11 +433,11 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	 * Threads.waitFor(fut3); } catch (Throwable ex) {
 	 * fut.completeExceptionally(ex); manager.launcher.handleError(ex); } }); return
 	 * fut; }
-	 * 
+	 *
 	 * @Override public CompletableFuture<Void> uploadAsync(ResourceStream stream)
 	 * throws GameException { CompletableFuture<Void> fut = new
 	 * CompletableFuture<>();
-	 * 
+	 *
 	 * manager.service.submit(() -> { try { PNGDecoder decoder =
 	 * stream.newPNGDecoder(); int w = decoder.getWidth(); int h =
 	 * decoder.getHeight(); AtomicInteger aibuf = new AtomicInteger();
@@ -463,7 +454,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	 * Threads.waitFor(fut2); decoder.decode(abuf.get(), w * Integer.BYTES,
 	 * PNGDecoder.Format.RGBA); stream.cleanup(); abuf.get().flip();
 	 * CompletableFuture<Void> fut3 = submit(new GameRunnable() {
-	 * 
+	 *
 	 * @Override public void run() { int buf = aibuf.get();
 	 * GlStates.current().bindBuffer(GL_PIXEL_UNPACK_BUFFER, buf);
 	 * glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER); bind(); glTexParameteri(GL_TEXTURE_2D,
@@ -476,29 +467,11 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	 * manager.launcher.handleError(ex); } }); return fut; }
 	 */
 
+
 	public static class InvalidSizeException extends GameException {
 
 		public InvalidSizeException() {
 			super();
 		}
-
-		public InvalidSizeException(String message, Throwable cause, boolean enableSuppression,
-				boolean writableStackTrace) {
-			super(message, cause, enableSuppression, writableStackTrace);
-		}
-
-		public InvalidSizeException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		public InvalidSizeException(String message) {
-			super(message);
-		}
-
-		public InvalidSizeException(Throwable cause) {
-			super(cause);
-		}
-
 	}
-
 }

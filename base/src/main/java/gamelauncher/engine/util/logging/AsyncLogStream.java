@@ -17,7 +17,6 @@ import gamelauncher.engine.util.logging.SelectiveStream.Output;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream.LogEntry<?>> {
 
 	final PrintStream out;
@@ -29,9 +28,6 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
 			.toFormatter();
 
-	/**
-	 * @param logger
-	 */
 	public AsyncLogStream() {
 		this.system = Logger.system;
 		this.setName("AsyncLogStream");
@@ -49,22 +45,22 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 
 	public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
 		if (!exit) {
-			return submit(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
+			return submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
 		}
-		log(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
+		log(new LogEntry<>(logger, Thread.currentThread(), message, level));
 		return CompletableFuture.completedFuture(null);
 	}
 
 	public CompletableFuture<Void> offerCalled(LogLevel level, StackTraceElement caller, Object message) {
 		if (!exit) {
-			return submit(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
+			return submit(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
 		}
-		log(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
+		log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
 		return CompletableFuture.completedFuture(null);
 	}
 
 	@Override
-	protected void handleElement(LogEntry<?> element) throws GameException {
+	protected void handleElement(LogEntry<?> element) {
 		log(element);
 	}
 
@@ -74,7 +70,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	void setSystemLevel(LogLevel level) {
-		if (level.getLevel() > LogLevel.ERROR.getLevel()) {
+		if (level.level() > LogLevel.ERROR.level()) {
 			system.setOutput(Output.ERR);
 		} else {
 			system.setOutput(Output.OUT);
@@ -90,6 +86,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			errorStream.log(entry);
 		} else {
 			if (message.getClass().isArray()) {
+				assert message instanceof Object[];
 				logArray(entry.withObject((Object[]) message));
 			} else if (message instanceof Collection<?>) {
 				logCollection(entry.withObject((Collection<?>) message));
@@ -103,14 +100,14 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		logString(entry,
 				String.format("%s[%s]", entry.object.getClass().getComponentType().getName(), entry.object.length));
 		for (T t : entry.object) {
-			logString(entry, String.format(" - %s", Objects.toString(t)));
+			logString(entry, String.format(" - %s", t));
 		}
 	}
 
 	void logCollection(LogEntry<Collection<?>> entry) {
 		logString(entry, String.format("%s<?> (Size: %s)", entry.object.getClass().getName(), entry.object.size()));
 		for (Object t : entry.object) {
-			logString(entry, String.format(" - %s", Objects.toString(t)));
+			logString(entry, String.format(" - %s", t));
 		}
 	}
 
@@ -127,7 +124,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	void printLevel(LogLevel level) {
-		out.printf("[%s] ", level.getName());
+		out.printf("[%s] ", level.name());
 	}
 
 	void logString(LogEntry<?> parent, String string) {
@@ -193,7 +190,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 
 		public <V> LogEntry<V> withObject(V object) {
-			return new LogEntry<V>(logger, thread, object, level, caller, time);
+			return new LogEntry<>(logger, thread, object, level, caller, time);
 		}
 
 	}

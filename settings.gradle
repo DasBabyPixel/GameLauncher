@@ -1,0 +1,9 @@
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+}
+
+include('base', 'lwjgl', 'orbits', 'example', 'labyrinth')

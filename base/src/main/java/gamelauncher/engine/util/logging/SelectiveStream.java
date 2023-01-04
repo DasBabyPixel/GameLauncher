@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class SelectiveStream extends OutputStream {
 
-	private final NavigableSet<Entry> entries = Collections.synchronizedNavigableSet(new TreeSet<>());
+	private final NavigableSet<Entry> entries =
+			Collections.synchronizedNavigableSet(new TreeSet<>());
 	private final AtomicReference<Output> output = new AtomicReference<>(null);
 	private final AtomicBoolean outputChanged = new AtomicBoolean(false);
 	private final AtomicReference<Entry> currentEntry = new AtomicReference<>(null);
@@ -39,7 +40,6 @@ public class SelectiveStream extends OutputStream {
 		}
 	}
 
-	@SuppressWarnings("javadoc")
 	public OutputStream computeOutputStream(Output output) {
 		OutputStream out = null;
 		Iterator<Entry> it = entries.iterator();
@@ -52,70 +52,37 @@ public class SelectiveStream extends OutputStream {
 		return out;
 	}
 
-	/**
-	 * @param output
-	 */
 	public void setOutput(Output output) {
 		this.output.set(output);
 		this.outputChanged.set(true);
 	}
 
-	/**
-	 * @param out
-	 * @param output
-	 */
 	public void addEntry(OutputStream out, Output output) {
 		entries.add(new Entry(out, output));
 		this.outputChanged.set(true);
 	}
 
-	/**
-	 * @author DasBabyPixel
-	 */
-	public static class Entry implements Comparable<Entry> {
-
-		@SuppressWarnings("javadoc")
-		public final OutputStream out;
-		@SuppressWarnings("javadoc")
-		public final Output output;
-
-		/**
-		 * @param out
-		 * @param output
-		 */
-		public Entry(OutputStream out, Output output) {
-			this.out = out;
-			this.output = output;
-		}
-
+	public record Entry(OutputStream out, Output output) implements Comparable<Entry> {
 		@Override
 		public int compareTo(Entry o) {
 			return Integer.compare(output.weight, o.output.weight);
 		}
 	}
 
+
 	/**
 	 * @author DasBabyPixel
 	 */
 	public static class Output {
-		@SuppressWarnings("javadoc")
 		public static final Output OUT = new Output(LogLevel.STDOUT);
-		@SuppressWarnings("javadoc")
 		public static final Output ERR = new Output(LogLevel.STDERR);
 
-		@SuppressWarnings("javadoc")
 		public final int weight;
 
-		/**
-		 * @param level
-		 */
 		public Output(LogLevel level) {
-			this(level.getLevel());
+			this(level.level());
 		}
 
-		/**
-		 * @param weight
-		 */
 		public Output(int weight) {
 			this.weight = weight;
 		}

@@ -26,9 +26,8 @@ class LogStreamConverter extends OutputStream {
 			boolean newLine = b == '\n';
 			if (newLine) {
 				carriage = false;
-				byte[] array = out.toByteArray();
 				out.reset();
-				String string = new String(array, charset);
+				String string = out.toString(charset);
 				this.converterStream.converted(string);
 				return;
 			} else if (carriage) {

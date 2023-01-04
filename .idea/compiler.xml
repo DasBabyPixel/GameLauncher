@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel target="17">
+      <module name="base" target="17" />
+      <module name="example" target="1.8" />
+      <module name="labyrinth" target="1.8" />
+      <module name="lwjgl" target="17" />
+      <module name="orbits" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

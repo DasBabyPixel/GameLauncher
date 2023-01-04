@@ -78,7 +78,7 @@ public abstract class GameLauncher {
 
 	private Frame frame;
 
-//	private FileSystem fileSystem;
+	//	private FileSystem fileSystem;
 	private FileSystem embedFileSystem;
 
 	private Path gameDirectory;
@@ -161,6 +161,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * @param framebuffer
+	 *
 	 * @return a new {@link DrawContext}
 	 */
 	@Deprecated
@@ -168,8 +169,9 @@ public abstract class GameLauncher {
 
 	/**
 	 * Starts the {@link GameLauncher}
-	 * 
+	 *
 	 * @param args
+	 *
 	 * @throws GameException
 	 */
 	public final void start(String[] args) throws GameException {
@@ -194,6 +196,7 @@ public abstract class GameLauncher {
 		System.setErr(this.logger.createPrintStream(LogLevel.STDERR));
 
 		this.logger.info("Starting " + GameLauncher.NAME);
+		this.logger.info("Working Directory: " + System.getProperty("user.dir"));
 
 		StartCommandSettings scs = StartCommandSettings.parse(args);
 
@@ -221,34 +224,33 @@ public abstract class GameLauncher {
 			this.settings.deserialize(element);
 			JsonElement serialized = this.settingsGson.toJsonTree(this.settings.serialize());
 			if (!serialized.equals(element)) {
-				this.getLogger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-						.appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MONTH_OF_YEAR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.DAY_OF_MONTH, 2)
-						.appendLiteral('_')
-						.appendValue(ChronoField.HOUR_OF_DAY, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-						.toFormatter();
-				Files.move(this.settingsFile,
-						this.settingsFile.getParent()
-								.resolve(String.format("backup-settings-%s.json",
-										formatter.format(LocalDateTime.now()).replace(':', '-'))));
+				this.getLogger()
+						.warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+				DateTimeFormatter formatter =
+						new DateTimeFormatterBuilder().appendValue(ChronoField.YEAR, 4, 10,
+										SignStyle.EXCEEDS_PAD).appendLiteral('-')
+								.appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
+								.appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_')
+								.appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-')
+								.appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-')
+								.appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
+				Files.move(this.settingsFile, this.settingsFile.getParent().resolve(
+						String.format("backup-settings-%s.json",
+								formatter.format(LocalDateTime.now()).replace(':', '-'))));
 				this.saveSettings();
 			}
 		}
 
 		this.gameThread.runLater(() -> {
 			this.start0();
-			if (this.gameRenderer.getRenderer() != null && !(this.gameRenderer.getRenderer() instanceof GuiRenderer)) {
-				this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.getRenderer().getClass().getName());
+			if (this.gameRenderer.getRenderer() != null
+					&& !(this.gameRenderer.getRenderer() instanceof GuiRenderer)) {
+				this.logger.warn(
+						"Not using GuiRenderer: " + this.gameRenderer.getRenderer().getClass()
+								.getName());
 			}
-//			window.scheduleDrawAndWaitForFrame(); // TODO: Gotta render the frame twice in beginning, dunny why
+			//			window.scheduleDrawAndWaitForFrame();
+			// TODO: Gotta render the frame twice in beginning, dunno why
 			this.frame.scheduleDrawWaitForFrame();
 			this.getEventManager().post(new LauncherInitializedEvent(this));
 		});
@@ -257,7 +259,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Stops the {@link GameLauncher}
-	 * 
+	 *
 	 * @throws GameException
 	 */
 	public void stop() throws GameException {
@@ -288,7 +290,7 @@ public abstract class GameLauncher {
 		this.getGuiManager().updateGuis();
 		this.tick0();
 	}
-	
+
 	protected abstract void tick0() throws GameException;
 
 	protected abstract void start0() throws GameException;
@@ -309,7 +311,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
-	 * 
+	 *
 	 * @param throwable
 	 */
 	public void handleError(Throwable throwable) {
@@ -334,8 +336,7 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * @return the {@link Threads Threads utility class} for this
-	 *         {@link GameLauncher}
+	 * @return the {@link Threads Threads utility class} for this {@link GameLauncher}
 	 */
 	public Threads getThreads() {
 		return this.threads;
@@ -434,7 +435,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Sets the current {@link Game}
-	 * 
+	 *
 	 * @param currentGame
 	 */
 	public void setCurrentGame(Game currentGame) {
@@ -443,7 +444,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Sets the current {@link GlyphProvider}
-	 * 
+	 *
 	 * @param glyphProvider
 	 */
 	public void setGlyphProvider(GlyphProvider glyphProvider) {
@@ -494,7 +495,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Sets the {@link GameLauncher}'s debug mode
-	 * 
+	 *
 	 * @param debugMode
 	 */
 	public void setDebugMode(boolean debugMode) {
@@ -553,8 +554,8 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * @return the {@link ContextProvider} to use for creating contexts. This is
-	 *         preferred over {@link #createContext(Framebuffer)}
+	 * @return the {@link ContextProvider} to use for creating contexts. This is preferred over
+	 * {@link #createContext(Framebuffer)}
 	 */
 	public ContextProvider getContextProvider() {
 		return this.contextProvider;
@@ -569,11 +570,10 @@ public abstract class GameLauncher {
 
 	/**
 	 * Saves the current settings
-	 * 
-	 * @throws GameException
 	 */
 	public void saveSettings() throws GameException {
-		Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(StandardCharsets.UTF_8));
+		Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize())
+				.getBytes(StandardCharsets.UTF_8));
 	}
 
 }
