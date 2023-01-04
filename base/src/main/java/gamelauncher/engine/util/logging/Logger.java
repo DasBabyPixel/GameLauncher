@@ -125,14 +125,12 @@ public abstract class Logger {
 	/**
 	 * @return {@link Logger}
 	 */
-	@SuppressWarnings("null")
 	public static Logger getLogger() {
 		StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = null;
 		String cname = Logger.class.getName();
 		boolean next = false;
-		for (int i = 0; i < st.length; i++) {
-			StackTraceElement t = st[i];
+		for (StackTraceElement t : st) {
 			if (t.getClassName().equals(cname)) {
 				next = true;
 			} else if (next) {
@@ -140,6 +138,7 @@ public abstract class Logger {
 				caller = t;
 			}
 		}
+		assert caller != null;
 		int index = caller.getClassName().lastIndexOf('.');
 		return Logger.getLogger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
 	}

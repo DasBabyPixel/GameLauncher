@@ -24,7 +24,7 @@ public class SimpleLogger extends Logger {
 
 	@Override
 	public boolean shouldDisplay(LogLevel level) {
-		return level.getLevel() >= this.level;
+		return level.level() >= this.level;
 	}
 
 	@Override

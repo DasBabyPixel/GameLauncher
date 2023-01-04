@@ -50,13 +50,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	private GLFWThread glfwThread;
 
-	private Camera camera = new BasicCamera();
+	private final Camera camera = new BasicCamera();
 
-	private GlThreadGroup glThreadGroup;
+	private final GlThreadGroup glThreadGroup;
 
-	/**
-	 * @throws GameException
-	 */
 	public LWJGLGameLauncher() throws GameException {
 		this.setKeybindManager(new LWJGLKeybindManager(this));
 		this.setResourceLoader(new SimpleResourceLoader());
@@ -120,7 +117,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		Threads.waitFor(this.glfwThread.exit());
 	}
 
-	@SuppressWarnings("javadoc")
 	@EventHandler
 	public void handle(LauncherInitializedEvent event) {
 		try {
@@ -137,8 +133,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	@Override
 	@Deprecated
 	public LWJGLDrawContext createContext(Framebuffer framebuffer) {
-		LWJGLDrawContext ctx = new LWJGLDrawContext(framebuffer);
-		return ctx;
+		return new LWJGLDrawContext(framebuffer);
 	}
 
 	@Override

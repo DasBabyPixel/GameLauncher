@@ -31,9 +31,9 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 	private final Map<Frame, Entry> map = new ConcurrentHashMap<>();
 
-	private LWJGLGameLauncher launcher;
+	private final LWJGLGameLauncher launcher;
 
-	private GlContext glContext = new GlContext();
+	private final GlContext glContext = new GlContext();
 
 	public LWJGLGameRenderer(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
@@ -88,10 +88,6 @@ public class LWJGLGameRenderer implements GameRenderer {
 		this.launcher.getProfiler().begin("render", "refresh");
 		this.map.get(frame).refreshDisplay(this.renderer.get());
 		this.launcher.getProfiler().end();
-	}
-
-	public Entry getEntry(Frame frame) {
-		return this.map.get(frame);
 	}
 
 	public class Entry extends AbstractGameResource {
