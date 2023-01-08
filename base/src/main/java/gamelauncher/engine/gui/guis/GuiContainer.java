@@ -68,5 +68,4 @@ public class GuiContainer extends ParentableAbstractGui {
 			this.setHeight(h);
 		}
 	}
-
 }

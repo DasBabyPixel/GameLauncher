@@ -1,16 +1,15 @@
 package gamelauncher.engine.game;
 
-import java.util.Objects;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 
+import java.util.Objects;
+
 /**
  * @author DasBabyPixel
- *
  */
 public abstract class Game implements Comparable<Game> {
 
@@ -18,20 +17,13 @@ public abstract class Game implements Comparable<Game> {
 
 	private final Key key;
 
-	/**
-	 * @param plugin
-	 * @param name
-	 */
 	public Game(Plugin plugin, String name) {
 		this(new Key(plugin, name));
 	}
 
-	/**
-	 * @param key
-	 */
 	public Game(Key key) {
 		this.key = key;
-		this.launcher = key.getPlugin().getLauncher();
+		this.launcher = key.plugin().getLauncher();
 	}
 
 	@Override
@@ -74,8 +66,9 @@ public abstract class Game implements Comparable<Game> {
 
 	/**
 	 * Launches a {@link Game} on a {@link Framebuffer}
-	 * 
+	 *
 	 * @param framebuffer
+	 *
 	 * @throws GameException
 	 */
 	public final void launch(Framebuffer framebuffer) throws GameException {

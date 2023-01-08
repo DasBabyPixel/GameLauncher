@@ -13,23 +13,21 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 public abstract class AbstractGui implements Gui {
 
 	private final NumberValue x = NumberValue.zero();
-
 	private final NumberValue y = NumberValue.zero();
-
 	private final NumberValue w = NumberValue.zero();
-
 	private final NumberValue h = NumberValue.zero();
-
+	private final NumberValue visibleX = NumberValue.zero();
+	private final NumberValue visibleY = NumberValue.zero();
+	private final NumberValue visibleW = NumberValue.zero();
+	private final NumberValue visibleH = NumberValue.zero();
 	private final GameLauncher launcher;
-
 	private final BooleanValue focused = BooleanValue.falseValue();
 
-	/**
-	 * @param launcher
-	 */
 	public AbstractGui(GameLauncher launcher) {
 		this.launcher = launcher;
 	}
+
+	public abstract BooleanValue hovering();
 
 	@Override
 	public NumberValue getWidthProperty() {
@@ -52,27 +50,43 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
+	public NumberValue getVisibleXProperty() {
+		return visibleX;
+	}
+
+	@Override
+	public NumberValue getVisibleYProperty() {
+		return visibleY;
+	}
+
+	@Override
+	public NumberValue getVisibleWidthProperty() {
+		return visibleW;
+	}
+
+	@Override
+	public NumberValue getVisibleHeightProperty() {
+		return visibleH;
+	}
+
+	@Override
 	public BooleanValue getFocusedProperty() {
 		return focused;
 	}
 
 	@Override
-	public GameLauncher getLauncher() {
-		return launcher;
+	public void init(Framebuffer framebuffer) throws GameException {
+
 	}
 
 	@Override
-	public void focus() throws GameException {
-		focused.setValue(true);
+	public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException {
+
 	}
 
 	@Override
-	public void unfocus() throws GameException {
-		focused.setValue(false);
-	}
-
-	@Override
-	public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+	public void cleanup(Framebuffer framebuffer) throws GameException {
 
 	}
 
@@ -87,18 +101,13 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
-	public void handle(KeybindEntry entry) throws GameException {
-
+	public void focus() throws GameException {
+		focused.setValue(true);
 	}
 
 	@Override
-	public void init(Framebuffer framebuffer) throws GameException {
-
-	}
-
-	@Override
-	public void cleanup(Framebuffer framebuffer) throws GameException {
-
+	public void unfocus() throws GameException {
+		focused.setValue(false);
 	}
 
 	@Override
@@ -107,9 +116,20 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
+	public void handle(KeybindEntry entry) throws GameException {
+
+	}
+
+	@Override
+	public GameLauncher getLauncher() {
+		return launcher;
+	}
+
+	@Override
 	public String toString() {
 		String cname = getClass().getSimpleName();
-		return String.format("%s[x=%s,y=%s,w=%s,h=%s]", cname, x.intValue(), y.intValue(), w.intValue(), h.intValue());
+		return String.format("%s[x=%s,y=%s,w=%s,h=%s]", cname, x.intValue(), y.intValue(),
+				w.intValue(), h.intValue());
 	}
 
 }

@@ -1,8 +1,5 @@
 package gamelauncher.engine.gui;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
@@ -12,6 +9,9 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEntry;
 import gamelauncher.engine.util.profiler.Profiler;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author DasBabyPixel
@@ -24,25 +24,13 @@ public class GuiRenderer extends Renderer {
 
 	private final Map<Framebuffer, Listener> listeners = new ConcurrentHashMap<>();
 
-	/**
-	 * @param launcher
-	 */
 	public GuiRenderer(GameLauncher launcher) {
 		this.launcher = launcher;
 		this.profiler = this.launcher.getProfiler();
 	}
 
-	@SuppressWarnings("javadoc")
 	public GameLauncher getLauncher() {
 		return launcher;
-	}
-
-	@Override
-	public void init(Framebuffer framebuffer) throws GameException {
-		profiler.begin("render", "init_window");
-		listeners.put(framebuffer, new Listener());
-		launcher.getEventManager().registerListener(listeners.get(framebuffer));
-		profiler.end();
 	}
 
 	@Override
@@ -58,6 +46,14 @@ public class GuiRenderer extends Renderer {
 	}
 
 	@Override
+	public void init(Framebuffer framebuffer) throws GameException {
+		profiler.begin("render", "init_window");
+		listeners.put(framebuffer, new Listener());
+		launcher.getEventManager().registerListener(listeners.get(framebuffer));
+		profiler.end();
+	}
+
+	@Override
 	public void cleanup(Framebuffer framebuffer) throws GameException {
 		profiler.begin("render", "cleanup_window");
 		Listener l = listeners.remove(framebuffer);
@@ -65,7 +61,7 @@ public class GuiRenderer extends Renderer {
 		profiler.end();
 	}
 
-	private class Listener {
+	private static class Listener {
 
 		private float mx;
 
@@ -74,8 +70,7 @@ public class GuiRenderer extends Renderer {
 		@EventHandler
 		public void handle(KeybindEntryEvent event) {
 			KeybindEntry e = event.getEntry();
-			if (e instanceof MouseMoveKeybindEntry) {
-				MouseMoveKeybindEntry m = (MouseMoveKeybindEntry) e;
+			if (e instanceof MouseMoveKeybindEntry m) {
 				mx = m.mouseX();
 				my = m.mouseY();
 			}

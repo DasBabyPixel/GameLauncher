@@ -9,7 +9,6 @@ import gamelauncher.lwjgl.render.states.GlStates;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class Primary implements Struct {
 
@@ -36,8 +35,8 @@ public class Primary implements Struct {
 
 	@Override
 	public Uniform createUniform(ShaderProgram program, String name) {
-		return new BasicUniform(name,
-				GlStates.current().getUniformLocation(((LWJGLShaderProgram) program).getProgramId(), name), type);
+		return new BasicUniform(GlStates.current()
+				.getUniformLocation(((LWJGLShaderProgram) program).getProgramId(), name), type);
 	}
 
 }

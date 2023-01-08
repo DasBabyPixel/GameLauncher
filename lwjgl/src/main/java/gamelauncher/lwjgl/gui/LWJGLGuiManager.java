@@ -1,12 +1,5 @@
 package gamelauncher.lwjgl.gui;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
@@ -15,10 +8,10 @@ import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
 import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
-import gamelauncher.engine.launcher.gui.ColorGui;
-import gamelauncher.engine.launcher.gui.MainScreenGui;
-import gamelauncher.engine.launcher.gui.ScrollGui;
-import gamelauncher.engine.launcher.gui.TextureGui;
+import gamelauncher.engine.gui.launcher.ColorGui;
+import gamelauncher.engine.gui.launcher.MainScreenGui;
+import gamelauncher.engine.gui.launcher.ScrollGui;
+import gamelauncher.engine.gui.launcher.TextureGui;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
@@ -26,25 +19,35 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEntry;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.launcher.gui.LWJGLColorGui;
-import gamelauncher.lwjgl.launcher.gui.LWJGLMainScreenGui;
-import gamelauncher.lwjgl.launcher.gui.LWJGLScrollGui;
-import gamelauncher.lwjgl.launcher.gui.LWJGLTextureGui;
+import gamelauncher.lwjgl.gui.launcher.LWJGLColorGui;
+import gamelauncher.lwjgl.gui.launcher.LWJGLMainScreenGui;
+import gamelauncher.lwjgl.gui.launcher.LWJGLScrollGui;
+import gamelauncher.lwjgl.gui.launcher.LWJGLTextureGui;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class LWJGLGuiManager extends AbstractGameResource implements GuiManager {
+	private static final Logger logger = Logger.getLogger();
 
 	private final LWJGLGameLauncher launcher;
 
 	private final Map<Framebuffer, GuiStack> guis = new ConcurrentHashMap<>();
 
-	private final Map<Class<? extends LauncherBasedGui>, GameSupplier<? extends LauncherBasedGui>> registeredGuis = new HashMap<>();
+	private final Map<Class<? extends LauncherBasedGui>, GameSupplier<? extends LauncherBasedGui>>
+			registeredGuis = new HashMap<>();
 
-	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>> converters = new HashMap<>();
+	private final Map<Class<? extends LauncherBasedGui>, Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>>>
+			converters = new HashMap<>();
 
 	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
@@ -56,20 +59,9 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	}
 
 	@Override
-	public void updateGuis() throws GameException {
-		for (GuiStack stack : this.guis.values()) {
-			GuiStack.StackEntry e = stack.peekGui();
-			if (e != null) {
-				e.gui.update();
-			}
-		}
-	}
-
-	@Override
 	public void cleanup0() throws GameException {
 		this.launcher.getEventManager().unregisterListener(this);
-		@SuppressWarnings("unchecked")
-		CompletableFuture<Void>[] futures = new CompletableFuture[this.guis.size()];
+		CompletableFuture<?>[] futures = new CompletableFuture[this.guis.size()];
 		int i = 0;
 		for (Map.Entry<Framebuffer, GuiStack> entry : this.guis.entrySet()) {
 			futures[i++] = this.cleanupLater(entry.getKey());
@@ -77,19 +69,15 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		Threads.waitFor(futures);
 	}
 
-	@Override
-	public void cleanup(Framebuffer framebuffer) throws GameException {
-		Threads.waitFor(this.cleanupLater(framebuffer));
-	}
-
 	/**
 	 * Cleanes up a framebuffer and its guis
-	 * 
+	 *
 	 * @param framebuffer
+	 *
 	 * @return a future for the task
 	 */
 	@Deprecated
-	public CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
+	private CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
 		GuiStack stack = this.guis.remove(framebuffer);
 		if (stack != null) {
 			return framebuffer.renderThread().submit(() -> {
@@ -100,30 +88,6 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			});
 		}
 		return CompletableFuture.completedFuture(null);
-	}
-
-	@Override
-	public <T extends LauncherBasedGui> void registerGuiCreator(Class<T> clazz, GameSupplier<T> sup) {
-		this.registeredGuis.put(clazz, sup);
-	}
-
-	@Override
-	public <T extends LauncherBasedGui> void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter) {
-		Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = this.converters.get(clazz);
-		if (c == null) {
-			c = new HashSet<>();
-			this.converters.put(clazz, c);
-		}
-		c.add(converter);
-	}
-
-	@Override
-	public Gui getCurrentGui(Framebuffer framebuffer) throws GameException {
-		if (!this.guis.containsKey(framebuffer)) {
-			return null;
-		}
-		StackEntry e = this.guis.get(framebuffer).peekGui();
-		return e == null ? null : e.gui;
 	}
 
 	@Override
@@ -160,8 +124,32 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	}
 
 	@Override
+	public Gui getCurrentGui(Framebuffer framebuffer) throws GameException {
+		if (!this.guis.containsKey(framebuffer)) {
+			return null;
+		}
+		StackEntry e = this.guis.get(framebuffer).peekGui();
+		return e == null ? null : e.gui;
+	}
+
+	@Override
+	public void cleanup(Framebuffer framebuffer) throws GameException {
+		Threads.waitFor(this.cleanupLater(framebuffer));
+	}
+
+	@Override
 	public GameLauncher getLauncher() {
 		return this.launcher;
+	}
+
+	@Override
+	public void updateGuis() throws GameException {
+		for (GuiStack stack : this.guis.values()) {
+			GuiStack.StackEntry e = stack.peekGui();
+			if (e != null) {
+				e.gui.update();
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -169,17 +157,36 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	public <T extends LauncherBasedGui> T createGui(Class<T> clazz) throws GameException {
 		GameSupplier<? extends LauncherBasedGui> sup = this.registeredGuis.get(clazz);
 		if (sup == null) {
-			throw new GameException("Gui " + clazz.getName() + " not registered! Outdated launcher?");
+			throw new GameException(
+					"Gui " + clazz.getName() + " not registered! Outdated launcher?");
 		}
 		T t = clazz.cast(sup.get());
 		if (this.converters.containsKey(clazz)) {
-			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c = this.converters.get(clazz);
-			for (@SuppressWarnings("rawtypes")
-			GameFunction func : c) {
+			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c =
+					this.converters.get(clazz);
+			for (@SuppressWarnings("rawtypes") GameFunction func : c) {
 				t = clazz.cast(func.apply(t));
 			}
 		}
 		return t;
+	}
+
+	@Override
+	public <T extends LauncherBasedGui> void registerGuiConverter(Class<T> clazz,
+			GameFunction<T, T> converter) {
+		Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c =
+				this.converters.get(clazz);
+		if (c == null) {
+			c = new HashSet<>();
+			this.converters.put(clazz, c);
+		}
+		c.add(converter);
+	}
+
+	@Override
+	public <T extends LauncherBasedGui> void registerGuiCreator(Class<T> clazz,
+			GameSupplier<T> sup) {
+		this.registeredGuis.put(clazz, sup);
 	}
 
 	@EventHandler
@@ -193,10 +200,14 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 				try {
 					e.gui.handle(entry);
 				} catch (GameException ex) {
-					ex.printStackTrace();
+					logger.error(ex);
 				}
 			}
 		});
 	}
+
+	//	private boolean isExitKeybind(KeybindEntry entry) {
+	//
+	//	}
 
 }

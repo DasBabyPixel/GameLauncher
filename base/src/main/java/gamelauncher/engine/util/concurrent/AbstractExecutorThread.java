@@ -1,15 +1,15 @@
 package gamelauncher.engine.util.concurrent;
 
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameRunnable;
+import gamelauncher.engine.util.logging.Logger;
+
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
-
-import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.function.GameRunnable;
-import gamelauncher.engine.util.logging.Logger;
 
 /**
  * @author DasBabyPixel
@@ -19,22 +19,15 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	private static final Logger logger = Logger.getLogger(AbstractExecutorThread.class);
 
 	private final Deque<QueueEntry> queue = new ConcurrentLinkedDeque<>();
-
-	protected volatile boolean exit = false;
-
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
-
 	private final AtomicBoolean work = new AtomicBoolean();
-
 	private final AtomicBoolean parked = new AtomicBoolean(false);
-
 	private final AtomicBoolean unpark = new AtomicBoolean(false);
-
 	/**
 	 * the current entry
 	 */
 	public WrapperEntry currentEntry;
-
+	protected volatile boolean exit = false;
 	private boolean skipNextSignalWait = false;
 
 	/**
@@ -66,23 +59,6 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	}
 
 	@Override
-	public void park() {
-		if (Thread.currentThread() != this) {
-			throw new SecurityException("May not call this from any other thread than self");
-		}
-		if (this.unpark.compareAndSet(true, false)) {
-			return;
-		}
-		this.parked.set(true);
-		if (this.unpark.compareAndSet(true, false)) {
-			this.parked.set(false);
-			return;
-		}
-		LockSupport.park();
-		this.parked.set(false);
-	}
-
-	@Override
 	public void park(long nanos) {
 		if (Thread.currentThread() != this) {
 			throw new SecurityException("May not call this from any other thread than self");
@@ -97,19 +73,6 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 		}
 		LockSupport.parkNanos(nanos);
 		this.parked.set(false);
-	}
-
-	@Override
-	public void unpark() {
-		if (this.parked.compareAndSet(true, false)) {
-			LockSupport.unpark(this);
-		} else {
-			this.unpark.set(true);
-			if (this.parked.compareAndSet(true, false)) {
-				this.unpark.set(false);
-				LockSupport.unpark(this);
-			}
-		}
 	}
 
 	protected abstract void startExecuting() throws GameException;
@@ -160,7 +123,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 	@Override
 	public final void run() {
 		try {
-			AbstractExecutorThread.logger.info("Starting " + this.getName());
+			AbstractExecutorThread.logger.debug("Starting " + this.getName());
 			this.startExecuting();
 			while (!this.exit) {
 				this.loop();
@@ -177,25 +140,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 			st.initCause(ex);
 			AbstractExecutorThread.logger.error(st);
 		}
-		AbstractExecutorThread.logger.info("Stopping " + this.getName());
-	}
-
-	@Override
-	public final void workQueue() {
-		QueueEntry e;
-		while ((e = this.queue.pollFirst()) != null) {
-			if (!this.shouldHandle(e)) {
-				this.queue.offerFirst(e);
-				return;
-			}
-			if (Threads.calculateThreadStacks) {
-				this.currentEntry = e.entry;
-			}
-			this.work(e.run, e.fut);
-			if (Threads.calculateThreadStacks) {
-				this.currentEntry = null;
-			}
-		}
+		AbstractExecutorThread.logger.debug("Stopping " + this.getName());
 	}
 
 	private void work(GameRunnable run, CompletableFuture<Void> fut) {
@@ -227,11 +172,6 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
 	protected boolean shouldHandle(QueueEntry entry) {
 		return true;
-	}
-
-	@Override
-	public Thread thread() {
-		return this;
 	}
 
 	protected boolean shouldWaitForSignal() {
@@ -267,6 +207,60 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 		}
 		return fut;
 	}
+
+	@Override
+	public void park() {
+		if (Thread.currentThread() != this) {
+			throw new SecurityException("May not call this from any other thread than self");
+		}
+		if (this.unpark.compareAndSet(true, false)) {
+			return;
+		}
+		this.parked.set(true);
+		if (this.unpark.compareAndSet(true, false)) {
+			this.parked.set(false);
+			return;
+		}
+		LockSupport.park();
+		this.parked.set(false);
+	}
+
+	@Override
+	public void unpark() {
+		if (this.parked.compareAndSet(true, false)) {
+			LockSupport.unpark(this);
+		} else {
+			this.unpark.set(true);
+			if (this.parked.compareAndSet(true, false)) {
+				this.unpark.set(false);
+				LockSupport.unpark(this);
+			}
+		}
+	}
+
+	@Override
+	public final void workQueue() {
+		QueueEntry e;
+		while ((e = this.queue.pollFirst()) != null) {
+			if (!this.shouldHandle(e)) {
+				this.queue.offerFirst(e);
+				return;
+			}
+			if (Threads.calculateThreadStacks) {
+				this.currentEntry = e.entry;
+			}
+			this.work(e.run, e.fut);
+			if (Threads.calculateThreadStacks) {
+				this.currentEntry = null;
+			}
+		}
+	}
+
+	@Override
+	public Thread thread() {
+		return this;
+	}
+
 
 	protected static final class QueueEntry {
 

@@ -1,5 +1,7 @@
 package gamelauncher.engine.render;
 
+import de.dasbabypixel.api.property.NumberValue;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,8 +11,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
-
-import de.dasbabypixel.api.property.NumberValue;
 
 /**
  * @author DasBabyPixel
@@ -74,13 +74,14 @@ public class FrameCounter {
 	}
 
 	/**
+	 *
 	 */
 	public void frameNoWait() {
 		this.offer(System.nanoTime());
 	}
 
 	/**
-	 * @param nanoSleeper
+	 * @param nanoSleeper the nanosleeper function
 	 */
 	public void frame(Consumer<Long> nanoSleeper) {
 		float limit = this.limit();
@@ -96,15 +97,6 @@ public class FrameCounter {
 			}
 			this.offer(System.nanoTime());
 		}
-	}
-
-	/**
-	 * Stops sleeping if sleeping
-	 * 
-	 * @param unparker
-	 */
-	public void stopWaiting(Runnable unparker) {
-		unparker.run();
 	}
 
 	/**
@@ -130,8 +122,8 @@ public class FrameCounter {
 
 	/**
 	 * Sets the frameLimit
-	 * 
-	 * @param limit
+	 *
+	 * @param limit the new limit
 	 */
 	public void limit(float limit) {
 		if (limit <= 0) {
@@ -143,13 +135,16 @@ public class FrameCounter {
 		}
 	}
 
-	private class Buffer {
+	private static class Buffer {
 
-		private final List<LongHandle> unusedHandles = Collections.synchronizedList(new ArrayList<>());
+		private final List<LongHandle> unusedHandles =
+				Collections.synchronizedList(new ArrayList<>());
 
-		private final List<LongHandle> frames1Second = Collections.synchronizedList(new ArrayList<>());
+		private final List<LongHandle> frames1Second =
+				Collections.synchronizedList(new ArrayList<>());
 
-		private final List<LongHandle> frames5Second = Collections.synchronizedList(new ArrayList<>());
+		private final List<LongHandle> frames5Second =
+				Collections.synchronizedList(new ArrayList<>());
 
 		private final AtomicLong lastFrame = new AtomicLong();
 

@@ -8,9 +8,6 @@ import gamelauncher.engine.settings.AbstractSettingSection;
  */
 public class ControlsSettingSection extends AbstractSettingSection {
 
-	/**
-	 * @param eventManager
-	 */
 	public ControlsSettingSection(EventManager eventManager) {
 		super(eventManager);
 	}

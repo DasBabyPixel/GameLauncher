@@ -9,15 +9,13 @@ public abstract class ClassBasedSettingSectionInsertion extends SettingSectionIn
 
 	private final Class<?> target;
 
-	/**
-	 * @param target
-	 */
 	public ClassBasedSettingSectionInsertion(Class<?> target) {
 		this.target = target;
 	}
 
 	@Override
 	protected boolean shouldHandle(SettingSectionConstructEvent event) {
-		return super.shouldHandle(event) && event.getConstructor().getSection().getClass().equals(target);
+		return super.shouldHandle(event) && event.getConstructor().getSection().getClass()
+				.equals(target);
 	}
 }

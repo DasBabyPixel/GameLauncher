@@ -13,7 +13,7 @@ public interface KeyboardKeybindEntry extends KeybindEntry {
 	/**
 	 * @author DasBabyPixel
 	 */
-	public static enum Type {
+	enum Type {
 		PRESS, RELEASE, HOLD, REPEAT, CHARACTER
 	}
 }

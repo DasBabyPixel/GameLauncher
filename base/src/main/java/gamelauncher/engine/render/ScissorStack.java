@@ -1,10 +1,11 @@
 package gamelauncher.engine.render;
 
+import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.gui.Gui;
+import gamelauncher.engine.util.math.Math;
+
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
-
-import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.util.math.Math;
 
 /**
  * @author DasBabyPixel
@@ -14,45 +15,55 @@ public abstract class ScissorStack {
 	private final Deque<Scissor> stack = new ConcurrentLinkedDeque<>();
 
 	/**
+	 *
 	 */
 	public ScissorStack() {
 	}
 
-	/**
-	 * @param x
-	 * @param y
-	 * @param w
-	 * @param h
-	 */
-	public void pushScissor(int x, int y, int w, int h) {
-		Scissor last = stack.peekLast();
-		if (last != null) {
-			x = Math.max(x, last.x);
-			y = Math.max(y, last.y);
-			w = Math.min(w, last.w + last.x - x);
-			h = Math.min(h, last.h + last.y - y);
-		}
-		if (w < 0) {
-			w = 0;
-		}
-		if (h < 0) {
-			h = 0;
-		}
+	public Scissor pushScissor(Gui gui) {
+		Scissor scissor =
+				pushScissor(gui.getXProperty(), gui.getYProperty(), gui.getWidthProperty(),
+						gui.getHeightProperty());
+		gui.getVisibleXProperty().setValue(scissor.x);
+		gui.getVisibleYProperty().setValue(scissor.y);
+		gui.getVisibleWidthProperty().setValue(scissor.w);
+		gui.getVisibleHeightProperty().setValue(scissor.h);
+		return scissor;
+	}
+
+	public Scissor pushScissor(int x, int y, int w, int h) {
 		if (stack.isEmpty()) {
 			enableScissor();
 		}
-		stack.addLast(new Scissor(x, y, w, h));
-		setScissor(last());
+		Scissor scissor = createScissor(x, y, w, h, last());
+		stack.addLast(scissor);
+		setScissor(scissor);
+		return scissor;
 	}
 
-	/**
-	 * @param x
-	 * @param y
-	 * @param w
-	 * @param h
-	 * @see #pushScissor(int, int, int, int)
-	 */
-	public void pushScissor(NumberValue x, NumberValue y, NumberValue w, NumberValue h) {
+	protected Scissor createScissor(int x, int y, int w, int h, Scissor last) {
+		int l = x;
+		int b = y;
+		int r = x + w;
+		int t = y + h;
+		if (last != null) {
+			l = Math.max(l, last.x());
+			r = Math.max(l, Math.min(r, last.x() + last.w()));
+			b = Math.max(b, last.y());
+			t = Math.max(b, Math.min(t, last.y() + last.h()));
+
+			return new Scissor(l, b, r - l, t - b);
+			//			nx = Math.max(x, last.x);
+			//			ny = Math.max(y, last.y);
+			//			int maxh = last.h - Math.abs(last.y - y);
+			//			Logger.getLogger().info(maxh);
+			//			w = Math.max(0, Math.min(w, last.w - Math.abs(nx - x)));
+			//			h = Math.max(0, Math.min(h, maxh));
+		}
+		return new Scissor(x, y, w, h);
+	}
+
+	public Scissor pushScissor(NumberValue x, NumberValue y, NumberValue w, NumberValue h) {
 		float fsx0 = x.floatValue();
 		float fsy0 = y.floatValue();
 		float fsx1 = fsx0 + w.floatValue();
@@ -61,11 +72,12 @@ public abstract class ScissorStack {
 		int sy = Math.floor(fsy0);
 		int sw = Math.round(fsx1 - sx);
 		int sh = Math.round(fsy1 - sy);
-		pushScissor(sx, sy, sw, sh);
+		return pushScissor(sx, sy, sw, sh);
+		//		return pushScissor(x.intValue(), y.intValue(), w.intValue(), h.intValue());
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public void popScissor() {
 		stack.removeLast();
@@ -90,29 +102,6 @@ public abstract class ScissorStack {
 	/**
 	 * @author DasBabyPixel
 	 */
-	public static class Scissor {
-
-		@SuppressWarnings("javadoc")
-		public final int x, y, w, h;
-
-		/**
-		 * @param x
-		 * @param y
-		 * @param w
-		 * @param h
-		 */
-		public Scissor(int x, int y, int w, int h) {
-			this.x = x;
-			this.y = y;
-			this.w = w;
-			this.h = h;
-		}
-
-		@Override
-		public String toString() {
-			return "Scissor [x=" + x + ", y=" + y + ", w=" + w + ", h=" + h + "]";
-		}
-
+	public record Scissor(int x, int y, int w, int h) {
 	}
-
 }

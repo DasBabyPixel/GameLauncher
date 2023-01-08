@@ -1,31 +1,24 @@
 package gamelauncher.lwjgl.render;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.lwjgl.opengles.GLES20;
-
 import gamelauncher.engine.gui.GuiRenderer;
-import gamelauncher.engine.launcher.gui.MainScreenGui;
-import gamelauncher.engine.render.BasicCamera;
-import gamelauncher.engine.render.Camera;
+import gamelauncher.engine.gui.launcher.MainScreenGui;
+import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.ContextProvider.ContextType;
-import gamelauncher.engine.render.DrawContext;
-import gamelauncher.engine.render.Frame;
-import gamelauncher.engine.render.GameItem;
-import gamelauncher.engine.render.GameRenderer;
-import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.framebuffer.BasicFramebuffer;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.states.GlStates;
+import org.lwjgl.opengles.GLES20;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class LWJGLGameRenderer implements GameRenderer {
 
-//	public static final boolean WIREFRAMES = false;
+	//	public static final boolean WIREFRAMES = false;
 
 	private final AtomicReference<Renderer> renderer = new AtomicReference<>();
 
@@ -41,13 +34,17 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	@Override
-	public void setRenderer(Renderer renderer) {
-		this.renderer.set(renderer);
+	public void renderFrame(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "frame");
+		this.map.get(frame).renderFrame(this.renderer.get());
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
-	public Renderer getRenderer() {
-		return this.renderer.get();
+	public void windowSizeChanged(Frame frame) throws GameException {
+		this.launcher.getProfiler().begin("render", "windowSizeChanged");
+		this.map.get(frame).windowSizeChanged();
+		this.launcher.getProfiler().end();
 	}
 
 	@Override
@@ -70,25 +67,12 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	@Override
-	public void windowSizeChanged(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "windowSizeChanged");
-		this.map.get(frame).windowSizeChanged();
-		this.launcher.getProfiler().end();
-	}
-
-	@Override
-	public void renderFrame(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "frame");
-		this.map.get(frame).renderFrame(this.renderer.get());
-		this.launcher.getProfiler().end();
-	}
-
-	@Override
 	public void refreshDisplay(Frame frame) throws GameException {
 		this.launcher.getProfiler().begin("render", "refresh");
 		this.map.get(frame).refreshDisplay(this.renderer.get());
 		this.launcher.getProfiler().end();
 	}
+
 
 	public class Entry extends AbstractGameResource {
 
@@ -121,8 +105,10 @@ public class LWJGLGameRenderer implements GameRenderer {
 			LWJGLGameRenderer.this.glContext.replace(null);
 
 			this.mainFramebuffer = new BasicFramebuffer(LWJGLGameRenderer.this.launcher,
-					this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
-			this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
+					this.frame.framebuffer().width().intValue(),
+					this.frame.framebuffer().height().intValue());
+			this.mainScreenItem =
+					new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
 			this.mainScreenItem.scale().x.bind(this.mainFramebuffer.width());
 			this.mainScreenItem.scale().y.bind(this.mainFramebuffer.height());
 			this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2));
@@ -134,31 +120,33 @@ public class LWJGLGameRenderer implements GameRenderer {
 					.loadContext(this.mainFramebuffer, ContextType.HUD);
 			((LWJGLDrawContext) this.contexthud).swapTopBottom = true;
 
-			LWJGLGameRenderer.this.launcher.getGuiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
+			LWJGLGameRenderer.this.launcher.getGuiManager()
+					.openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
 
-//			updateScreenItems();
+			//			updateScreenItems();
 
 		}
 
 		@Override
 		public void cleanup0() throws GameException {
 			this.mainScreenItemModel.cleanup();
-			LWJGLGameRenderer.this.launcher.getContextProvider().freeContext(this.contexthud, ContextType.HUD);
+			LWJGLGameRenderer.this.launcher.getContextProvider()
+					.freeContext(this.contexthud, ContextType.HUD);
 			this.mainFramebuffer.cleanup();
 		}
 
 		public void windowSizeChanged() throws GameException {
 			this.mainFramebuffer.resize(this.frame.framebuffer().width().intValue(),
 					this.frame.framebuffer().height().intValue());
-//			updateScreenItems();
+			//			updateScreenItems();
 		}
 
-//		private void updateScreenItems() {
-//			float fw = window.getFramebuffer().width().floatValue();
-//			float fh = window.getFramebuffer().height().floatValue();
-//			mainScreenItem.setScale(fw, fh, 1);
-//			mainScreenItem.setPosition(fw / 2F, fh / 2F, 0);
-//		}
+		//		private void updateScreenItems() {
+		//			float fw = window.getFramebuffer().width().floatValue();
+		//			float fh = window.getFramebuffer().height().floatValue();
+		//			mainScreenItem.setScale(fw, fh, 1);
+		//			mainScreenItem.setPosition(fw / 2F, fh / 2F, 0);
+		//		}
 
 		public void refreshDisplay(Renderer renderer) throws GameException {
 			GlStates cur = GlStates.current();
@@ -219,6 +207,16 @@ public class LWJGLGameRenderer implements GameRenderer {
 			renderer.init(this.mainFramebuffer);
 		}
 
+	}	@Override
+	public void setRenderer(Renderer renderer) {
+		this.renderer.set(renderer);
+	}
+
+
+
+	@Override
+	public Renderer getRenderer() {
+		return this.renderer.get();
 	}
 
 }

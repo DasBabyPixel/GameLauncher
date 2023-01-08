@@ -3,8 +3,9 @@ package gamelauncher.engine.settings;
 import com.google.gson.JsonElement;
 
 /**
- * @author DasBabyPixel
  * @param <T>
+ *
+ * @author DasBabyPixel
  */
 public interface Setting<T> {
 
@@ -14,7 +15,7 @@ public interface Setting<T> {
 	T getValue();
 
 	/**
-	 * @param value
+	 * @param value the new value
 	 */
 	void setValue(T value);
 
@@ -25,7 +26,8 @@ public interface Setting<T> {
 
 	/**
 	 * Loads this {@link Setting} from a {@link JsonElement}
-	 * @param json
+	 *
+	 * @param json the json to load from
 	 */
 	void deserialize(JsonElement json);
 

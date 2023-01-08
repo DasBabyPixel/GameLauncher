@@ -1,26 +1,8 @@
 package gamelauncher.engine;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.ProviderNotFoundException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.SignStyle;
-import java.time.temporal.ChronoField;
-
-import org.fusesource.jansi.AnsiConsole;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.event.events.game.TickEvent;
@@ -33,11 +15,7 @@ import gamelauncher.engine.io.embed.EmbedFileSystem;
 import gamelauncher.engine.io.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
-import gamelauncher.engine.render.ContextProvider;
-import gamelauncher.engine.render.DrawContext;
-import gamelauncher.engine.render.Frame;
-import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.GameRenderer;
+import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.font.FontFactory;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
@@ -56,6 +34,18 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
+import org.fusesource.jansi.AnsiConsole;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.SignStyle;
+import java.time.temporal.ChronoField;
 
 /**
  * @author DasBabyPixel
@@ -163,6 +153,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * @param framebuffer
+	 *
 	 * @return a new {@link DrawContext}
 	 */
 	@Deprecated
@@ -170,8 +161,9 @@ public abstract class GameLauncher {
 
 	/**
 	 * Starts the {@link GameLauncher}
-	 * 
+	 *
 	 * @param args
+	 *
 	 * @throws GameException
 	 */
 	public final void start(String[] args) throws GameException {
@@ -223,34 +215,33 @@ public abstract class GameLauncher {
 			this.settings.deserialize(element);
 			JsonElement serialized = this.settingsGson.toJsonTree(this.settings.serialize());
 			if (!serialized.equals(element)) {
-				this.getLogger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-						.appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MONTH_OF_YEAR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.DAY_OF_MONTH, 2)
-						.appendLiteral('_')
-						.appendValue(ChronoField.HOUR_OF_DAY, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-						.appendLiteral('-')
-						.appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-						.toFormatter();
-				Files.move(this.settingsFile,
-						this.settingsFile.getParent()
-								.resolve(String.format("backup-settings-%s.json",
-										formatter.format(LocalDateTime.now()).replace(':', '-'))));
+				this.getLogger()
+						.warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+				DateTimeFormatter formatter =
+						new DateTimeFormatterBuilder().appendValue(ChronoField.YEAR, 4, 10,
+										SignStyle.EXCEEDS_PAD).appendLiteral('-')
+								.appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
+								.appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_')
+								.appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-')
+								.appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-')
+								.appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
+				Files.move(this.settingsFile, this.settingsFile.getParent().resolve(
+						String.format("backup-settings-%s.json",
+								formatter.format(LocalDateTime.now()).replace(':', '-'))));
 				this.saveSettings();
 			}
 		}
 
 		this.gameThread.runLater(() -> {
 			this.start0();
-			if (this.gameRenderer.getRenderer() != null && !(this.gameRenderer.getRenderer() instanceof GuiRenderer)) {
-				this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.getRenderer().getClass().getName());
+			if (this.gameRenderer.getRenderer() != null
+					&& !(this.gameRenderer.getRenderer() instanceof GuiRenderer)) {
+				this.logger.warn(
+						"Not using GuiRenderer: " + this.gameRenderer.getRenderer().getClass()
+								.getName());
 			}
-//			window.scheduleDrawAndWaitForFrame(); // TODO: Gotta render the frame twice in beginning, dunny why
+			//			window.scheduleDrawAndWaitForFrame();
+			// TODO: Gotta render the frame twice in beginning, dunno why
 			this.frame.scheduleDrawWaitForFrame();
 			this.getEventManager().post(new LauncherInitializedEvent(this));
 		});
@@ -259,7 +250,7 @@ public abstract class GameLauncher {
 
 	/**
 	 * Stops the {@link GameLauncher}
-	 * 
+	 *
 	 * @throws GameException
 	 */
 	public void stop() throws GameException {
@@ -291,28 +282,16 @@ public abstract class GameLauncher {
 		this.getGuiManager().updateGuis();
 		this.tick0();
 	}
-	
+
 	protected abstract void tick0() throws GameException;
 
 	protected abstract void start0() throws GameException;
 
 	protected abstract void stop0() throws GameException;
 
-	protected void setGuiManager(GuiManager guiManager) {
-		this.guiManager = guiManager;
-	}
-
-	protected void setKeybindManager(KeybindManager keybindManager) {
-		this.keybindManager = keybindManager;
-	}
-
-	protected void setTextureManager(TextureManager textureManager) {
-		this.textureManager = textureManager;
-	}
-
 	/**
 	 * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
-	 * 
+	 *
 	 * @param throwable
 	 */
 	public void handleError(Throwable throwable) {
@@ -336,9 +315,12 @@ public abstract class GameLauncher {
 		return this.textureManager;
 	}
 
+	protected void setTextureManager(TextureManager textureManager) {
+		this.textureManager = textureManager;
+	}
+
 	/**
-	 * @return the {@link Threads Threads utility class} for this
-	 *         {@link GameLauncher}
+	 * @return the {@link Threads Threads utility class} for this {@link GameLauncher}
 	 */
 	public Threads getThreads() {
 		return this.threads;
@@ -351,8 +333,8 @@ public abstract class GameLauncher {
 		return this.keybindManager;
 	}
 
-	protected void setNetworkClient(NetworkClient networkClient) {
-		this.networkClient = networkClient;
+	protected void setKeybindManager(KeybindManager keybindManager) {
+		this.keybindManager = keybindManager;
 	}
 
 	/**
@@ -362,6 +344,10 @@ public abstract class GameLauncher {
 		return this.networkClient;
 	}
 
+	protected void setNetworkClient(NetworkClient networkClient) {
+		this.networkClient = networkClient;
+	}
+
 	/**
 	 * @return the {@link GuiManager}
 	 */
@@ -369,8 +355,8 @@ public abstract class GameLauncher {
 		return this.guiManager;
 	}
 
-	protected void setOperatingSystem(OperatingSystem operatingSystem) {
-		this.operatingSystem = operatingSystem;
+	protected void setGuiManager(GuiManager guiManager) {
+		this.guiManager = guiManager;
 	}
 
 	/**
@@ -378,6 +364,10 @@ public abstract class GameLauncher {
 	 */
 	public OperatingSystem getOperatingSystem() {
 		return this.operatingSystem;
+	}
+
+	protected void setOperatingSystem(OperatingSystem operatingSystem) {
+		this.operatingSystem = operatingSystem;
 	}
 
 	/**
@@ -394,15 +384,6 @@ public abstract class GameLauncher {
 		return this.pluginManager;
 	}
 
-	protected void setResourceLoader(ResourceLoader loader) {
-		this.resourceLoader = loader;
-		loader.set();
-	}
-
-	protected void setModelLoader(ModelLoader loader) {
-		this.modelLoader = loader;
-	}
-
 	/**
 	 * @return the {@link GlyphProvider}
 	 */
@@ -410,8 +391,13 @@ public abstract class GameLauncher {
 		return this.glyphProvider;
 	}
 
-	protected void setShaderLoader(ShaderLoader shaderLoader) {
-		this.shaderLoader = shaderLoader;
+	/**
+	 * Sets the current {@link GlyphProvider}
+	 *
+	 * @param glyphProvider
+	 */
+	public void setGlyphProvider(GlyphProvider glyphProvider) {
+		this.glyphProvider = glyphProvider;
 	}
 
 	/**
@@ -428,6 +414,10 @@ public abstract class GameLauncher {
 		return this.shaderLoader;
 	}
 
+	protected void setShaderLoader(ShaderLoader shaderLoader) {
+		this.shaderLoader = shaderLoader;
+	}
+
 	/**
 	 * @return the current {@link Game}
 	 */
@@ -437,20 +427,11 @@ public abstract class GameLauncher {
 
 	/**
 	 * Sets the current {@link Game}
-	 * 
+	 *
 	 * @param currentGame
 	 */
 	public void setCurrentGame(Game currentGame) {
 		this.currentGame = currentGame;
-	}
-
-	/**
-	 * Sets the current {@link GlyphProvider}
-	 * 
-	 * @param glyphProvider
-	 */
-	public void setGlyphProvider(GlyphProvider glyphProvider) {
-		this.glyphProvider = glyphProvider;
 	}
 
 	/**
@@ -481,11 +462,20 @@ public abstract class GameLauncher {
 		return this.modelLoader;
 	}
 
+	protected void setModelLoader(ModelLoader loader) {
+		this.modelLoader = loader;
+	}
+
 	/**
 	 * @return the {@link ResourceLoader}
 	 */
 	public ResourceLoader getResourceLoader() {
 		return this.resourceLoader;
+	}
+
+	protected void setResourceLoader(ResourceLoader loader) {
+		this.resourceLoader = loader;
+		loader.set();
 	}
 
 	/**
@@ -497,18 +487,11 @@ public abstract class GameLauncher {
 
 	/**
 	 * Sets the {@link GameLauncher}'s debug mode
-	 * 
+	 *
 	 * @param debugMode
 	 */
 	public void setDebugMode(boolean debugMode) {
 		this.debugMode = debugMode;
-	}
-
-	protected void setGameRenderer(GameRenderer renderer) {
-		this.gameRenderer = renderer;
-		if (this.frame != null) {
-			this.frame.frameRenderer(renderer);
-		}
 	}
 
 	protected void setFrame(Frame frame) {
@@ -556,8 +539,8 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * @return the {@link ContextProvider} to use for creating contexts. This is
-	 *         preferred over {@link #createContext(Framebuffer)}
+	 * @return the {@link ContextProvider} to use for creating contexts. This is preferred over
+	 * {@link #createContext(Framebuffer)}
 	 */
 	public ContextProvider getContextProvider() {
 		return this.contextProvider;
@@ -570,13 +553,21 @@ public abstract class GameLauncher {
 		return this.gameRenderer;
 	}
 
+	protected void setGameRenderer(GameRenderer renderer) {
+		this.gameRenderer = renderer;
+		if (this.frame != null) {
+			this.frame.frameRenderer(renderer);
+		}
+	}
+
 	/**
 	 * Saves the current settings
-	 * 
+	 *
 	 * @throws GameException
 	 */
 	public void saveSettings() throws GameException {
-		Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(StandardCharsets.UTF_8));
+		Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize())
+				.getBytes(StandardCharsets.UTF_8));
 	}
 
 }

@@ -14,6 +14,23 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 public interface Gui {
 
 	/**
+	 * Checks if the given mouse position is inside the given rectangle
+	 *
+	 * @param x      the x position
+	 * @param y      the y position
+	 * @param width  the width
+	 * @param height the height
+	 * @param mouseX the mouse x position
+	 * @param mouseY the mouse y position
+	 *
+	 * @return true if the mouse is inside the given rectangle
+	 */
+	static boolean isHovering(float x, float y, float width, float height, float mouseX,
+			float mouseY) {
+		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
+	}
+
+	/**
 	 * @return the width property of the gui
 	 */
 	NumberValue getWidthProperty();
@@ -33,6 +50,14 @@ public interface Gui {
 	 */
 	NumberValue getYProperty();
 
+	NumberValue getVisibleXProperty();
+
+	NumberValue getVisibleYProperty();
+
+	NumberValue getVisibleWidthProperty();
+
+	NumberValue getVisibleHeightProperty();
+
 	/**
 	 * @return the focused property of the gui
 	 */
@@ -40,71 +65,76 @@ public interface Gui {
 
 	/**
 	 * Called when the contents of the window should be initialized
-	 * 
-	 * @param framebuffer
-	 * @throws GameException
+	 *
+	 * @param framebuffer the framebuffer to initialize
+	 *
+	 * @throws GameException an exception
 	 */
 	void init(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is rendered
-	 * 
-	 * @param framebuffer
-	 * @param mouseX
-	 * @param mouseY
-	 * @param partialTick
-	 * @throws GameException
+	 *
+	 * @param framebuffer the framebuffer to render to
+	 * @param mouseX      the mouse x position
+	 * @param mouseY      the mouse y position
+	 * @param partialTick the partial tick
+	 *
+	 * @throws GameException an exception
 	 */
-	void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException;
+	void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
+			throws GameException;
 
 	/**
 	 * Called when the contents of this {@link Gui} should be cleaned up
-	 * 
-	 * @param framebuffer
-	 * @throws GameException
+	 *
+	 * @param framebuffer the framebuffer to clean up
+	 *
+	 * @throws GameException an exception
 	 */
 	void cleanup(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is closed
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void onClose() throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is opened
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void onOpen() throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is focused
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void focus() throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is unfocused
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void unfocus() throws GameException;
 
 	/**
 	 * Called when this {@link Gui} is updated in the {@link GameThread}
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void update() throws GameException;
 
 	/**
 	 * Called when a {@link KeybindEntry} is handled by this {@link Gui}
-	 * 
-	 * @param entry
-	 * @throws GameException
+	 *
+	 * @param entry the KeybindEntry to handle
+	 *
+	 * @throws GameException an exception
 	 */
 	void handle(KeybindEntry entry) throws GameException;
 
@@ -117,7 +147,7 @@ public interface Gui {
 	 * @return if this {@link Gui} has been initialized
 	 */
 	boolean isInitialized();
-	
+
 	/**
 	 * @return if this gui is focused
 	 */
@@ -126,9 +156,9 @@ public interface Gui {
 	}
 
 	/**
-	 * Should be true if this {@link Gui} pauses the game when opened. For
-	 * {@link Gui}s like settings or the pause menu
-	 * 
+	 * Should be true if this {@link Gui} pauses the game when opened. For {@link Gui}s like
+	 * settings or the pause menu
+	 *
 	 * @return if this {@link Gui} pauses the game
 	 */
 	default boolean doesPauseGame() {
@@ -143,6 +173,15 @@ public interface Gui {
 	}
 
 	/**
+	 * Sets the width of this {@link Gui}
+	 *
+	 * @param width the new width
+	 */
+	default void setWidth(float width) {
+		getWidthProperty().setNumber(width);
+	}
+
+	/**
 	 * @return the height of this {@link Gui}
 	 */
 	default float getHeight() {
@@ -150,18 +189,9 @@ public interface Gui {
 	}
 
 	/**
-	 * Sets the width of this {@link Gui}
-	 * 
-	 * @param width
-	 */
-	default void setWidth(float width) {
-		getWidthProperty().setNumber(width);
-	}
-
-	/**
 	 * Sets the height of this {@link Gui}
-	 * 
-	 * @param height
+	 *
+	 * @param height the new height
 	 */
 	default void setHeight(float height) {
 		getHeightProperty().setNumber(height);
@@ -175,6 +205,15 @@ public interface Gui {
 	}
 
 	/**
+	 * Sets the x position of this {@link Gui}
+	 *
+	 * @param x the new x position
+	 */
+	default void setX(float x) {
+		getXProperty().setNumber(x);
+	}
+
+	/**
 	 * @return the y position of this {@link Gui}
 	 */
 	default float getY() {
@@ -182,18 +221,9 @@ public interface Gui {
 	}
 
 	/**
-	 * Sets the x position of this {@link Gui}
-	 * 
-	 * @param x
-	 */
-	default void setX(float x) {
-		getXProperty().setNumber(x);
-	}
-
-	/**
 	 * Sets the y position of this {@link Gui}
-	 * 
-	 * @param y
+	 *
+	 * @param y the new y position
 	 */
 	default void setY(float y) {
 		getYProperty().setNumber(y);
@@ -201,18 +231,31 @@ public interface Gui {
 
 	/**
 	 * Checks if the given mouse position is inside this {@link Gui}
-	 * @param mouseX
-	 * @param mouseY
+	 *
+	 * @param mouseX the mouse x position
+	 * @param mouseY the mouse y position
+	 *
 	 * @return true if the mouse is inside this {@link Gui}
 	 */
 	default boolean isHovering(float mouseX, float mouseY) {
-		return isHovering(getX(), getY(), getWidth(), getHeight(), mouseX, mouseY);
+		return isHovering(getVisibleXProperty().floatValue(), getVisibleYProperty().floatValue(),
+				getVisibleWidthProperty().floatValue(), getVisibleHeightProperty().floatValue(),
+				mouseX, mouseY);
+	}
+
+	/**
+	 * @return if the user may exit this gui
+	 */
+	default boolean mayExit() {
+		return true;
 	}
 
 	/**
 	 * Sets the position of this {@link Gui}
-	 * @param x
-	 * @param y
+	 *
+	 * @param x the new x position
+	 * @param y the new y position
+	 *
 	 * @return this Gui
 	 */
 	default Gui setPosition(float x, float y) {
@@ -223,27 +266,15 @@ public interface Gui {
 
 	/**
 	 * Sets the size of this {@link Gui}
-	 * @param width
-	 * @param height
+	 *
+	 * @param width  the new width
+	 * @param height the new height
+	 *
 	 * @return this Gui
 	 */
 	default Gui setSize(float width, float height) {
 		this.setWidth(width);
 		this.setHeight(height);
 		return this;
-	}
-
-	/**
-	 * Checks if the given mouse position is inside the given rectangle
-	 * @param x 
-	 * @param y 
-	 * @param width 
-	 * @param height 
-	 * @param mouseX
-	 * @param mouseY
-	 * @return true if the mouse is inside the given rectangle
-	 */
-	static boolean isHovering(float x, float y, float width, float height, float mouseX, float mouseY) {
-		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
 	}
 }

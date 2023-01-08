@@ -8,10 +8,8 @@ import io.netty.buffer.ByteBuf;
  */
 public class ByteBufMemory extends ByteMemory {
 
-	@SuppressWarnings("javadoc")
 	public ByteBuf buf;
 
-	@SuppressWarnings("javadoc")
 	public ByteBufMemory(ByteBuf buf) {
 		this.buf = buf;
 	}

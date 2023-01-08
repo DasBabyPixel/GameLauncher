@@ -1,17 +1,16 @@
 package gamelauncher.engine.settings;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import gamelauncher.engine.event.EventManager;
+import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
+import gamelauncher.engine.util.logging.Logger;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import gamelauncher.engine.event.EventManager;
-import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
-import gamelauncher.engine.util.logging.Logger;
 
 /**
  * @author DasBabyPixel
@@ -22,9 +21,6 @@ public abstract class AbstractSettingSection implements SettingSection {
 	protected final Map<SettingPath, Setting<?>> settings = new ConcurrentHashMap<>();
 	protected final Logger logger = Logger.getLogger(SettingSection.class);
 
-	/**
-	 * @param eventManager
-	 */
 	public AbstractSettingSection(EventManager eventManager) {
 		addSettings(eventManager);
 		SettingSectionConstructor constructor = new SettingSectionConstructor(this, eventManager);
@@ -36,13 +32,6 @@ public abstract class AbstractSettingSection implements SettingSection {
 
 	protected void addSetting(SettingPath path, Setting<?> setting) {
 		settings.put(path, setting);
-	}
-
-	@Override
-	public void setDefaultValue() {
-		for (Setting<?> setting : settings.values()) {
-			setting.setDefaultValue();
-		}
 	}
 
 	@Override
@@ -63,8 +52,16 @@ public abstract class AbstractSettingSection implements SettingSection {
 			if (setting != null) {
 				setting.deserialize(o.get(path.getPath()));
 			} else {
-				logger.warnf("SettingSection key missing: %s%n -> %s", entry.getKey(), entry.getValue().toString());
+				logger.warnf("SettingSection key missing: %s%n -> %s", entry.getKey(),
+						entry.getValue().toString());
 			}
+		}
+	}
+
+	@Override
+	public void setDefaultValue() {
+		for (Setting<?> setting : settings.values()) {
+			setting.setDefaultValue();
 		}
 	}
 
@@ -106,20 +103,17 @@ public abstract class AbstractSettingSection implements SettingSection {
 		private final AbstractSettingSection section;
 		private final EventManager eventManager;
 
-		/**
-		 * @param section
-		 * @param eventManager
-		 */
-		public SettingSectionConstructor(AbstractSettingSection section, EventManager eventManager) {
+		public SettingSectionConstructor(AbstractSettingSection section,
+				EventManager eventManager) {
 			this.section = section;
 			this.eventManager = eventManager;
 		}
 
 		/**
 		 * Adds a setting
-		 * 
-		 * @param path
-		 * @param setting
+		 *
+		 * @param path    the path to identify the setting by
+		 * @param setting the setting
 		 */
 		public void addSetting(SettingPath path, Setting<?> setting) {
 			settings.put(path, setting);

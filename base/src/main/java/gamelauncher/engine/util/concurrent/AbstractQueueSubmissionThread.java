@@ -1,30 +1,32 @@
 package gamelauncher.engine.util.concurrent;
 
-import java.io.PrintWriter;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 
+import java.io.PrintWriter;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
- * @author DasBabyPixel
  * @param <T>
+ *
+ * @author DasBabyPixel
  */
 public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
 
 	protected final ConcurrentLinkedDeque<QueueEntry<T>> queue = new ConcurrentLinkedDeque<>();
-
+	protected final AtomicInteger size = new AtomicInteger();
+	protected final Phaser sizeLocker = new Phaser(1);
+	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
+	private final AtomicBoolean work = new AtomicBoolean(false);
 	protected volatile boolean exit = false;
 
-	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
-
-	private final AtomicBoolean work = new AtomicBoolean(false);
-
 	/**
-	 * 
+	 *
 	 */
 	public AbstractQueueSubmissionThread() {
 	}
@@ -95,10 +97,14 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 				this.queue.offerFirst(e);
 				return;
 			}
+			int nsize = size.decrementAndGet();
+			if (nsize < 600) {
+				sizeLocker.arrive();
+			}
 			try {
 				this.handleElement(e.val);
 				e.fut.complete(null);
-			} catch (GameException ex) {
+			} catch (Throwable ex) {
 				e.fut.completeExceptionally(ex);
 				ex.printStackTrace();
 			}
@@ -120,45 +126,53 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 	}
 
 	/**
-	 * @param element
+	 * @param element the element
+	 *
 	 * @return a new future for the submitted element
 	 */
 	public final CompletableFuture<Void> submitLast(T element) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
-		this.queue.offerLast(new QueueEntry<T>(fut, element));
+		do {
+			int phase = sizeLocker.getPhase();
+			if (size.get() > 1000) {
+				sizeLocker.awaitAdvance(phase);
+			}
+		} while (size.get() > 1000);
+		this.queue.offerLast(new QueueEntry<>(fut, element));
+		size.incrementAndGet();
 		this.signal();
 		return fut;
 	}
 
 	/**
-	 * @param element
+	 * @param element the element
+	 *
 	 * @return a new future for the submitted element
 	 */
 	public final CompletableFuture<Void> submitFirst(T element) {
 		CompletableFuture<Void> fut = new CompletableFuture<>();
+		do {
+			int phase = sizeLocker.getPhase();
+			if (size.get() > 1000) {
+				sizeLocker.awaitAdvance(phase);
+			}
+		} while (size.get() > 1000);
 		this.queue.offerFirst(new QueueEntry<T>(fut, element));
+		size.incrementAndGet();
 		this.signal();
 		return fut;
 	}
 
 	/**
-	 * @param element
+	 * @param element the element
+	 *
 	 * @return a new future from the submitted element
 	 */
 	public final CompletableFuture<Void> submit(T element) {
 		return this.submitLast(element);
 	}
 
-	protected static final class QueueEntry<T> {
-
-		public final CompletableFuture<Void> fut;
-
-		public final T val;
-
-		public QueueEntry(CompletableFuture<Void> fut, T val) {
-			this.fut = fut;
-			this.val = val;
-		}
+	protected record QueueEntry<T>(CompletableFuture<Void> fut, T val) {
 
 	}
 

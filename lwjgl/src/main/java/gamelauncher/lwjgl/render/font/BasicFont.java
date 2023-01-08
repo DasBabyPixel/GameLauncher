@@ -1,5 +1,13 @@
 package gamelauncher.lwjgl.render.font;
 
+import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.font.Font;
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.ResourceStream;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
+import org.lwjgl.system.MemoryUtil;
+
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
@@ -7,37 +15,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.lwjgl.system.MemoryUtil;
-
-import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.font.Font;
-import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.resource.ResourceStream;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.Threads;
-
 public class BasicFont extends AbstractGameResource implements Font {
 
-	private volatile boolean done = false;
-
-	private final CompletableFuture<Void> future;
-
 	final AtomicInteger refcount = new AtomicInteger(0);
-
+	final Lock lock = new ReentrantLock(true);
+	private final CompletableFuture<Void> future;
 	private final Path path;
-
+	private final BasicFontFactory factory;
+	private volatile boolean done = false;
 	private volatile ByteBuffer data;
 
-	private final BasicFontFactory factory;
-
-	final Lock lock = new ReentrantLock(true);
-
 	BasicFont(BasicFontFactory factory, GameLauncher launcher, ResourceStream stream) {
-		launcher.getLogger().info("create font " + stream);
 		this.path = stream.getPath();
 		this.factory = factory;
 		this.future = launcher.getThreads().cached.submit(() -> {
-			launcher.getLogger().info("cleanup fontstream " + stream);
 			byte[] b = stream.readAllBytes();
 			stream.cleanup();
 			this.data = MemoryUtil.memAlloc(b.length);

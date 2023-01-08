@@ -1,12 +1,12 @@
 package gamelauncher.engine.util.profiler;
 
+import gamelauncher.engine.util.Stack;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-
-import gamelauncher.engine.util.Stack;
 
 /**
  * @author DasBabyPixel
@@ -14,16 +14,14 @@ import gamelauncher.engine.util.Stack;
 public class Profiler {
 
 	private final Map<String, Collection<SectionHandler>> handlers = new ConcurrentHashMap<>();
-
 	private final Collection<SectionHandler> defaultHandlers = ConcurrentHashMap.newKeySet();
-
-	private final ThreadLocal<Stack<Entry>> stacks = ThreadLocal.withInitial(() -> new Stack<>());
+	private final ThreadLocal<Stack<Entry>> stacks = ThreadLocal.withInitial(Stack::new);
 
 	/**
 	 * Begins a section
-	 * 
-	 * @param type
-	 * @param section
+	 *
+	 * @param type    the profiler section type
+	 * @param section the section name
 	 */
 	public void begin(String type, String section) {
 		Entry entry = new Entry(System.nanoTime(), type, section);
@@ -63,8 +61,8 @@ public class Profiler {
 
 	/**
 	 * Begins a section with the default type
-	 * 
-	 * @param section
+	 *
+	 * @param section the section name
 	 */
 	public void begin(String section) {
 		Entry e = stacks.get().peek();
@@ -72,8 +70,8 @@ public class Profiler {
 	}
 
 	/**
-	 * @param type
-	 * @param handler
+	 * @param type    the profiler section type
+	 * @param handler the handler
 	 */
 	public void addHandler(String type, SectionHandler handler) {
 		if (type != null) {
@@ -85,8 +83,8 @@ public class Profiler {
 	}
 
 	/**
-	 * @param type
-	 * @param handler
+	 * @param type    the profiler section type
+	 * @param handler the handler
 	 */
 	public void removeHandler(String type, SectionHandler handler) {
 		if (type != null) {
@@ -97,11 +95,13 @@ public class Profiler {
 	}
 
 	/**
-	 * @param type
-	 * @return a unmodifiable collection for the handlers
+	 * @param type the profiler section type
+	 *
+	 * @return an unmodifiable collection for the handlers
 	 */
 	public Collection<SectionHandler> getHandlers(String type) {
-		return Collections.unmodifiableCollection(handlers.getOrDefault(type, Collections.emptySet()));
+		return Collections.unmodifiableCollection(
+				handlers.getOrDefault(type, Collections.emptySet()));
 	}
 
 	private static class Entry {

@@ -1,22 +1,8 @@
 package gamelauncher.lwjgl.render.font;
 
-import java.awt.Rectangle;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberInvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.render.shader.ShaderProgram;
-import org.lwjgl.stb.STBTTFontinfo;
-import org.lwjgl.stb.STBTruetype;
-import org.lwjgl.system.MemoryUtil;
-
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.font.Font;
@@ -24,6 +10,7 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.CombinedModelsModel;
 import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.render.model.Model;
+import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -33,11 +20,22 @@ import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
+import org.lwjgl.stb.STBTTFontinfo;
+import org.lwjgl.stb.STBTruetype;
+import org.lwjgl.system.MemoryUtil;
+
+import java.awt.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
 
 	private final GLFWFrame frame;
-
 	private final DynamicSizeTextureAtlas textureAtlas;
 
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
@@ -82,8 +80,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				NumberValue th = e.getTexture().getHeight();
 				NumberValue tl = NumberValue.constant(bd.x).divide(tw);
 				NumberValue tb = NumberValue.constant(bd.y).divide(th);
-				NumberValue tr = tl.add(bd.width).divide(tw);
-				NumberValue tt = tb.add(bd.height).divide(th);
+				NumberValue tr = NumberValue.constant(bd.x).add(bd.width).divide(tw);
+				NumberValue tt = NumberValue.constant(bd.y).add(bd.height).divide(th);
 
 				GlyphData data = e.getEntry().data;
 				float pb = -data.bearingY - data.height;
@@ -105,6 +103,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				gi.setScale(width, height, 1);
 				meshes.add(gi.createModel());
 				xpos += e.getEntry().data.advance;
+
+				//				e.getTexture().write();
 			}
 		}
 
@@ -113,55 +113,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		GameItem gi = new GameItem(cmodel);
 		gi.setAddColor(1, 1, 1, 0);
 		GameItemModel gim = gi.createModel();
+
 		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
-	}
-
-	private class DynamicModel extends AbstractGameResource implements Model {
-
-		private final AtlasEntry e;
-		private final NumberValue tl;
-		private final NumberValue tr;
-		private final NumberValue tt;
-		private final NumberValue tb;
-		private final BooleanValue invalid = BooleanValue.trueValue();
-
-		private Texture2DModel texture2DModel;
-
-		public DynamicModel(AtlasEntry e, NumberValue tl, NumberValue tr, NumberValue tt,
-				NumberValue tb) {
-			this.e = e;
-			this.tl = tl;
-			this.tr = tr;
-			this.tt = tt;
-			this.tb = tb;
-			NumberInvalidationListener invalidationListener = property -> invalid.setValue(true);
-			tl.addListener(invalidationListener);
-			tr.addListener(invalidationListener);
-			tt.addListener(invalidationListener);
-			tb.addListener(invalidationListener);
-		}
-
-		@Override
-		public void render(ShaderProgram program) throws GameException {
-			if (invalid.booleanValue()) {
-				invalid.setValue(false);
-				if (texture2DModel != null) {
-					texture2DModel.cleanup();
-				}
-				System.out.println("regenerate");
-				texture2DModel =
-						new Texture2DModel(e.getTexture(), tl.floatValue(), 1 - tb.floatValue(),
-								tr.floatValue(), 1 - tt.floatValue());
-			}
-			texture2DModel.render(program);
-		}
-
-		@Override
-		protected void cleanup0() throws GameException {
-			Threads.waitFor(releaseGlyphKey(e.getEntry().key));
-			if (texture2DModel != null)
-				texture2DModel.cleanup();
-		}
 	}
 
 	public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
@@ -253,6 +206,53 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 
 	public int getId(GlyphKey key) {
 		return key.hashCode();
+	}
+
+	private class DynamicModel extends AbstractGameResource implements Model {
+
+		private final AtlasEntry e;
+		private final NumberValue tl;
+		private final NumberValue tr;
+		private final NumberValue tt;
+		private final NumberValue tb;
+		private final BooleanValue invalid = BooleanValue.trueValue();
+
+		private Texture2DModel texture2DModel;
+
+		public DynamicModel(AtlasEntry e, NumberValue tl, NumberValue tr, NumberValue tt,
+				NumberValue tb) {
+			this.e = e;
+			this.tl = tl;
+			this.tr = tr;
+			this.tt = tt;
+			this.tb = tb;
+			NumberInvalidationListener invalidationListener = property -> invalid.setValue(true);
+			tl.addListener(invalidationListener);
+			tr.addListener(invalidationListener);
+			tt.addListener(invalidationListener);
+			tb.addListener(invalidationListener);
+		}
+
+		@Override
+		public void render(ShaderProgram program) throws GameException {
+			if (invalid.booleanValue()) {
+				invalid.setValue(false);
+				if (texture2DModel != null) {
+					texture2DModel.cleanup();
+				}
+				texture2DModel =
+						new Texture2DModel(e.getTexture(), tl.floatValue(), 1 - tb.floatValue(),
+								tr.floatValue(), 1 - tt.floatValue());
+			}
+			texture2DModel.render(program);
+		}
+
+		@Override
+		protected void cleanup0() throws GameException {
+			Threads.waitFor(releaseGlyphKey(e.getEntry().key));
+			if (texture2DModel != null)
+				texture2DModel.cleanup();
+		}
 	}
 
 }

@@ -1,9 +1,5 @@
 package gamelauncher.engine.render;
 
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-
 import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
@@ -12,37 +8,29 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector3f;
 import gamelauncher.engine.util.property.PropertyVector4f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class GameItem extends AbstractGameResource {
 
+	private final Vector3f cposition;
+	private final Vector3f cscale;
+	private final Vector3f crotation;
+	private final Vector4f ccolor;
+	private final Vector4f caddColor;
+	private final PropertyVector3f position;
+	private final PropertyVector3f scale;
+	private final PropertyVector3f rotation;
+	private final PropertyVector4f color;
+	private final PropertyVector4f addColor;
 	protected Model model;
 
-	private final Vector3f cposition;
-
-	private final Vector3f cscale;
-
-	private final Vector3f crotation;
-
-	private final Vector4f ccolor;
-
-	private final Vector4f caddColor;
-
-	private final PropertyVector3f position;
-
-	private final PropertyVector3f scale;
-
-	private final PropertyVector3f rotation;
-
-	private final PropertyVector4f color;
-
-	private final PropertyVector4f addColor;
-
 	/**
-	 * 
+	 *
 	 */
 	private GameItem() {
 		cposition = new Vector3f();
@@ -57,9 +45,6 @@ public class GameItem extends AbstractGameResource {
 		addColor = new PropertyVector4f(0, 0, 0, 0);
 	}
 
-	/**
-	 * @param model
-	 */
 	public GameItem(Model model) {
 		this();
 		this.model = model;
@@ -85,93 +70,55 @@ public class GameItem extends AbstractGameResource {
 		return scale;
 	}
 
-	/**
-	 * @return the position vector
-	 */
-	public Vector3f getPosition() {
-		return position.toVector3f(cposition);
-	}
+	//	/**
+	//	 * @return the position vector
+	//	 */
+	//	public Vector3f getPosition() {
+	//		return position.toVector3f(cposition);
+	//	}
+	//
+	//	/**
+	//	 * @return the addColor
+	//	 */
+	//	public Vector4f getAddColor() {
+	//		return addColor.toVector4f(caddColor);
+	//	}
 
-	/**
-	 * @return the addColor
-	 */
-	public Vector4f getAddColor() {
-		return addColor.toVector4f(caddColor);
-	}
-
-	/**
-	 * Sets the addColor
-	 * 
-	 * @param r
-	 * @param g
-	 * @param b
-	 * @param a
-	 */
 	public void setAddColor(float r, float g, float b, float a) {
 		this.addColor.set(r, g, b, a);
 	}
 
-	/**
-	 * @param x
-	 * @param y
-	 * @param z
-	 */
 	public void setPosition(float x, float y, float z) {
 		this.position.set(x, y, z);
 	}
 
-	/**
-	 * @return the scale vector
-	 */
-	public Vector3f getScale() {
-		return cscale;
-	}
+	//	/**
+	//	 * @return the scale vector
+	//	 */
+	//	public Vector3f getScale() {
+	//		return cscale;
+	//	}
 
-	/**
-	 * @param x
-	 * @param y
-	 * @param z
-	 */
-	public void setScale(float x, float y, float z) {
-		this.scale.set(x, y, z);
-	}
-
-	/**
-	 * @param scale
-	 */
 	public void setScale(float scale) {
 		this.setScale(scale, scale, scale);
 	}
 
-	/**
-	 * @return the rotation vector
-	 */
-	public Vector3f getRotation() {
-		return rotation.toVector3f(crotation);
+	public void setScale(float x, float y, float z) {
+		this.scale.set(x, y, z);
 	}
 
-	/**
-	 * @return the color vector
-	 */
-	public Vector4f getColor() {
-		return color.toVector4f(ccolor);
-	}
+	//	public Vector3f getRotation() {
+	//		return rotation.toVector3f(crotation);
+	//	}
 
-	/**
-	 * @param r
-	 * @param g
-	 * @param b
-	 * @param a
-	 */
+	//	public Vector4f getColor() {
+	//		return color.toVector4f(ccolor);
+	//	}
+
 	public void setColor(float r, float g, float b, float a) {
 		color.set(r, g, b, a);
 	}
 
-	/**
-	 * @param x
-	 * @param y
-	 * @param z
-	 */
 	public void setRotation(float x, float y, float z) {
 		this.rotation.set(x, y, z);
 	}
@@ -195,15 +142,14 @@ public class GameItem extends AbstractGameResource {
 		return new GameItemModel(this);
 	}
 
-	/**
-	 * @param transformationMatrix
-	 */
 	public void applyToTransformationMatrix(Matrix4f transformationMatrix) {
-		transformationMatrix.translate(position.x.floatValue(), position.y.floatValue(), position.z.floatValue());
+		transformationMatrix.translate(position.x.floatValue(), position.y.floatValue(),
+				position.z.floatValue());
 		transformationMatrix.rotateX((float) Math.toRadians(-rotation.x.floatValue()));
 		transformationMatrix.rotateY((float) Math.toRadians(-rotation.y.floatValue()));
 		transformationMatrix.rotateZ((float) Math.toRadians(-rotation.z.floatValue()));
-		transformationMatrix.scale(scale.x.floatValue(), scale.y.floatValue(), scale.z.floatValue());
+		transformationMatrix.scale(scale.x.floatValue(), scale.y.floatValue(),
+				scale.z.floatValue());
 	}
 
 	/**
@@ -213,12 +159,10 @@ public class GameItem extends AbstractGameResource {
 			implements ColorMultiplierModel, ColorAddModel {
 
 		/**
+		 *
 		 */
 		public final GameItem gameItem;
 
-		/**
-		 * @param gameItem
-		 */
 		private GameItemModel(GameItem gameItem) {
 			this.gameItem = gameItem;
 		}
@@ -235,12 +179,12 @@ public class GameItem extends AbstractGameResource {
 
 		@Override
 		public Vector4f getAddColor() {
-			return gameItem.getAddColor();
+			return gameItem.addColor().toVector4f();
 		}
 
 		@Override
 		public Vector4f getColor() {
-			return gameItem.getColor();
+			return gameItem.color().toVector4f();
 		}
 
 		public GameItem getGameItem() {

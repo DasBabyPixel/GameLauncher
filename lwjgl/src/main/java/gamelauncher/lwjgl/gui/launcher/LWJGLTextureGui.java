@@ -1,15 +1,9 @@
-package gamelauncher.lwjgl.launcher.gui;
-
-import java.util.concurrent.CompletableFuture;
+package gamelauncher.lwjgl.gui.launcher;
 
 import gamelauncher.engine.gui.ParentableAbstractGui;
-import gamelauncher.engine.launcher.gui.TextureGui;
-import gamelauncher.engine.render.BasicCamera;
-import gamelauncher.engine.render.Camera;
+import gamelauncher.engine.gui.launcher.TextureGui;
+import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.ContextProvider.ContextType;
-import gamelauncher.engine.render.DrawContext;
-import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.util.GameException;
@@ -18,24 +12,24 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * @author DasBabyPixel
  */
 public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui {
 
-	private Texture texture;
-
-	private volatile GameItemModel model;
-
 	private final CompletableFuture<LWJGLTexture> future;
-
+	private Texture texture;
+	private volatile GameItemModel model;
 	private DrawContext hud;
 
 	private Camera camera;
 
 	/**
 	 * @param launcher
-	 * @throws GameException 
+	 *
+	 * @throws GameException
 	 */
 	public LWJGLTextureGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
@@ -56,25 +50,25 @@ public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui
 	}
 
 	@Override
-	protected void doInit(Framebuffer framebuffer) throws GameException {
-		this.hud = this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
-	}
-
-	@Override
-	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
-			throws GameException {
-		this.hud.update(this.camera);
-		this.hud.drawModel(this.model);
-		this.hud.getProgram().clearUniforms();
-		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
-	}
-
-	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
 		this.getTexture().cleanup();
 		this.model.cleanup();
 		this.getLauncher().getContextProvider().freeContext(this.hud, ContextType.HUD);
-		super.doCleanup(framebuffer);
+	}
+
+	@Override
+	protected void doInit(Framebuffer framebuffer) throws GameException {
+		this.hud =
+				this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+	}
+
+	@Override
+	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
+			float partialTick) throws GameException {
+		this.hud.update(this.camera);
+		this.hud.drawModel(this.model);
+		this.hud.getProgram().clearUniforms();
+		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override

@@ -1,13 +1,5 @@
 package gamelauncher.lwjgl.network;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.net.ssl.SSLEngine;
-
 import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.network.packet.Packet;
@@ -17,11 +9,7 @@ import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
@@ -29,10 +17,17 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("javadoc")
+import javax.net.ssl.SSLEngine;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class LWJGLNetworkClient implements NetworkClient {
-	
+
 	public static final int PORT = 15684;
 
 	private static final Logger logger = Logger.getLogger();
@@ -40,22 +35,15 @@ public class LWJGLNetworkClient implements NetworkClient {
 	private final Lock lock = new ReentrantLock(true);
 
 	private final Lock handlerLock = new ReentrantLock(true);
-
-	private EventLoopGroup bossGroup;
-
-	private EventLoopGroup childGroup;
-
-	private volatile boolean running = false;
-
-	private volatile boolean connected = false;
-
 	private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
-
 	private final PacketRegistry packetRegistry = new PacketRegistry();
-
-	private final LWJGLNetworkHandler handler = new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
-
+	private final LWJGLNetworkHandler handler =
+			new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
 	private final KeyManagment keyManagment;
+	private EventLoopGroup bossGroup;
+	private EventLoopGroup childGroup;
+	private volatile boolean running = false;
+	private volatile boolean connected = false;
 
 	public LWJGLNetworkClient(LWJGLGameLauncher launcher) {
 		this.keyManagment = new KeyManagment(launcher);
@@ -71,30 +59,30 @@ public class LWJGLNetworkClient implements NetworkClient {
 			bossGroup = new NioEventLoopGroup();
 			childGroup = new NioEventLoopGroup();
 			ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup)
-					.channel(NioServerSocketChannel.class)
-					.childHandler(new ChannelInitializer<Channel>() {
+					.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
 
 						@Override
-						protected void initChannel(Channel ch) throws Exception {
+						protected void initChannel(@NotNull Channel ch) throws Exception {
 							ChannelPipeline p = ch.pipeline();
-							SslContext sslContext = SslContextBuilder
-									.forServer(keyManagment.privateKey, keyManagment.certificate)
-									.build();
+							SslContext sslContext =
+									SslContextBuilder.forServer(keyManagment.privateKey,
+											keyManagment.certificate).build();
 							SSLEngine engine = sslContext.newEngine(ch.alloc());
 							p.addLast("ssl", new SslHandler(engine));
 							p.addLast("packet_decoder", new LWJGLNetworkDecoder(handler));
-							p.addLast("packet_acceptor", new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
+							p.addLast("packet_acceptor",
+									new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
 							p.addLast("packet_encoder", new LWJGLNetworkEncoder(handler));
 						}
 
-					})
-					.option(ChannelOption.SO_KEEPALIVE, true)
+					}).option(ChannelOption.SO_KEEPALIVE, true)
 					.childOption(ChannelOption.SO_KEEPALIVE, true);
 			Channel ch = b.bind(PORT).syncUninterruptibly().channel();
 			ch.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
 				@Override
-				public void operationComplete(Future<? super Void> future) throws Exception {
-					
+				public void operationComplete(@NotNull Future<? super Void> future)
+						throws Exception {
+
 				}
 			});
 			running = true;
@@ -105,6 +93,21 @@ public class LWJGLNetworkClient implements NetworkClient {
 
 	@Override
 	public void stopClient() {
+	}
+
+	@Override
+	public boolean isRunning() {
+		return running;
+	}
+
+	@Override
+	public boolean isServer() {
+		return true;
+	}
+
+	@Override
+	public boolean isConnected() {
+		return connected;
 	}
 
 	@Override
@@ -130,16 +133,17 @@ public class LWJGLNetworkClient implements NetworkClient {
 		handlerLock.lock();
 		if (handlers.containsKey(packetType)) {
 			Collection<HandlerEntry<?>> col = handlers.get(packetType);
-			for (HandlerEntry<?> he : col) {
-				if (he.clazz.equals(packetType)) {
-					col.remove(he);
-				}
-			}
+			col.removeIf(he -> he.clazz.equals(packetType));
 			if (col.isEmpty()) {
 				handlers.remove(packetType);
 			}
 		}
 		handlerLock.unlock();
+	}
+
+	@Override
+	public PacketRegistry getPacketRegistry() {
+		return packetRegistry;
 	}
 
 	public void handleIncomingPacket(Packet packet) {
@@ -153,41 +157,12 @@ public class LWJGLNetworkClient implements NetworkClient {
 		}
 	}
 
-	@Override
-	public boolean isRunning() {
-		return running;
-	}
 
-	@Override
-	public boolean isServer() {
-		return true;
-	}
-
-	@Override
-	public boolean isConnected() {
-		return connected;
-	}
-
-	@Override
-	public PacketRegistry getPacketRegistry() {
-		return packetRegistry;
-	}
-
-	static class HandlerEntry<T extends Packet> {
-
-		final Class<T> clazz;
-
-		final PacketHandler<T> handler;
-
-		public HandlerEntry(Class<T> clazz, PacketHandler<T> handler) {
-			this.clazz = clazz;
-			this.handler = handler;
-		}
+	record HandlerEntry<T extends Packet>(Class<T> clazz, PacketHandler<T> handler) {
 
 		public void receivePacket(Object packet) {
 			handler.receivePacket(clazz.cast(packet));
 		}
 
 	}
-
 }

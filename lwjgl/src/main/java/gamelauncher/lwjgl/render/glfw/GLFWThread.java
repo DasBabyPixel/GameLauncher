@@ -1,15 +1,13 @@
 package gamelauncher.lwjgl.render.glfw;
 
+import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
+import gamelauncher.engine.util.logging.Logger;
+import org.lwjgl.glfw.GLFW;
+
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.lwjgl.glfw.GLFW;
-
-import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
-import gamelauncher.engine.util.logging.Logger;
-
-@SuppressWarnings("javadoc")
 public class GLFWThread extends AbstractExecutorThread {
 
 	private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
@@ -38,16 +36,10 @@ public class GLFWThread extends AbstractExecutorThread {
 		for (GLFWUser user : this.users) {
 			user.destroy();
 		}
-		while (true) {
+		do {
 			this.waitForSignal();
 			this.workQueue();
-			if (this.users.isEmpty()) {
-				break;
-			}
-		}
-		if (!this.users.isEmpty()) {
-			this.logger.errorf("Not all users of the GLFWThread have been cleared: %n%s", this.users);
-		}
+		} while (!this.users.isEmpty());
 		this.monitorManager.cleanup();
 		GLFW.glfwTerminate();
 		this.terminateFuture.complete(null);
@@ -59,18 +51,14 @@ public class GLFWThread extends AbstractExecutorThread {
 		GLFW.glfwPollEvents();
 	}
 
-//	@Override
-//	protected boolean useCondition() {
-//		return false;
-//	}
+	//	@Override
+	//	protected boolean useCondition() {
+	//		return false;
+	//	}
 
 	@Override
 	protected boolean shouldWaitForSignal() {
 		return false;
-	}
-
-	public GLFWMonitorManager getMonitorManager() {
-		return this.monitorManager;
 	}
 
 	@Override
@@ -79,6 +67,10 @@ public class GLFWThread extends AbstractExecutorThread {
 			GLFW.glfwPostEmptyEvent();
 		}
 		super.signal();
+	}
+
+	public GLFWMonitorManager getMonitorManager() {
+		return this.monitorManager;
 	}
 
 	void addUser(GLFWUser user) {

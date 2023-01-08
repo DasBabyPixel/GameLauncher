@@ -1,5 +1,12 @@
 package gamelauncher.engine.util.logging;
 
+import gamelauncher.engine.util.Color;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
+import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.logging.SelectiveStream.Output;
+import org.fusesource.jansi.Ansi;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -13,30 +20,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fusesource.jansi.Ansi;
-
-import gamelauncher.engine.util.Color;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
-import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.engine.util.logging.SelectiveStream.Output;
-
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream.LogEntry<?>> {
 
+	private static final Pattern throwablePattern = Pattern.compile("\\(.+\\.java:[0-9]+\\)");
+	private static final LogColor fgThread = new LogColor(new Color(200, 200, 200, 255));
+	private static final LogColor fgLogger = new LogColor(new Color(0, 100, 255, 255));
+	private static final LogColor fgTime = new LogColor(new Color(70, 255, 70, 255));
 	final PrintStream out;
-
 	final SelectiveStream system;
+	private final DateTimeFormatter formatter =
+			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
-	private final DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS")
-			.toFormatter();
-
-	/**
-	 * @param logger
-	 */
 	public AsyncLogStream() {
 		this.system = Logger.system;
 		this.setName("AsyncLogStream");
@@ -51,25 +48,25 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	protected void stopExecuting() {
 	}
 
-	public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
-		if (!this.exit) {
-			return this.submit(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
-		}
-		this.log(new LogEntry<Object>(logger, Thread.currentThread(), message, level));
-		return CompletableFuture.completedFuture(null);
-	}
-
-	public CompletableFuture<Void> offerCalled(LogLevel level, StackTraceElement caller, Object message) {
-		if (!this.exit) {
-			return this.submit(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
-		}
-		this.log(new LogEntry<Object>(null, Thread.currentThread(), message, level, caller));
-		return CompletableFuture.completedFuture(null);
-	}
-
 	@Override
 	protected void handleElement(LogEntry<?> element) throws GameException {
 		this.log(element);
+	}
+
+	public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
+		if (!this.exit) {
+			return this.submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
+		}
+		this.log(new LogEntry<>(logger, Thread.currentThread(), message, level));
+		return CompletableFuture.completedFuture(null);
+	}
+
+	public void offerCalled(LogLevel level, StackTraceElement caller, Object message) {
+		if (!this.exit) {
+			this.submit(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+			return;
+		}
+		this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
 	}
 
 	@Override
@@ -85,10 +82,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 	}
 
-	private static final Pattern throwablePattern = Pattern.compile("\\(.+\\.java:[0-9]+\\)");
-
-	private void log(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger,
-			Formatted f) {
+	private void log(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread,
+			Logger logger, Formatted f) {
 		Object[] data = new Object[f.getObjects().length];
 		LogColor resetTo = level.textColor();
 		LogColor[] logColors = new LogColor[data.length];
@@ -102,26 +97,28 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 				pw.flush();
 				pw.close();
 				String s = sw.getBuffer().toString();
-				Matcher m = AsyncLogStream.throwablePattern.matcher(s.toString());
+				Matcher m = AsyncLogStream.throwablePattern.matcher(s);
 				StringBuilder sb = new StringBuilder();
 				int last = 0;
 				while (m.find()) {
-					sb.append(s.substring(last, m.start()));
+					sb.append(s, last, m.start());
 					last = m.end();
 					sb.append(Ansi.ansi().reset().a(m.group()));
 				}
 				data[i] = sb.toString();
 			} else if (data[i] instanceof Collection<?> c) {
 				StringBuilder sb = new StringBuilder();
-				sb.append(c.getClass().getName()).append("<?> (Size: ").append(Integer.toString(c.size())).append(")");
+				sb.append(c.getClass().getName()).append("<?> (Size: ").append(c.size())
+						.append(")");
 				for (Object o : c) {
-					sb.append("\n - ").append(Objects.toString(o));
+					sb.append("\n - ").append(o);
 				}
 				data[i] = sb.toString();
 			} else if (data[i].getClass().isArray()) {
 				Object[] a = (Object[]) data[i];
 				StringBuilder sb = new StringBuilder();
-				sb.append(a.getClass().componentType().getName()).append('[').append(a.length).append(']');
+				sb.append(a.getClass().componentType().getName()).append('[').append(a.length)
+						.append(']');
 				for (int j = 0; j < a.length; j++) {
 					sb.append("\n - ").append(j).append(": ").append(Objects.toString(a[j]));
 				}
@@ -132,7 +129,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 					c = resetTo;
 				}
 				logColors[i] = c;
-				String r = String.format("%%lcr%n", c.hashCode());
+				String r = String.format("%%lcr%n");
 				logColorReplacements[i] = r;
 				data[i] = r;
 			}
@@ -144,21 +141,23 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		LogColor lastColor = resetTo;
 		for (int i = 0; i < lines.length; i++) {
 			lines[i] = this.colorToAnsi(lastColor) + lines[i];
-			w1: while (true) {
+			w1:
+			while (true) {
 				if (logColors.length <= lci) {
-					break w1;
+					break;
 				}
 				while (logColors[lci] == null) {
 					lci++;
 					continue w1;
 				}
 				if (lines[i].contains(logColorReplacements[lci])) {
-					lines[i] = lines[i].replace(logColorReplacements[lci], this.colorToAnsi(logColors[lci]));
+					lines[i] = lines[i].replace(logColorReplacements[lci],
+							this.colorToAnsi(logColors[lci]));
 					lastColor = logColors[lci];
 					lci++;
-					continue w1;
+					continue;
 				}
-				break w1;
+				break;
 			}
 		}
 		print = String.join("\n", lines);
@@ -181,17 +180,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	private String colorToAnsi(LogColor color) {
-		return Ansi.ansi()
-				.reset()
+		return Ansi.ansi().reset()
 				.fgRgb(color.color().ired(), color.color().igreen(), color.color().iblue())
 				.toString();
 	}
-
-	private static final LogColor fgThread = new LogColor(new Color(200, 200, 200, 255));
-
-	private static final LogColor fgLogger = new LogColor(new Color(0, 100, 255, 255));
-
-	private static final LogColor fgTime = new LogColor(new Color(70, 255, 70, 255));
 
 	void printThread(Thread thread) {
 		this.out.printf(this.ansi0(AsyncLogStream.fgThread), thread.getName());
@@ -210,20 +202,13 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	}
 
 	private String ansi0(LogColor color) {
-		return Ansi.ansi()
-				.fgRgb(100, 100, 100)
-				.a("[")
-				.fgRgb(color.color().ired(), color.color().igreen(), color.color().iblue())
-				.a("%s")
-				.fgRgb(100, 100, 100)
-				.a("]")
-				.reset()
-				.a(" ")
-				.toString();
+		return Ansi.ansi().fgRgb(100, 100, 100).a("[")
+				.fgRgb(color.color().ired(), color.color().igreen(), color.color().iblue()).a("%s")
+				.fgRgb(100, 100, 100).a("]").reset().a(" ").toString();
 	}
 
-	private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread,
-			Logger logger, String string) {
+	private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller,
+			Thread thread, Logger logger, String string) {
 		this.setSystemLevel(level);
 		for (String object : this.lines(string)) {
 			this.printTime(time);
@@ -234,7 +219,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			} else {
 				this.printLevel(level);
 				this.printThread(thread);
-				this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
+				this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(),
+						caller.getLineNumber());
 			}
 			this.out.printf(Ansi.ansi().reset().a("%s").reset().a("%n").toString(), object);
 		}
@@ -262,12 +248,13 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			this(logger, thread, object, level, null);
 		}
 
-		public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller) {
+		public LogEntry(Logger logger, Thread thread, T object, LogLevel level,
+				StackTraceElement caller) {
 			this(logger, thread, object, level, caller, LocalDateTime.now());
 		}
 
-		public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller,
-				TemporalAccessor time) {
+		public LogEntry(Logger logger, Thread thread, T object, LogLevel level,
+				StackTraceElement caller, TemporalAccessor time) {
 			this.logger = logger;
 			this.thread = thread;
 			this.object = object;
@@ -277,11 +264,13 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 
 		public <V> LogEntry<V> withObject(V object) {
-			return new LogEntry<V>(this.logger, this.thread, object, this.level, this.caller, this.time);
+			return new LogEntry<V>(this.logger, this.thread, object, this.level, this.caller,
+					this.time);
 		}
 
 		public LogEntry<T> withLevel(LogLevel level) {
-			return new LogEntry<T>(this.logger, this.thread, this.object, level, this.caller, this.time);
+			return new LogEntry<T>(this.logger, this.thread, this.object, level, this.caller,
+					this.time);
 		}
 
 	}

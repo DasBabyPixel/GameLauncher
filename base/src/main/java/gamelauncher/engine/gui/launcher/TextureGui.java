@@ -1,4 +1,4 @@
-package gamelauncher.engine.launcher.gui;
+package gamelauncher.engine.gui.launcher;
 
 import gamelauncher.engine.gui.LauncherBasedGui;
 import gamelauncher.engine.render.texture.Texture;
@@ -11,8 +11,9 @@ public interface TextureGui extends LauncherBasedGui {
 
 	/**
 	 * @return the texture
-	 * @throws GameException 
+	 *
+	 * @throws GameException
 	 */
 	Texture getTexture() throws GameException;
-	
+
 }

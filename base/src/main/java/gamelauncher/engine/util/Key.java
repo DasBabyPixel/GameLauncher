@@ -1,49 +1,35 @@
 package gamelauncher.engine.util;
 
-import java.util.Objects;
-
 import gamelauncher.engine.plugin.Plugin;
+
+import java.util.Objects;
 
 /**
  * @author DasBabyPixel
  */
-public class Key {
-
-	private final Plugin plugin;
-
-	private final String key;
+public record Key(Plugin plugin, String key) {
 
 	/**
-	 * @param plugin
-	 * @param key
+	 * @param plugin the plugin
+	 * @param key    the key
 	 */
-	public Key(Plugin plugin, String key) {
-		this.plugin = plugin;
-		this.key = key;
+	public Key {
 	}
 
 	/**
 	 * @return the key
 	 */
-	public String getKey() {
+	@Override
+	public String key() {
 		return this.key;
 	}
 
 	/**
 	 * @return the plugin
 	 */
-	public Plugin getPlugin() {
+	@Override
+	public Plugin plugin() {
 		return this.plugin;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("%s:%s", this.plugin.getName(), this.key);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(this.key, this.plugin);
 	}
 
 	@Override
@@ -56,6 +42,11 @@ public class Key {
 			return false;
 		Key other = (Key) obj;
 		return Objects.equals(this.key, other.key) && Objects.equals(this.plugin, other.plugin);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s:%s", this.plugin.getName(), this.key);
 	}
 
 }

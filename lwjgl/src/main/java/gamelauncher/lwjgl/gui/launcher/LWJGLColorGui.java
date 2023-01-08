@@ -1,11 +1,9 @@
-package gamelauncher.lwjgl.launcher.gui;
-
-import org.joml.Vector4f;
+package gamelauncher.lwjgl.gui.launcher;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.ParentableAbstractGui;
-import gamelauncher.engine.launcher.gui.ColorGui;
+import gamelauncher.engine.gui.launcher.ColorGui;
 import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.render.DrawContext;
 import gamelauncher.engine.render.EmptyCamera;
@@ -17,6 +15,7 @@ import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.lwjgl.render.mesh.Mesh;
 import gamelauncher.lwjgl.render.mesh.PlaneMesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
+import org.joml.Vector4f;
 
 /**
  * @author DasBabyPixel
@@ -29,9 +28,6 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 
 	private DrawContext context;
 
-	/**
-	 * @param launcher
-	 */
 	public LWJGLColorGui(GameLauncher launcher) {
 		super(launcher);
 		this.color = new PropertyVector4f(0, 0, 0, 0);
@@ -39,6 +35,12 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 		this.color.y.addListener((NumberValue v) -> this.redraw());
 		this.color.z.addListener((NumberValue v) -> this.redraw());
 		this.color.w.addListener((NumberValue v) -> this.redraw());
+	}
+
+	@Override
+	protected void doCleanup(Framebuffer framebuffer) throws GameException {
+		this.getLauncher().getContextProvider().freeContext(this.context, ContextType.HUD);
+		this.model.cleanup();
 	}
 
 	@Override
@@ -70,12 +72,6 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 		this.context.drawModel(this.model);
 		this.context.getProgram().clearUniforms();
 		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
-	}
-
-	@Override
-	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		this.getLauncher().getContextProvider().freeContext(this.context, ContextType.HUD);
-		this.model.cleanup();
 	}
 
 	@Override

@@ -1,14 +1,12 @@
 package gamelauncher.lwjgl.render.mesh;
 
-import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES20.GL_TRIANGLES;
 
 /**
  * @author DasBabyPixel
  */
 public class PlaneMesh extends Mesh {
 
-	/**
-	 */
 	public PlaneMesh() {
 		// @formatter:off
 		super(new float[] {
@@ -32,7 +30,7 @@ public class PlaneMesh extends Mesh {
 		}, GL_TRIANGLES);
 		// @formatter:on
 	}
-	
+
 	@Override
 	public boolean applyLighting() {
 		return false;

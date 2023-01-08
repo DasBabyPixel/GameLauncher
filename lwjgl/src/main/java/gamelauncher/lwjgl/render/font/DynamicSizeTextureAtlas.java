@@ -1,17 +1,5 @@
 package gamelauncher.lwjgl.render.font;
 
-import static org.lwjgl.opengles.GLES20.*;
-
-import java.awt.Rectangle;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.ByteBufferBackedInputStream;
@@ -22,21 +10,27 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
-@SuppressWarnings("javadoc")
+import java.awt.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+
+import static org.lwjgl.opengles.GLES20.GL_MAX_TEXTURE_SIZE;
+import static org.lwjgl.opengles.GLES20.glGetInteger;
+
 public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
+	final Map<LWJGLTexture, Collection<AtlasEntry>> byTexture = new HashMap<>();
 	private final Logger logger = Logger.getLogger();
-
 	private final Map<Integer, AtlasEntry> glyphs = new HashMap<>();
-
-	private final Map<LWJGLTexture, Collection<AtlasEntry>> byTexture = new HashMap<>();
-
 	private final Lock lock = new ReentrantLock(true);
-
 	private final LWJGLGameLauncher launcher;
-
 	private final ExecutorThread owner;
-
 	volatile int maxTextureSize;
 
 	public DynamicSizeTextureAtlas(LWJGLGameLauncher launcher, ExecutorThread owner) {
@@ -150,8 +144,6 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 					new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer),
 							null);
 			Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y));
-			//			Threads.waitFor(
-			//					e.texture.uploadAsync(e.bounds.x, e.bounds.y, e.bounds.width, e.bounds.height, e.entry.buffer));
 			byTexture.get(e.texture).add(e);
 			glyphs.put(glyphId, e);
 			return true;

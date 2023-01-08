@@ -1,38 +1,31 @@
 package gamelauncher.engine.settings;
 
-import java.lang.reflect.Type;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
+import java.lang.reflect.Type;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
 /**
- * @author DasBabyPixel
  * @param <T>
+ *
+ * @author DasBabyPixel
  */
 public class SimpleSetting<T> implements Setting<T> {
 
-	protected Gson gson;
 	protected final AtomicReference<T> value = new AtomicReference<>(null);
 	protected final Type type;
 	protected final Supplier<T> defaultSupplier;
+	protected Gson gson;
 
-	/**
-	 * @param type
-	 * @param defaultSupplier
-	 */
 	public SimpleSetting(Type type, Supplier<T> defaultSupplier) {
 		this.type = type;
 		this.defaultSupplier = defaultSupplier;
 		this.gson = new GsonBuilder().setPrettyPrinting().create();
 	}
 
-	/**
-	 * @param type
-	 * @param defaultValue
-	 */
 	public SimpleSetting(Type type, T defaultValue) {
 		this(type, () -> defaultValue);
 	}

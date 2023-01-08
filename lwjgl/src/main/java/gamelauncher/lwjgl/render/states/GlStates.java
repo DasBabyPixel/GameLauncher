@@ -1,8 +1,6 @@
 package gamelauncher.lwjgl.render.states;
 
-import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.opengles.GLES30.*;
-import static org.lwjgl.opengles.GLES32.*;
+import org.lwjgl.opengles.GLES20;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -12,9 +10,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.lwjgl.opengles.GLES20;
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES30.*;
+import static org.lwjgl.opengles.GLES32.glCopyImageSubData;
 
-@SuppressWarnings("javadoc")
 public class GlStates {
 
 	private final Map<Integer, Integer> bindTexture = new ConcurrentHashMap<>();
@@ -52,8 +51,6 @@ public class GlStates {
 	}
 
 	/**
-	 * @see GLES20#glTexImage2D(int, int, int, int, int, int, int, int, ByteBuffer)
-	 * 
 	 * @param target
 	 * @param level
 	 * @param internalFormat
@@ -63,14 +60,17 @@ public class GlStates {
 	 * @param dataFormat
 	 * @param type
 	 * @param data
+	 *
+	 * @see GLES20#glTexImage2D(int, int, int, int, int, int, int, int, ByteBuffer)
 	 */
-	public void texImage2D(int target, int level, int internalFormat, int width, int height, int border, int dataFormat,
-			int type, ByteBuffer data) {
+	public void texImage2D(int target, int level, int internalFormat, int width, int height,
+			int border, int dataFormat, int type, ByteBuffer data) {
 		glTexImage2D(target, level, internalFormat, width, height, border, dataFormat, type, data);
 	}
 
 	public void bindFramebuffer(int target, int framebuffer) {
-		if (!bindFramebuffer.containsKey(target) || bindFramebuffer.put(target, framebuffer) != framebuffer) {
+		if (!bindFramebuffer.containsKey(target)
+				|| bindFramebuffer.put(target, framebuffer) != framebuffer) {
 			glBindFramebuffer(target, framebuffer);
 		}
 	}
@@ -84,11 +84,11 @@ public class GlStates {
 		}
 	}
 
-	public void copyImageSubData(int srcTexture, int srcTarget, int srcLevel, int srcX, int srcY, int srcZ,
-			int dstTexture, int dstTarget, int dstLevel, int dstX, int dstY, int dstZ, int copyw, int copyh,
-			int copyd) {
-		glCopyImageSubData(srcTexture, srcTarget, srcLevel, srcX, srcY, srcZ, dstTexture, dstTarget, dstLevel, dstX,
-				dstY, dstZ, copyw, copyh, copyd);
+	public void copyImageSubData(int srcTexture, int srcTarget, int srcLevel, int srcX, int srcY,
+			int srcZ, int dstTexture, int dstTarget, int dstLevel, int dstX, int dstY, int dstZ,
+			int copyw, int copyh, int copyd) {
+		glCopyImageSubData(srcTexture, srcTarget, srcLevel, srcX, srcY, srcZ, dstTexture, dstTarget,
+				dstLevel, dstX, dstY, dstZ, copyw, copyh, copyd);
 	}
 
 	public int genTextures() {
@@ -115,12 +115,13 @@ public class GlStates {
 		glDeleteFramebuffers(framebuffer);
 	}
 
-	public void framebufferTexture2D(int target, int attachment, int textarget, int texture, int level) {
+	public void framebufferTexture2D(int target, int attachment, int textarget, int texture,
+			int level) {
 		glFramebufferTexture2D(target, attachment, textarget, texture, level);
 	}
 
-	public void texSubImage2D(int target, int level, int x, int y, int w, int h, int format, int type,
-			ByteBuffer data) {
+	public void texSubImage2D(int target, int level, int x, int y, int w, int h, int format,
+			int type, ByteBuffer data) {
 		glTexSubImage2D(target, level, x, y, w, h, format, type, data);
 	}
 
@@ -153,7 +154,8 @@ public class GlStates {
 	}
 
 	public void bindRenderbuffer(int target, int renderbuffer) {
-		if (!bindRenderbuffer.containsKey(target) || bindRenderbuffer.put(target, renderbuffer) != renderbuffer) {
+		if (!bindRenderbuffer.containsKey(target)
+				|| bindRenderbuffer.put(target, renderbuffer) != renderbuffer) {
 			glBindRenderbuffer(target, renderbuffer);
 		}
 	}
@@ -200,95 +202,12 @@ public class GlStates {
 		}
 	}
 
-	public static class DepthState {
-
-		public int func;
-
-		public final BooleanState enabled = new BooleanState(GL_DEPTH_TEST);
-
-		public void setFunc(int func) {
-			if (this.func != func) {
-				this.func = func;
-				glDepthFunc(func);
-			}
-		}
-
-	}
-
-	public static class BlendState {
-
-		public int srcrgb;
-
-		public int dstrgb;
-
-		public int srcalpha;
-
-		public int dstalpha;
-
-		public final BooleanState enabled = new BooleanState(GL_BLEND);
-
-		public void set(int srcrgb, int dstrgb, int srcalpha, int dstalpha) {
-			if (this.srcrgb != srcrgb || this.dstrgb != dstrgb || this.srcalpha != srcalpha
-					|| this.dstalpha != dstalpha) {
-				this.srcrgb = srcrgb;
-				this.dstrgb = dstrgb;
-				this.srcalpha = srcalpha;
-				this.dstalpha = dstalpha;
-				glBlendFuncSeparate(srcrgb, dstrgb, srcalpha, dstalpha);
-			}
-		}
-
-	}
-
-	public static class BooleanState {
-
-		public final int state;
-
-		public boolean enabled = false;
-
-		public BooleanState(int state) {
-			this.state = state;
-		}
-
-		public BooleanState(int state, boolean enabled) {
-			this.state = state;
-			this.enabled = enabled;
-		}
-
-		public void enable() {
-			setEnabled(true);
-		}
-
-		public void disable() {
-			setEnabled(false);
-		}
-
-		public boolean isEnabled() {
-			return enabled;
-		}
-
-		public int getState() {
-			return state;
-		}
-
-		public void setEnabled(boolean value) {
-			if (value != enabled) {
-				enabled = value;
-				if (enabled) {
-					glEnable(state);
-				} else {
-					glDisable(state);
-				}
-			}
-		}
-
-	}
-
 	public int genVertexArrays() {
 		return glGenVertexArrays();
 	}
 
-	public void vertexAttribPointer(int index, int size, int type, boolean normalized, int stride, int pointer) {
+	public void vertexAttribPointer(int index, int size, int type, boolean normalized, int stride,
+			int pointer) {
 		glVertexAttribPointer(index, size, type, normalized, stride, pointer);
 	}
 
@@ -324,7 +243,8 @@ public class GlStates {
 		return glGenBuffers();
 	}
 
-	public void framebufferRenderbuffer(int target, int attachment, int renderbuffertarget, int renderbuffer) {
+	public void framebufferRenderbuffer(int target, int attachment, int renderbuffertarget,
+			int renderbuffer) {
 		glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 	}
 
@@ -440,9 +360,91 @@ public class GlStates {
 		glDrawBuffers(buffer);
 	}
 
-	public void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1,
-			int mask, int filter) {
+	public void blitFramebuffer(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0,
+			int dstX1, int dstY1, int mask, int filter) {
 		glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+	}
+
+
+	public static class DepthState {
+
+		public final BooleanState enabled = new BooleanState(GL_DEPTH_TEST);
+		public int func;
+
+		public void setFunc(int func) {
+			if (this.func != func) {
+				this.func = func;
+				glDepthFunc(func);
+			}
+		}
+
+	}
+
+
+	public static class BlendState {
+
+		public final BooleanState enabled = new BooleanState(GL_BLEND);
+		public int srcrgb;
+		public int dstrgb;
+		public int srcalpha;
+		public int dstalpha;
+
+		public void set(int srcrgb, int dstrgb, int srcalpha, int dstalpha) {
+			if (this.srcrgb != srcrgb || this.dstrgb != dstrgb || this.srcalpha != srcalpha
+					|| this.dstalpha != dstalpha) {
+				this.srcrgb = srcrgb;
+				this.dstrgb = dstrgb;
+				this.srcalpha = srcalpha;
+				this.dstalpha = dstalpha;
+				glBlendFuncSeparate(srcrgb, dstrgb, srcalpha, dstalpha);
+			}
+		}
+
+	}
+
+
+	public static class BooleanState {
+
+		public final int state;
+
+		public boolean enabled = false;
+
+		public BooleanState(int state) {
+			this.state = state;
+		}
+
+		public BooleanState(int state, boolean enabled) {
+			this.state = state;
+			this.enabled = enabled;
+		}
+
+		public void enable() {
+			setEnabled(true);
+		}
+
+		public void disable() {
+			setEnabled(false);
+		}
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean value) {
+			if (value != enabled) {
+				enabled = value;
+				if (enabled) {
+					glEnable(state);
+				} else {
+					glDisable(state);
+				}
+			}
+		}
+
+		public int getState() {
+			return state;
+		}
+
 	}
 
 }

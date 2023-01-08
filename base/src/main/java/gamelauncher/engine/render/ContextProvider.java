@@ -7,30 +7,27 @@ import gamelauncher.engine.util.logging.Logger;
 /**
  * @author DasBabyPixel
  */
-public class ContextProvider {
+public record ContextProvider(GameLauncher launcher) {
 
 	private static final Logger logger = Logger.getLogger();
-
-	private final GameLauncher launcher;
 
 	/**
 	 * @param launcher
 	 */
-	public ContextProvider(GameLauncher launcher) {
-		this.launcher = launcher;
+	public ContextProvider {
 	}
 
 	/**
 	 * Must be explicitly freed by {@link #freeContext(DrawContext, ContextType)}
-	 * 
+	 *
 	 * @param framebuffer
 	 * @param type
+	 *
 	 * @return a new context for the given type
+	 *
 	 * @throws GameException
 	 */
 	public DrawContext loadContext(Framebuffer framebuffer, ContextType type) throws GameException {
-		ContextProvider.logger.info("Loading context");
-		@SuppressWarnings("deprecation")
 		DrawContext ctx = this.launcher.createContext(framebuffer);
 		type.load(this.launcher, ctx);
 		return ctx;
@@ -38,13 +35,13 @@ public class ContextProvider {
 
 	/**
 	 * Frees a context
-	 * 
+	 *
 	 * @param context
 	 * @param type
+	 *
 	 * @throws GameException
 	 */
 	public void freeContext(DrawContext context, ContextType type) throws GameException {
-		ContextProvider.logger.info("Freeing context");
 		type.cleanup(context);
 		context.cleanup();
 	}
@@ -52,24 +49,24 @@ public class ContextProvider {
 	/**
 	 * @return the launcher
 	 */
-	public GameLauncher getLauncher() {
+	@Override
+	public GameLauncher launcher() {
 		return this.launcher;
 	}
 
 	/**
 	 * @author DasBabyPixel
 	 */
-	public static enum ContextType {
+	public enum ContextType {
 
 		/**
 		 * 2D Projection HUD Context
 		 */
 		HUD {
-
 			@Override
 			protected void load(GameLauncher launcher, DrawContext context) throws GameException {
-				context.setProgram(launcher.getShaderLoader()
-						.loadShader(launcher, launcher.getEmbedFileSystem().getPath("shaders", "hud", "hud.json")));
+				context.setProgram(launcher.getShaderLoader().loadShader(launcher,
+						launcher.getEmbedFileSystem().getPath("shaders", "hud", "hud.json")));
 				context.setProjection(new Transformations.Projection.Projection2D());
 			}
 
@@ -78,9 +75,11 @@ public class ContextProvider {
 				context.getProgram().cleanup();
 			}
 
-		},;
+		},
+		;
 
-		protected abstract void load(GameLauncher launcher, DrawContext context) throws GameException;
+		protected abstract void load(GameLauncher launcher, DrawContext context)
+				throws GameException;
 
 		protected abstract void cleanup(DrawContext context) throws GameException;
 

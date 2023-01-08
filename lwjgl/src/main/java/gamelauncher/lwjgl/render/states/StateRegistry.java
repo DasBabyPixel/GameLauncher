@@ -1,17 +1,15 @@
 package gamelauncher.lwjgl.render.states;
 
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.logging.Logger;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengles.GLES;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES;
-
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.logging.Logger;
-
-@SuppressWarnings("javadoc")
 public class StateRegistry {
 
 	private static final Logger logger = Logger.getLogger();
@@ -46,7 +44,8 @@ public class StateRegistry {
 	}
 
 	public static void setContextHoldingThread(long id, Thread thread) {
-		StateRegistry.logger.infof("OpenGL Context %s on Thread %s", id, thread == null ? "null" : thread.getName());
+		StateRegistry.logger.debugf("OpenGL Context %s on Thread %s", id,
+				thread == null ? "null" : thread.getName());
 		if (thread == null) {
 			GLFW.glfwMakeContextCurrent(0L);
 			GLES.setCapabilities(null);

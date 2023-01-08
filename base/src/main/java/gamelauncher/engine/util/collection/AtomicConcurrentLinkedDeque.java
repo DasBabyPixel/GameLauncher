@@ -1,40 +1,29 @@
 package gamelauncher.engine.util.collection;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * @author DasBabyPixel
  * @param <E>
+ *
+ * @author DasBabyPixel
  */
 public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
-
 	private final AtomicInteger size = new AtomicInteger();
-
 	private final AtomicReference<Node<E>> head = new AtomicReference<>(null);
-
 	private final AtomicReference<Node<E>> tail = new AtomicReference<>(null);
 
 	@Override
-	public void clear() {
-		while (pollFirst() != null) {
-		}
+	public void addFirst(E e) {
+		offerFirst(e);
 	}
 
 	@Override
-	public Iterator<E> iterator() {
-		return new Itr();
-	}
-
-	@Override
-	public Iterator<E> descendingIterator() {
-		return new DescendingItr();
+	public void addLast(E e) {
+		offerLast(e);
 	}
 
 	@Override
@@ -49,6 +38,22 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 		size.incrementAndGet();
 		linkLast(new Node<>(e));
 		return true;
+	}
+
+	@Override
+	public E removeFirst() {
+		E e = pollFirst();
+		if (e == null)
+			throw new NoSuchElementException();
+		return e;
+	}
+
+	@Override
+	public E removeLast() {
+		E e = pollLast();
+		if (e == null)
+			throw new NoSuchElementException();
+		return e;
 	}
 
 	@Override
@@ -75,6 +80,22 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 				return node.item;
 			}
 		}
+	}
+
+	@Override
+	public E getFirst() {
+		E e = peekFirst();
+		if (e == null)
+			throw new NoSuchElementException();
+		return e;
+	}
+
+	@Override
+	public E getLast() {
+		E e = peekLast();
+		if (e == null)
+			throw new NoSuchElementException();
+		return e;
 	}
 
 	@Override
@@ -120,15 +141,34 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	}
 
 	@Override
-	public boolean contains(Object o) {
-		Iterator<E> it = iterator();
-		while (it.hasNext()) {
-			E e = it.next();
-			if (Objects.equals(o, e)) {
-				return true;
-			}
-		}
-		return false;
+	public boolean add(E e) {
+		addLast(e);
+		return true;
+	}
+
+	@Override
+	public boolean offer(E e) {
+		return offerLast(e);
+	}
+
+	@Override
+	public E remove() {
+		return removeFirst();
+	}
+
+	@Override
+	public E poll() {
+		return pollFirst();
+	}
+
+	@Override
+	public E element() {
+		return getFirst();
+	}
+
+	@Override
+	public E peek() {
+		return peekFirst();
 	}
 
 	@Override
@@ -157,59 +197,6 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	}
 
 	@Override
-	public E removeFirst() {
-		E e = pollFirst();
-		if (e == null)
-			throw new NoSuchElementException();
-		return e;
-	}
-
-	@Override
-	public void addFirst(E e) {
-		offerFirst(e);
-	}
-
-	@Override
-	public void addLast(E e) {
-		offerLast(e);
-	}
-
-	@Override
-	public E removeLast() {
-		E e = pollLast();
-		if (e == null)
-			throw new NoSuchElementException();
-		return e;
-	}
-
-	@Override
-	public E getFirst() {
-		E e = peekFirst();
-		if (e == null)
-			throw new NoSuchElementException();
-		return e;
-	}
-
-	@Override
-	public E getLast() {
-		E e = peekLast();
-		if (e == null)
-			throw new NoSuchElementException();
-		return e;
-	}
-
-	@Override
-	public boolean add(E e) {
-		addLast(e);
-		return true;
-	}
-
-	@Override
-	public boolean offer(E e) {
-		return offerLast(e);
-	}
-
-	@Override
 	public void push(E e) {
 		addFirst(e);
 	}
@@ -225,23 +212,13 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	}
 
 	@Override
-	public E remove() {
-		return removeFirst();
-	}
-
-	@Override
-	public E poll() {
-		return pollFirst();
-	}
-
-	@Override
-	public E element() {
-		return getFirst();
-	}
-
-	@Override
-	public E peek() {
-		return peekFirst();
+	public boolean contains(Object o) {
+		for (E e : this) {
+			if (Objects.equals(o, e)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -250,30 +227,80 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	}
 
 	@Override
+	public Iterator<E> iterator() {
+		return new Itr();
+	}
+
+	@Override
+	public Iterator<E> descendingIterator() {
+		return new DescendingItr();
+	}
+
+	@Override
 	public boolean isEmpty() {
 		return size.get() == 0;
 	}
 
-	private Node<E> first() {
-		return head.get();
+	@Override
+	public Object[] toArray() {
+		// Use ArrayList to deal with resizing.
+		ArrayList<E> al = new ArrayList<E>();
+		for (Node<E> p = first(); p != null; p = p.next.get()) {
+			E item = p.item;
+			if (item != null)
+				al.add(item);
+		}
+		return al.toArray();
 	}
 
-	private Node<E> last() {
-		return tail.get();
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> T[] toArray(T @NotNull [] a) {
+		// try to use sent-in array
+		int k = 0;
+		Node<E> p;
+		for (p = first(); p != null && k < a.length; p = p.next.get()) {
+			E item = p.item;
+			if (item != null)
+				a[k++] = (T) item;
+		}
+		if (p == null) {
+			if (k < a.length)
+				a[k] = null;
+			return a;
+		}
+
+		// If doesn't fit, use ArrayList version
+		ArrayList<E> al = new ArrayList<E>();
+		for (Node<E> q = first(); q != null; q = q.next.get()) {
+			E item = q.item;
+			if (item != null)
+				al.add(item);
+		}
+		return al.toArray(a);
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		for (Object o : c) {
+			if (!contains(o)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
 		boolean changed = false;
-		Iterator<?> it = c.iterator();
-		while (it.hasNext()) {
-			remove(it.next());
+		for (Object o : c) {
+			remove(o);
 		}
 		return changed;
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {
+	public boolean retainAll(@NotNull Collection<?> c) {
 		boolean changed = false;
 		Iterator<?> it = this.iterator();
 		while (it.hasNext()) {
@@ -283,6 +310,20 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 			}
 		}
 		return changed;
+	}
+
+	@Override
+	public void clear() {
+		while (pollFirst() != null)
+			;
+	}
+
+	private Node<E> first() {
+		return head.get();
+	}
+
+	private Node<E> last() {
+		return tail.get();
 	}
 
 	private void linkFirst(Node<E> newHead) {
@@ -337,7 +378,8 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	}
 
 	private boolean unlink(Node<E> node) {
-		begin: while (true) {
+		begin:
+		while (true) {
 			Node<E> prev = node.prev.get();
 			Node<E> next = node.next.get();
 			if (prev == null && next == null) {
@@ -392,11 +434,12 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 							if (next.prev.get() == prev) {
 								// Somebody else did it for us, problematic
 								throw new IllegalStateException("Broken nodes");
-//								return false;
+								//								return false;
 							}
 							// Somebody else updated it, reset values
 							if (!prev.next.compareAndSet(next, node)) {
-								throw new IllegalStateException("Theoretically impossible, weird nodes");
+								throw new IllegalStateException(
+										"Theoretically impossible, weird nodes");
 							}
 							continue begin;
 						}
@@ -411,56 +454,22 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 		return true;
 	}
 
-	@Override
-	public Object[] toArray() {
-		// Use ArrayList to deal with resizing.
-		ArrayList<E> al = new ArrayList<E>();
-		for (Node<E> p = first(); p != null; p = p.next.get()) {
-			E item = p.item;
-			if (item != null)
-				al.add(item);
-		}
-		return al.toArray();
-	}
+	private static class Node<V> {
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T[] toArray(T[] a) {
-		// try to use sent-in array
-		int k = 0;
-		Node<E> p;
-		for (p = first(); p != null && k < a.length; p = p.next.get()) {
-			E item = p.item;
-			if (item != null)
-				a[k++] = (T) item;
-		}
-		if (p == null) {
-			if (k < a.length)
-				a[k] = null;
-			return a;
+		private final AtomicReference<Node<V>> prev;
+
+		private final AtomicReference<Node<V>> next;
+
+		private final V item;
+
+		public Node(V item) {
+			this.item = item;
+			this.prev = new AtomicReference<>();
+			this.next = new AtomicReference<>();
 		}
 
-		// If won't fit, use ArrayList version
-		ArrayList<E> al = new ArrayList<E>();
-		for (Node<E> q = first(); q != null; q = q.next.get()) {
-			E item = q.item;
-			if (item != null)
-				al.add(item);
-		}
-		return al.toArray(a);
 	}
 
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		Iterator<?> it = c.iterator();
-		while (it.hasNext()) {
-			Object o = it.next();
-			if (!contains(o)) {
-				return false;
-			}
-		}
-		return true;
-	}
 
 	private class DescendingItr extends AbstractItr {
 
@@ -476,6 +485,7 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 
 	}
 
+
 	private class Itr extends AbstractItr {
 
 		@Override
@@ -490,12 +500,11 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 
 	}
 
+
 	private abstract class AbstractItr implements Iterator<E> {
 
 		private boolean first = true;
-
 		private Node<E> curNode;
-
 		private Node<E> nextNode;
 
 		@Override
@@ -514,8 +523,7 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 			}
 			curNode = nextNode;
 			nextNode = nextNode(nextNode);
-			E item = curNode.item;
-			return item;
+			return curNode.item;
 		}
 
 		@Override
@@ -531,22 +539,6 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 		protected abstract Node<E> beginNode();
 
 		protected abstract Node<E> nextNode(Node<E> node);
-
-	}
-
-	private static class Node<V> {
-
-		private final AtomicReference<Node<V>> prev;
-
-		private final AtomicReference<Node<V>> next;
-
-		private final V item;
-
-		public Node(V item) {
-			this.item = item;
-			this.prev = new AtomicReference<>();
-			this.next = new AtomicReference<>();
-		}
 
 	}
 

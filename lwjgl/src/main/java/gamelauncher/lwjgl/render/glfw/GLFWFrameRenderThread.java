@@ -1,12 +1,5 @@
 package gamelauncher.lwjgl.render.glfw;
 
-import java.util.concurrent.Phaser;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-
-import org.lwjgl.opengles.GLES20;
-
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.RenderThread;
@@ -14,34 +7,27 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.lwjgl.render.GlContext;
 import gamelauncher.lwjgl.render.framebuffer.ManualQueryFramebuffer;
+import org.lwjgl.opengles.GLES20;
+
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class GLFWFrameRenderThread extends AbstractExecutorThread implements RenderThread {
 
 	private static final AtomicInteger ids = new AtomicInteger();
-
 	private final GLFWFrame frame;
-
-	private volatile boolean draw = false;
-
-	private volatile boolean drawRefresh = false;
-
-	private volatile boolean refresh = false;
-
 	private final AtomicBoolean modifying = new AtomicBoolean(false);
-
 	private final Phaser phaser;
-
 	private final Phaser refreshPhaser;
-
-	private ManualQueryFramebuffer fb;
-
-	private FrameRenderer frameRenderer = null;
-
+	private final Consumer<Long> nanoSleeper = this::waitForSignalTimeout;
 	volatile boolean cleanupContextOnExit = false;
-
-	private final Consumer<Long> nanoSleeper = nanos -> {
-		this.waitForSignalTimeout(nanos);
-	};
+	private volatile boolean draw = false;
+	private volatile boolean drawRefresh = false;
+	private volatile boolean refresh = false;
+	private ManualQueryFramebuffer fb;
+	private FrameRenderer frameRenderer = null;
 
 	public GLFWFrameRenderThread(GLFWFrame frame) {
 		super(frame.launcher.getGlThreadGroup());
@@ -113,7 +99,8 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 
 	private void frame(FrameType type, boolean wait) {
 		FrameRenderer cfr = this.frame.frameRenderer();
-		cfr: if (cfr != null) {
+		cfr:
+		if (cfr != null) {
 			if (type == FrameType.REFRESH) {
 				try {
 					cfr.refreshDisplay(this.frame);
@@ -132,16 +119,15 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 					}
 				}
 				this.frameRenderer = cfr;
-				if (cfr != null) {
-					try {
-						cfr.init(this.frame);
-					} catch (GameException ex) {
-						this.frame.launcher.handleError(ex);
-					}
+				try {
+					cfr.init(this.frame);
+				} catch (GameException ex) {
+					this.frame.launcher.handleError(ex);
 				}
 			}
 
-			vp: if (this.fb.newValue().booleanValue()) {
+			vp:
+			if (this.fb.newValue().booleanValue()) {
 				this.fb.query();
 				if (this.fb.width().intValue() == 0 || this.fb.height().intValue() == 0) {
 					break vp;
@@ -226,7 +212,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 		this.modifying.set(false);
 	}
 
-	private static enum FrameType {
+	private enum FrameType {
 		REFRESH, RENDER
 	}
 

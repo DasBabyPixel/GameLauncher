@@ -1,10 +1,5 @@
 package gamelauncher.lwjgl;
 
-import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengles.GLES;
-import org.lwjgl.system.Configuration;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
@@ -21,7 +16,6 @@ import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
 import gamelauncher.lwjgl.render.LWJGLDrawContext;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
-import gamelauncher.lwjgl.render.LWJGLTestRenderer;
 import gamelauncher.lwjgl.render.font.BasicFontFactory;
 import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
@@ -33,26 +27,24 @@ import gamelauncher.lwjgl.render.texture.LWJGLTextureManager;
 import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.profiler.GLSectionHandler;
+import org.joml.Vector3f;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengles.GLES;
+import org.lwjgl.system.Configuration;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class LWJGLGameLauncher extends GameLauncher {
 
-	private GLFWFrame mainFrame;
-
-	private boolean mouseMovement = false;
-
-	private float mouseSensivity = 1.0F;
-
-	private boolean ignoreNextMovement = false;
-
-	private GLFWThread glfwThread;
-
 	private final Camera camera = new BasicCamera();
-
 	private final GlThreadGroup glThreadGroup;
+	private GLFWFrame mainFrame;
+	private boolean mouseMovement = false;
+	private float mouseSensivity = 1.0F;
+	private boolean ignoreNextMovement = false;
+	private GLFWThread glfwThread;
 
 	public LWJGLGameLauncher() throws GameException {
 		this.setKeybindManager(new LWJGLKeybindManager(this));
@@ -65,6 +57,46 @@ public class LWJGLGameLauncher extends GameLauncher {
 		this.setTextureManager(new LWJGLTextureManager(this));
 		this.setOperatingSystem(OperatingSystem.WINDOWS);
 		this.glThreadGroup = new GlThreadGroup();
+	}
+
+	@EventHandler
+	public void handle(LauncherInitializedEvent event) {
+		try {
+			Threads.waitFor(this.mainFrame.showWindow());
+		} catch (GameException ex) {
+			ex.printStackTrace();
+		}
+
+		// glfwThread.submit(() -> glfwSetWindowAttrib(window.getGLFWId(), GLFW_FLOATING,
+		// GLFW_TRUE));
+		this.mouseMovement(false);
+	}
+
+	@Override
+	@Deprecated
+	public LWJGLDrawContext createContext(Framebuffer framebuffer) {
+		return new LWJGLDrawContext(framebuffer);
+	}
+
+	@Override
+	protected void tick0() throws GameException {
+		// double avgNanos = getGameThread().getAverageTickTime();
+		// long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
+		// System.out.printf("%05d%n", avgMillis);
+		// System.out.println("Tick");
+		this.mainFrame.getInput().handleInput();
+		mouse:
+		if (this.mouseMovement) {
+			Camera cam = this.camera;
+			float dy = (float) (this.mainFrame.getMouse().getDeltaX() * 0.4) * this.mouseSensivity;
+			float dx = (float) (this.mainFrame.getMouse().getDeltaY() * 0.4) * this.mouseSensivity;
+			if ((dx != 0 || dy != 0) && this.ignoreNextMovement) {
+				this.ignoreNextMovement = false;
+				break mouse;
+			}
+			Vector3f rot = new Vector3f(cam.getRotX(), cam.getRotY(), cam.getRotZ());
+			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
+		}
 	}
 
 	@Override
@@ -89,9 +121,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 		// this.mainFrame.frameCounter().limit(500);
 		// Threads.waitFor(this.mainFrame.createWindow());
 		// this.asyncUploader.start();
-//		this.mainFrame.frameCounter().addUpdateListener(fps -> {
-//			this.getLogger().infof("FPS: %s", fps);
-//		});
+		//		this.mainFrame.frameCounter().addUpdateListener(fps -> {
+		//			this.getLogger().infof("FPS: %s", fps);
+		//		});
 		this.mainFrame.closeCallback().setValue(frame -> {
 			this.mainFrame.hideWindow();
 			try {
@@ -117,29 +149,32 @@ public class LWJGLGameLauncher extends GameLauncher {
 		Threads.waitFor(this.glfwThread.exit());
 	}
 
-	@EventHandler
-	public void handle(LauncherInitializedEvent event) {
-		try {
-			Threads.waitFor(this.mainFrame.showWindow());
-		} catch (GameException ex) {
-			ex.printStackTrace();
-		}
-
-		// glfwThread.submit(() -> glfwSetWindowAttrib(window.getGLFWId(), GLFW_FLOATING,
-		// GLFW_TRUE));
-		this.mouseMovement(false);
-	}
-
-	@Override
-	@Deprecated
-	public LWJGLDrawContext createContext(Framebuffer framebuffer) {
-		return new LWJGLDrawContext(framebuffer);
-	}
-
 	@Override
 	protected void registerSettingInsertions() {
 		new MouseSensivityInsertion().register(this);
 	}
+
+	@Override
+	public LWJGLTextureManager getTextureManager() {
+		return (LWJGLTextureManager) super.getTextureManager();
+	}
+
+	@Override
+	public LWJGLGuiManager getGuiManager() {
+		return (LWJGLGuiManager) super.getGuiManager();
+	}
+
+	@Override
+	public LWJGLGameRenderer getGameRenderer() {
+		return (LWJGLGameRenderer) super.getGameRenderer();
+	}
+	//
+	// /**
+	// * @return the {@link LWJGLAsyncOpenGL}
+	// */
+	// public LWJGLAsyncOpenGL getAsyncUploader() {
+	// return this.asyncUploader;
+	// }
 
 	private void mouseMovement(boolean movement) {
 		this.mainFrame.getMouse().grabbed(movement).thenRun(() -> {
@@ -162,60 +197,18 @@ public class LWJGLGameLauncher extends GameLauncher {
 		return this.mainFrame;
 	}
 
-	@Override
-	protected void tick0() throws GameException {
-		// double avgNanos = getGameThread().getAverageTickTime();
-		// long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
-		// System.out.printf("%05d%n", avgMillis);
-		// System.out.println("Tick");
-		this.mainFrame.getInput().handleInput();
-		mouse: if (this.mouseMovement) {
-			Camera cam = this.camera;
-			float dy = (float) (this.mainFrame.getMouse().getDeltaX() * 0.4) * this.mouseSensivity;
-			float dx = (float) (this.mainFrame.getMouse().getDeltaY() * 0.4) * this.mouseSensivity;
-			if ((dx != 0 || dy != 0) && this.ignoreNextMovement) {
-				this.ignoreNextMovement = false;
-				break mouse;
-			}
-			Vector3f rot = new Vector3f(cam.getRotX(), cam.getRotY(), cam.getRotZ());
-			cam.setRotation(Math.clamp(rot.x + dx, -90F, 90F), rot.y + dy, rot.z);
-		}
-	}
-
 	/**
 	 * @return the GLFW thread
 	 */
 	public GLFWThread getGLFWThread() {
 		return this.glfwThread;
 	}
-	//
-	// /**
-	// * @return the {@link LWJGLAsyncOpenGL}
-	// */
-	// public LWJGLAsyncOpenGL getAsyncUploader() {
-	// return this.asyncUploader;
-	// }
 
 	/**
 	 * @return the {@link GlThreadGroup}
 	 */
 	public GlThreadGroup getGlThreadGroup() {
 		return this.glThreadGroup;
-	}
-
-	@Override
-	public LWJGLGameRenderer getGameRenderer() {
-		return (LWJGLGameRenderer) super.getGameRenderer();
-	}
-
-	@Override
-	public LWJGLGuiManager getGuiManager() {
-		return (LWJGLGuiManager) super.getGuiManager();
-	}
-
-	@Override
-	public LWJGLTextureManager getTextureManager() {
-		return (LWJGLTextureManager) super.getTextureManager();
 	}
 
 }
