@@ -11,6 +11,9 @@ import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.keybind.Keybind;
+import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
+import gamelauncher.engine.util.keybind.KeyboardKeybindEntry.Type;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
@@ -80,10 +83,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 	@Override
 	protected void tick0() throws GameException {
-		// double avgNanos = getGameThread().getAverageTickTime();
-		// long avgMillis = TimeUnit.NANOSECONDS.toMicros((long)avgNanos);
-		// System.out.printf("%05d%n", avgMillis);
-		// System.out.println("Tick");
 		this.mainFrame.getInput().handleInput();
 		mouse:
 		if (this.mouseMovement) {
@@ -113,17 +112,10 @@ public class LWJGLGameLauncher extends GameLauncher {
 		GL.destroy();
 
 		this.mainFrame = new GLFWFrame(this);
-		// this.asyncUploader = new LWJGLAsyncOpenGL(this, this.mainFrame);
 		this.setFrame(this.mainFrame);
 		this.mainFrame.framebuffer().renderThread()
 				.submit(() -> this.setGlyphProvider(new LWJGLGlyphProvider(this)));
 		this.mainFrame.renderMode(RenderMode.ON_UPDATE);
-		// this.mainFrame.frameCounter().limit(500);
-		// Threads.waitFor(this.mainFrame.createWindow());
-		// this.asyncUploader.start();
-		//		this.mainFrame.frameCounter().addUpdateListener(fps -> {
-		//			this.getLogger().infof("FPS: %s", fps);
-		//		});
 		this.mainFrame.closeCallback().setValue(frame -> {
 			this.mainFrame.hideWindow();
 			try {
@@ -132,9 +124,16 @@ public class LWJGLGameLauncher extends GameLauncher {
 				ex.printStackTrace();
 			}
 		});
-		// this.mainFrame.getRenderThread().start();
 
 		this.getEventManager().registerListener(this);
+
+		Keybind keybind = getKeybindManager().createKeybind(GLFW.GLFW_KEY_F11);
+		keybind.addHandler(entry -> {
+			if (entry instanceof KeyboardKeybindEntry e) {
+				if (e.type() == Type.PRESS)
+					mainFrame.fullscreen().setValue(!mainFrame.fullscreen().booleanValue());
+			}
+		});
 	}
 
 	@Override

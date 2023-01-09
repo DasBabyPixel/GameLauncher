@@ -1,25 +1,24 @@
 package gamelauncher.lwjgl.render.modelloader;
 
-import java.io.ByteArrayInputStream;
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.Map;
-
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.mesh.Mesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import gamelauncher.lwjgl.render.modelloader.MaterialList.Material;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
+
+import java.io.ByteArrayInputStream;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.Formatter;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author DasBabyPixel
@@ -34,6 +33,7 @@ public class LWJGLModelLoader implements ModelLoader {
 
 	/**
 	 * @param launcher
+	 *
 	 * @throws GameException
 	 */
 	public LWJGLModelLoader(LWJGLGameLauncher launcher) throws GameException {
@@ -44,12 +44,24 @@ public class LWJGLModelLoader implements ModelLoader {
 		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader(launcher));
 	}
 
+	private static String hash(byte[] bytes) throws GameException {
+		try (Formatter formatter = new Formatter()) {
+			for (byte b : MessageDigest.getInstance("SHA-1").digest(bytes)) {
+				formatter.format("%02x", b);
+			}
+			return formatter.toString();
+		} catch (Exception ex) {
+			throw new GameException(ex);
+		}
+	}
+
 	@Override
 	public Model loadModel(Resource resource) throws GameException {
 		ResourceStream stream = resource.newResourceStream();
 		String hash = hash(stream.readAllBytes());
 		stream.cleanup();
-		Path file = modelDirectory.resolve(stream.getPath().getParent().toAbsolutePath().toString().substring(1))
+		Path file = modelDirectory.resolve(
+						stream.getPath().getParent().toAbsolutePath().toString().substring(1))
 				.resolve(stream.getPath().getFileName() + ".bin");
 		boolean hasSavedFile = false;
 		if (Files.exists(file)) {
@@ -68,26 +80,27 @@ public class LWJGLModelLoader implements ModelLoader {
 			}
 		}
 		if (hasSavedFile) {
-			Model model = loadConvertedModel(stream);
-			stream.cleanup();
-			return model;
+			return loadConvertedModel(stream);
 		}
 		ModelType type = ModelType.WAVEFRONT;
 		ModelSubLoader loader = loaders.get(type);
 		stream = resource.newResourceStream();
 		byte[] bytes = loader.convertModel(stream);
-		stream.cleanup();
+		if (!stream.isCleanedUp())
+			stream.cleanup();
 		if (!Files.exists(file)) {
 			Files.createFile(file);
 		}
-		stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes), Files.newOutputStream(file));
+		stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes),
+				Files.newOutputStream(file));
 		saveConvertedModel(hash, bytes, stream);
 		Model model = loadConvertedModel(stream);
 		stream.cleanup();
 		return model;
 	}
 
-	private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream) throws GameException {
+	private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream)
+			throws GameException {
 		stream.writeInt(this.version.length());
 		stream.writeUTF8(this.version);
 		stream.writeInt(hash.length());
@@ -111,9 +124,10 @@ public class LWJGLModelLoader implements ModelLoader {
 			for (Material mat : materialList.materials) {
 				byte[] tex = mat.diffuseColor.texture;
 				if (tex != null) {
-					ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
-					LWJGLTexture lt = Threads.waitFor(launcher.getTextureManager().createTexture());
-					Threads.waitFor(lt.uploadAsync(st));
+					ResourceStream st =
+							new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
+					LWJGLTexture lt = launcher.getTextureManager().createTexture();
+					lt.uploadAsync(st).thenRun(launcher.getGuiManager()::redraw);
 					lm.texture = lt;
 					break;
 				}
@@ -128,17 +142,6 @@ public class LWJGLModelLoader implements ModelLoader {
 			}
 		}
 		return new MeshModel(mesh);
-	}
-
-	private static String hash(byte[] bytes) throws GameException {
-		try (Formatter formatter = new Formatter()) {
-			for (byte b : MessageDigest.getInstance("SHA-1").digest(bytes)) {
-				formatter.format("%02x", b);
-			}
-			return formatter.toString();
-		} catch (Exception ex) {
-			throw new GameException(ex);
-		}
 	}
 
 }

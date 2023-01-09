@@ -1,11 +1,12 @@
 package gamelauncher.engine.render;
 
-import java.util.concurrent.CompletableFuture;
-
+import de.dasbabypixel.api.property.BooleanValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author DasBabyPixel
@@ -34,17 +35,22 @@ public interface Frame extends GameResource {
 
 	/**
 	 * Sets the {@link RenderMode} for this {@link Frame}
-	 * 
-	 * @param renderMode
+	 *
+	 * @param renderMode the {@link RenderMode}
 	 */
 	void renderMode(RenderMode renderMode);
 
 	/**
 	 * Sets the {@link FrameRenderer} for this {@link Frame}
-	 * 
-	 * @param renderer
+	 *
+	 * @param renderer the {@link FrameRenderer}
 	 */
 	void frameRenderer(FrameRenderer renderer);
+
+	/**
+	 * @return the fullscreen property. Modify this to set fullscreen
+	 */
+	BooleanValue fullscreen();
 
 	/**
 	 * @return the {@link FrameRenderer} for this {@link Frame}
@@ -53,7 +59,8 @@ public interface Frame extends GameResource {
 
 	/**
 	 * @return a new frame that shares resources with this {@link Frame}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	Frame newFrame() throws GameException;
 

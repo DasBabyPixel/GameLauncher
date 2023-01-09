@@ -1,33 +1,29 @@
 package gamelauncher.engine.resource;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
 import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * @author DasBabyPixel
- *
  */
 public abstract class AbstractGameResource implements GameResource {
 
+	private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
 	private static Logger logger;
-
-	private volatile boolean cleanedUp = false;
-
 	private final StackTraceElement[] stack;
 
 	private final String exName;
 
 	private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
-
-	private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
+	private volatile boolean cleanedUp = false;
 
 	/**
-	 * 
+	 *
 	 */
 	public AbstractGameResource() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -36,50 +32,15 @@ public abstract class AbstractGameResource implements GameResource {
 		AbstractGameResource.create(this);
 	}
 
-	@Override
-	public CompletableFuture<Void> cleanupFuture() {
-		return this.cleanupFuture;
-	}
-
 	/**
-	 * Cleanes up this {@link AbstractGameResource resource}
-	 * 
-	 * @throws GameException
-	 */
-	@Override
-	public final void cleanup() throws GameException {
-		if (!this.isCleanedUp()) {
-			this.setCleanedUp();
-			this.cleanup0();
-			if (this.isCleanedUp()) {
-				this.cleanupFuture.complete(null);
-				AbstractGameResource.logCleanup(this);
-			}
-		} else {
-			AbstractGameResource.logger().error(new GameException("Multiple cleanups"));
-		}
-	}
-
-	@Override
-	public boolean isCleanedUp() {
-		return this.cleanedUp;
-	}
-
-	protected void setCleanedUp() {
-		this.cleanedUp = true;
-	}
-
-	protected abstract void cleanup0() throws GameException;
-
-	/**
-	 * @param resource
+	 * @param resource a resource
 	 */
 	public static void create(GameResource resource) {
 		AbstractGameResource.resources.add(resource);
 	}
 
 	/**
-	 * @param resource
+	 * @param resource a resource
 	 */
 	public static void logCleanup(GameResource resource) {
 		AbstractGameResource.resources.remove(resource);
@@ -106,5 +67,40 @@ public abstract class AbstractGameResource implements GameResource {
 			}
 		}
 	}
+
+	/**
+	 * Cleanes up this {@link AbstractGameResource resource}
+	 *
+	 * @throws GameException an exception
+	 */
+	@Override
+	public final void cleanup() throws GameException {
+		if (!this.isCleanedUp()) {
+			this.setCleanedUp();
+			this.cleanup0();
+			if (this.isCleanedUp()) {
+				this.cleanupFuture.complete(null);
+				AbstractGameResource.logCleanup(this);
+			}
+		} else {
+			AbstractGameResource.logger().error(new GameException("Multiple cleanups"));
+		}
+	}
+
+	@Override
+	public boolean isCleanedUp() {
+		return this.cleanedUp;
+	}
+
+	@Override
+	public CompletableFuture<Void> cleanupFuture() {
+		return this.cleanupFuture;
+	}
+
+	protected void setCleanedUp() {
+		this.cleanedUp = true;
+	}
+
+	protected abstract void cleanup0() throws GameException;
 
 }

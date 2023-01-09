@@ -1,7 +1,5 @@
 package gamelauncher.engine.render.texture;
 
-import java.util.concurrent.CompletableFuture;
-
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 
@@ -12,8 +10,9 @@ public interface TextureManager extends GameResource {
 
 	/**
 	 * @return a new {@link Texture}
-	 * @throws GameException 
+	 *
+	 * @throws GameException an exception
 	 */
-	CompletableFuture<? extends Texture> createTexture() throws GameException;
-	
+	Texture createTexture() throws GameException;
+
 }

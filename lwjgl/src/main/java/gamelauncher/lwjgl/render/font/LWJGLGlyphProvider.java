@@ -63,7 +63,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			GlyphKey key = new GlyphKey(scale, ch);
 			AtlasEntry entry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
 			Collection<AtlasEntry> e =
-					entries.computeIfAbsent(entry.getTexture(), k -> new ArrayList<>());
+					entries.computeIfAbsent(entry.texture, k -> new ArrayList<>());
 			e.add(entry);
 		}
 		finfo.free();
@@ -74,16 +74,16 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		float z = 0;
 		for (Map.Entry<LWJGLTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
 			for (AtlasEntry e : entry.getValue()) {
-				Rectangle bd = e.getBounds();
+				Rectangle bd = e.bounds;
 
-				NumberValue tw = e.getTexture().getWidth();
-				NumberValue th = e.getTexture().getHeight();
+				NumberValue tw = e.texture.getWidth();
+				NumberValue th = e.texture.getHeight();
 				NumberValue tl = NumberValue.constant(bd.x).divide(tw);
 				NumberValue tb = NumberValue.constant(bd.y).divide(th);
 				NumberValue tr = NumberValue.constant(bd.x).add(bd.width).divide(tw);
 				NumberValue tt = NumberValue.constant(bd.y).add(bd.height).divide(th);
 
-				GlyphData data = e.getEntry().data;
+				GlyphData data = e.entry.data;
 				float pb = -data.bearingY - data.height;
 				float pt = pb + data.height;
 				//				float pl = xpos + data.bearingX;
@@ -102,7 +102,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				gi.setPosition(x, y, z);
 				gi.setScale(width, height, 1);
 				meshes.add(gi.createModel());
-				xpos += e.getEntry().data.advance;
+				xpos += e.entry.data.advance;
 
 				//				e.getTexture().write();
 			}
@@ -189,12 +189,18 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			MemoryUtil.memFree(x1);
 			MemoryUtil.memFree(y1);
 			GlyphEntry e = new GlyphEntry(gdata, gindex, pixelHeight, key, buf);
-			if (!Threads.waitFor(this.textureAtlas.addGlyph(id, e))) {
+
+			if (!this.textureAtlas.addGlyph(id, e)) {
 				throw new GameException("Could not add glyph to texture atlas");
 			}
 			entry = this.textureAtlas.getGlyph(id);
+
+			//			if (!Threads.waitFor(this.textureAtlas.addGlyph(id, e))) {
+			//				throw new GameException("Could not add glyph to texture atlas");
+			//			}
+			//			entry = this.textureAtlas.getGlyph(id);
 		}
-		entry.getEntry().key.required.incrementAndGet();
+		entry.entry.key.required.incrementAndGet();
 		return entry;
 	}
 
@@ -240,16 +246,15 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				if (texture2DModel != null) {
 					texture2DModel.cleanup();
 				}
-				texture2DModel =
-						new Texture2DModel(e.getTexture(), tl.floatValue(), 1 - tb.floatValue(),
-								tr.floatValue(), 1 - tt.floatValue());
+				texture2DModel = new Texture2DModel(e.texture, tl.floatValue(), 1 - tb.floatValue(),
+						tr.floatValue(), 1 - tt.floatValue());
 			}
 			texture2DModel.render(program);
 		}
 
 		@Override
 		protected void cleanup0() throws GameException {
-			Threads.waitFor(releaseGlyphKey(e.getEntry().key));
+			Threads.waitFor(releaseGlyphKey(e.entry.key));
 			if (texture2DModel != null)
 				texture2DModel.cleanup();
 		}

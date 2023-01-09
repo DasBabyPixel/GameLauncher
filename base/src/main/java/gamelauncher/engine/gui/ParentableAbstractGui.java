@@ -124,7 +124,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			if (done.compareAndSet(false, true)) {
 				gui.handle(entry);
 			}
-		}, gui -> gui.isHovering(this.lastMouseX.floatValue(), this.lastMouseY.floatValue()));
+		}, gui -> gui.isHovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
 	}
 
 	private void forFocused(KeybindEntry e) throws GameException {
@@ -200,6 +200,11 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	@Override
 	public BooleanValue hovering() {
 		return this.hovering;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return this.initialized.get();
 	}
 
 	@Override
@@ -291,11 +296,6 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
 	protected String additionalToStringData() {
 		return null;
-	}
-
-	@Override
-	public boolean isInitialized() {
-		return this.initialized.get();
 	}
 
 }

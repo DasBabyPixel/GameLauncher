@@ -1,10 +1,5 @@
 package gamelauncher.lwjgl.render.glfw;
 
-import java.util.Collection;
-
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES32;
-
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
@@ -14,26 +9,21 @@ import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.render.states.GlStates;
 import gamelauncher.lwjgl.render.states.StateRegistry;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengles.GLES32;
+
+import java.util.Collection;
 
 public class GLFWGLContext extends AbstractGameResource {
 
 	private static final Logger logger = Logger.getLogger();
 
 	private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
-
-	volatile long glfwId;
-
-	ExecutorThread owner = null;
-
-	boolean owned = false;
-
-	GLFWFrame parent;
-
 	final Collection<GLFWGLContext> sharedContexts;
-
-	public long getGLFWId() {
-		return this.glfwId;
-	}
+	volatile long glfwId;
+	ExecutorThread owner = null;
+	boolean owned = false;
+	GLFWFrame parent;
 
 	GLFWGLContext(Collection<GLFWGLContext> sharedContexts) {
 		super();
@@ -41,7 +31,11 @@ public class GLFWGLContext extends AbstractGameResource {
 		this.sharedContexts.add(this);
 	}
 
-	synchronized GLFWFrame.Creator create(GLFWFrame frame) {
+	public long getGLFWId() {
+		return this.glfwId;
+	}
+
+	GLFWFrame.Creator create(GLFWFrame frame) {
 		GLFWFrame.Creator creator = new GLFWFrame.Creator(frame);
 		creator.run();
 		this.glfwId = creator.glfwId;
@@ -93,7 +87,8 @@ public class GLFWGLContext extends AbstractGameResource {
 			this.owner = (ExecutorThread) Thread.currentThread();
 			StateRegistry.setContextHoldingThread(this.glfwId, Thread.currentThread());
 			GlStates.current().enable(GLES32.GL_DEBUG_OUTPUT);
-			GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+			GLUtil.setupDebugMessageCallback(
+					GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
 		}
 	}
 

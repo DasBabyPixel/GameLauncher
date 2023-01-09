@@ -1,10 +1,5 @@
 package gamelauncher.lwjgl.util.keybind;
 
-import static org.lwjgl.glfw.GLFW.*;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -14,13 +9,15 @@ import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeybindManager;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.lwjgl.glfw.GLFW.glfwGetKeyName;
+
 /**
  * @author DasBabyPixel
- *
  */
 public class LWJGLKeybindManager extends AbstractGameResource implements KeybindManager {
-
-	private static final String MOUSEBUTTON_PREFIX = "Button ";
 
 	/**
 	 * The number added for Keyboard ids
@@ -38,17 +35,14 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 	 * The number added for keyboard scancodes
 	 */
 	public static final int KEYBOARD_SCANCODE_ADD = 20000;
-
-	private final GameLauncher launcher;
-	private final Map<Integer, String> names = new ConcurrentHashMap<>();
+	private static final String MOUSEBUTTON_PREFIX = "Button ";
 	/**
 	 * The Map of {@link Keybind}s, by ID
 	 */
 	public final Map<Integer, Keybind> keybinds = new ConcurrentHashMap<>();
+	private final GameLauncher launcher;
+	private final Map<Integer, String> names = new ConcurrentHashMap<>();
 
-	/**
-	 * @param launcher
-	 */
 	public LWJGLKeybindManager(GameLauncher launcher) {
 		this.launcher = launcher;
 	}
@@ -76,6 +70,9 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 
 	@Override
 	protected void cleanup0() throws GameException {
+		for (Keybind k : keybinds.values()) {
+			k.cleanup();
+		}
 	}
 
 	private void loadKeybind(int id) {
@@ -89,7 +86,10 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 	private void loadName(int id) {
 		if (!names.containsKey(id)) {
 			if (id >= KEYBOARD_ADD && id < SCROLL) {
-				names.put(id, glfwGetKeyName(id - KEYBOARD_ADD, 0));
+				String n1 = glfwGetKeyName(id - KEYBOARD_ADD, 0);
+				if (n1 == null)
+					n1 = Integer.toString(id);
+				names.put(id, n1);
 			} else if (id == SCROLL) {
 				names.put(id, "MouseWheel");
 			} else if (id >= MOUSE_ADD && id < KEYBOARD_SCANCODE_ADD) {

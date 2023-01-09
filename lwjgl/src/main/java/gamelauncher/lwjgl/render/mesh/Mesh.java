@@ -60,32 +60,32 @@ public class Mesh extends AbstractGameResource {
 
 	private void createBuffer(int[] array) {
 		this.createBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER);
-		this.upload(GLES20.GL_ELEMENT_ARRAY_BUFFER, GLES20.GL_STATIC_DRAW, array);
+		this.upload(array);
 	}
 
 	private void createBuffer(float[] array) {
 		this.createBuffer(GLES20.GL_ARRAY_BUFFER);
-		this.upload(GLES20.GL_ARRAY_BUFFER, GLES20.GL_STATIC_DRAW, array);
+		this.upload(array);
 	}
 
-	private int createBuffer(int target) {
+	private void createBuffer(int target) {
 		int id = GlStates.current().genBuffers();
 		GlStates.current().bindBuffer(target, id);
 		this.vbos.add(id);
-		return id;
 	}
 
-	private void upload(int target, int usage, int[] array) {
+	private void upload(int[] array) {
 		IntBuffer buffer = MemoryUtil.memAllocInt(array.length);
 		buffer.put(array).flip();
-		GlStates.current().bufferData(target, buffer, usage);
+		GlStates.current()
+				.bufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, buffer, GLES20.GL_STATIC_DRAW);
 		MemoryUtil.memFree(buffer);
 	}
 
-	private void upload(int target, int usage, float[] array) {
+	private void upload(float[] array) {
 		FloatBuffer buffer = MemoryUtil.memAllocFloat(array.length);
 		buffer.put(array).flip();
-		GlStates.current().bufferData(target, buffer, usage);
+		GlStates.current().bufferData(GLES20.GL_ARRAY_BUFFER, buffer, GLES20.GL_STATIC_DRAW);
 		MemoryUtil.memFree(buffer);
 	}
 
@@ -123,6 +123,9 @@ public class Mesh extends AbstractGameResource {
 		for (int vbo : this.vbos) {
 			GlStates.current().deleteBuffers(vbo);
 		}
+		if (material.texture != null) {
+			material.texture.cleanup();
+		}
 		this.vbos.clear();
 		// Delete the VAO
 		GlStates.current().deleteVertexArrays(this.vaoId);
@@ -131,7 +134,6 @@ public class Mesh extends AbstractGameResource {
 	public boolean applyLighting() {
 		return true;
 	}
-
 
 	public static class Material implements ProgramObject {
 		private static final Vector4f DEFAULT_COLOUR = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -182,8 +184,4 @@ public class Mesh extends AbstractGameResource {
 		}
 
 	}
-
-	//	public boolean hasTexture() {
-	//		return texture != null;
-	//	}
 }

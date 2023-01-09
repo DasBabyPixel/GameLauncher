@@ -6,7 +6,6 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.util.GameException;
 
-@SuppressWarnings("javadoc")
 public class ManualQueryFramebuffer extends AbstractFramebuffer {
 
 	private final Framebuffer handle;
@@ -16,7 +15,8 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
 	public ManualQueryFramebuffer(Framebuffer handle, RenderThread renderThread) {
 		super(renderThread, handle::scheduleRedraw);
 		this.handle = handle;
-		InvalidationListener invalid = property -> ManualQueryFramebuffer.this.newValue.setValue(true);
+		InvalidationListener invalid =
+				property -> ManualQueryFramebuffer.this.newValue.setValue(true);
 		handle.width().addListener(invalid);
 		handle.height().addListener(invalid);
 		this.query();
@@ -39,7 +39,7 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
 	@Override
 	public void cleanup0() throws GameException {
 		super.cleanup0();
-//		this.handle.cleanup();
+		//		this.handle.cleanup();
 	}
 
 	@Override

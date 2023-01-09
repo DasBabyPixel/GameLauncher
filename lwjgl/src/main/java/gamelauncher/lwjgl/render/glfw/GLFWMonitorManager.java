@@ -1,13 +1,19 @@
 package gamelauncher.lwjgl.render.glfw;
 
+import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.lwjgl.render.glfw.Monitor.VideoMode;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWVidMode;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GLFWMonitorManager {
 
+	private final Logger logger = Logger.getLogger();
 	private final CopyOnWriteArrayList<Monitor> monitors = new CopyOnWriteArrayList<>();
 
 	void init() {
@@ -19,12 +25,22 @@ public class GLFWMonitorManager {
 			}
 		});
 		PointerBuffer mbuf = GLFW.glfwGetMonitors();
-		while (true) {
-			assert mbuf != null;
-			if (!mbuf.hasRemaining())
-				break;
+		assert mbuf != null;
+		while (mbuf.hasRemaining()) {
 			this.newMonitor(mbuf.get());
 		}
+	}
+
+	public Monitor getMonitor(long glfwId) {
+		for (Monitor monitor : monitors) {
+			if (monitor.glfwId() == glfwId)
+				return monitor;
+		}
+		return null;
+	}
+
+	public Collection<Monitor> getMonitors() {
+		return Collections.unmodifiableCollection(monitors);
 	}
 
 	void cleanup() {
@@ -41,7 +57,13 @@ public class GLFWMonitorManager {
 		float[] sx = new float[1];
 		float[] sy = new float[1];
 		GLFW.glfwGetMonitorContentScale(monitor, sx, sy);
-		Monitor m = new Monitor(name, x[0], y[0], w[0], h[0], sx[0], sy[0], monitor);
+		GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitor);
+		assert vidMode != null;
+		Monitor m = new Monitor(name, x[0], y[0], w[0], h[0], sx[0], sy[0], monitor,
+				new VideoMode(vidMode.width(), vidMode.height(), vidMode.refreshRate()));
+		logger.infof("New Monitor connected! %s[x=%s, y=%s, width=%s, height=%s, "
+						+ "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(),
+				m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());
 		this.monitors.add(m);
 	}
 
@@ -51,7 +73,7 @@ public class GLFWMonitorManager {
 		while (it.hasNext()) {
 			int i = it.nextIndex();
 			Monitor m = it.next();
-			if (m.glfwId == monitor) {
+			if (m.glfwId() == monitor) {
 				index = i;
 				break;
 			}

@@ -127,7 +127,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
 		if (entry instanceof ScrollKeybindEntry s) {
-			float mulx = this.displayWidth.floatValue() / 5;
+			float mulx = this.displayWidth.floatValue() / 10;
 			float muly = this.displayHeight.floatValue() / 5;
 			float dx = s.deltaX();
 			float dy = s.deltaY();

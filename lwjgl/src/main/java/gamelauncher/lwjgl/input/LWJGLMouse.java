@@ -1,17 +1,14 @@
 package gamelauncher.lwjgl.input;
 
+import gamelauncher.lwjgl.render.glfw.GLFWFrame;
+import org.lwjgl.glfw.GLFW;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.lwjgl.glfw.GLFW;
-
-import gamelauncher.engine.util.function.GameRunnable;
-import gamelauncher.lwjgl.render.glfw.GLFWFrame;
-
 /**
  * @author DasBabyPixel
- *
  */
 public class LWJGLMouse {
 
@@ -23,27 +20,22 @@ public class LWJGLMouse {
 	private final AtomicReference<Double> lastx = new AtomicReference<>(0D);
 	private final AtomicReference<Double> lasty = new AtomicReference<>(0D);
 
-	/**
-	 * @param frame
-	 */
 	public LWJGLMouse(GLFWFrame frame) {
 		this.frame = frame;
 	}
 
 	/**
 	 * Sets the grabbed status of the mouse
-	 * 
-	 * @param grab
+	 *
+	 * @param grab whether to grab the mouse
+	 *
 	 * @return a completionFuture
 	 */
 	public CompletableFuture<Void> grabbed(boolean grab) {
 		if (this.grabbed.compareAndSet(!grab, grab)) {
-			return this.frame.getLauncher().getGLFWThread().submit(new GameRunnable() {
-				@Override
-				public void run() {
-					GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(), GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode());
-				}
-			});
+			return this.frame.getLauncher().getGLFWThread()
+					.submit(() -> GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(),
+							GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode()));
 		}
 		return CompletableFuture.completedFuture(null);
 	}
@@ -94,26 +86,19 @@ public class LWJGLMouse {
 
 	/**
 	 * Sets the mouse position
-	 * 
-	 * @param x
-	 * @param y
+	 *
+	 * @param x the new x position
+	 * @param y the new y position
 	 */
 	public void setPosition(double x, double y) {
 		this.x.set(x);
 		this.y.set(y);
 	}
 
-	/**
-	 * @return true if the mouse is inside the window
-	 */
 	public boolean isInWindow() {
 		return this.inWindow.get();
 	}
 
-	/**
-	 * Sets if the mouse is inside the window
-	 * @param inWindow
-	 */
 	public void setInWindow(boolean inWindow) {
 		this.inWindow.set(inWindow);
 	}

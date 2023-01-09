@@ -1,21 +1,5 @@
 package gamelauncher.lwjgl.render.texture;
 
-import static org.lwjgl.opengles.GLES20.*;
-import static org.lwjgl.opengles.GLES30.*;
-import static org.lwjgl.system.MemoryUtil.*;
-
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.imageio.ImageIO;
-
 import de.dasbabypixel.api.property.NumberValue;
 import de.matthiasmann.twl.utils.PNGDecoder;
 import gamelauncher.engine.render.texture.Texture;
@@ -30,31 +14,38 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.GlStates;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static org.lwjgl.opengles.GLES20.*;
+import static org.lwjgl.opengles.GLES30.GL_DRAW_FRAMEBUFFER;
+import static org.lwjgl.opengles.GLES30.GL_READ_FRAMEBUFFER;
+import static org.lwjgl.system.MemoryUtil.memAlloc;
+import static org.lwjgl.system.MemoryUtil.memFree;
+
 public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	public static final byte[] SIGNATURE_RAW = new byte[] {0x45, (byte) 0xFF, 0x61, 0x19};
-
+	private static final AtomicInteger tid = new AtomicInteger();
 	private final ExecutorThread owner;
-
 	private final ExecutorThreadService service;
-
 	private final AtomicReference<LWJGLTextureFormat> format =
 			new AtomicReference<>(LWJGLTextureFormat.RGBA);
-
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-
-	private final AtomicInteger textureId = new AtomicInteger();
-
+	private final AtomicInteger textureId = new AtomicInteger(0);
 	private final NumberValue width = NumberValue.zero();
-
 	private final NumberValue height = NumberValue.zero();
-
 	private final Profiler profiler;
-
 	private final LWJGLTextureManager manager;
-
 	private int cwidth = 0;
-
 	private int cheight = 0;
 
 	public LWJGLTexture(LWJGLGameLauncher launcher, ExecutorThread owner,
@@ -65,66 +56,36 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		this.profiler = launcher.getProfiler();
 	}
 
-	@Override
-	public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
-		CompletableFuture<Void> fut = new CompletableFuture<>();
-		service.submit(() -> {
-			profiler.begin("render", "upload_texture_worker");
-			try {
-				byte[] data = stream.readAllBytes();
-				stream.cleanup();
-				ByteArrayInputStream bin = new ByteArrayInputStream(data);
+	private static BufferedImage getBufferedImage(int texture, int width, int height) {
+		ByteBuffer pixels = getBufferedImageBuffer(texture, width, height);
+		BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int r = pixels.get((y * width + x) * Integer.BYTES);
+				int g = pixels.get((y * width + x) * Integer.BYTES + 1);
+				int b = pixels.get((y * width + x) * Integer.BYTES + 2);
+				int a = pixels.get((y * width + x) * Integer.BYTES + 3);
 
-				int width;
-				int height;
-				ByteBuffer buff;
-				if (isRaw(data)) {
-					bin.skip(SIGNATURE_RAW.length);
-					ByteBuffer tbbuf = memAlloc(2 * Integer.BYTES);
-					tbbuf.put(data, SIGNATURE_RAW.length, 2 * Integer.BYTES);
-					tbbuf.flip();
-					width = tbbuf.getInt();
-					height = tbbuf.getInt();
-					memFree(tbbuf);
-					buff = memAlloc(width * height * format.get().size);
-					buff.put(data, SIGNATURE_RAW.length + 2 * Integer.BYTES,
-							data.length - SIGNATURE_RAW.length - 2 * Integer.BYTES);
-					buff.flip();
-				} else {
-					PNGDecoder dec = new PNGDecoder(bin);
-					width = dec.getWidth();
-					height = dec.getHeight();
-					buff = memAlloc(4 * width * height);
-					dec.decode(buff, width * 4, PNGDecoder.Format.RGBA);
-					buff.flip();
-				}
-				bin.close();
-
-				owner.submit(() -> {
-					GlStates cur = GlStates.current();
-					profiler.begin("render", "upload_texture");
-					lock.writeLock().lock();
-
-					if (textureId.get() == 0) {
-						safeCreate();
-						allocateCreated(x + width, y + height);
-					}
-
-					upload0(buff, x, y, width, height);
-					memFree(buff);
-					cur.flush();
-					cur.finish();
-					lock.writeLock().unlock();
-					profiler.end();
-				}).thenRun(() -> fut.complete(null));
-
-			} catch (GameException | IOException ex) {
-				fut.completeExceptionally(ex);
-			} finally {
-				profiler.end();
+				int argb = a << 24 | r << 16 | g << 8 | b;
+				img.setRGB(x, y, argb);
 			}
-		});
-		return fut;
+		}
+		memFree(pixels);
+		return img;
+	}
+
+	private static ByteBuffer getBufferedImageBuffer(int texture, int width, int height) {
+		GlStates cur = GlStates.current();
+		ByteBuffer pixels = memAlloc(4 * width * height);
+		cur.bindTexture(GL_TEXTURE_2D, texture);
+		int fbo = cur.genFramebuffers();
+		cur.bindFramebuffer(GL_FRAMEBUFFER, fbo);
+		cur.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+		cur.readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		cur.bindFramebuffer(GL_FRAMEBUFFER, 0);
+		cur.deleteFramebuffers(fbo);
+		cur.bindTexture(GL_TEXTURE_2D, 0);
+		return pixels;
 	}
 
 	private void upload0(ByteBuffer buffer, int x, int y, int width, int height)
@@ -148,8 +109,6 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		profiler.end();
 	}
 
-	private static final AtomicInteger tid = new AtomicInteger();
-
 	public CompletableFuture<Void> write() {
 		return owner.submit(() -> {
 			try {
@@ -164,20 +123,6 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		});
 	}
 
-	@Override
-	public CompletableFuture<Void> resize(int width, int height) {
-		this.width.setValue(width);
-		this.height.setValue(height);
-		return owner.submit(() -> {
-			try {
-				lock.writeLock().lock();
-				resize0(width, height);
-			} finally {
-				lock.writeLock().unlock();
-			}
-		});
-	}
-
 	private boolean isRaw(byte[] data) {
 		for (int i = 0; i < SIGNATURE_RAW.length; i++) {
 			if (data[i] != SIGNATURE_RAW[i]) {
@@ -185,18 +130,6 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 			}
 		}
 		return true;
-	}
-
-	@Override
-	public CompletableFuture<Void> allocate(int width, int height) {
-		this.width.setValue(width);
-		this.height.setValue(height);
-		return owner.submit(() -> {
-			lock.writeLock().lock();
-			safeCreate();
-			allocateCreated(width, height);
-			lock.writeLock().unlock();
-		});
 	}
 
 	private void resize0(int width, int height) {
@@ -288,6 +221,138 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	@Override
+	public void cleanup0() throws GameException {
+		Threads.waitFor(owner.submit(() -> {
+			lock.writeLock().lock();
+			int id = textureId.getAndSet(0);
+			if (id != 0) {
+				GlStates.current().deleteTextures(id);
+			}
+			lock.writeLock().unlock();
+		}));
+	}
+
+	@Override
+	public CompletableFuture<BufferedImage> getBufferedImage() {
+		return owner.submit(() -> {
+			lock.readLock().lock();
+			BufferedImage img = getBufferedImage(this.textureId.get(), cwidth, cheight);
+			lock.readLock().unlock();
+			return img;
+		});
+	}
+
+	@Override
+	public CompletableFuture<Void> allocate(int width, int height) {
+		this.width.setValue(width);
+		this.height.setValue(height);
+		return owner.submit(() -> {
+			lock.writeLock().lock();
+			safeCreate();
+			allocateCreated(width, height);
+			lock.writeLock().unlock();
+		});
+	}
+
+	@Override
+	public CompletableFuture<Void> resize(int width, int height) {
+		this.width.setValue(width);
+		this.height.setValue(height);
+		return owner.submit(() -> {
+			try {
+				lock.writeLock().lock();
+				resize0(width, height);
+			} finally {
+				lock.writeLock().unlock();
+			}
+		});
+	}
+
+	@Override
+	public NumberValue getWidth() {
+		return width;
+	}
+
+	@Override
+	public NumberValue getHeight() {
+		return height;
+	}
+
+	@Override
+	public CompletableFuture<Void> uploadAsync(BufferedImage image) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
+		return uploadSubAsync(stream, 0, 0);
+	}
+
+	@Override
+	public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
+		CompletableFuture<Void> fut = new CompletableFuture<>();
+		service.submit(() -> {
+			profiler.begin("render", "upload_texture_worker");
+			try {
+				byte[] data = stream.readAllBytes();
+				stream.cleanup();
+				ByteArrayInputStream bin = new ByteArrayInputStream(data);
+
+				int width;
+				int height;
+				ByteBuffer buff;
+				if (isRaw(data)) {
+					bin.skip(SIGNATURE_RAW.length);
+					ByteBuffer tbbuf = memAlloc(2 * Integer.BYTES);
+					tbbuf.put(data, SIGNATURE_RAW.length, 2 * Integer.BYTES);
+					tbbuf.flip();
+					width = tbbuf.getInt();
+					height = tbbuf.getInt();
+					memFree(tbbuf);
+					buff = memAlloc(width * height * format.get().size);
+					buff.put(data, SIGNATURE_RAW.length + 2 * Integer.BYTES,
+							data.length - SIGNATURE_RAW.length - 2 * Integer.BYTES);
+					buff.flip();
+				} else {
+					PNGDecoder dec = new PNGDecoder(bin);
+					width = dec.getWidth();
+					height = dec.getHeight();
+					buff = memAlloc(4 * width * height);
+					dec.decode(buff, width * 4, PNGDecoder.Format.RGBA);
+					buff.flip();
+				}
+				bin.close();
+
+				//				Threads.sleep(10);
+
+				owner.submit(() -> {
+					GlStates cur = GlStates.current();
+					profiler.begin("render", "upload_texture");
+					lock.writeLock().lock();
+
+					if (textureId.get() == 0) {
+						safeCreate();
+						allocateCreated(x + width, y + height);
+					}
+
+					upload0(buff, x, y, width, height);
+					memFree(buff);
+					cur.flush();
+					cur.finish();
+					lock.writeLock().unlock();
+					profiler.end();
+				}).thenRun(() -> fut.complete(null));
+
+			} catch (GameException | IOException ex) {
+				fut.completeExceptionally(ex);
+			} finally {
+				profiler.end();
+			}
+		});
+		return fut;
+	}
+
+	@Override
 	public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY,
 			int width, int height) throws GameException {
 		if (!(other instanceof final LWJGLTexture lwjgl)) {
@@ -318,82 +383,8 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		});
 	}
 
-	@Override
-	public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
-		return uploadSubAsync(stream, 0, 0);
-	}
-
-	@Override
-	public void cleanup0() throws GameException {
-		Threads.waitFor(owner.submit(() -> {
-			lock.writeLock().lock();
-			int id = textureId.getAndSet(0);
-			if (id != 0) {
-				GlStates.current().deleteTextures(id);
-			}
-			lock.writeLock().unlock();
-		}));
-	}
-
-	@Override
-	public CompletableFuture<BufferedImage> getBufferedImage() {
-		return owner.submit(() -> {
-			lock.readLock().lock();
-			BufferedImage img = getBufferedImage(this.textureId.get(), cwidth, cheight);
-			lock.readLock().unlock();
-			return img;
-		});
-	}
-
-	@Override
-	public NumberValue getWidth() {
-		return width;
-	}
-
-	@Override
-	public NumberValue getHeight() {
-		return height;
-	}
-
 	private int createTexture() {
 		return GlStates.current().genTextures();
-	}
-
-	private static BufferedImage getBufferedImage(int texture, int width, int height) {
-		ByteBuffer pixels = getBufferedImageBuffer(texture, width, height);
-		BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int r = pixels.get((y * width + x) * Integer.BYTES);
-				int g = pixels.get((y * width + x) * Integer.BYTES + 1);
-				int b = pixels.get((y * width + x) * Integer.BYTES + 2);
-				int a = pixels.get((y * width + x) * Integer.BYTES + 3);
-
-				int argb = a << 24 | r << 16 | g << 8 | b;
-				img.setRGB(x, y, argb);
-			}
-		}
-		memFree(pixels);
-		return img;
-	}
-
-	private static ByteBuffer getBufferedImageBuffer(int texture, int width, int height) {
-		GlStates cur = GlStates.current();
-		ByteBuffer pixels = memAlloc(4 * width * height);
-		cur.bindTexture(GL_TEXTURE_2D, texture);
-		int fbo = cur.genFramebuffers();
-		cur.bindFramebuffer(GL_FRAMEBUFFER, fbo);
-		cur.framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-		cur.readPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-		cur.bindFramebuffer(GL_FRAMEBUFFER, 0);
-		cur.deleteFramebuffers(fbo);
-		cur.bindTexture(GL_TEXTURE_2D, 0);
-		return pixels;
-	}
-
-	@Override
-	public CompletableFuture<Void> uploadAsync(BufferedImage image) {
-		throw new UnsupportedOperationException();
 	}
 
 	public void setInternalFormat(LWJGLTextureFormat format) {

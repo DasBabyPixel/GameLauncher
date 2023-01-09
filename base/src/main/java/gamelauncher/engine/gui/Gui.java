@@ -50,6 +50,8 @@ public interface Gui {
 	 */
 	NumberValue getYProperty();
 
+	BooleanValue hovering();
+
 	NumberValue getVisibleXProperty();
 
 	NumberValue getVisibleYProperty();

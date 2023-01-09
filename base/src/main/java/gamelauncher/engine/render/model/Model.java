@@ -9,10 +9,6 @@ import gamelauncher.engine.util.GameException;
  */
 public interface Model extends GameResource {
 
-	/**
-	 * @param program
-	 * @throws GameException
-	 */
 	void render(ShaderProgram program) throws GameException;
 
 }

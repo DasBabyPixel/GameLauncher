@@ -72,7 +72,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	/**
 	 * Cleanes up a framebuffer and its guis
 	 *
-	 * @param framebuffer
+	 * @param framebuffer the framebuffer
 	 *
 	 * @return a future for the task
 	 */
@@ -187,6 +187,12 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	public <T extends LauncherBasedGui> void registerGuiCreator(Class<T> clazz,
 			GameSupplier<T> sup) {
 		this.registeredGuis.put(clazz, sup);
+	}
+
+	public void redraw() {
+		for (Map.Entry<Framebuffer, GuiStack> e : guis.entrySet()) {
+			e.getKey().scheduleRedraw();
+		}
 	}
 
 	@EventHandler

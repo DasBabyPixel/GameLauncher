@@ -6,7 +6,6 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.framebuffer.LWJGLFramebuffer;
 import gamelauncher.lwjgl.render.states.ContextLocal;
 
-@SuppressWarnings("javadoc")
 public class CLTextureUtility extends AbstractGameResource {
 
 	public final CLFramebuffer framebuffer1;
@@ -16,20 +15,6 @@ public class CLTextureUtility extends AbstractGameResource {
 	public CLTextureUtility(LWJGLGameLauncher launcher) {
 		this.framebuffer1 = new CLFramebuffer(launcher);
 		this.framebuffer2 = new CLFramebuffer(launcher);
-	}
-
-	@Override
-	public void cleanup0() throws GameException {
-		this.framebuffer1.cleanup();
-		this.framebuffer2.cleanup();
-	}
-
-	public static class CLFramebuffer extends LWJGLFramebuffer {
-
-		public CLFramebuffer(LWJGLGameLauncher launcher) {
-			super(launcher.getMainFrame());
-		}
-
 	}
 
 	/**
@@ -53,6 +38,21 @@ public class CLTextureUtility extends AbstractGameResource {
 			}
 
 		};
+	}
+
+	@Override
+	public void cleanup0() throws GameException {
+		this.framebuffer1.cleanup();
+		this.framebuffer2.cleanup();
+	}
+
+
+	public static class CLFramebuffer extends LWJGLFramebuffer {
+
+		public CLFramebuffer(LWJGLGameLauncher launcher) {
+			super(launcher.getMainFrame());
+		}
+
 	}
 
 }

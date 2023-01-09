@@ -27,8 +27,6 @@ public abstract class AbstractGui implements Gui {
 		this.launcher = launcher;
 	}
 
-	public abstract BooleanValue hovering();
-
 	@Override
 	public NumberValue getWidthProperty() {
 		return w;

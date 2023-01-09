@@ -73,21 +73,14 @@ public class LWJGLGameRenderer implements GameRenderer {
 		this.launcher.getProfiler().end();
 	}
 
-
 	public class Entry extends AbstractGameResource {
 
 		public final Frame frame;
-
 		public BasicFramebuffer mainFramebuffer;
-
 		public GameItem mainScreenItem;
-
 		public GameItem.GameItemModel mainScreenItemModel;
-
 		public Renderer crenderer;
-
 		public Camera camera;
-
 		public DrawContext contexthud;
 
 		public Entry(Frame frame) {
@@ -97,12 +90,12 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 		public void init() throws GameException {
 
-			LWJGLGameRenderer.this.glContext.depth.enabled.value.set(true);
-			LWJGLGameRenderer.this.glContext.depth.depthFunc.set(GLES20.GL_LEQUAL);
-			LWJGLGameRenderer.this.glContext.blend.enabled.value.set(true);
-			LWJGLGameRenderer.this.glContext.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
-			LWJGLGameRenderer.this.glContext.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
-			LWJGLGameRenderer.this.glContext.replace(null);
+			glContext.depth.enabled.value.set(true);
+			glContext.depth.depthFunc.set(GLES20.GL_LEQUAL);
+			glContext.blend.enabled.value.set(true);
+			glContext.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
+			glContext.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
+			glContext.replace(null);
 
 			this.mainFramebuffer = new BasicFramebuffer(LWJGLGameRenderer.this.launcher,
 					this.frame.framebuffer().width().intValue(),
@@ -116,12 +109,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			this.mainScreenItemModel = this.mainScreenItem.createModel();
 
-			this.contexthud = LWJGLGameRenderer.this.launcher.getContextProvider()
+			this.contexthud = launcher.getContextProvider()
 					.loadContext(this.mainFramebuffer, ContextType.HUD);
 			((LWJGLDrawContext) this.contexthud).swapTopBottom = true;
 
-			LWJGLGameRenderer.this.launcher.getGuiManager()
-					.openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
+			launcher.getGuiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
 
 			//			updateScreenItems();
 
@@ -130,8 +122,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 		@Override
 		public void cleanup0() throws GameException {
 			this.mainScreenItemModel.cleanup();
-			LWJGLGameRenderer.this.launcher.getContextProvider()
-					.freeContext(this.contexthud, ContextType.HUD);
+			launcher.getContextProvider().freeContext(this.contexthud, ContextType.HUD);
 			this.mainFramebuffer.cleanup();
 		}
 
@@ -207,12 +198,12 @@ public class LWJGLGameRenderer implements GameRenderer {
 			renderer.init(this.mainFramebuffer);
 		}
 
-	}	@Override
+	}
+
+	@Override
 	public void setRenderer(Renderer renderer) {
 		this.renderer.set(renderer);
 	}
-
-
 
 	@Override
 	public Renderer getRenderer() {

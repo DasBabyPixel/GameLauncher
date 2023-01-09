@@ -32,6 +32,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 	private final LWJGLGameLauncher launcher;
 	private final ExecutorThread owner;
 	volatile int maxTextureSize;
+	private CompletableFuture<?> last = CompletableFuture.completedFuture(null);
 
 	public DynamicSizeTextureAtlas(LWJGLGameLauncher launcher, ExecutorThread owner) {
 		this.launcher = launcher;
@@ -74,37 +75,36 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		});
 	}
 
-	public CompletableFuture<Boolean> addGlyph(int glyphId, GlyphEntry entry) {
-		return launcher.getThreads().cached.submit(() -> {
-			try {
-				lock.lock();
-				if (isCleanedUp()) {
-					return false;
-				}
-				if (glyphs.containsKey(glyphId)) {
-					return true;
-				}
-				AtlasEntry e = new AtlasEntry(null, entry,
-						new Rectangle(entry.data.width, entry.data.height));
-				for (LWJGLTexture texture : byTexture.keySet()) {
-					e.texture = texture;
-					if (add(glyphId, e)) {
-						break;
-					}
-					e.texture = null;
-				}
-				if (e.texture == null) {
-					e.texture = Threads.waitFor(launcher.getTextureManager().createTexture(owner));
-					//					e.texture.setInternalFormat(LWJGLTextureFormat.ALPHA);
-					Threads.waitFor(e.texture.allocate(8, 8));
-					byTexture.put(e.texture, new HashSet<>());
-					add(glyphId, e);
-				}
-				return true;
-			} finally {
-				lock.unlock();
+	public boolean addGlyph(int glyphId, GlyphEntry entry) {
+		try {
+			lock.lock();
+			if (isCleanedUp()) {
+				return false;
 			}
-		});
+			if (glyphs.containsKey(glyphId)) {
+				return true;
+			}
+			AtlasEntry e =
+					new AtlasEntry(null, entry, new Rectangle(entry.data.width, entry.data.height));
+			for (LWJGLTexture texture : byTexture.keySet()) {
+				e.texture = texture;
+				if (add(glyphId, e)) {
+					break;
+				}
+				e.texture = null;
+			}
+			if (e.texture == null) {
+				e.texture = launcher.getTextureManager().createTexture(owner);
+				e.texture.allocate(8, 8);
+				byTexture.put(e.texture, new HashSet<>());
+				add(glyphId, e);
+			}
+			return true;
+		} catch (GameException e) {
+			throw new RuntimeException(e);
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	private boolean add(int glyphId, AtlasEntry e) throws GameException {
@@ -128,7 +128,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				}
 			}
 			if (!textureBounds.equals(currentBounds)) {
-				Threads.waitFor(e.texture.resize(currentBounds.width, currentBounds.height));
+				e.texture.resize(currentBounds.width, currentBounds.height);
 			}
 			if (glyphTooLarge) {
 				if (byTexture.get(e.texture).isEmpty()) {
@@ -143,7 +143,14 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			ResourceStream stream =
 					new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer),
 							null);
-			Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y));
+			last = last.thenRunAsync(() -> {
+				try {
+					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
+							.thenRun(launcher.getGuiManager()::redraw));
+				} catch (GameException ex) {
+					throw new RuntimeException(ex);
+				}
+			});
 			byTexture.get(e.texture).add(e);
 			glyphs.put(glyphId, e);
 			return true;

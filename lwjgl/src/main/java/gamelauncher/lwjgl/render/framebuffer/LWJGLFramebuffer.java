@@ -1,12 +1,10 @@
 package gamelauncher.lwjgl.render.framebuffer;
 
-import org.lwjgl.opengles.GLES20;
-
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.states.GlStates;
+import org.lwjgl.opengles.GLES20;
 
-@SuppressWarnings("javadoc")
 public class LWJGLFramebuffer extends AbstractFramebuffer {
 
 	private final int id;
@@ -42,8 +40,8 @@ public class LWJGLFramebuffer extends AbstractFramebuffer {
 		if (!this.isComplete()) {
 			try {
 				this.bind();
-				throw new GameException("Framebuffer not complete: Error "
-						+ Integer.toHexString(GlStates.current().checkFramebufferStatus(GLES20.GL_FRAMEBUFFER)));
+				throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(
+						GlStates.current().checkFramebufferStatus(GLES20.GL_FRAMEBUFFER)));
 			} finally {
 				this.unbind();
 			}

@@ -18,15 +18,12 @@ public class AllKeybind extends AbstractGameResource implements Keybind {
 	public static final ThreadLocal<AllKeybind> ALL = ThreadLocal.withInitial(AllKeybind::new);
 
 	/**
+	 *
 	 */
 	public int id = 0;
 
 	private AllKeybind() {
-		try {
-			cleanup();
-		} catch (GameException ex) {
-			ex.printStackTrace();
-		}
+		AbstractGameResource.logCleanup(this);
 	}
 
 	@Override
@@ -55,12 +52,17 @@ public class AllKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	public final void cleanup0() throws GameException {
+	public KeybindManager getManager() {
+		return null;
 	}
 
 	@Override
-	public KeybindManager getManager() {
-		return null;
+	public final boolean isCleanedUp() {
+		return true;
+	}
+
+	@Override
+	protected final void cleanup0() throws GameException {
 	}
 
 }

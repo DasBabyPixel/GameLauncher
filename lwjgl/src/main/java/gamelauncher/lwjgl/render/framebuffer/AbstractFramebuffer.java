@@ -15,27 +15,16 @@ import gamelauncher.lwjgl.render.LWJGLScissorStack;
  */
 public abstract class AbstractFramebuffer extends AbstractGameResource implements Framebuffer {
 
+	protected final Runnable draw;
 	private final NumberValue width = NumberValue.zero();
-
 	private final NumberValue height = NumberValue.zero();
-
 	private final RenderThread renderThread;
-
-	private final Runnable draw;
-
 	private final ScissorStack scissor;
 
-	/**
-	 * @param frame 
-	 */
 	public AbstractFramebuffer(Frame frame) {
 		this(frame.framebuffer().renderThread(), frame::scheduleDraw);
 	}
 
-	/**
-	 * @param render
-	 * @param draw
-	 */
 	public AbstractFramebuffer(RenderThread render, Runnable draw) {
 		this.renderThread = render;
 		this.draw = draw;
@@ -44,18 +33,9 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 
 	@Override
 	protected void cleanup0() throws GameException {
-		LWJGLGuiManager lgm = (LWJGLGuiManager) this.renderThread.getFrame().getLauncher().getGuiManager();
+		LWJGLGuiManager lgm =
+				(LWJGLGuiManager) this.renderThread.getFrame().getLauncher().getGuiManager();
 		lgm.cleanup(this);
-	}
-
-	@Override
-	public void scheduleRedraw() {
-		this.draw.run();
-	}
-
-	@Override
-	public ScissorStack scissorStack() {
-		return this.scissor;
 	}
 
 	@Override
@@ -71,6 +51,16 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 	@Override
 	public RenderThread renderThread() {
 		return this.renderThread;
+	}
+
+	@Override
+	public ScissorStack scissorStack() {
+		return this.scissor;
+	}
+
+	@Override
+	public void scheduleRedraw() {
+		this.draw.run();
 	}
 
 }
