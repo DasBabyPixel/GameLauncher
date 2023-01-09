@@ -6,7 +6,8 @@ import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.gui.launcher.ColorGui;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.plugin.Plugin.GamePlugin;
-import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.render.*;
+import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 
@@ -78,6 +79,36 @@ public class Labyrinth extends Plugin {
 		getLauncher().getGameRegistry().register(new Game(this, "g1") {
 			@Override
 			protected void launch0(Framebuffer framebuffer) throws GameException {
+				getLauncher().getGuiManager().openGui(framebuffer, new ParentableAbstractGui(getLauncher()) {
+
+					private Model model;
+					private DrawContext context;
+
+					@Override
+					protected void doInit(Framebuffer framebuffer) throws GameException {
+						context = getLauncher().getContextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
+						model = getLauncher().getModelLoader().loadModel(getLauncher().getResourceLoader().getResource(
+								getLauncher().getEmbedFileSystem().getPath("cube.obj")));
+						GameItem item = new GameItem(model);
+						item.setPosition(300,300,0);
+						item.setScale(400);
+						item.setRotation(40,40,40);
+						model = item.createModel();
+					}
+
+					@Override
+					protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+						context.update(EmptyCamera.instance());
+						context.drawModel(model);
+						return true;
+					}
+
+					@Override
+					protected void doCleanup(Framebuffer framebuffer) throws GameException {
+						getLauncher().getContextProvider().freeContext(context, ContextProvider.ContextType.HUD);
+						model.cleanup();
+					}
+				});
 			}
 
 			@Override

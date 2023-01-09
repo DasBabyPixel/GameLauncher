@@ -115,7 +115,6 @@ public class LWJGLModelLoader implements ModelLoader {
 					LWJGLTexture lt = Threads.waitFor(launcher.getTextureManager().createTexture());
 					Threads.waitFor(lt.uploadAsync(st));
 					lm.texture = lt;
-					st.cleanup();
 					break;
 				}
 			}
