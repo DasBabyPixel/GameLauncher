@@ -16,9 +16,30 @@ tasks.register("generateRunDirectory") {
     }
 }
 
-subprojects {
-    apply plugin: 'java-library'
+group 'de.dasbabypixel.gamelauncher'
+version '0.1-SNAPSHOT'
 
+allprojects {
+    pluginManager.withPlugin("maven-publish") {
+        java {
+            withSourcesJar()
+            withJavadocJar()
+        }
+
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    artifactId = 'base'
+                    groupId = 'de.dasbabypixel.gamelauncher'
+                    version = '0.1-SNAPSHOT'
+                    from components.java
+                }
+            }
+        }
+    }
+}
+
+subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
