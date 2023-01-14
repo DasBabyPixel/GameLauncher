@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation project(':base')
+    implementation parent.project('api')
 }

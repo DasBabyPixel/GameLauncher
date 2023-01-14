@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 dependencies {
@@ -9,6 +10,6 @@ dependencies {
     api 'com.google.guava:guava:31.1-jre'
     api 'de.dasbabypixel.api:property:1.0.5'
     api 'org.joml:joml:1.10.5'
-    api 'com.google.code.gson:gson:2.10'
+    api 'com.google.code.gson:gson:2.10.1'
     api 'org.l33tlabs.twl:pngdecoder:1.0'
 }
