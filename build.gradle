@@ -16,11 +16,29 @@ tasks.register("generateRunDirectory") {
     }
 }
 
-subprojects {
-    apply plugin: 'java-library'
+allprojects {
+    group = 'de.dasbabypixel.gamelauncher'
+    version = '0.0.1-SNAPSHOT'
+    pluginManager.withPlugin('java') {
+        pluginManager.withPlugin('maven-publish') {
+            publishing {
+                publications {
+                    maven(MavenPublication) {
+                        artifactId project.name
+                        groupId = project.group
+                        version = project.version
+                        from components.java
+                    }
+                }
+                repositories {
+                    maven {
+                        name = 'DarkCube'
+                        credentials PasswordCredentials
+                        url = 'https://dasbabypixel.ddnsfree.com/repository/darkcube/'
+                    }
+                }
+            }
 
-    repositories {
-        mavenCentral()
-        mavenLocal()
+        }
     }
 }
