@@ -2,7 +2,7 @@ ext {
     jansi = 'org.fusesource.jansi:jansi:2.4.0'
     fastutil = 'it.unimi.dsi:fastutil:8.5.8'
     guava = 'com.google.guava:guava:31.1-jre'
-    property = 'de.dasbabypixel.api:property:1.0.4'
+    property = 'de.dasbabypixel.api:property:1.0.5'
     joml = 'org.joml:joml:1.10.4'
     gson = 'com.google.code.gson:gson:2.9.0'
     pngdecoder = 'org.l33tlabs.twl:pngdecoder:1.0'
