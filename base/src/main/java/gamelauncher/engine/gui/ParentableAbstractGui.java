@@ -40,14 +40,14 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			.mapToBoolean(unused -> hovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
 	private final String className = this.getClass().getName();
 	protected Framebuffer framebuffer;
-	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
-	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
+	private final Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
+	private final Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
 
 	public ParentableAbstractGui(GameLauncher launcher) {
 		super(launcher);
 		hovering.addDependencies(lastMouseX, lastMouseY)
-				.addDependencies(visibleXProperty(), visibleYProperty(),
-						visibleWidthProperty(), visibleHeightProperty());
+				.addDependencies(visibleXProperty(), visibleYProperty(), visibleWidthProperty(),
+						visibleHeightProperty());
 		hovering.addListener(Property::getValue);
 	}
 
@@ -290,8 +290,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	public String toString() {
 		String additional = additionalToStringData();
 		return String.format("%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f%s]",
-				this.getClass().getSimpleName(), this.x(), this.y(), this.width(),
-				this.height(), additional == null ? "" : " " + additional);
+				this.getClass().getSimpleName(), this.x(), this.y(), this.width(), this.height(),
+				additional == null ? "" : " " + additional);
 	}
 
 	protected String additionalToStringData() {
