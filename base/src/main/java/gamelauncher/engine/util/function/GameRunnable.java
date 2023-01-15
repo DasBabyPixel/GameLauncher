@@ -2,6 +2,8 @@ package gamelauncher.engine.util.function;
 
 import gamelauncher.engine.util.GameException;
 
+import java.io.IOException;
+
 /**
  * @author DasBabyPixel
  */

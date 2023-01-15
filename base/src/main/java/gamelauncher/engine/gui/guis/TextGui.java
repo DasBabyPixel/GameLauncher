@@ -54,7 +54,7 @@ public class TextGui extends ParentableAbstractGui {
 		this.camera = new BasicCamera();
 		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> this.cwidth));
 		this.widthProperty().bind(this.cwidthprop);
-		 invalidationListener = property -> {
+		invalidationListener = property -> {
 			TextGui.this.recreateModel.set(true);
 			this.redraw();
 		};
@@ -104,8 +104,7 @@ public class TextGui extends ParentableAbstractGui {
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
-		this.hud =
-				this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
+		this.hud = this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
 	}
 
 	@Override
@@ -119,8 +118,8 @@ public class TextGui extends ParentableAbstractGui {
 	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
 			float partialTick) throws GameException {
 		this.hud.update(this.camera);
-		this.hud.drawModel(this.itemModel, this.x(),
-				this.y() + this.baselineYOffset.floatValue(), 0);
+		this.hud.drawModel(this.itemModel, Math.round(this.x()),
+				Math.round(this.y() + this.baselineYOffset.floatValue()), 0);
 		this.hud.program().clearUniforms();
 		return true;
 	}

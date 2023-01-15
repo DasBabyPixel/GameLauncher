@@ -95,7 +95,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			}
 			if (e.texture == null) {
 				e.texture = launcher.textureManager().createTexture(owner);
-				e.texture.allocate(8, 8);
+				e.texture.allocate(64, 64);
 				byTexture.put(e.texture, new HashSet<>());
 				add(glyphId, e);
 			}
@@ -111,8 +111,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		try {
 			//			Thread.dumpStack();
 			lock.lock();
-			Rectangle textureBounds = new Rectangle(e.texture.getWidth().intValue(),
-					e.texture.getHeight().intValue());
+			Rectangle textureBounds = new Rectangle(e.texture.width().intValue(),
+					e.texture.height().intValue());
 			Rectangle currentBounds = textureBounds;
 			boolean glyphTooLarge = false;
 			while (true) {
@@ -147,6 +147,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				try {
 					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
 							.thenRun(launcher.guiManager()::redraw));
+//					e.texture.write();
 				} catch (GameException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -171,11 +172,11 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
 	private boolean findFit(AtlasEntry entry, Rectangle bounds) {
 		Rectangle rect = entry.bounds;
-		int ox = rect.x;
-		int oy = rect.y;
+		rect = new Rectangle(rect.x, rect.y, rect.width + 2, rect.height + 2);
 		rect.y = 0;
 		boolean found = false;
 		Collection<Rectangle> check = byTexture.get(entry.texture).stream().map(e -> e.bounds)
+				.map(r -> new Rectangle(r.x - 1, r.y - 1, r.width + 2, r.height + 2))
 				.collect(Collectors.toSet());
 		Collection<Rectangle> remove = new HashSet<>();
 		yl:
@@ -201,9 +202,9 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				break yl;
 			}
 		}
-		if (!found) {
-			rect.x = ox;
-			rect.y = oy;
+		if (found) {
+			entry.bounds.x = rect.x + 1;
+			entry.bounds.y = rect.y + 1;
 		}
 		return found;
 	}
