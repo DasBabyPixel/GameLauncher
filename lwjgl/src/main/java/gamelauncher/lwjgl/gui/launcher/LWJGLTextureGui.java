@@ -24,27 +24,27 @@ public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui
 	public LWJGLTextureGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
 		this.camera = EmptyCamera.instance();
-		this.texture = launcher.getTextureManager().createTexture();
+		this.texture = launcher.textureManager().createTexture();
 	}
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		this.getTexture().cleanup();
+		this.texture().cleanup();
 		this.model.cleanup();
-		this.getLauncher().getContextProvider().freeContext(this.hud, ContextType.HUD);
+		this.launcher().contextProvider().freeContext(this.hud, ContextType.HUD);
 	}
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
 		this.hud =
-				this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+				this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
 		Texture2DModel t2d = new Texture2DModel(texture);
 		GameItem item = new GameItem(t2d);
 
-		item.position().x.bind(this.getXProperty().add(item.scale().x.divide(2)));
-		item.position().y.bind(this.getYProperty().add(item.scale().y.divide(2)));
-		item.scale().x.bind(this.getWidthProperty());
-		item.scale().y.bind(this.getHeightProperty());
+		item.position().x.bind(this.xProperty().add(item.scale().x.divide(2)));
+		item.position().y.bind(this.yProperty().add(item.scale().y.divide(2)));
+		item.scale().x.bind(this.widthProperty());
+		item.scale().y.bind(this.heightProperty());
 
 		this.model = item.createModel();
 	}
@@ -54,12 +54,12 @@ public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui
 			float partialTick) throws GameException {
 		this.hud.update(this.camera);
 		this.hud.drawModel(this.model);
-		this.hud.getProgram().clearUniforms();
+		this.hud.program().clearUniforms();
 		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
-	public Texture getTexture() {
+	public Texture texture() {
 		return this.texture;
 	}
 

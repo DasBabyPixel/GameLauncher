@@ -85,10 +85,10 @@ public class LWJGLShaderProgram extends ShaderProgram {
 			c.detachShader(this.programId, this.fragmentShaderId);
 		}
 
-		if (this.launcher.isDebugMode()) {
+		if (this.launcher.debugMode()) {
 			c.validateProgram(this.programId);
 			if (c.getProgrami(this.programId, GLES20.GL_VALIDATE_STATUS) == 0) {
-				this.launcher.getLogger()
+				this.launcher.logger()
 						.warnf("Warning validating Shader code: %s", c.getProgramInfoLog(this.programId, 1024));
 			}
 		}
@@ -105,7 +105,7 @@ public class LWJGLShaderProgram extends ShaderProgram {
 	}
 
 	@Override
-	public boolean isCleanedUp() {
+	public boolean cleanedUp() {
 		return this.refCount.get() == 0;
 	}
 

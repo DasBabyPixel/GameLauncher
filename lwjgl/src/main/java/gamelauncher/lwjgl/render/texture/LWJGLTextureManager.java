@@ -25,7 +25,7 @@ public class LWJGLTextureManager extends AbstractGameResource implements Texture
 	public LWJGLTextureManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
 		this.clTextureUtility = CLTextureUtility.local(launcher);
-		this.service = launcher.getThreads().cached;
+		this.service = launcher.threads().cached;
 		this.frame = null;
 	}
 
@@ -34,7 +34,7 @@ public class LWJGLTextureManager extends AbstractGameResource implements Texture
 		try {
 			lock.lock();
 			if (this.frame == null) {
-				this.frame = this.launcher.getMainFrame().newFrame();
+				this.frame = this.launcher.mainFrame().newFrame();
 			}
 			return this.createTexture(this.frame.renderThread());
 		} finally {

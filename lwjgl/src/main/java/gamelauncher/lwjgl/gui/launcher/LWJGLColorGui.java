@@ -39,24 +39,24 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		this.getLauncher().getContextProvider().freeContext(this.context, ContextType.HUD);
+		this.launcher().contextProvider().freeContext(this.context, ContextType.HUD);
 		this.model.cleanup();
 	}
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
 		this.context =
-				this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+				this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
 
 		Mesh mesh = new PlaneMesh();
-		Mesh.Material mat = mesh.getMaterial();
+		Mesh.Material mat = mesh.material();
 		mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
 		MeshModel model = new MeshModel(mesh);
 		GameItem item = new GameItem(model);
-		item.position().x.bind(this.getXProperty().add(this.getWidthProperty().divide(2)));
-		item.position().y.bind(this.getYProperty().add(this.getHeightProperty().divide(2)));
-		item.scale().x.bind(this.getWidthProperty());
-		item.scale().y.bind(this.getHeightProperty());
+		item.position().x.bind(this.xProperty().add(this.widthProperty().divide(2)));
+		item.position().y.bind(this.yProperty().add(this.heightProperty().divide(2)));
+		item.scale().x.bind(this.widthProperty());
+		item.scale().y.bind(this.heightProperty());
 		this.model = item.createModel();
 
 		item.color().x.bind(this.color.x);
@@ -70,12 +70,12 @@ public class LWJGLColorGui extends ParentableAbstractGui implements ColorGui {
 			float partialTick) throws GameException {
 		this.context.update(EmptyCamera.instance());
 		this.context.drawModel(this.model);
-		this.context.getProgram().clearUniforms();
+		this.context.program().clearUniforms();
 		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
-	public PropertyVector4f getColor() {
+	public PropertyVector4f color() {
 		return this.color;
 	}
 

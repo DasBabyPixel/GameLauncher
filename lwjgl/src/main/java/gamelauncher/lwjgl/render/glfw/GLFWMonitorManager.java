@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GLFWMonitorManager {
 
-	private final Logger logger = Logger.getLogger();
+	private final Logger logger = Logger.logger();
 	private final CopyOnWriteArrayList<Monitor> monitors = new CopyOnWriteArrayList<>();
 
 	void init() {

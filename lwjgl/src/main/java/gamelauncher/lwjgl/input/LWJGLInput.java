@@ -23,7 +23,7 @@ public class LWJGLInput implements Input {
 	private final KeybindManager keybindManager;
 
 	public LWJGLInput(GLFWFrame frame) {
-		this.keybindManager = frame.getLauncher().getKeybindManager();
+		this.keybindManager = frame.launcher().keybindManager();
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class LWJGLInput implements Input {
 				if (keybind instanceof AllKeybind) {
 					((AllKeybind) keybind).id = id;
 				}
-				if (keybind.getUniqueId() != id) {
+				if (keybind.uniqueId() != id) {
 					return null;
 				}
 				return new LWJGLScrollKeybindEntry(keybind, mx, my);
@@ -89,7 +89,7 @@ public class LWJGLInput implements Input {
 				if (keybind instanceof AllKeybind) {
 					((AllKeybind) keybind).id = id;
 				}
-				if (keybind.getUniqueId() != id) {
+				if (keybind.uniqueId() != id) {
 					return null;
 				}
 				return switch (inputType) {
@@ -113,7 +113,7 @@ public class LWJGLInput implements Input {
 			if (keybind instanceof AllKeybind) {
 				((AllKeybind) keybind).id = id;
 			}
-			if (keybind.getUniqueId() != id) {
+			if (keybind.uniqueId() != id) {
 				return null;
 			}
 			return switch (inputType) {

@@ -41,25 +41,25 @@ public class LabyrinthRender extends Renderer {
 
 	public LabyrinthRender(Labyrinth labyrinth) {
 		this.labyrinth = labyrinth;
-		this.launcher = this.labyrinth.getLauncher();
-		this.resourceLoader = this.launcher.getResourceLoader();
-		this.embedFileSystem = this.launcher.getEmbedFileSystem();
-		this.modelLoader = this.launcher.getModelLoader();
+		this.launcher = this.labyrinth.launcher();
+		this.resourceLoader = this.launcher.resourceLoader();
+		this.embedFileSystem = this.launcher.embedFileSystem();
+		this.modelLoader = this.launcher.modelLoader();
 	}
 
 	@Override
 	public void init(Framebuffer framebuffer) throws GameException {
-		contexthud = launcher.getContextProvider().loadContext(framebuffer, ContextType.HUD);
+		contexthud = launcher.contextProvider().loadContext(framebuffer, ContextType.HUD);
 
-		Model model = modelLoader.loadModel(resourceLoader.getResource(embedFileSystem.getPath("cube.obj")));
+		Model model = modelLoader.loadModel(resourceLoader.resource(embedFileSystem.getPath("cube.obj")));
 
 		gi1 = new GameItem(model);
-		gi1.setScale(100);
+		gi1.scale(100);
 		model1 = gi1.createModel();
 
 		gi2 = new GameItem(model);
-		gi2.setScale(200);
-		gi2.setPosition(300, 0, 0);
+		gi2.scale(200);
+		gi2.position(300, 0, 0);
 		model2 = gi2.createModel();
 	}
 
@@ -68,7 +68,7 @@ public class LabyrinthRender extends Renderer {
 		contexthud.update(camera);
 		contexthud.drawModel(model1, 0, 0, 0);
 		contexthud.drawModel(model2, 0, 0, 0);
-		contexthud.getProgram().clearUniforms();
+		contexthud.program().clearUniforms();
 //		program.clearUniforms();
 	}
 
@@ -76,7 +76,7 @@ public class LabyrinthRender extends Renderer {
 	public void cleanup(Framebuffer framebuffer) throws GameException {
 		model1.cleanup();
 		model2.cleanup();
-		launcher.getContextProvider().freeContext(contexthud, ContextType.HUD);
+		launcher.contextProvider().freeContext(contexthud, ContextType.HUD);
 	}
 
 }

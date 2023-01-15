@@ -26,32 +26,32 @@ public interface Camera {
 	/**
 	 * @return x position
 	 */
-	float getX();
+	float x();
 
 	/**
 	 * @return y position
 	 */
-	float getY();
+	float y();
 
 	/**
 	 * @return z position
 	 */
-	float getZ();
+	float z();
 
 	/**
 	 * @return x rotation
 	 */
-	float getRotX();
+	float rotX();
 
 	/**
 	 * @return y position
 	 */
-	float getRotY();
+	float rotY();
 
 	/**
 	 * @return z position
 	 */
-	float getRotZ();
+	float rotZ();
 
 	/**
 	 * Sets the rotation of the camera
@@ -60,28 +60,28 @@ public interface Camera {
 	 * @param ry
 	 * @param rz
 	 */
-	void setRotation(float rx, float ry, float rz);
+	void rotation(float rx, float ry, float rz);
 
 	/**
 	 * Sets the x rotation
 	 * 
 	 * @param rx
 	 */
-	void setRotX(float rx);
+	void rotX(float rx);
 
 	/**
 	 * Sets the y position
 	 * 
 	 * @param ry
 	 */
-	void setRotY(float ry);
+	void rotY(float ry);
 
 	/**
 	 * Sets the z position
 	 * 
 	 * @param rz
 	 */
-	void setRotZ(float rz);
+	void rotZ(float rz);
 
 	/**
 	 * Increases the rotation by the given amounts

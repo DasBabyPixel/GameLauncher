@@ -58,7 +58,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 	public void post(GameFunction<Keybind, KeybindEntry> entry) throws GameException {
 		KeybindEntry ke = entry.apply(AllKeybind.ALL.get());
 		if (ke != null) {
-			launcher.getEventManager().post(new KeybindEntryEvent(ke));
+			launcher.eventManager().post(new KeybindEntryEvent(ke));
 		}
 		for (Keybind keybind : keybinds.values()) {
 			ke = entry.apply(keybind);

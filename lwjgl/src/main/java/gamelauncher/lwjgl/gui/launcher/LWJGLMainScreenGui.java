@@ -26,9 +26,9 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
 
-		font = getLauncher().getFontFactory().createFont(getLauncher().getResourceLoader()
-				.getResource(
-						getLauncher().getEmbedFileSystem().getPath("fonts", "garamond_bold.ttf"))
+		font = launcher().fontFactory().createFont(launcher().resourceLoader()
+				.resource(
+						launcher().embedFileSystem().getPath("fonts", "garamond_bold.ttf"))
 				.newResourceStream());
 
 		GuiContainer container = new GuiContainer(launcher);
@@ -37,22 +37,22 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		NumberValue currentY = null;
 		GameGui ogui = null;
 
-		for (Game game : launcher.getGameRegistry().getGames().stream().sorted().toList()) {
+		for (Game game : launcher.gameRegistry().games().stream().sorted().toList()) {
 			GameGui gui = new GameGui(game);
 			if (currentY == null) {
-				currentY = container.getYProperty();
+				currentY = container.yProperty();
 			} else {
-				currentY = ogui.getYProperty().add(ogui.getHeightProperty()).add(spacing);
+				currentY = ogui.yProperty().add(ogui.heightProperty()).add(spacing);
 			}
-			gui.getYProperty().bind(currentY);
-			gui.getXProperty().bind(container.getXProperty());
-			gui.setHeight(80);
-			gui.setWidth(600);
+			gui.yProperty().bind(currentY);
+			gui.xProperty().bind(container.xProperty());
+			gui.height(80);
+			gui.width(600);
 			container.addGui(gui);
 			ogui = gui;
 		}
 
-		ScrollGui scrollGui = launcher.getGuiManager().createGui(ScrollGui.class);
+		ScrollGui scrollGui = launcher.guiManager().createGui(ScrollGui.class);
 		scrollGui.gui().setValue(container);
 		//		scrollGui.getXProperty().bind(this.getXProperty().add(this.getWidthProperty().divide(2))
 		//				.subtract(scrollGui.getWidthProperty().divide(2)));
@@ -60,10 +60,10 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		//				.subtract(scrollGui.getHeightProperty().divide(2)));
 		//		scrollGui.getWidthProperty().bind(this.getWidthProperty().divide(2));
 		//		scrollGui.getHeightProperty().bind(this.getHeightProperty().divide(2));
-		scrollGui.getXProperty().bind(getXProperty());
-		scrollGui.getYProperty().bind(getYProperty());
-		scrollGui.getWidthProperty().bind(getWidthProperty());
-		scrollGui.getHeightProperty().bind(getHeightProperty());
+		scrollGui.xProperty().bind(xProperty());
+		scrollGui.yProperty().bind(yProperty());
+		scrollGui.widthProperty().bind(widthProperty());
+		scrollGui.heightProperty().bind(heightProperty());
 
 		this.GUIs.add(scrollGui);
 	}
@@ -71,7 +71,7 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
 		if (entry instanceof KeyboardKeybindEntry e) {
-			e.getKeybind().getUniqueId();
+			e.keybind().uniqueId();
 		}
 		return super.doHandle(entry);
 	}
@@ -84,8 +84,8 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 	private class GameGui extends ParentableAbstractGui {
 
 		public GameGui(Game game) throws GameException {
-			super(LWJGLMainScreenGui.this.getLauncher());
-			ButtonGui buttonGui = new ButtonGui(getLauncher()) {
+			super(LWJGLMainScreenGui.this.launcher());
+			ButtonGui buttonGui = new ButtonGui(launcher()) {
 
 				@Override
 				protected void buttonPressed(MouseButtonKeybindEntry e) {
@@ -97,13 +97,13 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 				}
 
 			};
-			buttonGui.text().setValue(game.getKey().key());
+			buttonGui.text().setValue(game.key().key());
 			buttonGui.font().setValue(font);
 
-			buttonGui.getXProperty().bind(this.getXProperty());
-			buttonGui.getYProperty().bind(this.getYProperty());
-			buttonGui.getWidthProperty().bind(this.getWidthProperty());
-			buttonGui.getHeightProperty().bind(this.getHeightProperty());
+			buttonGui.xProperty().bind(this.xProperty());
+			buttonGui.yProperty().bind(this.yProperty());
+			buttonGui.widthProperty().bind(this.widthProperty());
+			buttonGui.heightProperty().bind(this.heightProperty());
 			this.GUIs.add(buttonGui);
 		}
 

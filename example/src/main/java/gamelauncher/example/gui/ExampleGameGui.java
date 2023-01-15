@@ -18,10 +18,10 @@ public class ExampleGameGui extends ParentableAbstractGui {
 			}
 
 		};
-		button.getWidthProperty().bind(this.getWidthProperty());
-		button.getHeightProperty().bind(this.getHeightProperty());
-		button.getXProperty().bind(this.getXProperty());
-		button.getYProperty().bind(this.getYProperty());
+		button.widthProperty().bind(this.widthProperty());
+		button.heightProperty().bind(this.heightProperty());
+		button.xProperty().bind(this.xProperty());
+		button.yProperty().bind(this.yProperty());
 		button.text().setValue("Deine Mudda");
 		this.GUIs.add(button);
 	}

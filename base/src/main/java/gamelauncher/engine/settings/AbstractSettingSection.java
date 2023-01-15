@@ -19,7 +19,7 @@ public abstract class AbstractSettingSection implements SettingSection {
 
 	protected final Lock lock = new ReentrantLock(false);
 	protected final Map<SettingPath, Setting<?>> settings = new ConcurrentHashMap<>();
-	protected final Logger logger = Logger.getLogger(SettingSection.class);
+	protected final Logger logger = Logger.logger(SettingSection.class);
 
 	public AbstractSettingSection(EventManager eventManager) {
 		addSettings(eventManager);

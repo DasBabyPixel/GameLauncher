@@ -26,7 +26,7 @@ import static org.lwjgl.opengles.GLES20.glGetInteger;
 public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
 	final Map<LWJGLTexture, Collection<AtlasEntry>> byTexture = new HashMap<>();
-	private final Logger logger = Logger.getLogger();
+	private final Logger logger = Logger.logger();
 	private final Map<Integer, AtlasEntry> glyphs = new HashMap<>();
 	private final Lock lock = new ReentrantLock(true);
 	private final LWJGLGameLauncher launcher;
@@ -52,7 +52,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 	}
 
 	public CompletableFuture<Void> removeGlyph(int glyphId) {
-		return launcher.getThreads().cached.submit(() -> {
+		return launcher.threads().cached.submit(() -> {
 			try {
 				lock.lock();
 				AtlasEntry entry = glyphs.remove(glyphId);
@@ -78,7 +78,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 	public boolean addGlyph(int glyphId, GlyphEntry entry) {
 		try {
 			lock.lock();
-			if (isCleanedUp()) {
+			if (cleanedUp()) {
 				return false;
 			}
 			if (glyphs.containsKey(glyphId)) {
@@ -94,7 +94,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				e.texture = null;
 			}
 			if (e.texture == null) {
-				e.texture = launcher.getTextureManager().createTexture(owner);
+				e.texture = launcher.textureManager().createTexture(owner);
 				e.texture.allocate(8, 8);
 				byTexture.put(e.texture, new HashSet<>());
 				add(glyphId, e);
@@ -146,7 +146,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			last = last.thenRunAsync(() -> {
 				try {
 					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
-							.thenRun(launcher.getGuiManager()::redraw));
+							.thenRun(launcher.guiManager()::redraw));
 				} catch (GameException ex) {
 					throw new RuntimeException(ex);
 				}

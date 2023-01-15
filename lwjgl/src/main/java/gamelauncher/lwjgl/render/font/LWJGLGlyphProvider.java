@@ -39,7 +39,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 	private final DynamicSizeTextureAtlas textureAtlas;
 
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
-		this.frame = launcher.getMainFrame().newFrame();
+		this.frame = launcher.mainFrame().newFrame();
 		this.textureAtlas = new DynamicSizeTextureAtlas(launcher, this.frame.renderThread());
 	}
 
@@ -99,8 +99,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
 				GameItem gi = new GameItem(m);
-				gi.setPosition(x, y, z);
-				gi.setScale(width, height, 1);
+				gi.position(x, y, z);
+				gi.scale(Math.round(width), Math.round(height), 1);
 				meshes.add(gi.createModel());
 				xpos += e.entry.data.advance;
 
@@ -111,7 +111,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		//		entries.keySet().stream().findAny().get().write();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[0]));
 		GameItem gi = new GameItem(cmodel);
-		gi.setAddColor(1, 1, 1, 0);
+		gi.addColor(1, 1, 1, 0);
 		GameItemModel gim = gi.createModel();
 
 		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);

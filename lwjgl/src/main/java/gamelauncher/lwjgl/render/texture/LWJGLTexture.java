@@ -50,10 +50,10 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	public LWJGLTexture(LWJGLGameLauncher launcher, ExecutorThread owner,
 			ExecutorThreadService service) {
-		this.manager = launcher.getTextureManager();
+		this.manager = launcher.textureManager();
 		this.owner = owner;
 		this.service = service;
-		this.profiler = launcher.getProfiler();
+		this.profiler = launcher.profiler();
 	}
 
 	private static BufferedImage getBufferedImage(int texture, int width, int height) {

@@ -52,13 +52,13 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		this.guiY = NumberValue.zero();
 		this.verticalScrollbar = new Scrollbar(Scrollbar.Type.VERTICAL);
 		this.horizontalScrollbar = new Scrollbar(Scrollbar.Type.HORIZONTAL);
-		this.displayWidth = this.getWidthProperty().mapToNumber(n -> {
+		this.displayWidth = this.widthProperty().mapToNumber(n -> {
 			if (this.verticalScrollbar.visible.booleanValue()) {
 				return n.floatValue() - this.verticalScrollbar.thickness.floatValue();
 			}
 			return n.floatValue();
 		}).addDependencies(this.verticalScrollbar.visible, this.verticalScrollbar.thickness);
-		this.displayHeight = this.getHeightProperty().mapToNumber(n -> {
+		this.displayHeight = this.heightProperty().mapToNumber(n -> {
 			if (this.horizontalScrollbar.visible.booleanValue()) {
 				return n.floatValue() - this.horizontalScrollbar.thickness.floatValue();
 			}
@@ -71,22 +71,22 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 				guiHeight.unbind();
 				guiWidth.setNumber(0);
 				guiHeight.setNumber(0);
-				oldValue.getXProperty().unbind();
-				oldValue.getYProperty().unbind();
+				oldValue.xProperty().unbind();
+				oldValue.yProperty().unbind();
 				this.GUIs.remove(oldValue);
 			}
 			if (newValue != null) {
-				guiWidth.bind(newValue.getWidthProperty());
-				guiHeight.bind(newValue.getHeightProperty());
-				newValue.getXProperty().bind(guiX);
-				newValue.getYProperty().bind(guiY);
+				guiWidth.bind(newValue.widthProperty());
+				guiHeight.bind(newValue.heightProperty());
+				newValue.xProperty().bind(guiX);
+				newValue.yProperty().bind(guiY);
 				this.GUIs.add(newValue);
 			}
 		});
 		this.horizontalScrollbar.max.bind(this.guiWidth.subtract(this.displayWidth).max(0));
 		this.verticalScrollbar.max.bind(this.guiHeight.subtract(this.displayHeight).max(0));
-		this.displayX = this.getXProperty();
-		this.displayY = this.getYProperty().mapToNumber(n -> {
+		this.displayX = this.xProperty();
+		this.displayY = this.yProperty().mapToNumber(n -> {
 			if (this.horizontalScrollbar.visible.booleanValue()) {
 				return n.doubleValue() + this.horizontalScrollbar.thickness.doubleValue();
 			}
@@ -101,26 +101,26 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 				.add(this.verticalScrollbar.display));
 
 		ScrollbarGui verticalScrollbarGui =
-				new ScrollbarGui(this.getLauncher(), this.guiWidth, this.guiHeight,
+				new ScrollbarGui(this.launcher(), this.guiWidth, this.guiHeight,
 						this.verticalScrollbar, this.displayWidth, this.displayHeight);
-		verticalScrollbarGui.getXProperty().bind(this.getXProperty().add(this.displayWidth));
-		verticalScrollbarGui.getYProperty().bind(this.getYProperty().mapToNumber(n -> {
+		verticalScrollbarGui.xProperty().bind(this.xProperty().add(this.displayWidth));
+		verticalScrollbarGui.yProperty().bind(this.yProperty().mapToNumber(n -> {
 			if (this.horizontalScrollbar.visible.booleanValue()) {
 				return n.doubleValue() + this.horizontalScrollbar.thickness.doubleValue();
 			}
 			return n;
 		}).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness));
-		verticalScrollbarGui.getWidthProperty().bind(this.verticalScrollbar.thickness);
-		verticalScrollbarGui.getHeightProperty().bind(this.displayHeight);
+		verticalScrollbarGui.widthProperty().bind(this.verticalScrollbar.thickness);
+		verticalScrollbarGui.heightProperty().bind(this.displayHeight);
 		this.GUIs.add(verticalScrollbarGui);
 
 		ScrollbarGui horizontalScrollbarGui =
-				new ScrollbarGui(this.getLauncher(), this.guiWidth, this.guiHeight,
+				new ScrollbarGui(this.launcher(), this.guiWidth, this.guiHeight,
 						this.horizontalScrollbar, this.displayWidth, this.displayHeight);
-		horizontalScrollbarGui.getXProperty().bind(this.getXProperty());
-		horizontalScrollbarGui.getYProperty().bind(this.getYProperty());
-		horizontalScrollbarGui.getWidthProperty().bind(this.displayWidth);
-		horizontalScrollbarGui.getHeightProperty().bind(this.horizontalScrollbar.thickness);
+		horizontalScrollbarGui.xProperty().bind(this.xProperty());
+		horizontalScrollbarGui.yProperty().bind(this.yProperty());
+		horizontalScrollbarGui.widthProperty().bind(this.displayWidth);
+		horizontalScrollbarGui.heightProperty().bind(this.horizontalScrollbar.thickness);
 		this.GUIs.add(horizontalScrollbarGui);
 	}
 
@@ -214,10 +214,10 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			this.scrollbar = scrollbar;
 			this.scrollbarIndent = NumberValue.constant(1);
 			this.dragging = BooleanValue.falseValue();
-			this.backgroundX = this.getXProperty();
-			this.backgroundY = this.getYProperty();
-			NumberValue backgroundWidth = this.getWidthProperty();
-			NumberValue backgroundHeight = this.getHeightProperty();
+			this.backgroundX = this.xProperty();
+			this.backgroundY = this.yProperty();
+			NumberValue backgroundWidth = this.widthProperty();
+			NumberValue backgroundHeight = this.heightProperty();
 			this.highlight = BooleanValue.falseValue();
 			this.maxScrollbarWidth =
 					backgroundWidth.subtract(this.scrollbarIndent.multiply(2)).max(0);
@@ -249,23 +249,23 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			} else {
 				throw new IllegalArgumentException();
 			}
-			ColorGui backgroundGui = launcher.getGuiManager().createGui(ColorGui.class);
-			backgroundGui.getXProperty().bind(this.backgroundX);
-			backgroundGui.getYProperty().bind(this.backgroundY);
-			backgroundGui.getWidthProperty().bind(backgroundWidth);
-			backgroundGui.getHeightProperty().bind(backgroundHeight);
+			ColorGui backgroundGui = launcher.guiManager().createGui(ColorGui.class);
+			backgroundGui.xProperty().bind(this.backgroundX);
+			backgroundGui.yProperty().bind(this.backgroundY);
+			backgroundGui.widthProperty().bind(backgroundWidth);
+			backgroundGui.heightProperty().bind(backgroundHeight);
 			this.curBackgroundColor.set(this.backgroundColor);
-			PropertyVector4f guiBackgroundColor = backgroundGui.getColor();
+			PropertyVector4f guiBackgroundColor = backgroundGui.color();
 			guiBackgroundColor.bind(this.curBackgroundColor.currentColor());
 			this.GUIs.add(backgroundGui);
 
-			ColorGui scrollbarGui = launcher.getGuiManager().createGui(ColorGui.class);
-			scrollbarGui.getXProperty().bind(this.scrollbarX);
-			scrollbarGui.getYProperty().bind(this.scrollbarY);
-			scrollbarGui.getWidthProperty().bind(this.scrollbarWidth);
-			scrollbarGui.getHeightProperty().bind(this.scrollbarHeight);
+			ColorGui scrollbarGui = launcher.guiManager().createGui(ColorGui.class);
+			scrollbarGui.xProperty().bind(this.scrollbarX);
+			scrollbarGui.yProperty().bind(this.scrollbarY);
+			scrollbarGui.widthProperty().bind(this.scrollbarWidth);
+			scrollbarGui.heightProperty().bind(this.scrollbarHeight);
 			this.curScrollbarColor.set(this.scrollbarColor);
-			PropertyVector4f guiScrollbarColor = scrollbarGui.getColor();
+			PropertyVector4f guiScrollbarColor = scrollbarGui.color();
 			guiScrollbarColor.bind(this.curScrollbarColor.currentColor());
 			this.GUIs.add(scrollbarGui);
 
@@ -323,7 +323,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 		@Override
 		protected boolean doHandle(KeybindEntry entry) throws GameException {
 			if (entry instanceof MouseMoveKeybindEntry mm) {
-				if (Gui.isHovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(),
+				if (Gui.hovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(),
 						this.scrollbarWidth.floatValue(), this.scrollbarHeight.floatValue(),
 						mm.mouseX(), mm.mouseY())) {
 					if (!this.highlight.booleanValue()) {
@@ -338,7 +338,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 			} else if (entry instanceof MouseButtonKeybindEntry mb) {
 				if (mb.type() == MouseButtonKeybindEntry.Type.PRESS) {
 					if (this.highlight.booleanValue()) {
-						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
+						if ((mb.keybind().uniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
 							if (this.scrollbar.type == Scrollbar.Type.VERTICAL) {
 								this.dragOffset = mb.mouseY() - this.scrollbarY.floatValue();
 								this.dragging.setValue(true);
@@ -350,7 +350,7 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 					}
 				} else if (mb.type() == MouseButtonKeybindEntry.Type.RELEASE) {
 					if (this.dragging.booleanValue()) {
-						if ((mb.getKeybind().getUniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
+						if ((mb.keybind().uniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {
 							this.dragging.setValue(false);
 						}
 					}

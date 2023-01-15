@@ -21,6 +21,10 @@ allprojects {
     version = '0.0.1-SNAPSHOT'
     pluginManager.withPlugin('java') {
         pluginManager.withPlugin('maven-publish') {
+            java {
+                withSourcesJar()
+                withJavadocJar()
+            }
             publishing {
                 publications {
                     maven(MavenPublication) {

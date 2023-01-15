@@ -28,52 +28,52 @@ public class EmptyCamera implements Camera {
 	}
 
 	@Override
-	public float getX() {
+	public float x() {
 		return 0;
 	}
 
 	@Override
-	public float getY() {
+	public float y() {
 		return 0;
 	}
 
 	@Override
-	public float getZ() {
+	public float z() {
 		return 0;
 	}
 
 	@Override
-	public float getRotX() {
+	public float rotX() {
 		return 0;
 	}
 
 	@Override
-	public float getRotY() {
+	public float rotY() {
 		return 0;
 	}
 
 	@Override
-	public float getRotZ() {
+	public float rotZ() {
 		return 0;
 	}
 
 	@Override
-	public void setRotation(float rx, float ry, float rz) {
+	public void rotation(float rx, float ry, float rz) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setRotX(float rx) {
+	public void rotX(float rx) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setRotY(float ry) {
+	public void rotY(float ry) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void setRotZ(float rz) {
+	public void rotZ(float rz) {
 		throw new UnsupportedOperationException();
 	}
 

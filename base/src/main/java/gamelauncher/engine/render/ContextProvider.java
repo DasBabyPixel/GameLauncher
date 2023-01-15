@@ -9,7 +9,7 @@ import gamelauncher.engine.util.logging.Logger;
  */
 public record ContextProvider(GameLauncher launcher) {
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	/**
 	 * @param launcher
@@ -65,14 +65,14 @@ public record ContextProvider(GameLauncher launcher) {
 		HUD {
 			@Override
 			protected void load(GameLauncher launcher, DrawContext context) throws GameException {
-				context.setProgram(launcher.getShaderLoader().loadShader(launcher,
-						launcher.getEmbedFileSystem().getPath("shaders", "hud", "hud.json")));
-				context.setProjection(new Transformations.Projection.Projection2D());
+				context.program(launcher.shaderLoader().loadShader(launcher,
+						launcher.embedFileSystem().getPath("shaders", "hud", "hud.json")));
+				context.projection(new Transformations.Projection.Projection2D());
 			}
 
 			@Override
 			protected void cleanup(DrawContext context) throws GameException {
-				context.getProgram().cleanup();
+				context.program().cleanup();
 			}
 
 		},

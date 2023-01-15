@@ -71,7 +71,7 @@ public class PluginClassLoader extends URLClassLoader {
 		super.close();
 		pm.loaders.remove(this);
 		for (Plugin pl : plugins) {
-			PluginInfo info = pm.infos.get(pl.getName());
+			PluginInfo info = pm.infos.get(pl.name());
 			info.lock.lock();
 			try {
 				info.plugin.get().onDisable();
@@ -80,7 +80,7 @@ public class PluginClassLoader extends URLClassLoader {
 			}
 			info.plugin.set(null);
 			info.loader.set(null);
-			pm.infos.remove(pl.getName());
+			pm.infos.remove(pl.name());
 			info.lock.unlock();
 		}
 		for (String s : classes.keySet()) {

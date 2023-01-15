@@ -46,7 +46,7 @@ public record Key(Plugin plugin, String key) {
 
 	@Override
 	public String toString() {
-		return String.format("%s:%s", this.plugin.getName(), this.key);
+		return String.format("%s:%s", this.plugin.name(), this.key);
 	}
 
 }

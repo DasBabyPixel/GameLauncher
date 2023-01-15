@@ -8,7 +8,7 @@ import gamelauncher.engine.util.GameException;
 public class ExampleRenderer extends Renderer {
 
 	public void set(GameLauncher launcher) {
-		launcher.getGameRenderer().setRenderer(this);
+		launcher.gameRenderer().setRenderer(this);
 	}
 
 	@Override

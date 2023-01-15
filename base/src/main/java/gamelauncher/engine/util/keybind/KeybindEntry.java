@@ -8,6 +8,6 @@ public interface KeybindEntry {
 	/**
 	 * @return the {@link Keybind} of this {@link KeybindEntry}
 	 */
-	Keybind getKeybind();
+	Keybind keybind();
 
 }

@@ -26,7 +26,7 @@ public interface GuiManager extends GameResource {
 	 * @return the current gui for a window
 	 * @throws GameException
 	 */
-	Gui getCurrentGui(Framebuffer framebuffer) throws GameException;
+	Gui currentGui(Framebuffer framebuffer) throws GameException;
 
 	/**
 	 * @param framebuffer
@@ -48,7 +48,7 @@ public interface GuiManager extends GameResource {
 	/**
 	 * @return the {@link GameLauncher}
 	 */
-	GameLauncher getLauncher();
+	GameLauncher launcher();
 	
 	/**
 	 * @throws GameException 

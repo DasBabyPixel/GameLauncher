@@ -12,8 +12,8 @@ public interface TextureGui extends LauncherBasedGui {
 	/**
 	 * @return the texture
 	 *
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
-	Texture getTexture() throws GameException;
+	Texture texture() throws GameException;
 
 }

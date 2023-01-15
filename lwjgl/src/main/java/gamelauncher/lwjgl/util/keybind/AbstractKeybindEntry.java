@@ -18,7 +18,7 @@ public abstract class AbstractKeybindEntry implements KeybindEntry {
 	}
 
 	@Override
-	public Keybind getKeybind() {
+	public Keybind keybind() {
 		return keybind;
 	}
 }

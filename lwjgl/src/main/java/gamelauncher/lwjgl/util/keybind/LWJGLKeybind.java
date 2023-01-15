@@ -28,12 +28,12 @@ public class LWJGLKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	public String getName() {
+	public String name() {
 		return name;
 	}
 
 	@Override
-	public int getUniqueId() {
+	public int uniqueId() {
 		return id.get();
 	}
 
@@ -55,7 +55,7 @@ public class LWJGLKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	public KeybindManager getManager() {
+	public KeybindManager manager() {
 		return manager;
 	}
 

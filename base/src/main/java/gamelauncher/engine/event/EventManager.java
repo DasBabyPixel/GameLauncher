@@ -34,7 +34,7 @@ public class EventManager {
 	 */
 	public EventManager(GameLauncher launcher) {
 		this.launcher = launcher;
-		this.profiler = this.launcher.getProfiler();
+		this.profiler = this.launcher.profiler();
 	}
 
 	/**

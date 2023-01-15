@@ -6,13 +6,15 @@ import java.util.Objects;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.i18n.Message;
+import gamelauncher.engine.util.i18n.SimpleMessage;
 import gamelauncher.engine.util.logging.Logger;
 
 /**
- * A plugin must extend this. 
- * 
+ * A plugin must extend this.
+ * <p>
  * A plugin must also have the {@link GameException} annotation
- * 
+ *
  * @author DasBabyPixel
  */
 public abstract class Plugin {
@@ -20,66 +22,74 @@ public abstract class Plugin {
 	private final String name;
 	private final Logger logger;
 	private GameLauncher launcher;
+	private final Message displayName;
 
 	/**
-	 * @param name
+	 * @param name the plugins name (identity)
 	 */
 	public Plugin(String name) {
-		this.logger = Logger.getLogger(this.getClass());
+		this.logger = Logger.logger(this.getClass());
 		this.name = name;
+		this.displayName = new SimpleMessage(this, name);
+	}
+
+	public Message displayName() {
+		return displayName;
 	}
 
 	/**
 	 * Called when the plugin is enabled
-	 * @throws GameException 
+	 *
+	 * @throws GameException an exception
 	 */
 	public void onEnable() throws GameException {
 	}
 
 	/**
 	 * Called when the plugin is disabled
-	 * @throws GameException 
+	 *
+	 * @throws GameException an exception
 	 */
 	public void onDisable() throws GameException {
 	}
 
 	/**
 	 * Sets the {@link GameLauncher}
-	 * 
-	 * @param launcher
+	 *
+	 * @param launcher sets the launcher
 	 */
-	public void setLauncher(GameLauncher launcher) {
+	public void launcher(GameLauncher launcher) {
 		this.launcher = launcher;
 	}
 
 	/**
 	 * @return the {@link GameLauncher}
 	 */
-	public GameLauncher getLauncher() {
+	public GameLauncher launcher() {
 		return this.launcher;
 	}
 
 	/**
 	 * @return the {@link Logger} of this plugin
 	 */
-	public Logger getLogger() {
+	public Logger logger() {
 		return this.logger;
 	}
 
 	/**
 	 * @return the name of this plugin
 	 */
-	public String getName() {
+	public String name() {
 		return this.name;
 	}
 
 	/**
 	 * Add this to every plugin
-	 * 
+	 *
 	 * @author DasBabyPixel
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
-	public static @interface GamePlugin {
+	public @interface GamePlugin {
 
 	}
 

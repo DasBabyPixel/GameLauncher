@@ -30,11 +30,8 @@ public class TextGui extends ParentableAbstractGui {
 	private final NumberValue baselineYOffset;
 	private final Camera camera;
 	private final AtomicBoolean recreateModel = new AtomicBoolean(true);
-	private final InvalidationListener invalidationListener;
-	private final WeakReferenceInvalidationListener weakListener;
 	private final NumberValue cwidthprop;
 	private GlyphStaticModel model;
-	private GameItem item;
 	private GameItemModel itemModel;
 	private DrawContext hud;
 	private volatile boolean createdFont;
@@ -42,44 +39,31 @@ public class TextGui extends ParentableAbstractGui {
 	private volatile boolean recreating = false;
 	private Font fontToDelete = null;
 	private volatile int cwidth;
+	private final InvalidationListener invalidationListener;
 
-	/**
-	 * @param launcher
-	 * @param text
-	 * @param height
-	 *
-	 * @throws GameException
-	 */
 	public TextGui(GameLauncher launcher, String text, int height) throws GameException {
 		this(launcher, TextGui.defaultFont(launcher), text, height);
 		this.createdFont = true;
 	}
 
-	/**
-	 * @param launcher
-	 * @param font
-	 * @param text
-	 * @param height
-	 *
-	 * @throws GameException
-	 */
-	public TextGui(GameLauncher launcher, Font font, String text, int height) throws GameException {
+	public TextGui(GameLauncher launcher, Font font, String text, int height) {
 		super(launcher);
 		this.font = ObjectProperty.withValue(font);
-		this.getHeightProperty().setNumber(height);
+		this.heightProperty().setNumber(height);
 		this.text = ObjectProperty.withValue(text);
 		this.camera = new BasicCamera();
 		this.cwidthprop = NumberValue.withStorage(new SupplierReadOnlyStorage<>(() -> this.cwidth));
-		this.getWidthProperty().bind(this.cwidthprop);
-		this.invalidationListener = property -> {
+		this.widthProperty().bind(this.cwidthprop);
+		 invalidationListener = property -> {
 			TextGui.this.recreateModel.set(true);
 			this.redraw();
 		};
 		this.baselineYOffset = NumberValue.withStorage(new SupplierReadOnlyStorage<>(
-				() -> this.model == null ? 0 : -this.model.getDescent()));
-		this.weakListener = new WeakReferenceInvalidationListener(this.invalidationListener);
-		this.getHeightProperty().addListener(this.weakListener);
-		this.text.addListener(this.weakListener);
+				() -> this.model == null ? 0 : -this.model.descent()));
+		WeakReferenceInvalidationListener weakListener =
+				new WeakReferenceInvalidationListener(invalidationListener);
+		this.heightProperty().addListener(weakListener);
+		this.text.addListener(weakListener);
 		this.font.addListener((property, oldValue, newValue) -> {
 			if (TextGui.this.createdFont) {
 				TextGui.this.fontToDelete = oldValue;
@@ -90,7 +74,7 @@ public class TextGui extends ParentableAbstractGui {
 				TextGui.this.recreateModel.set(true);
 			}
 		});
-		this.font.addListener(this.weakListener);
+		this.font.addListener(weakListener);
 		this.color.x.addListener((NumberValue p) -> this.redraw());
 		this.color.y.addListener((NumberValue p) -> this.redraw());
 		this.color.z.addListener((NumberValue p) -> this.redraw());
@@ -98,10 +82,10 @@ public class TextGui extends ParentableAbstractGui {
 	}
 
 	private static Font defaultFont(GameLauncher launcher) throws GameException {
-		ResourceStream stream = launcher.getResourceLoader()
-				.getResource(launcher.getEmbedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
+		ResourceStream stream = launcher.resourceLoader()
+				.resource(launcher.embedFileSystem().getPath("fonts", "cinzel_regular.ttf"))
 				.newResourceStream();
-		return launcher.getFontFactory().createFont(stream);
+		return launcher.fontFactory().createFont(stream);
 	}
 
 	@Override
@@ -115,13 +99,13 @@ public class TextGui extends ParentableAbstractGui {
 			this.fontToDelete.cleanup();
 			this.deleteFont = false;
 		}
-		this.getLauncher().getContextProvider().freeContext(this.hud, ContextType.HUD);
+		this.launcher().contextProvider().freeContext(this.hud, ContextType.HUD);
 	}
 
 	@Override
 	protected void doInit(Framebuffer framebuffer) throws GameException {
 		this.hud =
-				this.getLauncher().getContextProvider().loadContext(framebuffer, ContextType.HUD);
+				this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
 	}
 
 	@Override
@@ -135,9 +119,9 @@ public class TextGui extends ParentableAbstractGui {
 	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
 			float partialTick) throws GameException {
 		this.hud.update(this.camera);
-		this.hud.drawModel(this.itemModel, this.getX(),
-				this.getY() + this.baselineYOffset.floatValue(), 0);
-		this.hud.getProgram().clearUniforms();
+		this.hud.drawModel(this.itemModel, this.x(),
+				this.y() + this.baselineYOffset.floatValue(), 0);
+		this.hud.program().clearUniforms();
 		return true;
 	}
 
@@ -176,16 +160,16 @@ public class TextGui extends ParentableAbstractGui {
 			this.recreating = true;
 			GameItemModel oldModel = this.itemModel;
 
-			this.model = this.getLauncher().getGlyphProvider()
+			this.model = this.launcher().glyphProvider()
 					.loadStaticModel(this.font.getValue(), this.text.getValue(),
-							this.getHeightProperty().intValue());
-			this.item = new GameItem(this.model);
-			this.item.color().x.bind(this.color.x);
-			this.item.color().y.bind(this.color.y);
-			this.item.color().z.bind(this.color.z);
-			this.item.color().w.bind(this.color.w);
-			this.itemModel = this.item.createModel();
-			this.cwidth = this.model.getWidth();
+							this.heightProperty().intValue());
+			GameItem item = new GameItem(this.model);
+			item.color().x.bind(this.color.x);
+			item.color().y.bind(this.color.y);
+			item.color().z.bind(this.color.z);
+			item.color().w.bind(this.color.w);
+			this.itemModel = item.createModel();
+			this.cwidth = this.model.width();
 			this.cwidthprop.invalidate();
 			this.baselineYOffset.invalidate();
 

@@ -27,12 +27,12 @@ public class AllKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	public String getName() {
+	public String name() {
 		return "<All>";
 	}
 
 	@Override
-	public int getUniqueId() {
+	public int uniqueId() {
 		return id;
 	}
 
@@ -52,12 +52,12 @@ public class AllKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	public KeybindManager getManager() {
+	public KeybindManager manager() {
 		return null;
 	}
 
 	@Override
-	public final boolean isCleanedUp() {
+	public final boolean cleanedUp() {
 		return true;
 	}
 

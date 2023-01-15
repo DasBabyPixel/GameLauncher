@@ -151,12 +151,12 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 	}
 
 	@Override
-	public Projection getProjection() {
+	public Projection projection() {
 		return this.projection.get();
 	}
 
 	@Override
-	public void setProjection(Transformations.Projection projection) throws GameException {
+	public void projection(Transformations.Projection projection) throws GameException {
 		if (this.projection.getAndSet(projection) != projection) {
 			this.reloadProjectionMatrix();
 		}
@@ -187,7 +187,7 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 		shaderProgram.bind();
 		shaderProgram.uviewMatrix.set(this.viewMatrix);
 		shaderProgram.uprojectionMatrix.set(this.projectionMatrix);
-		shaderProgram.ucamera_pos.set(camera.getX(), camera.getY(), camera.getZ());
+		shaderProgram.ucamera_pos.set(camera.x(), camera.y(), camera.z());
 		shaderProgram.uambientLight.set(this.ambientLight);
 
 		shaderProgram.utexture_sampler.set(0);
@@ -238,12 +238,12 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 	}
 
 	@Override
-	public ShaderProgram getProgram() {
+	public ShaderProgram program() {
 		return this.shaderProgram.get();
 	}
 
 	@Override
-	public void setProgram(ShaderProgram program) {
+	public void program(ShaderProgram program) {
 		this.shaderProgram.set(program);
 	}
 
@@ -290,7 +290,7 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 		if (model instanceof GameItemModel) {
 			GameItem item = ((GameItemModel) model).gameItem;
 			item.applyToTransformationMatrix(this.modelMatrix);
-			this.pDrawModel(item.getModel(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier,
+			this.pDrawModel(item.model(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier,
 					colorAdd);
 		} else if (model instanceof LWJGLCombinedModelsModel comb) {
 			this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
@@ -341,10 +341,10 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 
 	private void loadViewMatrix(Camera camera) {
 		this.viewMatrix.identity();
-		this.viewMatrix.rotate((float) Math.toRadians(camera.getRotX()), LWJGLDrawContext.X_AXIS)
-				.rotate((float) Math.toRadians(camera.getRotY()), LWJGLDrawContext.Y_AXIS)
-				.rotate((float) Math.toRadians(camera.getRotZ()), LWJGLDrawContext.Z_AXIS);
-		this.viewMatrix.translate(-camera.getX(), -camera.getY(), -camera.getZ());
+		this.viewMatrix.rotate((float) Math.toRadians(camera.rotX()), LWJGLDrawContext.X_AXIS)
+				.rotate((float) Math.toRadians(camera.rotY()), LWJGLDrawContext.Y_AXIS)
+				.rotate((float) Math.toRadians(camera.rotZ()), LWJGLDrawContext.Z_AXIS);
+		this.viewMatrix.translate(-camera.x(), -camera.y(), -camera.z());
 	}
 
 }

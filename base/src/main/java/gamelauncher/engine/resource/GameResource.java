@@ -19,7 +19,7 @@ public interface GameResource {
 	/**
 	 * @return if this resource is cleaned up
 	 */
-	boolean isCleanedUp();
+	boolean cleanedUp();
 
 	/**
 	 * @return the future for when this object is cleaned up

@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class LWJGLModelLoader implements ModelLoader {
 
-	private static final Logger logger = Logger.getLogger(LWJGLModelLoader.class);
+	private static final Logger logger = Logger.logger(LWJGLModelLoader.class);
 	private final Map<ModelType, ModelSubLoader> loaders = new HashMap<>();
 	private final LWJGLGameLauncher launcher;
 	private final Path modelDirectory;
@@ -38,7 +38,7 @@ public class LWJGLModelLoader implements ModelLoader {
 	 */
 	public LWJGLModelLoader(LWJGLGameLauncher launcher) throws GameException {
 		this.launcher = launcher;
-		this.modelDirectory = this.launcher.getDataDirectory().resolve("models");
+		this.modelDirectory = this.launcher.dataDirectory().resolve("models");
 		Files.createDirectories(this.modelDirectory);
 
 		this.loaders.put(ModelType.WAVEFRONT, new WaveFrontModelLoader(launcher));
@@ -86,7 +86,7 @@ public class LWJGLModelLoader implements ModelLoader {
 		ModelSubLoader loader = loaders.get(type);
 		stream = resource.newResourceStream();
 		byte[] bytes = loader.convertModel(stream);
-		if (!stream.isCleanedUp())
+		if (!stream.cleanedUp())
 			stream.cleanup();
 		if (!Files.exists(file)) {
 			Files.createFile(file);
@@ -118,7 +118,7 @@ public class LWJGLModelLoader implements ModelLoader {
 
 		stream.cleanup();
 		Mesh mesh = new Mesh(vertices, texCoords, normals, indices);
-		Mesh.Material lm = mesh.getMaterial();
+		Mesh.Material lm = mesh.material();
 
 		if (lm.texture == null) {
 			for (Material mat : materialList.materials) {
@@ -126,8 +126,8 @@ public class LWJGLModelLoader implements ModelLoader {
 				if (tex != null) {
 					ResourceStream st =
 							new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
-					LWJGLTexture lt = launcher.getTextureManager().createTexture();
-					lt.uploadAsync(st).thenRun(launcher.getGuiManager()::redraw);
+					LWJGLTexture lt = launcher.textureManager().createTexture();
+					lt.uploadAsync(st).thenRun(launcher.guiManager()::redraw);
 					lm.texture = lt;
 					break;
 				}

@@ -21,7 +21,7 @@ public class KeybindEntryEvent extends Event {
 	/**
 	 * @return the KeybindEntry of the event
 	 */
-	public KeybindEntry getEntry() {
+	public KeybindEntry entry() {
 		return entry;
 	}
 }

@@ -30,7 +30,7 @@ public class LWJGLNetworkClient implements NetworkClient {
 
 	public static final int PORT = 15684;
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private final Lock lock = new ReentrantLock(true);
 

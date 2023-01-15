@@ -15,7 +15,7 @@ public abstract class ClassBasedSettingSectionInsertion extends SettingSectionIn
 
 	@Override
 	protected boolean shouldHandle(SettingSectionConstructEvent event) {
-		return super.shouldHandle(event) && event.getConstructor().getSection().getClass()
+		return super.shouldHandle(event) && event.constructor().getSection().getClass()
 				.equals(target);
 	}
 }

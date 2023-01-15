@@ -11,18 +11,18 @@ public interface Keybind extends GameResource {
 	/**
 	 * @return the name of this Keybind. For Display usage
 	 */
-	String getName();
+	String name();
 
 	/**
 	 * @return the uniqueId of this Keybind. Can be used for storage, will be the
 	 *         same for the same key.
 	 */
-	int getUniqueId();
+	int uniqueId();
 
 	/**
 	 * Handles a {@link KeybindEntry}
 	 * 
-	 * @param entry
+	 * @param entry an entry
 	 */
 	void handle(KeybindEntry entry);
 
@@ -32,7 +32,7 @@ public interface Keybind extends GameResource {
 	 * @see Keybind#removeHandler(KeybindHandler)
 	 * @see Keybind#handle(KeybindEntry)
 	 * 
-	 * @param handler
+	 * @param handler a handler
 	 */
 	void addHandler(KeybindHandler handler);
 
@@ -41,13 +41,13 @@ public interface Keybind extends GameResource {
 	 * 
 	 * @see Keybind#addHandler(KeybindHandler)
 	 * @see Keybind#handle(KeybindEntry)
-	 * @param handler
+	 * @param handler a handler
 	 */
 	void removeHandler(KeybindHandler handler);
 
 	/**
 	 * @return the {@link KeybindManager}
 	 */
-	KeybindManager getManager();
+	KeybindManager manager();
 
 }

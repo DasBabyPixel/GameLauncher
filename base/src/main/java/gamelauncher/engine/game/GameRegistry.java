@@ -1,6 +1,7 @@
 package gamelauncher.engine.game;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,7 +10,6 @@ import gamelauncher.engine.util.Key;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class GameRegistry {
 
@@ -17,6 +17,7 @@ public class GameRegistry {
 
 	/**
 	 * @param key
+	 *
 	 * @return the game or null
 	 */
 	public Game get(Key key) {
@@ -25,16 +26,18 @@ public class GameRegistry {
 
 	/**
 	 * @param game
+	 *
 	 * @throws GameException
 	 */
 	public void register(Game game) throws GameException {
-		if (games.putIfAbsent(game.getKey(), game) != null) {
+		if (games.putIfAbsent(game.key(), game) != null) {
 			throw new GameAlreadyExistsException();
 		}
 	}
 
 	/**
 	 * @param key
+	 *
 	 * @return the unregistered {@link Game} or null if no {@link Game} was found
 	 */
 	public Game unregister(Key key) {
@@ -44,8 +47,8 @@ public class GameRegistry {
 	/**
 	 * @return the games
 	 */
-	public Collection<Game> getGames() {
-		return games.values();
+	public Collection<Game> games() {
+		return Collections.unmodifiableCollection(games.values());
 	}
 
 }

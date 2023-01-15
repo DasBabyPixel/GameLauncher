@@ -125,7 +125,7 @@ public abstract class Logger {
 	/**
 	 * @return {@link Logger}
 	 */
-	public static Logger getLogger() {
+	public static Logger logger() {
 		StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		StackTraceElement caller = null;
 		String cname = Logger.class.getName();
@@ -140,22 +140,22 @@ public abstract class Logger {
 		}
 		assert caller != null;
 		int index = caller.getClassName().lastIndexOf('.');
-		return Logger.getLogger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
+		return Logger.logger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
 	}
 
 	/**
-	 * @param clazz
-	 * @return {@link Logger}
+	 * 	 * @param clazz
+	 * 	 * @return {@link Logger}
 	 */
-	public static Logger getLogger(Class<?> clazz) {
-		return Logger.getLogger(clazz.getSimpleName());
+	public static Logger logger(Class<?> clazz) {
+		return Logger.logger(clazz.getSimpleName());
 	}
 
 	/**
 	 * @param name
 	 * @return {@link Logger}
 	 */
-	public static Logger getLogger(String name) {
+	public static Logger logger(String name) {
 		return new SimpleLogger(name, Logger.asyncLogStream);
 	}
 

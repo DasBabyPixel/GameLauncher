@@ -48,7 +48,7 @@ public abstract class AbstractGameResource implements GameResource {
 
 	private static Logger logger() {
 		if (AbstractGameResource.logger == null) {
-			return AbstractGameResource.logger = Logger.getLogger();
+			return AbstractGameResource.logger = Logger.logger();
 		}
 		return AbstractGameResource.logger;
 	}
@@ -75,10 +75,10 @@ public abstract class AbstractGameResource implements GameResource {
 	 */
 	@Override
 	public final void cleanup() throws GameException {
-		if (!this.isCleanedUp()) {
+		if (!this.cleanedUp()) {
 			this.setCleanedUp();
 			this.cleanup0();
-			if (this.isCleanedUp()) {
+			if (this.cleanedUp()) {
 				this.cleanupFuture.complete(null);
 				AbstractGameResource.logCleanup(this);
 			}
@@ -88,7 +88,7 @@ public abstract class AbstractGameResource implements GameResource {
 	}
 
 	@Override
-	public boolean isCleanedUp() {
+	public boolean cleanedUp() {
 		return this.cleanedUp;
 	}
 
