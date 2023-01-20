@@ -39,12 +39,12 @@ public interface Texture extends GameResource {
 	/**
 	 * @return the width
 	 */
-	NumberValue getWidth();
+	NumberValue width();
 
 	/**
 	 * @return the height
 	 */
-	NumberValue getHeight();
+	NumberValue height();
 
 	/**
 	 * @param image the image to upload

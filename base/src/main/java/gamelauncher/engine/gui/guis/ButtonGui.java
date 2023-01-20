@@ -28,25 +28,25 @@ public class ButtonGui extends ParentableAbstractGui {
 
 	public ButtonGui(GameLauncher launcher) throws GameException {
 		super(launcher);
-		this.setWidth(100);
-		this.setHeight(50);
+		this.width(100);
+		this.height(50);
 		this.textColor = new InterpolatedColor();
 		this.backgroundColor = new InterpolatedColor();
 
-		ColorGui colorGui = launcher.getGuiManager().createGui(ColorGui.class);
-		colorGui.getXProperty().bind(this.getXProperty());
-		colorGui.getYProperty().bind(this.getYProperty());
-		colorGui.getWidthProperty().bind(this.getWidthProperty());
-		colorGui.getHeightProperty().bind(this.getHeightProperty());
-		colorGui.getColor().bind(backgroundColor.currentColor());
+		ColorGui colorGui = launcher.guiManager().createGui(ColorGui.class);
+		colorGui.xProperty().bind(this.xProperty());
+		colorGui.yProperty().bind(this.yProperty());
+		colorGui.widthProperty().bind(this.widthProperty());
+		colorGui.heightProperty().bind(this.heightProperty());
+		colorGui.color().bind(backgroundColor.currentColor());
 		this.GUIs.add(colorGui);
 
 		TextGui textGui = new TextGui(launcher, "no text set", 50);
-		textGui.getXProperty().bind(this.getXProperty().add(this.getWidthProperty().divide(2))
-				.subtract(textGui.getWidthProperty().divide(2)));
-		textGui.getYProperty().bind(this.getYProperty().add(this.getHeightProperty().divide(2))
-				.subtract(textGui.getHeightProperty().divide(2)));
-		textGui.getHeightProperty().bind(this.getHeightProperty());
+		textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2))
+				.subtract(textGui.widthProperty().divide(2)));
+		textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2))
+				.subtract(textGui.heightProperty().divide(2)));
+		textGui.heightProperty().bind(this.heightProperty());
 		textGui.color().bind(textColor.currentColor());
 		Runnable recalc = () -> {
 			if (this.hovering().booleanValue() || this.pressing.booleanValue()) {
@@ -73,7 +73,7 @@ public class ButtonGui extends ParentableAbstractGui {
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
 		if (entry instanceof MouseButtonKeybindEntry mb) {
 			if (mb.type() == Type.RELEASE) {
-				if (isHovering(mb.mouseX(), mb.mouseY())) {
+				if (hovering(mb.mouseX(), mb.mouseY())) {
 					try {
 						this.buttonPressed(mb);
 					} catch (GameException ex) {

@@ -22,12 +22,12 @@ public abstract class ScissorStack {
 
 	public Scissor pushScissor(Gui gui) {
 		Scissor scissor =
-				pushScissor(gui.getXProperty(), gui.getYProperty(), gui.getWidthProperty(),
-						gui.getHeightProperty());
-		gui.getVisibleXProperty().setValue(scissor.x);
-		gui.getVisibleYProperty().setValue(scissor.y);
-		gui.getVisibleWidthProperty().setValue(scissor.w);
-		gui.getVisibleHeightProperty().setValue(scissor.h);
+				pushScissor(gui.xProperty(), gui.yProperty(), gui.widthProperty(),
+						gui.heightProperty());
+		gui.visibleXProperty().setValue(scissor.x);
+		gui.visibleYProperty().setValue(scissor.y);
+		gui.visibleWidthProperty().setValue(scissor.w);
+		gui.visibleHeightProperty().setValue(scissor.h);
 		return scissor;
 	}
 

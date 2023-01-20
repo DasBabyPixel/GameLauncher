@@ -54,7 +54,7 @@ public class Mesh extends AbstractGameResource {
 		this(positions, textCoords, normals, indices, GLES20.GL_TRIANGLES);
 	}
 
-	public Material getMaterial() {
+	public Material material() {
 		return this.material;
 	}
 

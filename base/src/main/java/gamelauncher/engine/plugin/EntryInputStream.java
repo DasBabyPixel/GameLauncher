@@ -11,7 +11,6 @@ import gamelauncher.engine.io.Files;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
-@SuppressWarnings("javadoc")
 public class EntryInputStream extends AbstractGameResource implements AutoCloseable {
 
 	public final boolean directory;
@@ -38,7 +37,7 @@ public class EntryInputStream extends AbstractGameResource implements AutoClosea
 		return nextEntry != null;
 	}
 
-	public Entry getNextEntry() throws GameException {
+	public Entry nextEntry() throws GameException {
 		if (directory) {
 			return new Entry(path.relativize(dir.next()).toString());
 		}
@@ -77,7 +76,7 @@ public class EntryInputStream extends AbstractGameResource implements AutoClosea
 			this.name = name;
 		}
 
-		public String getName() {
+		public String name() {
 			return name;
 		}
 	}

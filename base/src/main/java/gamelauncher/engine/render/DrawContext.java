@@ -13,139 +13,156 @@ public interface DrawContext extends GameResource {
 
 	/**
 	 * Draws a {@link Model} at a position with a rotation
-	 * 
-	 * @param model
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param rx
-	 * @param ry
-	 * @param rz
-	 * @throws GameException
+	 *
+	 * @param model the model
+	 * @param x     x position
+	 * @param y     y position
+	 * @param z     z position
+	 * @param rx    x rotation
+	 * @param ry    y rotation
+	 * @param rz    z rotation
+	 *
+	 * @throws GameException an exception
 	 */
-	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz) throws GameException;
+	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz)
+			throws GameException;
 
 	/**
 	 * Draws a {@link Model} at a position with a rotation and scale
-	 * 
-	 * @param model
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @param rx
-	 * @param ry
-	 * @param rz
-	 * @param sx
-	 * @param sy
-	 * @param sz
-	 * @throws GameException
+	 *
+	 * @param model the model
+	 * @param x     x position
+	 * @param y     y position
+	 * @param z     z position
+	 * @param rx    x rotation
+	 * @param ry    y rotation
+	 * @param rz    z rotation
+	 * @param sx    x scale
+	 * @param sy    y scale
+	 * @param sz    z scale
+	 *
+	 * @throws GameException an exception
 	 */
-	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy,
-			double sz) throws GameException;
+	void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz,
+			double sx, double sy, double sz) throws GameException;
 
 	/**
 	 * Draws a {@link Model} at a position
-	 * 
-	 * @param model
-	 * @param x
-	 * @param y
-	 * @param z
-	 * @throws GameException
+	 *
+	 * @param model the model
+	 * @param x     x position
+	 * @param y     y position
+	 * @param z     z position
+	 *
+	 * @throws GameException an exception
 	 */
 	void drawModel(Model model, double x, double y, double z) throws GameException;
 
 	/**
 	 * Draws a model
-	 * 
-	 * @param model
-	 * @throws GameException
+	 *
+	 * @param model the model
+	 *
+	 * @throws GameException an exception
 	 */
 	void drawModel(Model model) throws GameException;
 
 	/**
 	 * Creates a new {@link DrawContext} with the given {@link Projection}
-	 * 
-	 * @param projection
+	 *
+	 * @param projection the projection
+	 *
 	 * @return the new {@link DrawContext}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	DrawContext withProjection(Transformations.Projection projection) throws GameException;
 
 	/**
 	 * Creates a new {@link DrawContext} with the given {@link ShaderProgram}
-	 * 
-	 * @param program
+	 *
+	 * @param program the program
+	 *
 	 * @return the new {@link DrawContext}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	DrawContext withProgram(ShaderProgram program) throws GameException;
 
 	/**
 	 * @return the {@link Projection} of this {@link DrawContext}
 	 */
-	Transformations.Projection getProjection();
+	Transformations.Projection projection();
 
 	/**
 	 * @return the {@link ShaderProgram} of this {@link DrawContext}
 	 */
-	ShaderProgram getProgram();
+	ShaderProgram program();
 
 	/**
 	 * Sets the {@link ShaderProgram} of this {@link DrawContext}
-	 * 
-	 * @param program
-	 * @throws GameException
+	 *
+	 * @param program the program
+	 *
+	 * @throws GameException an exception
 	 */
-	void setProgram(ShaderProgram program) throws GameException;
+	void program(ShaderProgram program) throws GameException;
 
 	/**
 	 * Sets the {@link Projection} of this {@link DrawContext}
-	 * 
-	 * @param projection
-	 * @throws GameException
+	 *
+	 * @param projection the projection
+	 *
+	 * @throws GameException an exception
 	 */
-	void setProjection(Transformations.Projection projection) throws GameException;
+	void projection(Transformations.Projection projection) throws GameException;
 
 	/**
 	 * Creates a new {@link DrawContext} with the given translation
-	 * 
-	 * @param x
-	 * @param y
-	 * @param z
+	 *
+	 * @param x x translation
+	 * @param y y translation
+	 * @param z z translation
+	 *
 	 * @return the new {@link DrawContext}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	DrawContext translate(double x, double y, double z) throws GameException;
 
 	/**
 	 * Creates a new {@link DrawContext} with the given scale
-	 * 
-	 * @param x
-	 * @param y
-	 * @param z
+	 *
+	 * @param x x scale
+	 * @param y y scale
+	 * @param z z scale
+	 *
 	 * @return the new {@link DrawContext}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	DrawContext scale(double x, double y, double z) throws GameException;
 
 	/**
 	 * Updates the values of this {@link DrawContext}. Should be called before
-	 * 
-	 * @param camera
-	 * @throws GameException
+	 *
+	 * @param camera a camera
+	 *
+	 * @throws GameException an exception
 	 */
 	void update(Camera camera) throws GameException;
 
 	/**
 	 * @return a duplicate of this {@link DrawContext}
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	DrawContext duplicate() throws GameException;
 
 	/**
 	 * Reloads the projection matrix. Should not be neccessary to call.
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	void reloadProjectionMatrix() throws GameException;
 

@@ -103,7 +103,7 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
 	}
 
 	@Override
-	public boolean isCleanedUp() {
+	public boolean cleanedUp() {
 		return this.cleanedUp;
 	}
 

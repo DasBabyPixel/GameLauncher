@@ -37,37 +37,37 @@ public class BasicCamera implements Camera {
 	}
 
 	@Override
-	public float getX() {
+	public float x() {
 		return position.x;
 	}
 
 	@Override
-	public float getY() {
+	public float y() {
 		return position.y;
 	}
 
 	@Override
-	public float getZ() {
+	public float z() {
 		return position.z;
 	}
 
 	@Override
-	public float getRotX() {
+	public float rotX() {
 		return rotation.x;
 	}
 
 	@Override
-	public float getRotY() {
+	public float rotY() {
 		return rotation.y;
 	}
 
 	@Override
-	public float getRotZ() {
+	public float rotZ() {
 		return rotation.z;
 	}
 
 	@Override
-	public void setRotation(float rx, float ry, float rz) {
+	public void rotation(float rx, float ry, float rz) {
 		boolean change = rotation.x != rx || rotation.y != ry || rotation.z != rz;
 		if (!change)
 			return;
@@ -78,21 +78,21 @@ public class BasicCamera implements Camera {
 
 	@Override
 	public void moveRotation(float offsetX, float offsetY, float offsetZ) {
-		setRotation(rotation.x + offsetX, rotation.y + offsetY, rotation.z + offsetZ);
+		rotation(rotation.x + offsetX, rotation.y + offsetY, rotation.z + offsetZ);
 	}
 
 	@Override
-	public void setRotX(float rx) {
+	public void rotX(float rx) {
 		rotation.x = rx;
 	}
 
 	@Override
-	public void setRotY(float ry) {
+	public void rotY(float ry) {
 		rotation.y = ry;
 	}
 
 	@Override
-	public void setRotZ(float rz) {
+	public void rotZ(float rz) {
 		rotation.z = rz;
 	}
 

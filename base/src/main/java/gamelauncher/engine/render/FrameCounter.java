@@ -36,7 +36,7 @@ public class FrameCounter {
 	/**
 	 * @return the update listeners
 	 */
-	public Collection<Consumer<Integer>> getUpdateListeners() {
+	public Collection<Consumer<Integer>> updateListeners() {
 		return this.updateListeners;
 	}
 
@@ -57,7 +57,7 @@ public class FrameCounter {
 	/**
 	 * @return the average update listeners
 	 */
-	public Collection<Consumer<Float>> getAvgUpdateListeners() {
+	public Collection<Consumer<Float>> avgUpdateListeners() {
 		return this.avgUpdateListeners;
 	}
 
@@ -102,14 +102,14 @@ public class FrameCounter {
 	/**
 	 * @return the current fps
 	 */
-	public int getFps() {
+	public int fps() {
 		return this.buffer.frames1Second.size();
 	}
 
 	/**
 	 * @return the average fps over the last five seconds
 	 */
-	public float getFpsAvg() {
+	public float fpsAvg() {
 		return this.buffer.frames5Second.size() / 5F;
 	}
 

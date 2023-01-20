@@ -35,42 +35,42 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 	@Override
 	public void renderFrame(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "frame");
+		this.launcher.profiler().begin("render", "frame");
 		this.map.get(frame).renderFrame(this.renderer.get());
-		this.launcher.getProfiler().end();
+		this.launcher.profiler().end();
 	}
 
 	@Override
 	public void windowSizeChanged(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "windowSizeChanged");
+		this.launcher.profiler().begin("render", "windowSizeChanged");
 		this.map.get(frame).windowSizeChanged();
-		this.launcher.getProfiler().end();
+		this.launcher.profiler().end();
 	}
 
 	@Override
 	public void init(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "init");
-		this.launcher.getLogger().info("Initializing RenderEngine");
+		this.launcher.profiler().begin("render", "init");
+		this.launcher.logger().info("Initializing RenderEngine");
 		this.map.put(frame, new Entry(frame));
 		this.map.get(frame).init();
-		this.launcher.getLogger().info("RenderEngine initialized");
-		this.launcher.getProfiler().end();
+		this.launcher.logger().info("RenderEngine initialized");
+		this.launcher.profiler().end();
 	}
 
 	@Override
 	public void cleanup(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "cleanup");
-		this.launcher.getLogger().info("Cleaning up RenderEngine");
+		this.launcher.profiler().begin("render", "cleanup");
+		this.launcher.logger().info("Cleaning up RenderEngine");
 		this.map.remove(frame).cleanup();
-		this.launcher.getLogger().info("RenderEngine cleaned up");
-		this.launcher.getProfiler().end();
+		this.launcher.logger().info("RenderEngine cleaned up");
+		this.launcher.profiler().end();
 	}
 
 	@Override
 	public void refreshDisplay(Frame frame) throws GameException {
-		this.launcher.getProfiler().begin("render", "refresh");
+		this.launcher.profiler().begin("render", "refresh");
 		this.map.get(frame).refreshDisplay(this.renderer.get());
-		this.launcher.getProfiler().end();
+		this.launcher.profiler().end();
 	}
 
 	public class Entry extends AbstractGameResource {
@@ -109,11 +109,11 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			this.mainScreenItemModel = this.mainScreenItem.createModel();
 
-			this.contexthud = launcher.getContextProvider()
+			this.contexthud = launcher.contextProvider()
 					.loadContext(this.mainFramebuffer, ContextType.HUD);
 			((LWJGLDrawContext) this.contexthud).swapTopBottom = true;
 
-			launcher.getGuiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
+			launcher.guiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
 
 			//			updateScreenItems();
 
@@ -122,7 +122,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 		@Override
 		public void cleanup0() throws GameException {
 			this.mainScreenItemModel.cleanup();
-			launcher.getContextProvider().freeContext(this.contexthud, ContextType.HUD);
+			launcher.contextProvider().freeContext(this.contexthud, ContextType.HUD);
 			this.mainFramebuffer.cleanup();
 		}
 
@@ -149,7 +149,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			this.contexthud.update(this.camera);
 			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
-			this.contexthud.getProgram().clearUniforms();
+			this.contexthud.program().clearUniforms();
 			this.frame.framebuffer().endFrame();
 		}
 
@@ -179,7 +179,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 
 			this.contexthud.update(this.camera);
 			this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
-			this.contexthud.getProgram().clearUniforms();
+			this.contexthud.program().clearUniforms();
 
 			this.frame.framebuffer().endFrame();
 		}
@@ -206,7 +206,7 @@ public class LWJGLGameRenderer implements GameRenderer {
 	}
 
 	@Override
-	public Renderer getRenderer() {
+	public Renderer renderer() {
 		return this.renderer.get();
 	}
 

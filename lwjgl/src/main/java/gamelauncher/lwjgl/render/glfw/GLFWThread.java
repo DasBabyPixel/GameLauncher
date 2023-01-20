@@ -14,7 +14,7 @@ public class GLFWThread extends AbstractExecutorThread {
 
 	private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
 
-	private final Logger logger = Logger.getLogger();
+	private final Logger logger = Logger.logger();
 
 	private final GLFWMonitorManager monitorManager = new GLFWMonitorManager();
 

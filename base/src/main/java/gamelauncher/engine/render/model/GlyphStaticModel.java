@@ -8,21 +8,21 @@ public interface GlyphStaticModel extends Model {
 	/**
 	 * @return the width
 	 */
-	int getWidth();
+	int width();
 
 	/**
 	 * @return the height
 	 */
-	int getHeight();
+	int height();
 
 	/**
 	 * @return the descent
 	 */
-	float getDescent();
+	float descent();
 
 	/**
 	 * @return the ascent
 	 */
-	float getAscent();
+	float ascent();
 
 }

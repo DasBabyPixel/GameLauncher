@@ -12,7 +12,7 @@ public class SettingSectionConstructEvent extends Event {
 	private final SettingSectionConstructor constructor;
 
 	/**
-	 * @param constructor
+	 * @param constructor the settings-constructor
 	 */
 	public SettingSectionConstructEvent(SettingSectionConstructor constructor) {
 		this.constructor = constructor;
@@ -21,7 +21,7 @@ public class SettingSectionConstructEvent extends Event {
 	/**
 	 * @return the {@link SettingSectionConstructor}
 	 */
-	public SettingSectionConstructor getConstructor() {
+	public SettingSectionConstructor constructor() {
 		return constructor;
 	}
 }

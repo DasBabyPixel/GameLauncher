@@ -15,6 +15,6 @@ public interface GameRenderer extends FrameRenderer {
 	/**
 	 * @return the {@link Renderer}
 	 */
-	Renderer getRenderer();
+	Renderer renderer();
 
 }

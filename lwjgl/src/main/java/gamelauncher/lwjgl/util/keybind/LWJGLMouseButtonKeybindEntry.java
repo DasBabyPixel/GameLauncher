@@ -44,7 +44,7 @@ public class LWJGLMouseButtonKeybindEntry extends AbstractKeybindEntry implement
 
 	@Override
 	public MouseButtonKeybindEntry withType(Type type) {
-		return new LWJGLMouseButtonKeybindEntry(getKeybind(), mouseX, mouseY, type);
+		return new LWJGLMouseButtonKeybindEntry(keybind(), mouseX, mouseY, type);
 	}
 
 	@Override

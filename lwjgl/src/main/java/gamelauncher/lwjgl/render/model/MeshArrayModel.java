@@ -31,8 +31,8 @@ public class MeshArrayModel extends AbstractGameResource implements Model {
 	@Override
 	public void render(ShaderProgram program) throws GameException {
 		for (Mesh mesh : this.meshes) {
-			if (mesh.getMaterial() != null) {
-				program.umaterial.set(mesh.getMaterial());
+			if (mesh.material() != null) {
+				program.umaterial.set(mesh.material());
 			}
 //			program.umaterial.upload();
 			program.uapplyLighting.set(mesh.applyLighting() ? 1 : 0);

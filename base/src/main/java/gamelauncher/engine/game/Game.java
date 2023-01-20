@@ -23,7 +23,7 @@ public abstract class Game implements Comparable<Game> {
 
 	public Game(Key key) {
 		this.key = key;
-		this.launcher = key.plugin().getLauncher();
+		this.launcher = key.plugin().launcher();
 	}
 
 	@Override
@@ -51,14 +51,14 @@ public abstract class Game implements Comparable<Game> {
 	/**
 	 * @return the game {@link Key}
 	 */
-	public Key getKey() {
+	public Key key() {
 		return this.key;
 	}
 
 	/**
 	 * @return the {@link GameLauncher}
 	 */
-	public GameLauncher getLauncher() {
+	public GameLauncher launcher() {
 		return this.launcher;
 	}
 
@@ -67,30 +67,30 @@ public abstract class Game implements Comparable<Game> {
 	/**
 	 * Launches a {@link Game} on a {@link Framebuffer}
 	 *
-	 * @param framebuffer
+	 * @param framebuffer a framebuffer
 	 *
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
 	public final void launch(Framebuffer framebuffer) throws GameException {
-		if (this.launcher.getCurrentGame() != null) {
-			this.launcher.getCurrentGame().close();
+		if (this.launcher.currentGame() != null) {
+			this.launcher.currentGame().close();
 		}
-		this.launcher.setCurrentGame(this);
+		this.launcher.currentGame(this);
 		this.launch0(framebuffer);
 	}
 
 	protected abstract void close0() throws GameException;
 
 	/**
-	 * @throws GameException
-	 * @throws WrongGameException
+	 * @throws GameException an exception
+	 * @throws WrongGameException an exception
 	 */
 	public final void close() throws GameException {
-		if (this.launcher.getCurrentGame() != this) {
+		if (this.launcher.currentGame() != this) {
 			throw new WrongGameException();
 		}
 		this.close0();
-		this.launcher.setCurrentGame(null);
+		this.launcher.currentGame(null);
 	}
 
 }

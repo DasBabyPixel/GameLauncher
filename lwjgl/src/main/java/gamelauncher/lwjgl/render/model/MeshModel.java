@@ -27,8 +27,8 @@ public class MeshModel extends AbstractGameResource implements Model {
 
 	@Override
 	public void render(ShaderProgram program) throws GameException {
-		program.umaterial.set(this.mesh.getMaterial());
-		program.uhasTexture.set(this.mesh.getMaterial().texture != null ? 1 : 0);
+		program.umaterial.set(this.mesh.material());
+		program.uhasTexture.set(this.mesh.material().texture != null ? 1 : 0);
 		program.uapplyLighting.set(this.mesh.applyLighting() ? 1 : 0);
 		program.uploadUniforms();
 		this.mesh.render();

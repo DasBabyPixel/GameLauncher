@@ -30,7 +30,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class GLFWFrame extends AbstractGameResource implements Frame {
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 	private static final GameConsumer<Frame> simpleCCB = f -> {
 		((GLFWFrame) f).close0();
 	};
@@ -176,7 +176,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	}
 
 	@Override
-	public Input getInput() {
+	public Input input() {
 		return this.input;
 	}
 
@@ -242,11 +242,11 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	}
 
 	@Override
-	public LWJGLGameLauncher getLauncher() {
+	public LWJGLGameLauncher launcher() {
 		return this.launcher;
 	}
 
-	public LWJGLMouse getMouse() {
+	public LWJGLMouse mouse() {
 		return this.mouse;
 	}
 
@@ -380,10 +380,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			GLFW.glfwSetCursorPosCallback(this.glfwId, (wid, xpos, ypos) -> {
 				ypos = ypos + 0.5F;
 				xpos = xpos + 0.5F;
-				float omx = (float) this.frame.getMouse().getX();
-				float omy = (float) this.frame.getMouse().getY();
+				float omx = (float) this.frame.mouse().getX();
+				float omy = (float) this.frame.mouse().getY();
 				ypos = this.height.doubleValue() - ypos;
-				this.frame.getMouse().setPosition(xpos, ypos);
+				this.frame.mouse().setPosition(xpos, ypos);
 				this.frame.input.mouseMove(omx, omy, (float) xpos, (float) ypos);
 			});
 			GLFW.glfwSetWindowSizeCallback(this.glfwId, (wid, w, h) -> {
@@ -393,11 +393,11 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			GLFW.glfwSetMouseButtonCallback(this.glfwId, (wid, button, action, mods) -> {
 				switch (action) {
 					case GLFW_PRESS -> this.frame.input.mousePress(button,
-							(float) this.frame.getMouse().getX(),
-							(float) this.frame.getMouse().getY());
+							(float) this.frame.mouse().getX(),
+							(float) this.frame.mouse().getY());
 					case GLFW_RELEASE -> this.frame.input.mouseRelease(button,
-							(float) this.frame.getMouse().getX(),
-							(float) this.frame.getMouse().getY());
+							(float) this.frame.mouse().getX(),
+							(float) this.frame.mouse().getY());
 				}
 			});
 			GLFW.glfwSetKeyCallback(this.glfwId, (wid, key, scancode, action, mods) -> {

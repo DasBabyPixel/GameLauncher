@@ -49,21 +49,21 @@ public class LWJGLTestRenderer implements GameRenderer {
 		this.glContext.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
 		this.glContext.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
 		this.glContext.replace(null);
-		this.launcher.getGuiManager()
+		this.launcher.guiManager()
 				.openGui(this.framebuffer, new ParentableAbstractGui(this.launcher) {
 
 					{
-						ColorGui colorGui = LWJGLTestRenderer.this.launcher.getGuiManager()
+						ColorGui colorGui = LWJGLTestRenderer.this.launcher.guiManager()
 								.createGui(ColorGui.class);
 						//						colorGui.getXProperty().bind(this.getXProperty());
 						//						colorGui.getYProperty().bind(this.getYProperty());
 						//						colorGui.getWidthProperty().bind(this.getWidthProperty());
 						//						colorGui.getHeightProperty().bind(this.getHeightProperty());
-						colorGui.getXProperty().setValue(100);
-						colorGui.getYProperty().setValue(100);
-						colorGui.getWidthProperty().bind(getWidthProperty().subtract(200));
-						colorGui.getHeightProperty().bind(getHeightProperty().subtract(200));
-						colorGui.getColor().set(1, 1, 1, 0.5F);
+						colorGui.xProperty().setValue(100);
+						colorGui.yProperty().setValue(100);
+						colorGui.widthProperty().bind(widthProperty().subtract(200));
+						colorGui.heightProperty().bind(heightProperty().subtract(200));
+						colorGui.color().set(1, 1, 1, 0.5F);
 						//						colorGui.getColor().w.bind(
 						//								this.getHeightProperty().divide(this.getWidthProperty()).min(1));
 						this.GUIs.add(colorGui);
@@ -93,7 +93,7 @@ public class LWJGLTestRenderer implements GameRenderer {
 	}
 
 	@Override
-	public Renderer getRenderer() {
+	public Renderer renderer() {
 		return this.renderer;
 	}
 

@@ -37,22 +37,22 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	private final NumberValue lastMouseX = NumberValue.zero();
 	private final NumberValue lastMouseY = NumberValue.zero();
 	private final BooleanValue hovering = BooleanValue.falseValue()
-			.mapToBoolean(unused -> isHovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
+			.mapToBoolean(unused -> hovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
 	private final String className = this.getClass().getName();
 	protected Framebuffer framebuffer;
-	private Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
-	private Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
+	private final Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
+	private final Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
 
 	public ParentableAbstractGui(GameLauncher launcher) {
 		super(launcher);
 		hovering.addDependencies(lastMouseX, lastMouseY)
-				.addDependencies(getVisibleXProperty(), getVisibleYProperty(),
-						getVisibleWidthProperty(), getVisibleHeightProperty());
+				.addDependencies(visibleXProperty(), visibleYProperty(), visibleWidthProperty(),
+						visibleHeightProperty());
 		hovering.addListener(Property::getValue);
 	}
 
 	private void mouseClicked(MouseButtonKeybindEntry entry) throws GameException {
-		int id = entry.getKeybind().getUniqueId();
+		int id = entry.keybind().uniqueId();
 		if (this.mouseButtons.contains(id)) {
 			this.handle(entry.withType(MouseButtonKeybindEntry.Type.RELEASE));
 		}
@@ -63,26 +63,26 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 		float mouseY = entry.mouseY();
 		this.doForGUIs(gui -> {
 			if (!hasFoundFocusedGui.get()) {
-				if (gui.isHovering(mouseX, mouseY)) {
+				if (gui.hovering(mouseX, mouseY)) {
 					if (gui == this.focusedGui.get()) {
-						if (!gui.isFocused()) {
+						if (!gui.focused()) {
 							gui.focus();
 						}
-						if (!gui.isFocused()) {
+						if (!gui.focused()) {
 							return;
 						}
 						hasFoundFocusedGui.set(true);
 						gui.handle(entry);
 						guis.add(gui);
-					} else if (!gui.isFocused()) {
+					} else if (!gui.focused()) {
 						if (this.focusedGui.get() != null) {
 							this.focusedGui.get().unfocus();
-							if (this.focusedGui.get().isFocused()) {
+							if (this.focusedGui.get().focused()) {
 								return;
 							}
 						}
 						gui.focus();
-						if (gui.isFocused()) {
+						if (gui.focused()) {
 							hasFoundFocusedGui.set(true);
 							this.focusedGui.set(gui);
 							gui.handle(entry);
@@ -94,7 +94,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 		});
 		if (!hasFoundFocusedGui.get() && this.focusedGui.get() != null) {
 			this.focusedGui.get().unfocus();
-			if (!this.focusedGui.get().isFocused()) {
+			if (!this.focusedGui.get().focused()) {
 				this.focusedGui.set(null);
 			}
 		}
@@ -102,7 +102,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	private void mouseReleased(MouseButtonKeybindEntry entry) throws GameException {
-		int id = entry.getKeybind().getUniqueId();
+		int id = entry.keybind().uniqueId();
 		if (this.mouseButtons.contains(id)) {
 			this.mouseButtons.remove(id);
 			Collection<Gui> guis = this.mouseDownGuis.remove(id);
@@ -124,11 +124,11 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			if (done.compareAndSet(false, true)) {
 				gui.handle(entry);
 			}
-		}, gui -> gui.isHovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
+		}, gui -> gui.hovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
 	}
 
 	private void forFocused(KeybindEntry e) throws GameException {
-		this.doForGUIs(gui -> gui.handle(e), Gui::isFocused);
+		this.doForGUIs(gui -> gui.handle(e), Gui::focused);
 	}
 
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
@@ -203,7 +203,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	}
 
 	@Override
-	public boolean isInitialized() {
+	public boolean initialized() {
 		return this.initialized.get();
 	}
 
@@ -222,7 +222,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 		ScissorStack scissor = framebuffer.scissorStack();
 		scissor.pushScissor(this);
 		try {
-			this.getLauncher().getProfiler().begin("render", "Gui-" + this.className);
+			this.launcher().profiler().begin("render", "Gui-" + this.className);
 			this.init(framebuffer);
 			this.preRender(framebuffer, mouseX, mouseY, partialTick);
 			if (this.doRender(framebuffer, mouseX, mouseY, partialTick)) {
@@ -230,7 +230,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 			}
 			this.postRender(framebuffer, mouseX, mouseY, partialTick);
 		} finally {
-			this.getLauncher().getProfiler().end();
+			this.launcher().profiler().end();
 			scissor.popScissor();
 		}
 	}
@@ -290,8 +290,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	public String toString() {
 		String additional = additionalToStringData();
 		return String.format("%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f%s]",
-				this.getClass().getSimpleName(), this.getX(), this.getY(), this.getWidth(),
-				this.getHeight(), additional == null ? "" : " " + additional);
+				this.getClass().getSimpleName(), this.x(), this.y(), this.width(), this.height(),
+				additional == null ? "" : " " + additional);
 	}
 
 	protected String additionalToStringData() {

@@ -58,7 +58,7 @@ public class GameThread extends Thread {
 	 * 
 	 * @return the current partial tick
 	 */
-	public float getPartialTick() {
+	public float partialTick() {
 		long lastTick = this.lastTick.get();
 		if (lastTick == -1) {
 			return 0;
@@ -81,11 +81,11 @@ public class GameThread extends Thread {
 				Threads.park(nanoDelay);
 			}
 			while (lastTick - System.nanoTime() < 0) {
-				int tps = getTps();
+				int tps = tps();
 				if (tps < GameLauncher.MAX_TPS * 0.9) {
 					tpsTrySkipCounter++;
 					if (tpsTrySkipCounter > GameLauncher.MAX_TPS && tpsTrySkipCounter > 1) {
-						gameLauncher.getLogger().infof("Low TPS!");
+						gameLauncher.logger().infof("Low TPS!");
 						tpsTrySkipCounter = 0;
 					}
 				} else {
@@ -102,7 +102,7 @@ public class GameThread extends Thread {
 				if (tickTook > tickTime) {
 					long tooLong = tickTook - tickTime;
 					long ticksToSkip = tooLong / tickTime;
-					gameLauncher.getLogger()
+					gameLauncher.logger()
 							.infof("Tick took %sms. This is %sms longer than expected!%s",
 									TimeUnit.NANOSECONDS.toMillis(tickTook), TimeUnit.NANOSECONDS.toMillis(tooLong),
 									ticksToSkip > 0 ? String.format("%nSkipping %s ticks to compensate", ticksToSkip)
@@ -160,14 +160,14 @@ public class GameThread extends Thread {
 	/**
 	 * @return the current tps
 	 */
-	public int getTps() {
+	public int tps() {
 		return ticks.size();
 	}
 
 	/**
 	 * @return the average tick time over the last second
 	 */
-	public double getAverageTickTime() {
+	public double averageTickTime() {
 		return (double) ticksTimeSum / (double) ticksTimeSumCount;
 	}
 
@@ -228,7 +228,7 @@ public class GameThread extends Thread {
 	/**
 	 * @return the current tick
 	 */
-	public int getCurrentTick() {
+	public int currentTick() {
 		return tick.get();
 	}
 

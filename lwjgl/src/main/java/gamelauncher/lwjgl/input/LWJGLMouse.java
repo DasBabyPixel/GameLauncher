@@ -33,7 +33,7 @@ public class LWJGLMouse {
 	 */
 	public CompletableFuture<Void> grabbed(boolean grab) {
 		if (this.grabbed.compareAndSet(!grab, grab)) {
-			return this.frame.getLauncher().getGLFWThread()
+			return this.frame.launcher().getGLFWThread()
 					.submit(() -> GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(),
 							GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode()));
 		}
@@ -57,7 +57,7 @@ public class LWJGLMouse {
 	/**
 	 * @return the delta x since the last call
 	 */
-	public double getDeltaX() {
+	public double deltaX() {
 		double x = this.getX();
 		return x - this.lastx.getAndSet(x);
 	}
@@ -65,7 +65,7 @@ public class LWJGLMouse {
 	/**
 	 * @return the delta y since the last call
 	 */
-	public double getDeltaY() {
+	public double deltaY() {
 		double y = this.getY();
 		return y - this.lasty.getAndSet(y);
 	}

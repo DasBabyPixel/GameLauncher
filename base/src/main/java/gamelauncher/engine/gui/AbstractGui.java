@@ -28,47 +28,47 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
-	public NumberValue getWidthProperty() {
+	public NumberValue widthProperty() {
 		return w;
 	}
 
 	@Override
-	public NumberValue getHeightProperty() {
+	public NumberValue heightProperty() {
 		return h;
 	}
 
 	@Override
-	public NumberValue getXProperty() {
+	public NumberValue xProperty() {
 		return x;
 	}
 
 	@Override
-	public NumberValue getYProperty() {
+	public NumberValue yProperty() {
 		return y;
 	}
 
 	@Override
-	public NumberValue getVisibleXProperty() {
+	public NumberValue visibleXProperty() {
 		return visibleX;
 	}
 
 	@Override
-	public NumberValue getVisibleYProperty() {
+	public NumberValue visibleYProperty() {
 		return visibleY;
 	}
 
 	@Override
-	public NumberValue getVisibleWidthProperty() {
+	public NumberValue visibleWidthProperty() {
 		return visibleW;
 	}
 
 	@Override
-	public NumberValue getVisibleHeightProperty() {
+	public NumberValue visibleHeightProperty() {
 		return visibleH;
 	}
 
 	@Override
-	public BooleanValue getFocusedProperty() {
+	public BooleanValue focusedProperty() {
 		return focused;
 	}
 
@@ -119,7 +119,7 @@ public abstract class AbstractGui implements Gui {
 	}
 
 	@Override
-	public GameLauncher getLauncher() {
+	public GameLauncher launcher() {
 		return launcher;
 	}
 

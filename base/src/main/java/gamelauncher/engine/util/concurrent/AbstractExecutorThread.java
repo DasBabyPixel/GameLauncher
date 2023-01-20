@@ -16,7 +16,7 @@ import java.util.concurrent.locks.LockSupport;
  */
 public abstract class AbstractExecutorThread extends AbstractGameThread implements ExecutorThread {
 
-	private static final Logger logger = Logger.getLogger(AbstractExecutorThread.class);
+	private static final Logger logger = Logger.logger(AbstractExecutorThread.class);
 
 	private final Deque<QueueEntry> queue = new ConcurrentLinkedDeque<>();
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();

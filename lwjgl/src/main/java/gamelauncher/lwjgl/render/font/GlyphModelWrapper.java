@@ -40,22 +40,22 @@ public class GlyphModelWrapper extends AbstractGameResource implements GlyphStat
 	}
 
 	@Override
-	public float getDescent() {
+	public float descent() {
 		return descent;
 	}
 
 	@Override
-	public float getAscent() {
+	public float ascent() {
 		return ascent;
 	}
 
 	@Override
-	public int getWidth() {
+	public int width() {
 		return width;
 	}
 
 	@Override
-	public int getHeight() {
+	public int height() {
 		return height;
 	}
 

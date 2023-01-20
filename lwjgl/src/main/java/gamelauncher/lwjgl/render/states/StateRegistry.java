@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class StateRegistry {
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private static final Collection<Long> glfwWindows = new CopyOnWriteArrayList<>();
 

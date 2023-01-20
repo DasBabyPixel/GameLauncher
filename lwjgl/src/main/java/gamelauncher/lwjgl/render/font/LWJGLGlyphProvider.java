@@ -39,7 +39,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 	private final DynamicSizeTextureAtlas textureAtlas;
 
 	public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
-		this.frame = launcher.getMainFrame().newFrame();
+		this.frame = launcher.mainFrame().newFrame();
 		this.textureAtlas = new DynamicSizeTextureAtlas(launcher, this.frame.renderThread());
 	}
 
@@ -76,31 +76,31 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 			for (AtlasEntry e : entry.getValue()) {
 				Rectangle bd = e.bounds;
 
-				NumberValue tw = e.texture.getWidth();
-				NumberValue th = e.texture.getHeight();
+				NumberValue tw = e.texture.width();
+				NumberValue th = e.texture.height();
 				NumberValue tl = NumberValue.constant(bd.x).divide(tw);
 				NumberValue tb = NumberValue.constant(bd.y).divide(th);
 				NumberValue tr = NumberValue.constant(bd.x).add(bd.width).divide(tw);
 				NumberValue tt = NumberValue.constant(bd.y).add(bd.height).divide(th);
 
 				GlyphData data = e.entry.data;
-				float pb = -data.bearingY - data.height;
-				float pt = pb + data.height;
+				int pb = -data.bearingY - data.height;
+				int pt = pb + data.height;
 				//				float pl = xpos + data.bearingX;
-				float pl = xpos;
-				float pr = pl + data.width;
-				float width = pr - pl;
-				float height = pt - pb;
-				float x = pl + width / 2F;
-				float y = pt + height / 2F;
+				int pl = xpos;
+				int pr = pl + data.width;
+				int width = pr - pl;
+				int height = pt - pb;
+				int x = pl + width / 2;
+				int y = pt + height / 2;
 
-				mheight = Math.max(mheight, Math.ceil(height));
-				mwidth = Math.max(mwidth, Math.ceil(xpos + width));
+				mheight = Math.max(mheight, height);
+				mwidth = Math.max(mwidth, xpos + width);
 				DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
 				GameItem gi = new GameItem(m);
-				gi.setPosition(x, y, z);
-				gi.setScale(width, height, 1);
+				gi.position(x, y, z);
+				gi.scale(width, height, 1);
 				meshes.add(gi.createModel());
 				xpos += e.entry.data.advance;
 
@@ -111,7 +111,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		//		entries.keySet().stream().findAny().get().write();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[0]));
 		GameItem gi = new GameItem(cmodel);
-		gi.setAddColor(1, 1, 1, 0);
+		gi.addColor(1, 1, 1, 0);
 		GameItemModel gim = gi.createModel();
 
 		return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);

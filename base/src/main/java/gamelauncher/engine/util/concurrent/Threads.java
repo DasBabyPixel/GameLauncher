@@ -25,7 +25,7 @@ public class Threads extends AbstractGameResource {
 	 */
 	public static final boolean calculateThreadStacks = Boolean.getBoolean("calculateThreadStacks");
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	/**
 	 * A work stealing {@link Executor}.

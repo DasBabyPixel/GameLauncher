@@ -34,7 +34,7 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
 	@Override
 	protected void cleanup0() throws GameException {
 		LWJGLGuiManager lgm =
-				(LWJGLGuiManager) this.renderThread.getFrame().getLauncher().getGuiManager();
+				(LWJGLGuiManager) this.renderThread.getFrame().launcher().guiManager();
 		lgm.cleanup(this);
 	}
 

@@ -16,7 +16,7 @@ public interface Frame extends GameResource {
 	/**
 	 * @return the input for this {@link Frame}
 	 */
-	Input getInput();
+	Input input();
 
 	/**
 	 * @return the frameCloseFuture
@@ -87,6 +87,6 @@ public interface Frame extends GameResource {
 	/**
 	 * @return the launcher
 	 */
-	GameLauncher getLauncher();
+	GameLauncher launcher();
 
 }

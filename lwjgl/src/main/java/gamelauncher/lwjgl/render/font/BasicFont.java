@@ -28,7 +28,7 @@ public class BasicFont extends AbstractGameResource implements Font {
 	BasicFont(BasicFontFactory factory, GameLauncher launcher, ResourceStream stream) {
 		this.path = stream.getPath();
 		this.factory = factory;
-		this.future = launcher.getThreads().cached.submit(() -> {
+		this.future = launcher.threads().cached.submit(() -> {
 			byte[] b = stream.readAllBytes();
 			stream.cleanup();
 			this.data = MemoryUtil.memAlloc(b.length);
@@ -46,7 +46,7 @@ public class BasicFont extends AbstractGameResource implements Font {
 	}
 
 	@Override
-	public boolean isCleanedUp() {
+	public boolean cleanedUp() {
 		return this.refcount.get() == 0;
 	}
 

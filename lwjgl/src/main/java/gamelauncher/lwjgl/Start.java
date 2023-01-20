@@ -7,11 +7,8 @@ import gamelauncher.engine.util.GameException;
  */
 public class Start {
 	
-	/**
-	 * @param args
-	 * @throws GameException
-	 */
 	public static void main(String[] args) throws GameException {
+		System.out.println("Starting LWJGL");
 		new LWJGLGameLauncher().start(args);
 	}
 }

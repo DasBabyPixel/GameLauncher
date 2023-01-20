@@ -16,7 +16,7 @@ import java.util.Collection;
 
 public class GLFWGLContext extends AbstractGameResource {
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
 	final Collection<GLFWGLContext> sharedContexts;

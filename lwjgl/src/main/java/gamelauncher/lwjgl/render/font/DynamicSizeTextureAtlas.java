@@ -26,7 +26,7 @@ import static org.lwjgl.opengles.GLES20.glGetInteger;
 public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
 	final Map<LWJGLTexture, Collection<AtlasEntry>> byTexture = new HashMap<>();
-	private final Logger logger = Logger.getLogger();
+	private final Logger logger = Logger.logger();
 	private final Map<Integer, AtlasEntry> glyphs = new HashMap<>();
 	private final Lock lock = new ReentrantLock(true);
 	private final LWJGLGameLauncher launcher;
@@ -52,7 +52,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 	}
 
 	public CompletableFuture<Void> removeGlyph(int glyphId) {
-		return launcher.getThreads().cached.submit(() -> {
+		return launcher.threads().cached.submit(() -> {
 			try {
 				lock.lock();
 				AtlasEntry entry = glyphs.remove(glyphId);
@@ -78,7 +78,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 	public boolean addGlyph(int glyphId, GlyphEntry entry) {
 		try {
 			lock.lock();
-			if (isCleanedUp()) {
+			if (cleanedUp()) {
 				return false;
 			}
 			if (glyphs.containsKey(glyphId)) {
@@ -94,8 +94,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				e.texture = null;
 			}
 			if (e.texture == null) {
-				e.texture = launcher.getTextureManager().createTexture(owner);
-				e.texture.allocate(8, 8);
+				e.texture = launcher.textureManager().createTexture(owner);
+				e.texture.allocate(64, 64);
 				byTexture.put(e.texture, new HashSet<>());
 				add(glyphId, e);
 			}
@@ -111,8 +111,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		try {
 			//			Thread.dumpStack();
 			lock.lock();
-			Rectangle textureBounds = new Rectangle(e.texture.getWidth().intValue(),
-					e.texture.getHeight().intValue());
+			Rectangle textureBounds = new Rectangle(e.texture.width().intValue(),
+					e.texture.height().intValue());
 			Rectangle currentBounds = textureBounds;
 			boolean glyphTooLarge = false;
 			while (true) {
@@ -146,7 +146,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			last = last.thenRunAsync(() -> {
 				try {
 					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
-							.thenRun(launcher.getGuiManager()::redraw));
+							.thenRun(launcher.guiManager()::redraw));
+//					e.texture.write();
 				} catch (GameException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -171,11 +172,11 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
 	private boolean findFit(AtlasEntry entry, Rectangle bounds) {
 		Rectangle rect = entry.bounds;
-		int ox = rect.x;
-		int oy = rect.y;
+		rect = new Rectangle(rect.x, rect.y, rect.width + 2, rect.height + 2);
 		rect.y = 0;
 		boolean found = false;
 		Collection<Rectangle> check = byTexture.get(entry.texture).stream().map(e -> e.bounds)
+				.map(r -> new Rectangle(r.x - 1, r.y - 1, r.width + 2, r.height + 2))
 				.collect(Collectors.toSet());
 		Collection<Rectangle> remove = new HashSet<>();
 		yl:
@@ -201,9 +202,9 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				break yl;
 			}
 		}
-		if (!found) {
-			rect.x = ox;
-			rect.y = oy;
+		if (found) {
+			entry.bounds.x = rect.x + 1;
+			entry.bounds.y = rect.y + 1;
 		}
 		return found;
 	}

@@ -31,7 +31,7 @@ public class LWJGLShaderLoader implements ShaderLoader {
 	 */
 	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private final Map<Resource, LWJGLShaderProgram> programs = new ConcurrentHashMap<>();
 
@@ -112,8 +112,8 @@ public class LWJGLShaderLoader implements ShaderLoader {
 
 	@Override
 	public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
-		ResourceLoader loader = launcher.getResourceLoader();
-		Resource resource = loader.getResource(path);
+		ResourceLoader loader = launcher.resourceLoader();
+		Resource resource = loader.resource(path);
 		if (this.programs.containsKey(resource)) {
 			LWJGLShaderProgram program = this.programs.get(resource);
 			program.refCount.incrementAndGet();
@@ -127,9 +127,9 @@ public class LWJGLShaderLoader implements ShaderLoader {
 			root = LWJGLShaderLoader.gson.fromJson(rootutf8, JsonObject.class);
 			String vspathstr = root.get("vertexShader").getAsString();
 			String fspathstr = root.get("fragmentShader").getAsString();
-			String vscode = loader.getResource(parent.resolve(vspathstr)).newResourceStream()
+			String vscode = loader.resource(parent.resolve(vspathstr)).newResourceStream()
 					.readUTF8FullyClose();
-			String fscode = loader.getResource(parent.resolve(fspathstr)).newResourceStream()
+			String fscode = loader.resource(parent.resolve(fspathstr)).newResourceStream()
 					.readUTF8FullyClose();
 			LWJGLShaderProgram program = new LWJGLShaderProgram(launcher, path);
 			this.programs.put(resource, program);

@@ -17,7 +17,7 @@ import gamelauncher.engine.util.logging.Logger;
  */
 public class WrapperExecutorThreadService implements ExecutorThreadService {
 
-	private static final Logger logger = Logger.getLogger(WrapperExecutorThreadService.class);
+	private static final Logger logger = Logger.logger(WrapperExecutorThreadService.class);
 
 	private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
 

@@ -14,7 +14,7 @@ public abstract class SettingSectionInsertion {
 	 * @param launcher
 	 */
 	public void register(GameLauncher launcher) {
-		launcher.getEventManager().registerListener(this);
+		launcher.eventManager().registerListener(this);
 	}
 
 	protected abstract void construct(SettingSectionConstructor constructor);
@@ -26,7 +26,7 @@ public abstract class SettingSectionInsertion {
 	@EventHandler
 	private void handle(SettingSectionConstructEvent event) {
 		if (shouldHandle(event)) {
-			construct(event.getConstructor());
+			construct(event.constructor());
 		}
 	}
 }

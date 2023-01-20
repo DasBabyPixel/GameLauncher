@@ -7,6 +7,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import gamelauncher.engine.util.GameException;
+import org.jetbrains.annotations.Contract;
 
 /**
  * @author DasBabyPixel
@@ -25,10 +26,11 @@ public abstract class ResourceLoader extends AbstractGameResource {
 	}
 
 	/**
-	 * @param path
+	 * @param path the path
 	 * @return if this {@link ResourceLoader} has the given {@link Path}
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
+	@Contract(pure = true)
 	public final boolean hasResource(Path path) throws GameException {
 		if (isResourceLoaded(path)) {
 			return true;
@@ -36,12 +38,13 @@ public abstract class ResourceLoader extends AbstractGameResource {
 		return canLoadResource(path);
 	}
 
+	@Contract(pure = true)
 	protected abstract boolean canLoadResource(Path path) throws GameException;
 
 	protected abstract Resource loadResource(Path path) throws GameException;
 
 	/**
-	 * @param path
+	 * @param path the path
 	 * @return if this {@link ResourceLoader} has loaded a {@link Resource} for the given {@link Path}
 	 */
 	public final boolean isResourceLoaded(Path path) {
@@ -51,11 +54,11 @@ public abstract class ResourceLoader extends AbstractGameResource {
 	/**
 	 * Loads a {@link Resource} (if neccessary) by the given {@link Path}
 	 * 
-	 * @param path
+	 * @param path the path
 	 * @return the {@link Resource}
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
-	public final Resource getResource(Path path) throws GameException {
+	public final Resource resource(Path path) throws GameException {
 		path = path.toAbsolutePath();
 		if (isResourceLoaded(path)) {
 			lock.lock();
@@ -80,6 +83,7 @@ public abstract class ResourceLoader extends AbstractGameResource {
 	/**
 	 * @return the instance
 	 */
+	@Contract(pure = true)
 	public static ResourceLoader getInstance() {
 		return instance;
 	}

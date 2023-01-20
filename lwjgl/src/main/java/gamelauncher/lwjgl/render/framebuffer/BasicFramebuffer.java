@@ -20,13 +20,13 @@ public class BasicFramebuffer extends LWJGLFramebuffer {
 
 	public BasicFramebuffer(LWJGLGameLauncher launcher, int width, int height)
 			throws GameException {
-		super(launcher.getMainFrame());
+		super(launcher.mainFrame());
 		this.width().setNumber(width);
 		this.height().setNumber(height);
 		this.bind();
 
 		GlStates c = GlStates.current();
-		this.colorTexture = launcher.getTextureManager()
+		this.colorTexture = launcher.textureManager()
 				.createTexture((ExecutorThread) Threads.currentThread());
 		Threads.waitFor(
 				this.colorTexture.allocate(this.width().intValue(), this.height().intValue()));

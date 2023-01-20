@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.io.Files;
@@ -24,7 +23,7 @@ import gamelauncher.engine.util.logging.Logger;
  */
 public class PluginManager {
 
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private final GameLauncher launcher;
 
@@ -47,12 +46,14 @@ public class PluginManager {
 
 	/**
 	 * Loads all the plugins in a folder
-	 * 
+	 *
 	 * @param folder
+	 *
 	 * @throws GameException
 	 */
 	public void loadPlugins(Path folder) throws GameException {
-		logger.debugf("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
+		logger.debugf("Loading plugin files in folder %s",
+				folder.toAbsolutePath().normalize().toString());
 		DirectoryStream<Path> stream = Files.newDirectoryStream(folder);
 		Iterator<Path> it = stream.iterator();
 		while (it.hasNext()) {
@@ -65,8 +66,9 @@ public class PluginManager {
 
 	/**
 	 * Loads plugins
-	 * 
+	 *
 	 * @param plugins
+	 *
 	 * @throws GameException
 	 */
 	public void loadPlugins(Collection<Path> plugins) throws GameException {
@@ -77,28 +79,29 @@ public class PluginManager {
 
 	/**
 	 * Loads the given plugin
-	 * 
+	 *
 	 * @param plugin
+	 *
 	 * @throws GameException
 	 */
 	public void loadPlugin(Path plugin) throws GameException {
 		logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
 		try {
-			PluginClassLoader pcl = new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this,
-					plugin.toUri().toURL());
+			PluginClassLoader pcl =
+					new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this,
+							plugin.toUri().toURL());
 			Collection<Class<?>> pluginClasses = new HashSet<>();
 			try (EntryInputStream ein = new EntryInputStream(plugin)) {
 				EntryInputStream.Entry e;
 				while (ein.hasNextEntry()) {
-					e = ein.getNextEntry();
+					e = ein.nextEntry();
 
-					if (!e.getName().endsWith(".class") || e.getName().startsWith("META-INF")) {
+					if (!e.name().endsWith(".class") || e.name().startsWith("META-INF")) {
 						continue;
 					}
-					String className = e.getName()
-							.substring(0, e.getName().length() - 6)
-							.replace("\\", "/")
-							.replace("/", ".");
+					String className =
+							e.name().substring(0, e.name().length() - 6).replace("\\", "/")
+									.replace("/", ".");
 					Class<?> ocls = loadedClasses.get(className);
 					if (ocls != null) {
 						PluginClassLoader opcl = (PluginClassLoader) ocls.getClassLoader();
@@ -115,18 +118,17 @@ public class PluginManager {
 
 				}
 			} catch (IllegalAccessError ex) {
-				ex.printStackTrace();
+				throw new GameException(ex);
 			}
 			for (Class<?> cls : pluginClasses) {
 				String className = cls.getName();
 				Object instance = cls.getConstructor().newInstance();
-				if (!(instance instanceof Plugin)) {
+				if (!(instance instanceof Plugin pl)) {
 					continue;
 				}
-				Plugin pl = (Plugin) instance;
 				pcl.plugins.add(pl);
-				pl.setLauncher(launcher);
-				String name = pl.getName();
+				pl.launcher(launcher);
+				String name = pl.name();
 				logger.infof("Loading plugin %s - %s", name, className);
 				PluginInfo info;
 				if (infos.containsKey(name)) {
@@ -144,31 +146,33 @@ public class PluginManager {
 				}
 				info.lock.unlock();
 			}
-		} catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
+		} catch (IOException | ClassNotFoundException | InstantiationException |
+				IllegalAccessException | IllegalArgumentException | InvocationTargetException |
+				NoSuchMethodException | SecurityException ex) {
 			throw new GameException(ex);
 		}
 	}
 
 	/**
 	 * Unloads all plugins
-	 * 
-	 * @throws GameException
+	 *
+	 * @throws GameException an exception
 	 */
 	public void unloadPlugins() throws GameException {
-		for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).collect(Collectors.toList())) {
+		for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).toList()) {
 			unloadPlugin(plugin);
 		}
 	}
 
 	/**
 	 * Unloads a plugin
-	 * 
+	 *
 	 * @param plugin
+	 *
 	 * @throws GameException
 	 */
 	public void unloadPlugin(Plugin plugin) throws GameException {
-		PluginInfo info = this.infos.get(plugin.getName());
+		PluginInfo info = this.infos.get(plugin.name());
 		PluginClassLoader pcl = info.loader.get();
 		try {
 			pcl.pmClose();
@@ -209,7 +213,7 @@ public class PluginManager {
 		final AtomicReference<PluginClassLoader> loader = new AtomicReference<>();
 
 		/**
-		 * @param name
+		 * @param name an exception
 		 */
 		public PluginInfo(String name) {
 			this.name = name;

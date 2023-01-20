@@ -25,7 +25,7 @@ public interface Gui {
 	 *
 	 * @return true if the mouse is inside the given rectangle
 	 */
-	static boolean isHovering(float x, float y, float width, float height, float mouseX,
+	static boolean hovering(float x, float y, float width, float height, float mouseX,
 			float mouseY) {
 		return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
 	}
@@ -33,37 +33,37 @@ public interface Gui {
 	/**
 	 * @return the width property of the gui
 	 */
-	NumberValue getWidthProperty();
+	NumberValue widthProperty();
 
 	/**
 	 * @return the height property of the gui
 	 */
-	NumberValue getHeightProperty();
+	NumberValue heightProperty();
 
 	/**
 	 * @return the x position property of the gui
 	 */
-	NumberValue getXProperty();
+	NumberValue xProperty();
 
 	/**
 	 * @return the y position property of the gui
 	 */
-	NumberValue getYProperty();
+	NumberValue yProperty();
 
 	BooleanValue hovering();
 
-	NumberValue getVisibleXProperty();
+	NumberValue visibleXProperty();
 
-	NumberValue getVisibleYProperty();
+	NumberValue visibleYProperty();
 
-	NumberValue getVisibleWidthProperty();
+	NumberValue visibleWidthProperty();
 
-	NumberValue getVisibleHeightProperty();
+	NumberValue visibleHeightProperty();
 
 	/**
 	 * @return the focused property of the gui
 	 */
-	BooleanValue getFocusedProperty();
+	BooleanValue focusedProperty();
 
 	/**
 	 * Called when the contents of the window should be initialized
@@ -143,18 +143,18 @@ public interface Gui {
 	/**
 	 * @return the {@link GameLauncher}
 	 */
-	GameLauncher getLauncher();
+	GameLauncher launcher();
 
 	/**
 	 * @return if this {@link Gui} has been initialized
 	 */
-	boolean isInitialized();
+	boolean initialized();
 
 	/**
 	 * @return if this gui is focused
 	 */
-	default boolean isFocused() {
-		return getFocusedProperty().getValue();
+	default boolean focused() {
+		return focusedProperty().getValue();
 	}
 
 	/**
@@ -170,8 +170,8 @@ public interface Gui {
 	/**
 	 * @return the width of this {@link Gui}
 	 */
-	default float getWidth() {
-		return getWidthProperty().floatValue();
+	default float width() {
+		return widthProperty().floatValue();
 	}
 
 	/**
@@ -179,15 +179,15 @@ public interface Gui {
 	 *
 	 * @param width the new width
 	 */
-	default void setWidth(float width) {
-		getWidthProperty().setNumber(width);
+	default void width(float width) {
+		widthProperty().setNumber(width);
 	}
 
 	/**
 	 * @return the height of this {@link Gui}
 	 */
-	default float getHeight() {
-		return getHeightProperty().floatValue();
+	default float height() {
+		return heightProperty().floatValue();
 	}
 
 	/**
@@ -195,15 +195,15 @@ public interface Gui {
 	 *
 	 * @param height the new height
 	 */
-	default void setHeight(float height) {
-		getHeightProperty().setNumber(height);
+	default void height(float height) {
+		heightProperty().setNumber(height);
 	}
 
 	/**
 	 * @return the x position of this {@link Gui}
 	 */
-	default float getX() {
-		return getXProperty().floatValue();
+	default float x() {
+		return xProperty().floatValue();
 	}
 
 	/**
@@ -211,15 +211,15 @@ public interface Gui {
 	 *
 	 * @param x the new x position
 	 */
-	default void setX(float x) {
-		getXProperty().setNumber(x);
+	default void x(float x) {
+		xProperty().setNumber(x);
 	}
 
 	/**
 	 * @return the y position of this {@link Gui}
 	 */
-	default float getY() {
-		return getYProperty().floatValue();
+	default float y() {
+		return yProperty().floatValue();
 	}
 
 	/**
@@ -227,8 +227,8 @@ public interface Gui {
 	 *
 	 * @param y the new y position
 	 */
-	default void setY(float y) {
-		getYProperty().setNumber(y);
+	default void y(float y) {
+		yProperty().setNumber(y);
 	}
 
 	/**
@@ -239,9 +239,9 @@ public interface Gui {
 	 *
 	 * @return true if the mouse is inside this {@link Gui}
 	 */
-	default boolean isHovering(float mouseX, float mouseY) {
-		return isHovering(getVisibleXProperty().floatValue(), getVisibleYProperty().floatValue(),
-				getVisibleWidthProperty().floatValue(), getVisibleHeightProperty().floatValue(),
+	default boolean hovering(float mouseX, float mouseY) {
+		return hovering(visibleXProperty().floatValue(), visibleYProperty().floatValue(),
+				visibleWidthProperty().floatValue(), visibleHeightProperty().floatValue(),
 				mouseX, mouseY);
 	}
 
@@ -260,9 +260,9 @@ public interface Gui {
 	 *
 	 * @return this Gui
 	 */
-	default Gui setPosition(float x, float y) {
-		this.setX(x);
-		this.setY(y);
+	default Gui position(float x, float y) {
+		this.x(x);
+		this.y(y);
 		return this;
 	}
 
@@ -274,9 +274,9 @@ public interface Gui {
 	 *
 	 * @return this Gui
 	 */
-	default Gui setSize(float width, float height) {
-		this.setWidth(width);
-		this.setHeight(height);
+	default Gui size(float width, float height) {
+		this.width(width);
+		this.height(height);
 		return this;
 	}
 }

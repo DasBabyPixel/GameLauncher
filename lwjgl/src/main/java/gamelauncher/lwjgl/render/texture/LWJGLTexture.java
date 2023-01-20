@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousCloseException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,10 +51,10 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 
 	public LWJGLTexture(LWJGLGameLauncher launcher, ExecutorThread owner,
 			ExecutorThreadService service) {
-		this.manager = launcher.getTextureManager();
+		this.manager = launcher.textureManager();
 		this.owner = owner;
 		this.service = service;
-		this.profiler = launcher.getProfiler();
+		this.profiler = launcher.profiler();
 	}
 
 	private static BufferedImage getBufferedImage(int texture, int width, int height) {
@@ -113,10 +114,14 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		return owner.submit(() -> {
 			try {
 				lock.readLock().lock();
-				ImageIO.write(getBufferedImage(textureId.get(), cwidth, cheight), "png",
-						new File("img" + tid.incrementAndGet() + ".png"));
-			} catch (IOException ex) {
-				ex.printStackTrace();
+				BufferedImage img = getBufferedImage(textureId.get(), cwidth, cheight);
+				manager.launcher.threads().cached.submit(() -> {
+					try {
+						ImageIO.write(img, "png", new File("img" + tid.incrementAndGet() + ".png"));
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				});
 			} finally {
 				lock.readLock().unlock();
 			}
@@ -269,12 +274,12 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	@Override
-	public NumberValue getWidth() {
+	public NumberValue width() {
 		return width;
 	}
 
 	@Override
-	public NumberValue getHeight() {
+	public NumberValue height() {
 		return height;
 	}
 

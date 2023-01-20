@@ -30,7 +30,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 	private FrameRenderer frameRenderer = null;
 
 	public GLFWFrameRenderThread(GLFWFrame frame) {
-		super(frame.launcher.getGlThreadGroup());
+		super(frame.launcher.glThreadGroup());
 		this.phaser = new Phaser(1);
 		this.refreshPhaser = new Phaser(1);
 		this.frame = frame;
@@ -62,7 +62,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 				this.frame.launcher.handleError(ex);
 			}
 		}
-		this.frame.launcher.getGlThreadGroup().terminated(this);
+		this.frame.launcher.glThreadGroup().terminated(this);
 		if (this.cleanupContextOnExit) {
 			this.frame.context.cleanup();
 		} else {

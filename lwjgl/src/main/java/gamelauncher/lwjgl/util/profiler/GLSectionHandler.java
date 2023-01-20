@@ -10,7 +10,7 @@ import gamelauncher.lwjgl.render.states.StateRegistry;
 @SuppressWarnings("javadoc")
 public class GLSectionHandler implements SectionHandler {
 
-	private static final Logger logger = Logger.getLogger("GL");
+	private static final Logger logger = Logger.logger("GL");
 
 	@Override
 	public void handleBegin(String type, String section) {

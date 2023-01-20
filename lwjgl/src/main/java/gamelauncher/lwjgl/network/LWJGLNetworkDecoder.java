@@ -14,7 +14,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
  */
 public class LWJGLNetworkDecoder extends ByteToMessageDecoder {
 
-	private static final Logger logger = Logger.getLogger(LWJGLNetworkDecoder.class);
+	private static final Logger logger = Logger.logger(LWJGLNetworkDecoder.class);
 
 	private final LWJGLNetworkHandler handler;
 

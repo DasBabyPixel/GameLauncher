@@ -50,7 +50,7 @@ public class CLTextureUtility extends AbstractGameResource {
 	public static class CLFramebuffer extends LWJGLFramebuffer {
 
 		public CLFramebuffer(LWJGLGameLauncher launcher) {
-			super(launcher.getMainFrame());
+			super(launcher.mainFrame());
 		}
 
 	}

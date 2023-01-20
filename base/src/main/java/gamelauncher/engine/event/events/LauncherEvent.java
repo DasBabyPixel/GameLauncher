@@ -10,7 +10,7 @@ public abstract class LauncherEvent extends Event {
 	private final GameLauncher launcher;
 
 	/**
-	 * @param launcher
+	 * @param launcher the launcher
 	 */
 	public LauncherEvent(GameLauncher launcher) {
 		this.launcher = launcher;
@@ -19,7 +19,7 @@ public abstract class LauncherEvent extends Event {
 	/**
 	 * @return the {@link GameLauncher}
 	 */
-	public GameLauncher getLauncher() {
+	public GameLauncher launcher() {
 		return launcher;
 	}
 }

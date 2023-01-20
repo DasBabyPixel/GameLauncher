@@ -57,7 +57,7 @@ class KeyManagment {
 			X509EncodedKeySpec x509 = new X509EncodedKeySpec(certificate.getEncoded());
 			PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(privateKey.getEncoded());
 
-			Path directory = launcher.getDataDirectory().resolve("ssl");
+			Path directory = launcher.dataDirectory().resolve("ssl");
 			Files.createDirectories(directory);
 			Path pkey = directory.resolve("key");
 			Path pcert = directory.resolve("cert");
@@ -73,7 +73,7 @@ class KeyManagment {
 	}
 
 	private void loadFromFile() throws Exception {
-		Path directory = launcher.getDataDirectory().resolve("ssl");
+		Path directory = launcher.dataDirectory().resolve("ssl");
 		Files.createDirectories(directory);
 		Path pkey = directory.resolve("key");
 		Path pcert = directory.resolve("cert");

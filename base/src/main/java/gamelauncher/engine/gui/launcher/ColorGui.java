@@ -13,6 +13,6 @@ public interface ColorGui extends LauncherBasedGui {
 	 *
 	 * @return the color property
 	 */
-	PropertyVector4f getColor();
+	PropertyVector4f color();
 
 }

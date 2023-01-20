@@ -27,17 +27,17 @@ import gamelauncher.lwjgl.gui.launcher.LWJGLScrollGui;
 import gamelauncher.lwjgl.gui.launcher.LWJGLTextureGui;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * @author DasBabyPixel
  */
 public class LWJGLGuiManager extends AbstractGameResource implements GuiManager {
-	private static final Logger logger = Logger.getLogger();
+	private static final Logger logger = Logger.logger();
 
 	private final LWJGLGameLauncher launcher;
 
@@ -51,7 +51,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	public LWJGLGuiManager(LWJGLGameLauncher launcher) {
 		this.launcher = launcher;
-		this.launcher.getEventManager().registerListener(this);
+		this.launcher.eventManager().registerListener(this);
 		this.registerGuiCreator(MainScreenGui.class, () -> new LWJGLMainScreenGui(launcher));
 		this.registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
 		this.registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
@@ -60,7 +60,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	@Override
 	public void cleanup0() throws GameException {
-		this.launcher.getEventManager().unregisterListener(this);
+		this.launcher.eventManager().unregisterListener(this);
 		CompletableFuture<?>[] futures = new CompletableFuture[this.guis.size()];
 		int i = 0;
 		for (Map.Entry<Framebuffer, GuiStack> entry : this.guis.entrySet()) {
@@ -76,7 +76,6 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	 *
 	 * @return a future for the task
 	 */
-	@Deprecated
 	private CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
 		GuiStack stack = this.guis.remove(framebuffer);
 		if (stack != null) {
@@ -98,8 +97,8 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			this.guis.put(framebuffer, stack);
 		}
 		final boolean exit = gui == null;
-		StackEntry scurrentGui = exit ? stack.popGui() : stack.peekGui();
-		Gui currentGui = scurrentGui == null ? null : scurrentGui.gui;
+		StackEntry stackEntryCurrentGui = exit ? stack.popGui() : stack.peekGui();
+		Gui currentGui = stackEntryCurrentGui == null ? null : stackEntryCurrentGui.gui;
 		if (currentGui != null) {
 			currentGui.unfocus();
 			currentGui.onClose();
@@ -114,8 +113,8 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			}
 		}
 		if (gui != null) {
-			gui.getWidthProperty().bind(framebuffer.width());
-			gui.getHeightProperty().bind(framebuffer.height());
+			gui.widthProperty().bind(framebuffer.width());
+			gui.heightProperty().bind(framebuffer.height());
 			stack.pushGui(gui);
 			gui.onOpen();
 			gui.focus();
@@ -124,7 +123,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	}
 
 	@Override
-	public Gui getCurrentGui(Framebuffer framebuffer) throws GameException {
+	public Gui currentGui(Framebuffer framebuffer) throws GameException {
 		if (!this.guis.containsKey(framebuffer)) {
 			return null;
 		}
@@ -138,7 +137,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	}
 
 	@Override
-	public GameLauncher getLauncher() {
+	public GameLauncher launcher() {
 		return this.launcher;
 	}
 
@@ -175,11 +174,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 	public <T extends LauncherBasedGui> void registerGuiConverter(Class<T> clazz,
 			GameFunction<T, T> converter) {
 		Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c =
-				this.converters.get(clazz);
-		if (c == null) {
-			c = new HashSet<>();
-			this.converters.put(clazz, c);
-		}
+				this.converters.computeIfAbsent(clazz, k -> new CopyOnWriteArraySet<>());
 		c.add(converter);
 	}
 
@@ -197,7 +192,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
 	@EventHandler
 	private void handle(KeybindEntryEvent event) {
-		KeybindEntry entry = event.getEntry();
+		KeybindEntry entry = event.entry();
 		// TODO: Gui Selection - not relevant with only one gui being able to be opened
 		// in this guimanager
 		this.guis.values().forEach(stack -> {

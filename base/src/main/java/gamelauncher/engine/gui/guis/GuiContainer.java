@@ -33,39 +33,39 @@ public class GuiContainer extends ParentableAbstractGui {
 	}
 
 	private void recalculateSize() {
-		if (!this.getWidthProperty().isBound()) {
+		if (!this.widthProperty().isBound()) {
 			float minx = Float.MAX_VALUE;
 			float w = 0;
 			for (Gui gui : this.GUIs) {
-				if (gui.getX() < minx) {
+				if (gui.x() < minx) {
 					if (w != 0) {
-						float diff = minx - gui.getX();
+						float diff = minx - gui.x();
 						w += diff;
 						minx -= diff;
 					} else {
-						minx = gui.getX();
+						minx = gui.x();
 					}
 				}
-				w = Math.max(w, gui.getX() - minx + gui.getWidth());
+				w = Math.max(w, gui.x() - minx + gui.width());
 			}
-			this.setWidth(w);
+			this.width(w);
 		}
-		if (!this.getHeightProperty().isBound()) {
+		if (!this.heightProperty().isBound()) {
 			float miny = Float.MAX_VALUE;
 			float h = 0;
 			for (Gui gui : this.GUIs) {
-				if (gui.getY() < miny) {
+				if (gui.y() < miny) {
 					if (h != 0) {
-						float diff = miny - gui.getY();
+						float diff = miny - gui.y();
 						h += diff;
 						miny -= diff;
 					} else {
-						miny = gui.getY();
+						miny = gui.y();
 					}
 				}
-				h = Math.max(h, gui.getY() - miny + gui.getHeight());
+				h = Math.max(h, gui.y() - miny + gui.height());
 			}
-			this.setHeight(h);
+			this.height(h);
 		}
 	}
 }

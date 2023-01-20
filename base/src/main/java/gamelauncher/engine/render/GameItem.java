@@ -17,11 +17,6 @@ import org.joml.Vector4f;
  */
 public class GameItem extends AbstractGameResource {
 
-	private final Vector3f cposition;
-	private final Vector3f cscale;
-	private final Vector3f crotation;
-	private final Vector4f ccolor;
-	private final Vector4f caddColor;
 	private final PropertyVector3f position;
 	private final PropertyVector3f scale;
 	private final PropertyVector3f rotation;
@@ -33,15 +28,10 @@ public class GameItem extends AbstractGameResource {
 	 *
 	 */
 	private GameItem() {
-		cposition = new Vector3f();
 		position = new PropertyVector3f(0, 0, 0);
-		cscale = new Vector3f();
 		scale = new PropertyVector3f(1, 1, 1);
-		crotation = new Vector3f();
 		rotation = new PropertyVector3f(0, 0, 0);
-		ccolor = new Vector4f();
 		color = new PropertyVector4f(1, 1, 1, 1);
-		caddColor = new Vector4f();
 		addColor = new PropertyVector4f(0, 0, 0, 0);
 	}
 
@@ -70,63 +60,34 @@ public class GameItem extends AbstractGameResource {
 		return scale;
 	}
 
-	//	/**
-	//	 * @return the position vector
-	//	 */
-	//	public Vector3f getPosition() {
-	//		return position.toVector3f(cposition);
-	//	}
-	//
-	//	/**
-	//	 * @return the addColor
-	//	 */
-	//	public Vector4f getAddColor() {
-	//		return addColor.toVector4f(caddColor);
-	//	}
-
-	public void setAddColor(float r, float g, float b, float a) {
+	public void addColor(float r, float g, float b, float a) {
 		this.addColor.set(r, g, b, a);
 	}
 
-	public void setPosition(float x, float y, float z) {
+	public void position(float x, float y, float z) {
 		this.position.set(x, y, z);
 	}
 
-	//	/**
-	//	 * @return the scale vector
-	//	 */
-	//	public Vector3f getScale() {
-	//		return cscale;
-	//	}
-
-	public void setScale(float scale) {
-		this.setScale(scale, scale, scale);
+	public void scale(float scale) {
+		this.scale(scale, scale, scale);
 	}
 
-	public void setScale(float x, float y, float z) {
+	public void scale(float x, float y, float z) {
 		this.scale.set(x, y, z);
 	}
-
-	//	public Vector3f getRotation() {
-	//		return rotation.toVector3f(crotation);
-	//	}
-
-	//	public Vector4f getColor() {
-	//		return color.toVector4f(ccolor);
-	//	}
 
 	public void setColor(float r, float g, float b, float a) {
 		color.set(r, g, b, a);
 	}
 
-	public void setRotation(float x, float y, float z) {
+	public void rotation(float x, float y, float z) {
 		this.rotation.set(x, y, z);
 	}
 
 	/**
 	 * @return the model
 	 */
-	public Model getModel() {
+	public Model model() {
 		return model;
 	}
 
