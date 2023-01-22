@@ -9,7 +9,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class LWJGLNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
 
-	private LWJGLNetworkClient client;
+	private final LWJGLNetworkClient client;
 
 	public LWJGLNetworkAcceptor(LWJGLNetworkClient client) {
 		this.client = client;

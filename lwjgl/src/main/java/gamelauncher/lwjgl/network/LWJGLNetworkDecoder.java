@@ -1,13 +1,13 @@
 package gamelauncher.lwjgl.network;
 
-import java.util.List;
-
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketBuffer;
 import gamelauncher.engine.util.logging.Logger;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+
+import java.util.List;
 
 /**
  * @author DasBabyPixel
@@ -18,15 +18,13 @@ public class LWJGLNetworkDecoder extends ByteToMessageDecoder {
 
 	private final LWJGLNetworkHandler handler;
 
-	/**
-	 * @param handler
-	 */
 	public LWJGLNetworkDecoder(LWJGLNetworkHandler handler) {
 		this.handler = handler;
 	}
 
 	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
+			throws Exception {
 		PacketBuffer buf = handler.prepareBuffer(in);
 		if (buf.readableBytes() < 4) {
 			return;
