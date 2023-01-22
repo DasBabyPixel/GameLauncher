@@ -15,8 +15,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.SSLEngine;
@@ -78,12 +76,8 @@ public class LWJGLNetworkClient implements NetworkClient {
 					}).option(ChannelOption.SO_KEEPALIVE, true)
 					.childOption(ChannelOption.SO_KEEPALIVE, true);
 			Channel ch = b.bind(PORT).syncUninterruptibly().channel();
-			ch.closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
-				@Override
-				public void operationComplete(@NotNull Future<? super Void> future)
-						throws Exception {
+			ch.closeFuture().addListener(future -> {
 
-				}
 			});
 			running = true;
 		} finally {

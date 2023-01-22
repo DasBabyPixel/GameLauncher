@@ -5,7 +5,6 @@ import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.render.BasicCamera;
 import gamelauncher.engine.render.Camera;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
@@ -17,7 +16,7 @@ import gamelauncher.engine.util.keybind.KeyboardKeybindEntry.Type;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.GlThreadGroup;
-import gamelauncher.lwjgl.render.LWJGLDrawContext;
+import gamelauncher.lwjgl.render.LWJGLContextProvider;
 import gamelauncher.lwjgl.render.LWJGLGameRenderer;
 import gamelauncher.lwjgl.render.font.BasicFontFactory;
 import gamelauncher.lwjgl.render.font.LWJGLGlyphProvider;
@@ -50,6 +49,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	private GLFWThread glfwThread;
 
 	public LWJGLGameLauncher() throws GameException {
+		this.contextProvider(new LWJGLContextProvider(this));
 		this.keybindManager(new LWJGLKeybindManager(this));
 		this.resourceLoader(new SimpleResourceLoader());
 		this.shaderLoader(new LWJGLShaderLoader());
@@ -71,12 +71,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 		}
 
 		this.mouseMovement(false);
-	}
-
-	@Override
-	@Deprecated
-	public LWJGLDrawContext createContext(Framebuffer framebuffer) {
-		return new LWJGLDrawContext(framebuffer);
 	}
 
 	@Override
@@ -165,13 +159,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 	public LWJGLGameRenderer gameRenderer() {
 		return (LWJGLGameRenderer) super.gameRenderer();
 	}
-	//
-	// /**
-	// * @return the {@link LWJGLAsyncOpenGL}
-	// */
-	// public LWJGLAsyncOpenGL getAsyncUploader() {
-	// return this.asyncUploader;
-	// }
 
 	private void mouseMovement(boolean movement) {
 		this.mainFrame.mouse().grabbed(movement).thenRun(() -> {

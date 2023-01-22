@@ -9,8 +9,8 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
+import org.joml.Vector4i;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +40,27 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		this.owner.submit(() -> {
 			this.maxTextureSize = glGetInteger(GL_MAX_TEXTURE_SIZE);
 		});
+	}
+
+	private static boolean intersects(Vector4i v1, Vector4i v2) {
+		int tw = v1.z;
+		int th = v1.w;
+		int rw = v2.z;
+		int rh = v2.w;
+		if (rw <= 0 || rh <= 0 || tw <= 0 || th <= 0) {
+			return false;
+		}
+		int tx = v1.x;
+		int ty = v1.y;
+		int rx = v2.x;
+		int ry = v2.y;
+		rw += rx;
+		rh += ry;
+		tw += tx;
+		th += ty;
+		//      overflow || intersect
+		return ((rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty
+				|| th > ry));
 	}
 
 	public AtlasEntry getGlyph(int id) {
@@ -84,8 +105,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			if (glyphs.containsKey(glyphId)) {
 				return true;
 			}
-			AtlasEntry e =
-					new AtlasEntry(null, entry, new Rectangle(entry.data.width, entry.data.height));
+			AtlasEntry e = new AtlasEntry(null, entry,
+					new Vector4i(0, 0, entry.data.width, entry.data.height));
 			for (LWJGLTexture texture : byTexture.keySet()) {
 				e.texture = texture;
 				if (add(glyphId, e)) {
@@ -111,15 +132,15 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		try {
 			//			Thread.dumpStack();
 			lock.lock();
-			Rectangle textureBounds = new Rectangle(e.texture.width().intValue(),
-					e.texture.height().intValue());
-			Rectangle currentBounds = textureBounds;
+			Vector4i textureBounds =
+					new Vector4i(0, 0, e.texture.width().intValue(), e.texture.height().intValue());
+			Vector4i currentBounds = textureBounds;
 			boolean glyphTooLarge = false;
 			while (true) {
 				if (findFit(e, currentBounds)) {
 					break;
 				}
-				Rectangle newBounds = scaledBounds(currentBounds);
+				Vector4i newBounds = scaledBounds(currentBounds);
 				if (!newBounds.equals(currentBounds)) {
 					currentBounds = newBounds;
 				} else {
@@ -128,14 +149,14 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				}
 			}
 			if (!textureBounds.equals(currentBounds)) {
-				e.texture.resize(currentBounds.width, currentBounds.height);
+				e.texture.resize(currentBounds.z, currentBounds.w);
 			}
 			if (glyphTooLarge) {
 				if (byTexture.get(e.texture).isEmpty()) {
 					logger.warnf(
 							"Glyph too large: ID: %s, CodePoint: %s, Scale: %s, Width: %s, Height: %s",
-							glyphId, e.entry.key.codepoint, e.entry.key.scale, e.bounds.width,
-							e.bounds.height);
+							glyphId, e.entry.key.codepoint, e.entry.key.scale, e.bounds.z,
+							e.bounds.w);
 				} else {
 					return false;
 				}
@@ -147,7 +168,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 				try {
 					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
 							.thenRun(launcher.guiManager()::redraw));
-//					e.texture.write();
+					//					e.texture.write();
 				} catch (GameException ex) {
 					throw new RuntimeException(ex);
 				}
@@ -160,30 +181,30 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		}
 	}
 
-	private Rectangle scaledBounds(Rectangle textureBounds) {
-		boolean same = textureBounds.width == textureBounds.height;
-		int newWidth = same ? textureBounds.width * 2 : textureBounds.width;
+	private Vector4i scaledBounds(Vector4i textureBounds) {
+		boolean same = textureBounds.z == textureBounds.w;
+		int newWidth = same ? textureBounds.z * 2 : textureBounds.z;
 		if (newWidth > maxTextureSize) {
 			return textureBounds;
 		}
-		int newHeight = same ? textureBounds.height : textureBounds.height * 2;
-		return new Rectangle(newWidth, newHeight);
+		int newHeight = same ? textureBounds.w : textureBounds.w * 2;
+		return new Vector4i(0, 0, newWidth, newHeight);
 	}
 
-	private boolean findFit(AtlasEntry entry, Rectangle bounds) {
-		Rectangle rect = entry.bounds;
-		rect = new Rectangle(rect.x, rect.y, rect.width + 2, rect.height + 2);
+	private boolean findFit(AtlasEntry entry, Vector4i bounds) {
+		Vector4i rect = entry.bounds;
+		rect = new Vector4i(rect.x, rect.y, rect.z + 2, rect.w + 2);
 		rect.y = 0;
 		boolean found = false;
-		Collection<Rectangle> check = byTexture.get(entry.texture).stream().map(e -> e.bounds)
-				.map(r -> new Rectangle(r.x - 1, r.y - 1, r.width + 2, r.height + 2))
+		Collection<Vector4i> check = byTexture.get(entry.texture).stream().map(e -> e.bounds)
+				.map(r -> new Vector4i(r.x - 1, r.y - 1, r.z + 2, r.w + 2))
 				.collect(Collectors.toSet());
-		Collection<Rectangle> remove = new HashSet<>();
+		Collection<Vector4i> remove = new HashSet<>();
 		yl:
-		for (; rect.y < bounds.height - rect.height; rect.y++) {
+		for (; rect.y < bounds.w - rect.w; rect.y++) {
 			rect.x = 0;
-			for (Rectangle r : check) {
-				if (r.y + r.height < rect.y) {
+			for (Vector4i r : check) {
+				if (r.y + r.w < rect.y) {
 					remove.add(r);
 				}
 			}
@@ -191,10 +212,10 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 			remove.clear();
 
 			xl:
-			for (; rect.x < bounds.width - rect.width; rect.x++) {
-				for (Rectangle r : check) {
-					if (r.intersects(rect)) {
-						rect.x = r.x + r.width - 1;
+			for (; rect.x < bounds.z - rect.z; rect.x++) {
+				for (Vector4i r : check) {
+					if (intersects(r, rect)) {
+						rect.x = r.x + r.z - 1;
 						continue xl;
 					}
 				}

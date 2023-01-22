@@ -11,18 +11,8 @@ import java.nio.channels.Channels;
 import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.AccessMode;
-import java.nio.file.CopyOption;
-import java.nio.file.DirectoryStream;
+import java.nio.file.*;
 import java.nio.file.DirectoryStream.Filter;
-import java.nio.file.FileStore;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystemAlreadyExistsException;
-import java.nio.file.LinkOption;
-import java.nio.file.OpenOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.ProviderMismatchException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
@@ -32,33 +22,38 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("javadoc")
 public class EmbedFileSystemProvider extends FileSystemProvider {
 
 	private volatile EmbedFileSystem embedFileSystem;
 
 	@Override
-	public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
+	public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type,
+			LinkOption... options) {
 		return EmbedFileAttributeView.get(toEmbedPath(path), type);
 	}
 
 	@Override
-	public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
-			throws IOException {
-		return type != BasicFileAttributes.class && type != EmbedFileAttributes.class ? null
+	public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type,
+			LinkOption... options) throws IOException {
+		return type != BasicFileAttributes.class && type != EmbedFileAttributes.class
+				? null
 				: type.cast(embedFileSystem.getAttributes(toEmbedPath(path)));
 	}
 
 	@Override
-	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
-			throws IOException {
+	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options,
+			FileAttribute<?>... attrs) throws IOException {
 		EmbedPath embedPath = toEmbedPath(path);
-		InputStream in = embedFileSystem.cl.getResourceAsStream(embedPath.toAbsolutePath().toString().substring(1));
+		InputStream in = embedFileSystem.cl.getResourceAsStream(
+				embedPath.toAbsolutePath().toString().substring(1));
 		if (in == null) {
 			throw new FileNotFoundException(path.toString());
 		}
 		long size = embedFileSystem.size(toEmbedPath(path));
 		return new SeekableByteChannel() {
+			final ReadableByteChannel rbc = Channels.newChannel(in);
+			long read = 0L;
+
 			@Override
 			public boolean isOpen() {
 				return rbc.isOpen();
@@ -70,17 +65,17 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 			}
 
 			@Override
-			public int write(ByteBuffer src) throws IOException {
+			public int write(ByteBuffer src) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public SeekableByteChannel truncate(long size) throws IOException {
+			public SeekableByteChannel truncate(long size) {
 				throw new NonWritableChannelException();
 			}
 
 			@Override
-			public long size() throws IOException {
+			public long size() {
 				return size;
 			}
 
@@ -94,24 +89,22 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 			}
 
 			@Override
-			public SeekableByteChannel position(long newPosition) throws IOException {
+			public SeekableByteChannel position(long newPosition) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public long position() throws IOException {
+			public long position() {
 				return read;
 			}
-
-			long read = 0L;
-			final ReadableByteChannel rbc = Channels.newChannel(in);
 		};
 	}
 
 	@Override
-	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
+	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter)
+			throws IOException {
 		Enumeration<URL> en = embedFileSystem.cl.getResources(toEmbedPath(dir).toString());
-		Iterator<Path> it = new Iterator<Path>() {
+		Iterator<Path> it = new Iterator<>() {
 			@Override
 			public boolean hasNext() {
 				return en.hasMoreElements();
@@ -135,7 +128,8 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options)
+			throws IOException {
 		int index = attributes.indexOf(':');
 		String type;
 		String substring2;
@@ -154,7 +148,8 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void setAttribute(Path path, String attribute, Object o, LinkOption... options) throws IOException {
+	public void setAttribute(Path path, String attribute, Object o, LinkOption... options)
+			throws IOException {
 		int index = attribute.indexOf(58);
 		String substring;
 		String substring2;
@@ -165,9 +160,10 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 			substring = attribute.substring(0, index++);
 			substring2 = attribute.substring(index);
 		}
-		final EmbedFileAttributeView value = EmbedFileAttributeView.get(toEmbedPath(path), substring);
+		final EmbedFileAttributeView value =
+				EmbedFileAttributeView.get(toEmbedPath(path), substring);
 		if (value == null) {
-			throw new UnsupportedOperationException("view <" + value + "> is not supported");
+			throw new UnsupportedOperationException("view <null> is not supported");
 		}
 		value.setAttribute(substring2, o);
 	}
@@ -193,7 +189,8 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 			throw new FileSystemAlreadyExistsException();
 		}
 		try {
-			Path path = Paths.get(getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
+			Path path = Paths.get(
+					getClass().getProtectionDomain().getCodeSource().getLocation().toURI());
 			ClassLoader cl = getClass().getClassLoader();
 			embedFileSystem = new EmbedFileSystem(cl, this, path);
 		} catch (URISyntaxException ex) {
@@ -243,7 +240,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void checkAccess(Path path, AccessMode... modes) throws IOException {
+	public void checkAccess(Path path, AccessMode... modes) {
 	}
 
 	@Override
@@ -256,21 +253,4 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 		return getFileSystem(uri).getPath(s.substring(index + 1));
 	}
 
-	protected Path uriToPath(URI var1) {
-		String var2 = var1.getScheme();
-		if (var2 != null && var2.equalsIgnoreCase(this.getScheme())) {
-			try {
-				String var3 = var1.getRawSchemeSpecificPart();
-				int var4 = var3.indexOf("#/");
-				if (var4 != -1) {
-					var3 = var3.substring(0, var4);
-				}
-
-				return Paths.get(new URI(var3)).toAbsolutePath();
-			} catch (URISyntaxException var5) {
-				throw new IllegalArgumentException(var5.getMessage(), var5);
-			}
-		}
-		throw new IllegalArgumentException("URI scheme is not '" + this.getScheme() + "'");
-	}
 }

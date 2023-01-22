@@ -1,5 +1,6 @@
 package gamelauncher.engine.render.font;
 
+import gamelauncher.engine.resource.Resource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 
@@ -9,12 +10,31 @@ import gamelauncher.engine.util.GameException;
 public interface FontFactory {
 
 	/**
-	 * This method will close the given ResourceStream eventually
-	 * 
-	 * @param stream
-	 * @return a font created with the given {@link ResourceStream}
-	 * @throws GameException
+	 * This method will <B>NOT</B> close the given {@link ResourceStream}!
+	 *
+	 * @param stream the {@link ResourceStream} to load the font from
+	 * @return a {@link Font} created with the given {@link ResourceStream}
+	 * @throws GameException an exception
 	 */
-	Font createFont(ResourceStream stream) throws GameException;
+	default Font createFont(ResourceStream stream) throws GameException {
+		return createFont(stream, false);
+	}
+
+	/**
+	 * @param resource the {@link Resource to load the font from}
+	 * @return a {@link Font} created with the given {@link Resource}
+	 * @throws GameException an exception
+	 */
+	default Font createFont(Resource resource) throws GameException {
+		return createFont(resource.newResourceStream(), true);
+	}
+
+	/**
+	 * @param stream the stream to load the font from
+	 * @param close whether the stream should be closed after loading the font
+	 * @return a font created with the given {@link ResourceStream}
+	 * @throws GameException an exception
+	 */
+	Font createFont(ResourceStream stream, boolean close) throws GameException;
 
 }

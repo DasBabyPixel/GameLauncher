@@ -15,7 +15,9 @@ import gamelauncher.engine.io.embed.EmbedFileSystem;
 import gamelauncher.engine.io.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
-import gamelauncher.engine.render.*;
+import gamelauncher.engine.render.ContextProvider;
+import gamelauncher.engine.render.Frame;
+import gamelauncher.engine.render.GameRenderer;
 import gamelauncher.engine.render.font.FontFactory;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
@@ -65,57 +67,31 @@ public abstract class GameLauncher {
 	private final EventManager eventManager;
 
 	private final Logger logger;
-
+	private final Path gameDirectory;
+	private final Path dataDirectory;
+	private final Path settingsFile;
+	private final Path pluginsDirectory;
+	private final Threads threads;
+	private final PluginManager pluginManager;
+	private final Profiler profiler;
+	private final Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
+	private final GameRegistry gameRegistry;
 	private GameThread gameThread;
-
 	private Frame frame;
-
 	private FileSystem embedFileSystem;
-
-	private Path gameDirectory;
-
-	private Path dataDirectory;
-
-	private Path settingsFile;
-
-	private Path pluginsDirectory;
-
 	private OperatingSystem operatingSystem;
-
 	private SettingSection settings;
-
 	private GameRenderer gameRenderer;
-
 	private ModelLoader modelLoader;
-
 	private GlyphProvider glyphProvider;
-
 	private ShaderLoader shaderLoader;
-
 	private GuiManager guiManager;
-
 	private KeybindManager keybindManager;
-
 	private TextureManager textureManager;
-
 	private FontFactory fontFactory;
-
 	private NetworkClient networkClient;
-
-	private Threads threads;
-
-	private PluginManager pluginManager;
-
 	private ResourceLoader resourceLoader;
-
-	private Profiler profiler;
-
 	private boolean debugMode = false;
-
-	private Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
-
-	private GameRegistry gameRegistry;
-
 	private ContextProvider contextProvider;
 
 	private Game currentGame;
@@ -147,12 +123,12 @@ public abstract class GameLauncher {
 			throw new AssertionError(ex);
 		}
 		this.eventManager = new EventManager(this);
-		this.contextProvider = new ContextProvider(this);
 		this.pluginManager = new PluginManager(this);
 	}
 
-	@Deprecated
-	public abstract DrawContext createContext(Framebuffer framebuffer);
+	protected void contextProvider(ContextProvider contextProvider) {
+		this.contextProvider = contextProvider;
+	}
 
 	public final void start(String[] args) throws GameException {
 
@@ -518,8 +494,7 @@ public abstract class GameLauncher {
 	}
 
 	/**
-	 * @return the {@link ContextProvider} to use for creating contexts. This is preferred over
-	 * {@link #createContext(Framebuffer)}
+	 * @return the {@link ContextProvider} to use for creating contexts.
 	 */
 	public ContextProvider contextProvider() {
 		return this.contextProvider;

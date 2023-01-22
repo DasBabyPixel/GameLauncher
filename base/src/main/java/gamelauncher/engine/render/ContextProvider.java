@@ -2,44 +2,40 @@ package gamelauncher.engine.render;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.logging.Logger;
 
 /**
  * @author DasBabyPixel
  */
-public record ContextProvider(GameLauncher launcher) {
+public abstract class ContextProvider {
 
-	private static final Logger logger = Logger.logger();
+	private final GameLauncher launcher;
 
-	/**
-	 * @param launcher
-	 */
-	public ContextProvider {
+	public ContextProvider(GameLauncher launcher) {
+		this.launcher = launcher;
 	}
 
 	/**
 	 * Must be explicitly freed by {@link #freeContext(DrawContext, ContextType)}
 	 *
-	 * @param framebuffer
-	 * @param type
-	 *
+	 * @param framebuffer the {@link Framebuffer} to use while loading the context
+	 * @param type the {@link ContextType}
 	 * @return a new context for the given type
-	 *
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
 	public DrawContext loadContext(Framebuffer framebuffer, ContextType type) throws GameException {
-		DrawContext ctx = this.launcher.createContext(framebuffer);
+		DrawContext ctx = createContext(framebuffer);
 		type.load(this.launcher, ctx);
 		return ctx;
 	}
 
+	public abstract DrawContext createContext(Framebuffer framebuffer);
+
 	/**
 	 * Frees a context
 	 *
-	 * @param context
-	 * @param type
-	 *
-	 * @throws GameException
+	 * @param context the {@link DrawContext} to free
+	 * @param type the {@link ContextType}
+	 * @throws GameException an exception
 	 */
 	public void freeContext(DrawContext context, ContextType type) throws GameException {
 		type.cleanup(context);
@@ -49,7 +45,6 @@ public record ContextProvider(GameLauncher launcher) {
 	/**
 	 * @return the launcher
 	 */
-	@Override
 	public GameLauncher launcher() {
 		return this.launcher;
 	}

@@ -11,9 +11,6 @@ public class LWJGLNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
 
 	private LWJGLNetworkClient client;
 
-	/**
-	 * @param client
-	 */
 	public LWJGLNetworkAcceptor(LWJGLNetworkClient client) {
 		this.client = client;
 	}

@@ -15,16 +15,18 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.math.Math;
+import gamelauncher.engine.util.text.Component;
+import gamelauncher.engine.util.text.serializer.PlainTextComponentSerializer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.model.Texture2DModel;
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
+import org.joml.Vector4i;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
 import org.lwjgl.system.MemoryUtil;
 
-import java.awt.*;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -44,7 +46,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 	}
 
 	@Override
-	public GlyphStaticModel loadStaticModel(Font font, String text, int pixelHeight)
+	public GlyphStaticModel loadStaticModel(Font font, Component text, int pixelHeight)
 			throws GameException {
 		STBTTFontinfo finfo = STBTTFontinfo.malloc();
 		if (!STBTruetype.stbtt_InitFont(finfo, font.data())) {
@@ -57,7 +59,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		STBTruetype.stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
 		float descent = adescent[0] * scale;
 		float ascent = aascent[0] * scale;
-		char[] ar = text.toCharArray();
+		char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
 		Map<LWJGLTexture, Collection<AtlasEntry>> entries = new HashMap<>();
 		for (char ch : ar) {
 			GlyphKey key = new GlyphKey(scale, ch);
@@ -74,14 +76,14 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		float z = 0;
 		for (Map.Entry<LWJGLTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
 			for (AtlasEntry e : entry.getValue()) {
-				Rectangle bd = e.bounds;
+				Vector4i bd = e.bounds;
 
 				NumberValue tw = e.texture.width();
 				NumberValue th = e.texture.height();
 				NumberValue tl = NumberValue.constant(bd.x).divide(tw);
 				NumberValue tb = NumberValue.constant(bd.y).divide(th);
-				NumberValue tr = NumberValue.constant(bd.x).add(bd.width).divide(tw);
-				NumberValue tt = NumberValue.constant(bd.y).add(bd.height).divide(th);
+				NumberValue tr = NumberValue.constant(bd.x).add(bd.z).divide(tw);
+				NumberValue tt = NumberValue.constant(bd.y).add(bd.w).divide(th);
 
 				GlyphData data = e.entry.data;
 				int pb = -data.bearingY - data.height;

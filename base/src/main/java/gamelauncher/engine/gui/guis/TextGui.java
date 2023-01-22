@@ -16,6 +16,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.engine.util.property.SupplierReadOnlyStorage;
 import gamelauncher.engine.util.property.WeakReferenceInvalidationListener;
+import gamelauncher.engine.util.text.Component;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,6 +32,7 @@ public class TextGui extends ParentableAbstractGui {
 	private final Camera camera;
 	private final AtomicBoolean recreateModel = new AtomicBoolean(true);
 	private final NumberValue cwidthprop;
+	private final InvalidationListener invalidationListener;
 	private GlyphStaticModel model;
 	private GameItemModel itemModel;
 	private DrawContext hud;
@@ -39,7 +41,6 @@ public class TextGui extends ParentableAbstractGui {
 	private volatile boolean recreating = false;
 	private Font fontToDelete = null;
 	private volatile int cwidth;
-	private final InvalidationListener invalidationListener;
 
 	public TextGui(GameLauncher launcher, String text, int height) throws GameException {
 		this(launcher, TextGui.defaultFont(launcher), text, height);
@@ -160,7 +161,7 @@ public class TextGui extends ParentableAbstractGui {
 			GameItemModel oldModel = this.itemModel;
 
 			this.model = this.launcher().glyphProvider()
-					.loadStaticModel(this.font.getValue(), this.text.getValue(),
+					.loadStaticModel(this.font.getValue(), Component.text(this.text.getValue()),
 							this.heightProperty().intValue());
 			GameItem item = new GameItem(this.model);
 			item.color().x.bind(this.color.x);
