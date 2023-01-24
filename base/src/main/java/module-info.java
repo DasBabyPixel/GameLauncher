@@ -28,6 +28,8 @@ module gamelauncher.base {
 	exports gamelauncher.engine.util.math;
 	exports gamelauncher.engine.util.profiler;
 	exports gamelauncher.engine.util.property;
+	exports gamelauncher.engine.util.text.flattener;
+	exports gamelauncher.engine.util.text.format;
 	exports gamelauncher.engine.util.text.serializer;
 	exports gamelauncher.engine.util.text;
 	exports gamelauncher.engine.util;

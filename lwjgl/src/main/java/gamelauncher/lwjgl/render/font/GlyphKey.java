@@ -3,7 +3,6 @@ package gamelauncher.lwjgl.render.font;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@SuppressWarnings("javadoc")
 public class GlyphKey {
 
 	public final float scale;

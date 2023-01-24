@@ -10,7 +10,7 @@ import gamelauncher.engine.util.text.Component;
  */
 public interface GlyphProvider extends GameResource {
 
-	GlyphStaticModel loadStaticModel(Font font, Component text, int pixelHeight)
+	GlyphStaticModel loadStaticModel(Component text, int pixelHeight)
 			throws GameException;
 
 }

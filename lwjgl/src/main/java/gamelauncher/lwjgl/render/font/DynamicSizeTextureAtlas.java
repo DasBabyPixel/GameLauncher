@@ -96,31 +96,33 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		});
 	}
 
-	public boolean addGlyph(int glyphId, GlyphEntry entry) {
+	public AddFuture addGlyph(int glyphId, GlyphEntry entry) {
 		try {
 			lock.lock();
 			if (cleanedUp()) {
-				return false;
+				return new AddFuture(false, CompletableFuture.completedFuture(null));
 			}
 			if (glyphs.containsKey(glyphId)) {
-				return true;
+				return new AddFuture(true, CompletableFuture.completedFuture(null));
 			}
 			AtlasEntry e = new AtlasEntry(null, entry,
 					new Vector4i(0, 0, entry.data.width, entry.data.height));
+			AddFuture af = null;
 			for (LWJGLTexture texture : byTexture.keySet()) {
 				e.texture = texture;
-				if (add(glyphId, e)) {
+				af = add(glyphId, e);
+				if (af.suc) {
 					break;
 				}
 				e.texture = null;
 			}
-			if (e.texture == null) {
+			if (af == null) {
 				e.texture = launcher.textureManager().createTexture(owner);
 				e.texture.allocate(64, 64);
 				byTexture.put(e.texture, new HashSet<>());
-				add(glyphId, e);
+				af = add(glyphId, e);
 			}
-			return true;
+			return af;
 		} catch (GameException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -128,7 +130,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		}
 	}
 
-	private boolean add(int glyphId, AtlasEntry e) throws GameException {
+	private AddFuture add(int glyphId, AtlasEntry e) throws GameException {
 		try {
 			//			Thread.dumpStack();
 			lock.lock();
@@ -158,27 +160,30 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 							glyphId, e.entry.key.codepoint, e.entry.key.scale, e.bounds.z,
 							e.bounds.w);
 				} else {
-					return false;
+					return new AddFuture(false, CompletableFuture.completedFuture(null));
 				}
 			}
 			ResourceStream stream =
 					new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer),
 							null);
+			CompletableFuture<Void> glf = new CompletableFuture<>();
 			last = last.thenRunAsync(() -> {
-				try {
-					Threads.waitFor(e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y)
-							.thenRun(launcher.guiManager()::redraw));
-					//					e.texture.write();
-				} catch (GameException ex) {
-					throw new RuntimeException(ex);
-				}
-			});
+				e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> {
+					launcher.guiManager().redraw();
+					glf.complete(null);
+				});
+				//					e.texture.write();
+				//					e.texture.write();
+			}, launcher.threads().cached.executor());
 			byTexture.get(e.texture).add(e);
 			glyphs.put(glyphId, e);
-			return true;
+			return new AddFuture(true, glf);
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	public record AddFuture(boolean suc, CompletableFuture<Void> glFuture) {
 	}
 
 	private Vector4i scaledBounds(Vector4i textureBounds) {

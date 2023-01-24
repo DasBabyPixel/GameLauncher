@@ -1,13 +1,16 @@
 package gamelauncher.engine.resource;
 
+import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.gui.LauncherBasedGui;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.Key;
+import org.jetbrains.annotations.Contract;
+
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import gamelauncher.engine.util.GameException;
-import org.jetbrains.annotations.Contract;
 
 /**
  * @author DasBabyPixel
@@ -15,8 +18,13 @@ import org.jetbrains.annotations.Contract;
 public abstract class ResourceLoader extends AbstractGameResource {
 
 	private static ResourceLoader instance = null;
+	private final GameLauncher launcher;
 	private final Map<Path, Resource> resources = new ConcurrentHashMap<>();
 	private final Lock lock = new ReentrantLock();
+
+	public ResourceLoader(GameLauncher launcher) {
+		this.launcher = launcher;
+	}
 
 	/**
 	 * Sets this as the {@link ResourceLoader}
@@ -27,7 +35,9 @@ public abstract class ResourceLoader extends AbstractGameResource {
 
 	/**
 	 * @param path the path
+	 *
 	 * @return if this {@link ResourceLoader} has the given {@link Path}
+	 *
 	 * @throws GameException an exception
 	 */
 	@Contract(pure = true)
@@ -45,17 +55,25 @@ public abstract class ResourceLoader extends AbstractGameResource {
 
 	/**
 	 * @param path the path
-	 * @return if this {@link ResourceLoader} has loaded a {@link Resource} for the given {@link Path}
+	 *
+	 * @return if this {@link ResourceLoader} has loaded a {@link Resource} for the given
+	 * {@link Path}
 	 */
 	public final boolean isResourceLoaded(Path path) {
 		return resources.containsKey(path);
 	}
 
+	public final Resource embedResource(Key key) throws GameException {
+		return resource(key.toPath(launcher.embedFileSystem().getPath("test").getParent()));
+	}
+
 	/**
 	 * Loads a {@link Resource} (if neccessary) by the given {@link Path}
-	 * 
+	 *
 	 * @param path the path
+	 *
 	 * @return the {@link Resource}
+	 *
 	 * @throws GameException an exception
 	 */
 	public final Resource resource(Path path) throws GameException {
@@ -72,10 +90,10 @@ public abstract class ResourceLoader extends AbstractGameResource {
 		lock.unlock();
 		return resource;
 	}
-	
+
 	@Override
 	protected void cleanup0() throws GameException {
-		for(Path path : resources.keySet()) {
+		for (Path path : resources.keySet()) {
 			resources.remove(path).cleanup();
 		}
 	}

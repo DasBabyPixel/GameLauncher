@@ -51,7 +51,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 	public LWJGLGameLauncher() throws GameException {
 		this.contextProvider(new LWJGLContextProvider(this));
 		this.keybindManager(new LWJGLKeybindManager(this));
-		this.resourceLoader(new SimpleResourceLoader());
+		this.resourceLoader(new SimpleResourceLoader(this));
 		this.shaderLoader(new LWJGLShaderLoader());
 		this.gameRenderer(new LWJGLGameRenderer(this));
 		this.modelLoader(new LWJGLModelLoader(this));

@@ -13,6 +13,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
+import gamelauncher.engine.util.text.Component;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
 /**
@@ -21,15 +22,9 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScreenGui {
 
 	private static int id = 0;
-	private Font font;
 
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
-
-		font = launcher().fontFactory().createFont(launcher().resourceLoader()
-				.resource(
-						launcher().embedFileSystem().getPath("fonts", "garamond_bold.ttf"))
-				.newResourceStream());
 
 		GuiContainer container = new GuiContainer(launcher);
 
@@ -78,7 +73,6 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		font.cleanup();
 	}
 
 	private class GameGui extends ParentableAbstractGui {
@@ -97,8 +91,7 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 				}
 
 			};
-			buttonGui.text().setValue(game.key().key());
-			buttonGui.font().setValue(font);
+			buttonGui.text().setValue(Component.text(game.key().key()));
 
 			buttonGui.xProperty().bind(this.xProperty());
 			buttonGui.yProperty().bind(this.yProperty());

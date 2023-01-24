@@ -25,9 +25,9 @@ public interface Style {
 
 	TextDecoration.State decorationState(TextDecoration decoration);
 
-	@NotNull Key font();
+	Key font();
 
-	Style font(@NotNull Key font);
+	Style font(Key font);
 
 	TextColor color();
 

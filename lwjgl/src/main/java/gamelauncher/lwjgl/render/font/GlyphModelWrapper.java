@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render.font;
 
+import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.WrapperModel;
@@ -7,9 +8,10 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
-@SuppressWarnings("javadoc")
-public class GlyphModelWrapper extends AbstractGameResource implements GlyphStaticModel, WrapperModel {
+public class GlyphModelWrapper extends AbstractGameResource
+		implements GlyphStaticModel, WrapperModel {
 
+	private final Font font;
 	private final Model handle;
 
 	private final int width;
@@ -20,8 +22,10 @@ public class GlyphModelWrapper extends AbstractGameResource implements GlyphStat
 
 	private final float descent;
 
-	public GlyphModelWrapper(Model handle, int width, int height, float ascent, float descent) {
+	public GlyphModelWrapper(Font font, Model handle, int width, int height, float ascent,
+			float descent) {
 		super();
+		this.font = font;
 		this.handle = handle;
 		this.width = width;
 		this.height = height;
@@ -37,6 +41,7 @@ public class GlyphModelWrapper extends AbstractGameResource implements GlyphStat
 	@Override
 	public void cleanup0() throws GameException {
 		handle.cleanup();
+		font.cleanup();
 	}
 
 	@Override

@@ -1,4 +1,5 @@
 open module gamelauncher.lwjgl {
+	requires java.desktop;
 	requires com.google.gson;
 	requires de.dasbabypixel.property;
 	requires gamelauncher.base;

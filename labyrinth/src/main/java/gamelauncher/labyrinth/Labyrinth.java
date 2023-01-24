@@ -10,6 +10,7 @@ import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
+import gamelauncher.engine.util.text.Component;
 
 @GamePlugin
 public class Labyrinth extends Plugin {
@@ -63,7 +64,7 @@ public class Labyrinth extends Plugin {
 										.bind(this.xProperty().add(g.widthProperty().divide(2)));
 								g.yProperty()
 										.bind(this.yProperty().add(g.heightProperty().divide(2)));
-								g.text().setValue("labyrinth game lol test");
+								g.text().setValue(Component.text("labyrinth game lol test"));
 								this.GUIs.add(g);
 							}
 
