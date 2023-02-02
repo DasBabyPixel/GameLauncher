@@ -25,14 +25,11 @@ switch (OperatingSystem.current()) {
 
 dependencies {
     implementation parent.project('api')
-    implementation platform("io.netty:netty-bom:4.1.78.Final")
-    implementation 'io.netty:netty-buffer'
-    implementation 'io.netty:netty-codec'
-    implementation 'io.netty:netty-common'
-    implementation 'io.netty:netty-transport'
-    implementation 'io.netty:netty-handler'
+    implementation libs.bundles.netty
 
-    implementation platform("org.lwjgl:lwjgl-bom:3.3.1")
+    var lwjgl = libs.versions.lwjgl.get()
+
+    implementation platform("org.lwjgl:lwjgl-bom:$lwjgl")
     implementation "org.lwjgl:lwjgl"
     implementation "org.lwjgl:lwjgl-glfw"
     implementation "org.lwjgl:lwjgl-openal"

@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.bitmap;
 
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberInvalidationListener;
@@ -30,13 +30,8 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
 
@@ -69,13 +64,19 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		float descent = adescent[0] * scale;
 		float ascent = aascent[0] * scale;
 		char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
+		Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
 		Map<LWJGLTexture, Collection<AtlasEntry>> entries = new HashMap<>();
 		for (char ch : ar) {
 			GlyphKey key = new GlyphKey(scale, ch);
-			AtlasEntry entry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
+			CompletableFuture<AtlasEntry> fentry =
+					this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
+			futures.add(fentry);
+		}
+		Threads.waitFor(futures.toArray(new CompletableFuture[0]));
+		for (CompletableFuture<AtlasEntry> f : futures) {
 			Collection<AtlasEntry> e =
-					entries.computeIfAbsent(entry.texture, k -> new ArrayList<>());
-			e.add(entry);
+					entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
+			e.add(f.getNow(null));
 		}
 		finfo.free();
 		Collection<Model> meshes = new ArrayList<>();
@@ -134,73 +135,75 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 		return CompletableFuture.completedFuture(null);
 	}
 
-	public AtlasEntry requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight,
-			float scale) throws GameException {
-		int id = this.getId(key);
-		AtlasEntry entry = this.textureAtlas.getGlyph(id);
-		ret:
-		{
-			if (entry != null) {
-				break ret;
+	public CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch,
+			int pixelHeight, float scale) throws GameException {
+		return this.frame.launcher().threads().cached.submit(()->{
+			int id = this.getId(key);
+			AtlasEntry entry = this.textureAtlas.getGlyph(id);
+			ret:
+			{
+				if (entry != null) {
+					break ret;
+				}
+				int gindex = STBTruetype.stbtt_FindGlyphIndex(finfo, id);
+				IntBuffer x0 = MemoryUtil.memAllocInt(1);
+				IntBuffer y0 = MemoryUtil.memAllocInt(1);
+				IntBuffer x1 = MemoryUtil.memAllocInt(1);
+				IntBuffer y1 = MemoryUtil.memAllocInt(1);
+				IntBuffer advance = MemoryUtil.memAllocInt(1);
+				IntBuffer lsb = MemoryUtil.memAllocInt(1);
+				GlyphData gdata = new GlyphData();
+				STBTruetype.stbtt_GetCodepointBitmapBox(finfo, ch, scale, scale, x0, y0, x1, y1);
+				STBTruetype.stbtt_GetCodepointHMetrics(finfo, ch, advance, lsb);
+				gdata.advance = Math.round(advance.get(0) * scale);
+				gdata.bearingX = x0.get(0);
+				gdata.bearingY = y1.get(0);
+				gdata.width = x1.get(0) - x0.get(0);
+				gdata.height = y1.get(0) - y0.get(0);
+				IntBuffer bw = MemoryUtil.memAllocInt(1);
+				IntBuffer bh = MemoryUtil.memAllocInt(1);
+				ByteBuffer output = MemoryUtil.memCalloc((gdata.width + 2) * (gdata.height + 2));
+				STBTruetype.stbtt_MakeCodepointBitmap(finfo, output, gdata.width, gdata.height,
+						gdata.width + 2, scale, scale, ch);
+
+				// Setup for usage by LWJGLTexture
+				ByteBuffer buf = MemoryUtil.memCalloc(
+						Integer.BYTES * output.capacity() + Integer.BYTES * 2
+								+ LWJGLTexture.SIGNATURE_RAW.length);
+				buf.put(LWJGLTexture.SIGNATURE_RAW);
+				buf.putInt(gdata.width + 2);
+				buf.putInt(gdata.height + 2);
+				//			buf.put(apxls);
+				for (int i = 0; i < output.capacity(); i++) {
+					buf.position(buf.position() + 3);
+					buf.put(output.get(i));
+				}
+				buf.flip();
+
+				MemoryUtil.memFree(output);
+				MemoryUtil.memFree(bw);
+				MemoryUtil.memFree(bh);
+				MemoryUtil.memFree(advance);
+				MemoryUtil.memFree(lsb);
+				MemoryUtil.memFree(x0);
+				MemoryUtil.memFree(y0);
+				MemoryUtil.memFree(x1);
+				MemoryUtil.memFree(y1);
+				GlyphEntry e = new GlyphEntry(gdata, gindex, pixelHeight, key, buf);
+
+				if (!this.textureAtlas.addGlyph(id, e).suc()) {
+					throw new GameException("Could not add glyph to texture atlas");
+				}
+				entry = this.textureAtlas.getGlyph(id);
+
+				//			if (!Threads.waitFor(this.textureAtlas.addGlyph(id, e))) {
+				//				throw new GameException("Could not add glyph to texture atlas");
+				//			}
+				//			entry = this.textureAtlas.getGlyph(id);
 			}
-			int gindex = STBTruetype.stbtt_FindGlyphIndex(finfo, id);
-			IntBuffer x0 = MemoryUtil.memAllocInt(1);
-			IntBuffer y0 = MemoryUtil.memAllocInt(1);
-			IntBuffer x1 = MemoryUtil.memAllocInt(1);
-			IntBuffer y1 = MemoryUtil.memAllocInt(1);
-			IntBuffer advance = MemoryUtil.memAllocInt(1);
-			IntBuffer lsb = MemoryUtil.memAllocInt(1);
-			GlyphData gdata = new GlyphData();
-			STBTruetype.stbtt_GetCodepointBitmapBox(finfo, ch, scale, scale, x0, y0, x1, y1);
-			STBTruetype.stbtt_GetCodepointHMetrics(finfo, ch, advance, lsb);
-			gdata.advance = Math.round(advance.get(0) * scale);
-			gdata.bearingX = x0.get(0);
-			gdata.bearingY = y1.get(0);
-			gdata.width = x1.get(0) - x0.get(0);
-			gdata.height = y1.get(0) - y0.get(0);
-			IntBuffer bw = MemoryUtil.memAllocInt(1);
-			IntBuffer bh = MemoryUtil.memAllocInt(1);
-			ByteBuffer output = MemoryUtil.memCalloc((gdata.width + 2) * (gdata.height + 2));
-			STBTruetype.stbtt_MakeCodepointBitmap(finfo, output, gdata.width, gdata.height,
-					gdata.width + 2, scale, scale, ch);
-
-			// Setup for usage by LWJGLTexture
-			ByteBuffer buf = MemoryUtil.memCalloc(
-					Integer.BYTES * output.capacity() + Integer.BYTES * 2
-							+ LWJGLTexture.SIGNATURE_RAW.length);
-			buf.put(LWJGLTexture.SIGNATURE_RAW);
-			buf.putInt(gdata.width + 2);
-			buf.putInt(gdata.height + 2);
-			//			buf.put(apxls);
-			for (int i = 0; i < output.capacity(); i++) {
-				buf.position(buf.position() + 3);
-				buf.put(output.get(i));
-			}
-			buf.flip();
-
-			MemoryUtil.memFree(output);
-			MemoryUtil.memFree(bw);
-			MemoryUtil.memFree(bh);
-			MemoryUtil.memFree(advance);
-			MemoryUtil.memFree(lsb);
-			MemoryUtil.memFree(x0);
-			MemoryUtil.memFree(y0);
-			MemoryUtil.memFree(x1);
-			MemoryUtil.memFree(y1);
-			GlyphEntry e = new GlyphEntry(gdata, gindex, pixelHeight, key, buf);
-
-			if (!this.textureAtlas.addGlyph(id, e).suc()) {
-				throw new GameException("Could not add glyph to texture atlas");
-			}
-			entry = this.textureAtlas.getGlyph(id);
-
-			//			if (!Threads.waitFor(this.textureAtlas.addGlyph(id, e))) {
-			//				throw new GameException("Could not add glyph to texture atlas");
-			//			}
-			//			entry = this.textureAtlas.getGlyph(id);
-		}
-		entry.entry.key.required.incrementAndGet();
-		return entry;
+			entry.entry.key.required.incrementAndGet();
+			return entry;
+		});
 	}
 
 	@Override

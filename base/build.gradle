@@ -8,12 +8,12 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 dependencies {
-    api 'org.jetbrains:annotations:23.1.0'
-    api 'org.fusesource.jansi:jansi:2.4.0'
-    api 'it.unimi.dsi:fastutil:8.5.11'
-    api 'com.google.guava:guava:31.1-jre'
-    api 'de.dasbabypixel.api:property:1.0.7'
-    api 'org.joml:joml:1.10.5'
-    api 'com.google.code.gson:gson:2.10.1'
-    api 'org.l33tlabs.twl:pngdecoder:1.0'
+    api libs.annotations
+    api libs.jansi
+    api libs.fastutil
+    api libs.guava
+    api libs.property
+    api libs.joml
+    api libs.gson
+    api libs.pngdecoder
 }

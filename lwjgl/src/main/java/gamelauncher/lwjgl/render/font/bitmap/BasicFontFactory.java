@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.bitmap;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.font.Font;
