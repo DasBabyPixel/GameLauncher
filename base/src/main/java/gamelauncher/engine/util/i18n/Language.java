@@ -2,7 +2,6 @@ package gamelauncher.engine.util.i18n;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.Locale;
 
 /**
  * @author DasBabyPixel
@@ -18,7 +17,7 @@ public class Language {
 		this.charset = charset;
 		this.fallbacks = fallbacks;
 	}
-
+// TODO
 	public String translate(Message message) {
 		return null;
 	}
