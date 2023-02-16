@@ -13,10 +13,7 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.states.GlStates;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
@@ -55,23 +52,23 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		this.profiler = launcher.profiler();
 	}
 
-	private static BufferedImage getBufferedImage(int texture, int width, int height) {
-		ByteBuffer pixels = getBufferedImageBuffer(texture, width, height);
-		BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				int r = pixels.get((y * width + x) * Integer.BYTES);
-				int g = pixels.get((y * width + x) * Integer.BYTES + 1);
-				int b = pixels.get((y * width + x) * Integer.BYTES + 2);
-				int a = pixels.get((y * width + x) * Integer.BYTES + 3);
-
-				int argb = a << 24 | r << 16 | g << 8 | b;
-				img.setRGB(x, y, argb);
-			}
-		}
-		memFree(pixels);
-		return img;
-	}
+	//	private static BufferedImage getBufferedImage(int texture, int width, int height) {
+	//		ByteBuffer pixels = getBufferedImageBuffer(texture, width, height);
+	//		BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
+	//		for (int y = 0; y < height; y++) {
+	//			for (int x = 0; x < width; x++) {
+	//				int r = pixels.get((y * width + x) * Integer.BYTES);
+	//				int g = pixels.get((y * width + x) * Integer.BYTES + 1);
+	//				int b = pixels.get((y * width + x) * Integer.BYTES + 2);
+	//				int a = pixels.get((y * width + x) * Integer.BYTES + 3);
+	//
+	//				int argb = a << 24 | r << 16 | g << 8 | b;
+	//				img.setRGB(x, y, argb);
+	//			}
+	//		}
+	//		memFree(pixels);
+	//		return img;
+	//	}
 
 	private static ByteBuffer getBufferedImageBuffer(int texture, int width, int height) {
 		GlStates cur = GlStates.current();
@@ -108,23 +105,23 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 		profiler.end();
 	}
 
-	public CompletableFuture<Void> write() {
-		return owner.submit(() -> {
-			try {
-				lock.readLock().lock();
-				BufferedImage img = getBufferedImage(textureId.get(), cwidth, cheight);
-				manager.launcher.threads().cached.submit(() -> {
-					try {
-						ImageIO.write(img, "png", new File("img" + tid.incrementAndGet() + ".png"));
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				});
-			} finally {
-				lock.readLock().unlock();
-			}
-		});
-	}
+	//	public CompletableFuture<Void> write() {
+	//		return owner.submit(() -> {
+	//			try {
+	//				lock.readLock().lock();
+	//				BufferedImage img = getBufferedImage(textureId.get(), cwidth, cheight);
+	//				manager.launcher.threads().cached.submit(() -> {
+	//					try {
+	//						ImageIO.write(img, "png", new File("img" + tid.incrementAndGet() + ".png"));
+	//					} catch (IOException e) {
+	//						throw new RuntimeException(e);
+	//					}
+	//				});
+	//			} finally {
+	//				lock.readLock().unlock();
+	//			}
+	//		});
+	//	}
 
 	private boolean isRaw(byte[] data) {
 		for (int i = 0; i < SIGNATURE_RAW.length; i++) {
@@ -236,14 +233,14 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	}
 
 	//	@Override
-	public CompletableFuture<BufferedImage> getBufferedImage() {
-		return owner.submit(() -> {
-			lock.readLock().lock();
-			BufferedImage img = getBufferedImage(this.textureId.get(), cwidth, cheight);
-			lock.readLock().unlock();
-			return img;
-		});
-	}
+	//	public CompletableFuture<BufferedImage> getBufferedImage() {
+	//		return owner.submit(() -> {
+	//			lock.readLock().lock();
+	//			BufferedImage img = getBufferedImage(this.textureId.get(), cwidth, cheight);
+	//			lock.readLock().unlock();
+	//			return img;
+	//		});
+	//	}
 
 	@Override
 	public CompletableFuture<Void> allocate(int width, int height) {
@@ -305,6 +302,7 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 				int height;
 				ByteBuffer buff;
 				if (isRaw(data)) {
+					//noinspection ResultOfMethodCallIgnored
 					bin.skip(SIGNATURE_RAW.length);
 					ByteBuffer tbbuf = memAlloc(2 * Integer.BYTES);
 					tbbuf.put(data, SIGNATURE_RAW.length, 2 * Integer.BYTES);

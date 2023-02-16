@@ -21,6 +21,14 @@ public class Math {
 		return java.lang.Math.max(v1, v2);
 	}
 
+	public static double max(double v1, double v2) {
+		return java.lang.Math.max(v1, v2);
+	}
+
+	public static double min(double v1, double v2) {
+		return java.lang.Math.min(v1, v2);
+	}
+
 	public static float clamp(float val, float min, float max) {
 		return max(min, min(max, val));
 	}

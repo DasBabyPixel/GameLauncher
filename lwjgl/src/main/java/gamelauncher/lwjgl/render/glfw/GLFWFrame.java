@@ -1,6 +1,7 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import de.dasbabypixel.api.property.BooleanValue;
+import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
 import de.dasbabypixel.api.property.implementation.ObjectProperty;
@@ -15,6 +16,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.engine.util.math.Math;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
@@ -31,9 +33,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class GLFWFrame extends AbstractGameResource implements Frame {
 
 	private static final Logger logger = Logger.logger();
-	private static final GameConsumer<Frame> simpleCCB = f -> {
-		((GLFWFrame) f).close0();
-	};
+	private static final GameConsumer<Frame> simpleCCB = f -> ((GLFWFrame) f).close0();
 	final LWJGLGameLauncher launcher;
 	final GLFWFrameRenderThread renderThread;
 	final LWJGLInput input;
@@ -131,11 +131,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 		});
 	}
 
-	/**
-	 * @return the future
-	 */
-	public CompletableFuture<Void> hideWindow() {
-		return this.launcher.getGLFWThread().submit(() -> {
+	public void hideWindow() {
+		this.launcher.getGLFWThread().submit(() -> {
 			this.framebuffer.swapBuffers().setValue(false);
 			GLFW.glfwHideWindow(this.context.glfwId);
 		});
@@ -308,9 +305,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			if (!this.frame.created) {
 				this.frame.windowWidth.bind(this.width);
 				this.frame.windowHeight.bind(this.height);
-				long monitor = glfwGetPrimaryMonitor();
-				this.monitor.setValue(
-						frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor));
+				this.monitor.setValue(primaryMonitor);
 			}
 			GLFW.glfwGetFramebufferSize(this.glfwId, a0, a1);
 			this.fbwidth.setNumber(a0[0]);
@@ -319,6 +314,45 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 				this.frame.framebuffer.width().bind(this.fbwidth);
 				this.frame.framebuffer.height().bind(this.fbheight);
 				this.frame.monitor.bind(monitor);
+				this.frame.monitor.addListener(Property::getValue);
+
+				InvalidationListener l = p -> {
+					GLFWMonitorManager manager = frame.launcher.getGLFWThread().getMonitorManager();
+					Monitor nearest = null;
+					Rect window =
+							new Rect(xpos.doubleValue(), ypos.doubleValue(), width.doubleValue(),
+									height.doubleValue());
+					for (Monitor monitor : manager.getMonitors()) {
+						if (nearest != null && new Rect(nearest.x(), nearest.y(), nearest.width(),
+								nearest.height()).contains(window)) {
+							break;
+						}
+						if (nearest == null) {
+							nearest = monitor;
+							continue;
+						}
+
+						Rect rnearest = new Rect(nearest.x(), nearest.y(), nearest.width(),
+								nearest.height());
+						Rect rmonitor = new Rect(monitor.x(), monitor.y(), monitor.width(),
+								monitor.height());
+						if (rmonitor.contains(window)) {
+							nearest = monitor;
+							continue;
+						}
+						Rect overlapNearest = rnearest.overlap(window);
+						Rect overlapMonitor = rmonitor.overlap(window);
+						if (overlapMonitor.size() > overlapNearest.size()) {
+							nearest = monitor;
+						}
+					}
+					monitor.setValue(nearest);
+				};
+				this.xpos.addListener(l);
+				this.ypos.addListener(l);
+				this.width.addListener(l);
+				this.height.addListener(l);
+
 				this.frame.fullscreen.addListener(Property::getValue);
 				this.frame.fullscreen.addListener(
 						(p, o, n) -> frame.launcher.getGLFWThread().submit(() -> {
@@ -330,17 +364,11 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 								fullscreenOldH.setNumber(height.getNumber());
 								glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
 								glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
-								//								glfwSetWindowMonitor(glfwId, monitor.glfwId(), 0, 0,
-								//										monitor.videoMode().width(), monitor.videoMode().height(),
-								//										monitor.videoMode().refreshRate());
 							} else {
 								glfwSetWindowPos(glfwId, fullscreenOldX.intValue(),
 										fullscreenOldY.intValue());
 								glfwSetWindowSize(glfwId, fullscreenOldW.intValue(),
 										fullscreenOldH.intValue());
-								//								glfwSetWindowMonitor(glfwId, 0L, fullscreenOldX.intValue(),
-								//										fullscreenOldY.intValue(), fullscreenOldW.intValue(),
-								//										fullscreenOldH.intValue(), 0);
 							}
 						}));
 			}
@@ -360,10 +388,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 					ex.printStackTrace();
 				}
 			});
-			GLFW.glfwSetMonitorCallback((monitor, event) -> {
-				this.monitor.setValue(
-						frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor));
-			});
+			GLFW.glfwSetMonitorCallback((monitor, event) -> this.monitor.setValue(
+					frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor)));
 			GLFW.glfwSetWindowCloseCallback(this.glfwId, wid -> {
 				GameConsumer<Frame> cs = this.frame.closeCallback.getValue();
 				if (cs != null) {
@@ -374,9 +400,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 					}
 				}
 			});
-			GLFW.glfwSetCursorEnterCallback(this.glfwId, (wid, entered) -> {
-				this.frame.mouse.setInWindow(entered);
-			});
+			GLFW.glfwSetCursorEnterCallback(this.glfwId,
+					(wid, entered) -> this.frame.mouse.setInWindow(entered));
 			GLFW.glfwSetCursorPosCallback(this.glfwId, (wid, xpos, ypos) -> {
 				ypos = ypos + 0.5F;
 				xpos = xpos + 0.5F;
@@ -392,12 +417,12 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			});
 			GLFW.glfwSetMouseButtonCallback(this.glfwId, (wid, button, action, mods) -> {
 				switch (action) {
-					case GLFW_PRESS -> this.frame.input.mousePress(button,
-							(float) this.frame.mouse().getX(),
-							(float) this.frame.mouse().getY());
-					case GLFW_RELEASE -> this.frame.input.mouseRelease(button,
-							(float) this.frame.mouse().getX(),
-							(float) this.frame.mouse().getY());
+					case GLFW_PRESS ->
+							this.frame.input.mousePress(button, (float) this.frame.mouse().getX(),
+									(float) this.frame.mouse().getY());
+					case GLFW_RELEASE ->
+							this.frame.input.mouseRelease(button, (float) this.frame.mouse().getX(),
+									(float) this.frame.mouse().getY());
 				}
 			});
 			GLFW.glfwSetKeyCallback(this.glfwId, (wid, key, scancode, action, mods) -> {
@@ -411,12 +436,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 				this.scaleX.setNumber(xscale);
 				this.scaleY.setNumber(yscale);
 			});
-			GLFW.glfwSetCharCallback(this.glfwId, (wid, codepoint) -> {
-				this.frame.input.character((char) codepoint);
-			});
-			GLFW.glfwSetWindowRefreshCallback(this.glfwId, wid -> {
-				this.frame.renderThread.refreshWait();
-			});
+			GLFW.glfwSetCharCallback(this.glfwId,
+					(wid, codepoint) -> this.frame.input.character((char) codepoint));
+			GLFW.glfwSetWindowRefreshCallback(this.glfwId,
+					wid -> this.frame.renderThread.refreshWait());
 			GLFW.glfwSetFramebufferSizeCallback(this.glfwId, (wid, width, height) -> {
 				GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
 				GLFWFrameRenderThread rt = this.frame.renderThread;
@@ -430,4 +453,25 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
 	}
 
+
+	private record Rect(double x, double y, double w, double h) {
+
+		public double size() {
+			return w * h;
+		}
+
+		public boolean contains(Rect other) {
+			return x <= other.x && y <= other.y && x + w >= other.x + other.w
+					&& y + h >= other.y + other.h;
+		}
+
+		public Rect overlap(Rect other) {
+			double nx = Math.max(x, other.x);
+			double ny = Math.max(y, other.y);
+			double right = Math.min(x + w, other.x + other.w);
+			double top = Math.min(y + h, other.y + other.h);
+
+			return new Rect(nx, ny, Math.max(0, right - nx), Math.max(top - ny, 0));
+		}
+	}
 }
