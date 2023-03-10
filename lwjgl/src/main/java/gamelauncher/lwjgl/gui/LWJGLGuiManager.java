@@ -8,10 +8,7 @@ import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
 import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
-import gamelauncher.engine.gui.launcher.ColorGui;
-import gamelauncher.engine.gui.launcher.MainScreenGui;
-import gamelauncher.engine.gui.launcher.ScrollGui;
-import gamelauncher.engine.gui.launcher.TextureGui;
+import gamelauncher.engine.gui.launcher.*;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
@@ -21,10 +18,7 @@ import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.gui.launcher.LWJGLColorGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLMainScreenGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLScrollGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLTextureGui;
+import gamelauncher.lwjgl.gui.launcher.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +50,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		this.registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
 		this.registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
 		this.registerGuiCreator(ScrollGui.class, () -> new LWJGLScrollGui(launcher));
+		this.registerGuiCreator(LineGui.class, () -> new LWJGLLineGui(launcher));
 	}
 
 	@Override

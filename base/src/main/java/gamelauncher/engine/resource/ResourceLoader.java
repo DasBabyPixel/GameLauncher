@@ -63,10 +63,6 @@ public abstract class ResourceLoader extends AbstractGameResource {
 		return resources.containsKey(path);
 	}
 
-	public final Resource embedResource(Key key) throws GameException {
-		return resource(key.toPath(launcher.embedFileSystem().getPath("test").getParent()));
-	}
-
 	/**
 	 * Loads a {@link Resource} (if neccessary) by the given {@link Path}
 	 *

@@ -96,7 +96,8 @@ public class PluginManager {
 				while (ein.hasNextEntry()) {
 					e = ein.nextEntry();
 
-					if (!e.name().endsWith(".class") || e.name().startsWith("META-INF")) {
+					if (!e.name().endsWith(".class") || e.name().startsWith("META-INF") || e.name()
+							.equals("module-info.class")) {
 						continue;
 					}
 					String className =

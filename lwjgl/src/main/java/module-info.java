@@ -18,4 +18,6 @@ open module gamelauncher.lwjgl {
 	requires org.lwjgl.stb.natives;
 	requires org.lwjgl.stb;
 	requires io.netty.codec;
+
+	exports gamelauncher.lwjgl;
 }

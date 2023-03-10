@@ -1,5 +1,6 @@
 package gamelauncher.engine.gui.guis;
 
+import de.dasbabypixel.api.property.InvalidationListener;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.ParentableAbstractGui;
@@ -8,6 +9,10 @@ import gamelauncher.engine.gui.ParentableAbstractGui;
  * @author DasBabyPixel
  */
 public class GuiContainer extends ParentableAbstractGui {
+
+	private final InvalidationListener invalidationListener = p -> {
+		recalculateSize();
+	};
 
 	/**
 	 * @param launcher
@@ -32,7 +37,7 @@ public class GuiContainer extends ParentableAbstractGui {
 		this.recalculateSize();
 	}
 
-	private void recalculateSize() {
+	public void recalculateSize() {
 		if (!this.widthProperty().isBound()) {
 			float minx = Float.MAX_VALUE;
 			float w = 0;

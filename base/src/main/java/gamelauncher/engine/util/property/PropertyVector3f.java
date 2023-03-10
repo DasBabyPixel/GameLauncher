@@ -57,7 +57,7 @@ public class PropertyVector3f {
 	}
 
 	/**
-	 * @return a new vector4f
+	 * @return a new vector3f
 	 */
 	public Vector3f toVector3f() {
 		return this.toVector3f(new Vector3f());
@@ -65,11 +65,15 @@ public class PropertyVector3f {
 
 	/**
 	 * @param dest
-	 * @return the vector4f
+	 * @return the vector3f
 	 */
 	public Vector3f toVector3f(Vector3f dest) {
 		dest.set(this.x.floatValue(), this.y.floatValue(), this.z.floatValue());
 		return dest;
 	}
 
+	@Override
+	public String toString() {
+		return "PropertyVector3f{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
+	}
 }

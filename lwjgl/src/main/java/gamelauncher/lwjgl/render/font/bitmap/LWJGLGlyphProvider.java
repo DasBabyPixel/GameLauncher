@@ -98,7 +98,6 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				GlyphData data = e.entry.data;
 				int pb = -data.bearingY - data.height;
 				int pt = pb + data.height;
-				//				float pl = xpos + data.bearingX;
 				int pl = xpos;
 				int pr = pl + data.width;
 				int width = pr - pl;
@@ -116,11 +115,9 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				meshes.add(gi.createModel());
 				xpos += e.entry.data.advance;
 
-				//				e.getTexture().write();
 			}
 		}
 
-		//		entries.keySet().stream().findAny().get().write();
 		CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[0]));
 		GameItem gi = new GameItem(cmodel);
 		gi.addColor(1, 1, 1, 0);
@@ -136,7 +133,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 	}
 
 	public CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch,
-			int pixelHeight, float scale) throws GameException {
+			int pixelHeight, float scale) {
 		return this.frame.launcher().threads().cached.submit(()->{
 			int id = this.getId(key);
 			AtlasEntry entry = this.textureAtlas.getGlyph(id);
@@ -196,10 +193,6 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 				}
 				entry = this.textureAtlas.getGlyph(id);
 
-				//			if (!Threads.waitFor(this.textureAtlas.addGlyph(id, e))) {
-				//				throw new GameException("Could not add glyph to texture atlas");
-				//			}
-				//			entry = this.textureAtlas.getGlyph(id);
 			}
 			entry.entry.key.required.incrementAndGet();
 			return entry;
