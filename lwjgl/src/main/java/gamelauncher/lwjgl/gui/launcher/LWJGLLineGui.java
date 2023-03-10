@@ -13,7 +13,6 @@ import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.render.mesh.Mesh;
-import gamelauncher.lwjgl.render.mesh.PlaneMesh;
 import gamelauncher.lwjgl.render.model.MeshModel;
 import org.joml.Math;
 import org.joml.Vector2f;
@@ -32,8 +31,9 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 	private Model arrowModel;
 	private GameItem lineItem;
 	private Model lineModel;
+	private float lineWidth = 200;
 
-	public LWJGLLineGui(GameLauncher launcher) {
+	public LWJGLLineGui(GameLauncher launcher) throws GameException {
 		super(launcher);
 		NumberValue x = NumberValue.zero();
 		NumberValue y = NumberValue.zero();
@@ -43,6 +43,7 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 		this.yProperty().bind(y);
 		this.widthProperty().bind(w);
 		this.heightProperty().bind(h);
+
 		NumberInvalidationListener invalidationListener = numberValue -> {
 			Vector2f to = new Vector2f(toX.floatValue(), toY.floatValue());
 			Vector2f from = new Vector2f(fromX.floatValue(), fromY.floatValue());
@@ -55,16 +56,16 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 			}
 			if (lineItem != null) {
 				lineItem.position(from.x, from.y, 0);
-				lineItem.scale(2, direction.length(), 0);
+				lineItem.scale(lineWidth / 100, direction.length(), 0);
 				lineItem.rotation(0, 0,
 						(float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
 			}
-			float minX = Math.min(from.x, to.x);
-			float minY = Math.min(from.y, to.y);
+			float minX = Math.min(from.x, to.x) - lineWidth;
+			float minY = Math.min(from.y, to.y) - lineWidth;
 			x.setNumber(minX);
 			y.setNumber(minY);
-			w.setNumber(Math.abs(from.x - to.x));
-			h.setNumber(Math.abs(from.y - to.y));
+			w.setNumber(Math.abs(from.x - to.x) + lineWidth * 2);
+			h.setNumber(Math.abs(from.y - to.y) + lineWidth * 2);
 			redraw();
 		};
 		fromX.addListener(invalidationListener);
@@ -94,15 +95,14 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 	}
 
 	@Override
-	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
-			float partialTick) throws GameException {
-		context.update(EmptyCamera.instance());
+	protected void doCleanup(Framebuffer framebuffer) throws GameException {
+		super.doCleanup(framebuffer);
+		launcher().contextProvider().freeContext(context, ContextType.HUD);
+		lineModel.cleanup();
 		if (arrowModel != null) {
-			context.drawModel(arrowModel);
+			arrowModel.cleanup();
+			arrowModel = null;
 		}
-		context.drawModel(lineModel);
-		context.program().clearUniforms();
-		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 
 	@Override
@@ -110,12 +110,18 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 		super.doInit(framebuffer);
 		context = launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
 		if (arrow) {
-			arrowModel = launcher().modelLoader().loadModel(launcher().resourceLoader()
-					.resource(launcher().embedFileSystem().getPath("arrow.obj")));
-			arrowItem = new GameItem(arrowModel);
+
+			Mesh mesh = new Mesh(new float[] {-0.5F, -0.5F, 0, 0, 0.5F, 0, 0.5F, -0.5F, 0},
+					new float[] {0, 0, 0, 0, 0, 0}, new float[] {0, 0, 0, 0, 0, 0, 0, 0, 0},
+					new int[] {0, 2, 1}, GL_TRIANGLES);
+			Mesh.Material mat = mesh.material();
+			mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
+			MeshModel model = new MeshModel(mesh);
+			arrowItem = new GameItem(model);
+			arrowItem.color().set(1, 1, 0, 1);
 			arrowModel = arrowItem.createModel();
 		}
-		Mesh mesh = new Mesh(new float[] {0, 0, 0.0F, 0, 1, 0.0F, 1, 1, 0.0F, 1, 0, 0.0F,},
+		Mesh mesh = new Mesh(new float[] {-0.5F, 0, 0, -0.5F, 1, 0, 0.5F, 1, 0, 0.5F, 0, 0},
 				new float[] {0, 0, 0, 0, 0, 0, 0, 0,},
 				new float[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,}, new int[] {0, 3, 2, 0, 2, 1,},
 				GL_TRIANGLES);
@@ -129,13 +135,14 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 	}
 
 	@Override
-	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		super.doCleanup(framebuffer);
-		launcher().contextProvider().freeContext(context, ContextType.HUD);
-		lineModel.cleanup();
+	protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
+			float partialTick) throws GameException {
+		context.update(EmptyCamera.instance());
+		context.drawModel(lineModel);
 		if (arrowModel != null) {
-			arrowModel.cleanup();
-			arrowModel = null;
+			context.drawModel(arrowModel);
 		}
+		context.program().clearUniforms();
+		return super.doRender(framebuffer, mouseX, mouseY, partialTick);
 	}
 }

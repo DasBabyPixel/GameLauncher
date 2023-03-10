@@ -5,16 +5,13 @@ import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.gui.guis.GuiContainer;
-import gamelauncher.engine.gui.launcher.LineGui;
 import gamelauncher.engine.gui.launcher.MainScreenGui;
 import gamelauncher.engine.gui.launcher.ScrollGui;
 import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
-import gamelauncher.engine.util.keybind.MouseMoveKeybindEntry;
 import gamelauncher.engine.util.text.Component;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
