@@ -31,7 +31,7 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 	private Model arrowModel;
 	private GameItem lineItem;
 	private Model lineModel;
-	private float lineWidth = 200;
+	private float lineWidth = 2;
 
 	public LWJGLLineGui(GameLauncher launcher) throws GameException {
 		super(launcher);
@@ -49,23 +49,24 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 			Vector2f from = new Vector2f(fromX.floatValue(), fromY.floatValue());
 			Vector2f direction = to.sub(from, new Vector2f());
 			if (arrowItem != null) {
-				arrowItem.scale(20, 20, 0);
-				arrowItem.position(to.x, to.y, 0);
+				arrowItem.scale(lineWidth * 10, lineWidth * 10, 0);
+				Vector2f norm = direction.normalize(new Vector2f()).mul(-lineWidth * 5);
+				arrowItem.position(to.x + norm.x, to.y + norm.y, 0);
 				arrowItem.rotation(0, 0,
 						(float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
 			}
 			if (lineItem != null) {
 				lineItem.position(from.x, from.y, 0);
-				lineItem.scale(lineWidth / 100, direction.length(), 0);
+				lineItem.scale(lineWidth, direction.length() - lineWidth * 10, 0);
 				lineItem.rotation(0, 0,
 						(float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
 			}
-			float minX = Math.min(from.x, to.x) - lineWidth;
-			float minY = Math.min(from.y, to.y) - lineWidth;
+			float minX = Math.min(from.x, to.x) - lineWidth * 6;
+			float minY = Math.min(from.y, to.y) - lineWidth * 6;
 			x.setNumber(minX);
 			y.setNumber(minY);
-			w.setNumber(Math.abs(from.x - to.x) + lineWidth * 2);
-			h.setNumber(Math.abs(from.y - to.y) + lineWidth * 2);
+			w.setNumber(Math.abs(from.x - to.x) + lineWidth * 12);
+			h.setNumber(Math.abs(from.y - to.y) + lineWidth * 12);
 			redraw();
 		};
 		fromX.addListener(invalidationListener);
@@ -118,7 +119,7 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
 			mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
 			MeshModel model = new MeshModel(mesh);
 			arrowItem = new GameItem(model);
-			arrowItem.color().set(1, 1, 0, 1);
+			arrowItem.color().set(1, 1, 1, 1);
 			arrowModel = arrowItem.createModel();
 		}
 		Mesh mesh = new Mesh(new float[] {-0.5F, 0, 0, -0.5F, 1, 0, 0.5F, 1, 0, 0.5F, 0, 0},
