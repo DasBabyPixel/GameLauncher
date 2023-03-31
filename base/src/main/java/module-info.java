@@ -35,12 +35,10 @@ module gamelauncher.base {
 	exports gamelauncher.engine.util;
 	exports gamelauncher.engine;
 
-	provides java.nio.file.spi.FileSystemProvider with gamelauncher.engine.io.embed.EmbedFileSystemProvider;
-
-	requires com.google.gson;
-	requires de.dasbabypixel.property;
+	requires transitive com.google.gson;
+	requires transitive de.dasbabypixel.property;
 	requires java.base;
 	requires org.fusesource.jansi;
-	requires org.jetbrains.annotations;
-	requires org.joml;
+	requires transitive org.jetbrains.annotations;
+	requires transitive org.joml;
 }

@@ -80,9 +80,9 @@ public class PluginManager {
 	/**
 	 * Loads the given plugin
 	 *
-	 * @param plugin
+	 * @param plugin the plugin to load
 	 *
-	 * @throws GameException
+	 * @throws GameException when some error happens
 	 */
 	public void loadPlugin(Path plugin) throws GameException {
 		logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());

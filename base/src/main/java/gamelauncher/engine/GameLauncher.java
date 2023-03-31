@@ -12,6 +12,7 @@ import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.io.embed.EmbedFileSystem;
+import gamelauncher.engine.io.embed.EmbedFileSystemProvider;
 import gamelauncher.engine.io.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
@@ -115,7 +116,8 @@ public abstract class GameLauncher {
 		try {
 			URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
 			URI uri = URI.create("embed:/");
-			this.embedFileSystem = FileSystems.newFileSystem(uri, null);
+			//			this.embedFileSystem = FileSystems.newFileSystem(uri, null);
+			this.embedFileSystem = EmbedFileSystemProvider.instance.newFileSystem(uri, null);
 		} catch (ProviderNotFoundException ex) {
 			this.logger.error(ex);
 			this.startupFailed = true;
@@ -162,7 +164,11 @@ public abstract class GameLauncher {
 		Files.createDirectories(this.pluginsDirectory);
 
 		for (Path externalPlugin : scs.externalPlugins) {
-			this.pluginManager.loadPlugin(externalPlugin);
+			try {
+				this.pluginManager.loadPlugin(externalPlugin);
+			} catch (GameException exception) {
+				logger.error(exception);
+			}
 		}
 		this.pluginManager.loadPlugins(this.pluginsDirectory);
 

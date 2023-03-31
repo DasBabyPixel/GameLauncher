@@ -5,11 +5,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
-@SuppressWarnings("javadoc")
 public class EmbedURLStreamHandler extends URLStreamHandler {
 
 	@Override
-	protected URLConnection openConnection(URL u) throws IOException {
+	protected URLConnection openConnection(URL u) {
 		return new EmbedURLConnection(u);
 	}
 }

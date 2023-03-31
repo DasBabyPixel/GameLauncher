@@ -3,7 +3,6 @@ package gamelauncher.engine.io.embed.url;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 
-@SuppressWarnings("javadoc")
 public class EmbedURLStreamHandlerFactory implements URLStreamHandlerFactory {
 
 	@Override
