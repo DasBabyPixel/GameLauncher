@@ -20,8 +20,6 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
  */
 public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScreenGui {
 
-	private static int id = 0;
-
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
 

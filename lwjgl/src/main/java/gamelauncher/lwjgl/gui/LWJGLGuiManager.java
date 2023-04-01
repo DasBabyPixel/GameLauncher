@@ -2,6 +2,7 @@ package gamelauncher.lwjgl.gui;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
+import gamelauncher.engine.event.events.gui.GuiOpenEvent;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.GuiManager;
@@ -101,6 +102,9 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 				framebuffer.renderThread().submit(() -> {
 					currentGui.cleanup(framebuffer);
 				});
+				if (stack.peekGui() == null) {
+					gui = this.createGui(MainScreenGui.class);
+				}
 			}
 		} else {
 			if (exit) {
@@ -108,13 +112,16 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			}
 		}
 		if (gui != null) {
+			gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
 			gui.widthProperty().bind(framebuffer.width());
 			gui.heightProperty().bind(framebuffer.height());
 			stack.pushGui(gui);
 			gui.onOpen();
 			gui.focus();
-			framebuffer.scheduleRedraw();
+		} else {
+			logger.error("Tried to push \"null\" GUI");
 		}
+		framebuffer.scheduleRedraw();
 	}
 
 	@Override
@@ -158,7 +165,8 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		if (this.converters.containsKey(clazz)) {
 			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c =
 					this.converters.get(clazz);
-			for (@SuppressWarnings("rawtypes") GameFunction func : c) {
+			//noinspection rawtypes
+			for (GameFunction func : c) {
 				t = clazz.cast(func.apply(t));
 			}
 		}

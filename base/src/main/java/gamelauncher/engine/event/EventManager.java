@@ -2,6 +2,7 @@ package gamelauncher.engine.event;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.Arrays;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
 
 import java.lang.reflect.Method;
@@ -13,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author DasBabyPixel
  */
 public class EventManager {
+
+	private static final Logger logger = Logger.logger();
 
 	private final Map<Object, Listener> listeners = new ConcurrentHashMap<>();
 
@@ -95,17 +98,14 @@ public class EventManager {
 				if (handler == null)
 					continue;
 				if (method.getParameterCount() != 1) {
-					System.out.println(
-							"Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
-									+ " - More than 1 Parameters!");
+					logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
+							+ " - More than 1 Parameters!");
 					continue;
 				}
 				Parameter param = method.getParameters()[0];
 				if (!Event.class.isAssignableFrom(param.getType())) {
-					System.out.println(
-							"Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
-									+ " - Param " + param.getType().getName()
-									+ " is not of type Event!");
+					logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
+							+ " - Param " + param.getType().getName() + " is not of type Event!");
 					continue;
 				}
 				nodes.add(new MethodNode(listener, method, param.getType(), handler.priority()));
@@ -152,7 +152,7 @@ public class EventManager {
 					EventException e =
 							new EventException("Exception in Event: " + ex.getLocalizedMessage(),
 									ex);
-					e.printStackTrace();
+					logger.error(e);
 				}
 			}
 			profiler.end();

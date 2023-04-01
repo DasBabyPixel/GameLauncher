@@ -1,5 +1,6 @@
 module gamelauncher.base {
 	exports gamelauncher.engine.event.events.util.keybind;
+	exports gamelauncher.engine.event.events.gui;
 	exports gamelauncher.engine.event.events;
 	exports gamelauncher.engine.event;
 	exports gamelauncher.engine.game;
