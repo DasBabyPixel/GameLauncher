@@ -110,7 +110,8 @@ public class EventManager {
 				}
 				nodes.add(new MethodNode(listener, method, param.getType(), handler.priority()));
 			}
-			if (listener instanceof Node node) {
+			if (listener instanceof Node) {
+				Node node = (Node) listener;
 				nodes.add(node);
 			}
 			return nodes.toArray(new Node[0]);

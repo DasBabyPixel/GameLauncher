@@ -462,7 +462,31 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 	}
 
 
-	private record Rect(double x, double y, double w, double h) {
+	private static class Rect {
+		private final double x, y, w, h;
+
+		public Rect(double x, double y, double w, double h) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+		}
+
+		public double x() {
+			return x;
+		}
+
+		public double y() {
+			return y;
+		}
+
+		public double w() {
+			return w;
+		}
+
+		public double h() {
+			return h;
+		}
 
 		public double size() {
 			return w * h;

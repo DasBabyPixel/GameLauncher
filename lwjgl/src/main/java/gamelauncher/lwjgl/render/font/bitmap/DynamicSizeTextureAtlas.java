@@ -192,7 +192,22 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 		}
 	}
 
-	public record AddFuture(boolean suc, CompletableFuture<Void> glFuture) {
+	public static class AddFuture {
+		private final boolean suc;
+		private final CompletableFuture<Void> glFuture;
+
+		public AddFuture(boolean suc, CompletableFuture<Void> glFuture) {
+			this.suc = suc;
+			this.glFuture = glFuture;
+		}
+
+		public boolean suc() {
+			return suc;
+		}
+
+		public CompletableFuture<Void> glFuture() {
+			return glFuture;
+		}
 	}
 
 	private Vector4i scaledBounds(Vector4i textureBounds) {

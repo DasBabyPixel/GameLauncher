@@ -8,6 +8,7 @@ import gamelauncher.engine.gui.guis.GuiContainer;
 import gamelauncher.engine.gui.launcher.MainScreenGui;
 import gamelauncher.engine.gui.launcher.ScrollGui;
 import gamelauncher.engine.render.Framebuffer;
+import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
@@ -24,10 +25,6 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
-
-		font = launcher().fontFactory().createFont(launcher().resourceLoader()
-				.resource(launcher().embedFileSystem().getPath("fonts", "garamond_bold.ttf"))
-				.newResourceStream());
 
 		GuiContainer container = new GuiContainer(launcher);
 
