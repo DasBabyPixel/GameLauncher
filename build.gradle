@@ -39,7 +39,7 @@ allprojects {
                     maven {
                         name = 'DarkCube'
                         credentials PasswordCredentials
-                        url = 'https://dasbabypixel.ddnsfree.com/repository/darkcube/'
+                        url = 'https://nexus.darkcube.eu/repository/dasbabypixel/'
                     }
                 }
             }

@@ -84,7 +84,7 @@ public class PacketBuffer {
 	}
 
 	/**
-	 * Increases the {@code readerIndex} by {@code length}<br/>
+	 * Increases the {@code readerIndex} by {@code length}<br>
 	 * The same as {@link #increaseReaderIndex(int)}
 	 * 
 	 * @param length
