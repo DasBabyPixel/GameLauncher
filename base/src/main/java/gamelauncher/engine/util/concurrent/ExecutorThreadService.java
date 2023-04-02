@@ -2,6 +2,7 @@ package gamelauncher.engine.util.concurrent;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 import gamelauncher.engine.util.function.GameRunnable;
 
@@ -19,6 +20,8 @@ public interface ExecutorThreadService extends ExecutorThread {
 	 * @return the cancelled runnables
 	 */
 	Collection<GameRunnable> exitNow();
+
+	Executor executor();
 	
 	/**
 	 * @return the exitfuture

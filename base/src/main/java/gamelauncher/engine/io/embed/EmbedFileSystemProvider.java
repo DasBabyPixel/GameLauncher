@@ -24,6 +24,11 @@ import java.util.Set;
 
 public class EmbedFileSystemProvider extends FileSystemProvider {
 
+	public static final EmbedFileSystemProvider instance = new EmbedFileSystemProvider();
+
+	private EmbedFileSystemProvider() {
+	}
+
 	private volatile EmbedFileSystem embedFileSystem;
 
 	@Override
@@ -44,6 +49,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options,
 			FileAttribute<?>... attrs) throws IOException {
 		EmbedPath embedPath = toEmbedPath(path);
+		//noinspection resource
 		InputStream in = embedFileSystem.cl.getResourceAsStream(
 				embedPath.toAbsolutePath().toString().substring(1));
 		if (in == null) {
@@ -252,5 +258,4 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
 		}
 		return getFileSystem(uri).getPath(s.substring(index + 1));
 	}
-
 }

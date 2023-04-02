@@ -1,21 +1,23 @@
 open module gamelauncher.lwjgl {
-	requires com.google.gson;
-	requires de.dasbabypixel.property;
-	requires gamelauncher.base;
+	requires transitive com.google.gson;
+	requires transitive de.dasbabypixel.property;
+	requires transitive gamelauncher.base;
+	requires transitive org.jetbrains.annotations;
+	requires transitive org.joml;
+	requires transitive org.lwjgl.glfw.natives;
+	requires transitive org.lwjgl.glfw;
+	requires transitive org.lwjgl.natives;
+	requires transitive org.lwjgl.opengl.natives;
+	requires transitive org.lwjgl.opengl;
+	requires transitive org.lwjgl.opengles.natives;
+	requires transitive org.lwjgl.opengles;
+	requires transitive org.lwjgl.stb.natives;
+	requires transitive org.lwjgl.stb;
+	requires io.netty.codec;
 	requires io.netty.buffer;
 	requires io.netty.common;
 	requires io.netty.handler;
 	requires io.netty.transport;
-	requires org.jetbrains.annotations;
-	requires org.joml;
-	requires org.lwjgl.glfw.natives;
-	requires org.lwjgl.glfw;
-	requires org.lwjgl.natives;
-	requires org.lwjgl.opengl.natives;
-	requires org.lwjgl.opengl;
-	requires org.lwjgl.opengles.natives;
-	requires org.lwjgl.opengles;
-	requires org.lwjgl.stb.natives;
-	requires org.lwjgl.stb;
-	requires io.netty.codec;
+
+	exports gamelauncher.lwjgl;
 }

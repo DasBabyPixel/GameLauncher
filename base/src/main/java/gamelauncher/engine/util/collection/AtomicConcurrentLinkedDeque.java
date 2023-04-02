@@ -60,7 +60,7 @@ public class AtomicConcurrentLinkedDeque<E> implements Deque<E> {
 	public E pollFirst() {
 		while (true) {
 			Node<E> node = head.get();
-			if (head == null)
+			if (node == null)
 				return null;
 			if (unlink(node)) {
 				size.decrementAndGet();

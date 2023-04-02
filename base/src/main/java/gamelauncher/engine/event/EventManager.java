@@ -1,47 +1,38 @@
 package gamelauncher.engine.event;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.Arrays;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class EventManager {
+
+	private static final Logger logger = Logger.logger();
 
 	private final Map<Object, Listener> listeners = new ConcurrentHashMap<>();
 
 	private final Collection<Node> sorted = ConcurrentHashMap.newKeySet();
 
-	private final GameLauncher launcher;
-
 	private final Profiler profiler;
 
-	/**
-	 * @param launcher
-	 */
 	public EventManager(GameLauncher launcher) {
-		this.launcher = launcher;
-		this.profiler = this.launcher.profiler();
+		this.profiler = launcher.profiler();
 	}
 
 	/**
 	 * Posts the event for this {@link EventManager}
-	 * 
-	 * @param <T>
-	 * @param event
+	 *
+	 * @param <T>   the type of event
+	 * @param event the event
+	 *
 	 * @return the event
 	 */
 	public <T extends Event> T post(T event) {
@@ -54,7 +45,7 @@ public class EventManager {
 	}
 
 	/**
-	 * @param listener
+	 * @param listener the listener to register
 	 */
 	public void registerListener(Object listener) {
 		Listener l = new Listener(listener);
@@ -63,7 +54,7 @@ public class EventManager {
 	}
 
 	/**
-	 * @param listener
+	 * @param listener the listener to unregister
 	 */
 	public void unregisterListener(Object listener) {
 		listeners.remove(listener);
@@ -73,18 +64,9 @@ public class EventManager {
 	private synchronized void sortMethodNodes() {
 		List<Node> nodes = new ArrayList<>();
 		for (Listener l : listeners.values()) {
-			for (Node m : l.nodes) {
-				nodes.add(m);
-			}
+			Collections.addAll(nodes, l.nodes);
 		}
-		Collections.sort(nodes, new Comparator<Node>() {
-
-			@Override
-			public int compare(Node o1, Node o2) {
-				return -Integer.valueOf(o1.priority()).compareTo(Integer.valueOf(o2.priority()));
-			}
-
-		});
+		nodes.sort((o1, o2) -> -Integer.compare(o1.priority(), o2.priority()));
 		sorted.clear();
 		sorted.addAll(nodes);
 	}
@@ -102,7 +84,7 @@ public class EventManager {
 			Class<?> clazz = listener.getClass();
 			Collection<Method> methods = new HashSet<>();
 
-			while (clazz != Object.class && clazz != null) {
+			while (clazz != Object.class && clazz.getSuperclass() != null) {
 				methods.addAll(Arrays.asList(clazz.getDeclaredMethods()));
 				Class<?> c = clazz;
 				clazz = clazz.getSuperclass();
@@ -116,26 +98,26 @@ public class EventManager {
 				if (handler == null)
 					continue;
 				if (method.getParameterCount() != 1) {
-					System.out.println("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
+					logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
 							+ " - More than 1 Parameters!");
 					continue;
 				}
 				Parameter param = method.getParameters()[0];
 				if (!Event.class.isAssignableFrom(param.getType())) {
-					System.out.println("Invalid EventHandler: " + clazz.getName() + "#" + method.getName() + " - Param "
-							+ param.getType().getName() + " is not of type Event!");
+					logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
+							+ " - Param " + param.getType().getName() + " is not of type Event!");
 					continue;
 				}
 				nodes.add(new MethodNode(listener, method, param.getType(), handler.priority()));
 			}
-			if (listener instanceof Node) {
-				Node node = (Node) listener;
+			if (listener instanceof Node node) {
 				nodes.add(node);
 			}
-			return nodes.toArray(new Node[nodes.size()]);
+			return nodes.toArray(new Node[0]);
 		}
 
 	}
+
 
 	private class MethodNode implements Node {
 
@@ -167,8 +149,10 @@ public class EventManager {
 				try {
 					method.invoke(owner, event);
 				} catch (Throwable ex) {
-					EventException e = new EventException("Exception in Event: " + ex.getLocalizedMessage(), ex);
-					e.printStackTrace();
+					EventException e =
+							new EventException("Exception in Event: " + ex.getLocalizedMessage(),
+									ex);
+					logger.error(e);
 				}
 			}
 			profiler.end();

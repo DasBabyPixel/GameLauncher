@@ -59,8 +59,8 @@ public class GLFWMonitorManager {
 		GLFW.glfwGetMonitorContentScale(monitor, sx, sy);
 		GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitor);
 		assert vidMode != null;
-		Monitor m = new Monitor(name, x[0], y[0], w[0], h[0], sx[0], sy[0], monitor,
-				new VideoMode(vidMode.width(), vidMode.height(), vidMode.refreshRate()));
+		Monitor m = new Monitor(name, x[0], y[0], vidMode.width(), vidMode.height(), sx[0], sy[0],
+				monitor, new VideoMode(w[0], h[0], vidMode.refreshRate()));
 		logger.infof("New Monitor connected! %s[x=%s, y=%s, width=%s, height=%s, "
 						+ "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(),
 				m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());

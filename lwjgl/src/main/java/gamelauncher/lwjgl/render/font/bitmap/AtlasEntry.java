@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.bitmap;
 
 import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 import org.joml.Vector4i;

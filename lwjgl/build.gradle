@@ -24,25 +24,22 @@ switch (OperatingSystem.current()) {
 }
 
 dependencies {
-    implementation parent.project('api')
-    implementation platform("io.netty:netty-bom:4.1.78.Final")
-    implementation 'io.netty:netty-buffer'
-    implementation 'io.netty:netty-codec'
-    implementation 'io.netty:netty-common'
-    implementation 'io.netty:netty-transport'
-    implementation 'io.netty:netty-handler'
+    api parent.project('api')
+    api libs.bundles.netty
 
-    implementation platform("org.lwjgl:lwjgl-bom:3.3.1")
-    implementation "org.lwjgl:lwjgl"
-    implementation "org.lwjgl:lwjgl-glfw"
-    implementation "org.lwjgl:lwjgl-openal"
-    implementation "org.lwjgl:lwjgl-opengl"
-    implementation "org.lwjgl:lwjgl-opengles"
-    implementation "org.lwjgl:lwjgl-stb"
-    implementation "org.lwjgl:lwjgl::$lwjglNatives"
-    implementation "org.lwjgl:lwjgl-glfw::$lwjglNatives"
-    implementation "org.lwjgl:lwjgl-openal::$lwjglNatives"
-    implementation "org.lwjgl:lwjgl-opengl::$lwjglNatives"
-    implementation "org.lwjgl:lwjgl-opengles::$lwjglNatives"
-    implementation "org.lwjgl:lwjgl-stb::$lwjglNatives"
+    var lwjgl = libs.versions.lwjgl.get()
+
+    api platform("org.lwjgl:lwjgl-bom:$lwjgl")
+    api "org.lwjgl:lwjgl"
+    api "org.lwjgl:lwjgl-glfw"
+    api "org.lwjgl:lwjgl-openal"
+    api "org.lwjgl:lwjgl-opengl"
+    api "org.lwjgl:lwjgl-opengles"
+    api "org.lwjgl:lwjgl-stb"
+    api "org.lwjgl:lwjgl::$lwjglNatives"
+    api "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    api "org.lwjgl:lwjgl-openal::$lwjglNatives"
+    api "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+    api "org.lwjgl:lwjgl-opengles::$lwjglNatives"
+    api "org.lwjgl:lwjgl-stb::$lwjglNatives"
 }

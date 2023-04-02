@@ -3,6 +3,7 @@ package gamelauncher.engine.resource;
 import java.io.InputStream;
 import java.nio.file.Path;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameSupplier;
@@ -11,6 +12,10 @@ import gamelauncher.engine.util.function.GameSupplier;
  * @author DasBabyPixel
  */
 public class SimpleResourceLoader extends ResourceLoader {
+
+	public SimpleResourceLoader(GameLauncher launcher) {
+		super(launcher);
+	}
 
 	@Override
 	protected boolean canLoadResource(Path path) throws GameException {

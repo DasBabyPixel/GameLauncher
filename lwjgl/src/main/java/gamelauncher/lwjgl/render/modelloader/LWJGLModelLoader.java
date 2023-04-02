@@ -94,9 +94,7 @@ public class LWJGLModelLoader implements ModelLoader {
 		stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes),
 				Files.newOutputStream(file));
 		saveConvertedModel(hash, bytes, stream);
-		Model model = loadConvertedModel(stream);
-		stream.cleanup();
-		return model;
+		return loadConvertedModel(stream);
 	}
 
 	private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream)

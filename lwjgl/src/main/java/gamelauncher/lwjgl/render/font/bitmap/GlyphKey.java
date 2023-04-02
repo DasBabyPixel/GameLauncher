@@ -1,9 +1,8 @@
-package gamelauncher.lwjgl.render.font;
+package gamelauncher.lwjgl.render.font.bitmap;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@SuppressWarnings("javadoc")
 public class GlyphKey {
 
 	public final float scale;

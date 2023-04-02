@@ -2,16 +2,14 @@ package gamelauncher.lwjgl.gui;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
+import gamelauncher.engine.event.events.gui.GuiOpenEvent;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiStack;
 import gamelauncher.engine.gui.GuiStack.StackEntry;
 import gamelauncher.engine.gui.LauncherBasedGui;
-import gamelauncher.engine.gui.launcher.ColorGui;
-import gamelauncher.engine.gui.launcher.MainScreenGui;
-import gamelauncher.engine.gui.launcher.ScrollGui;
-import gamelauncher.engine.gui.launcher.TextureGui;
+import gamelauncher.engine.gui.launcher.*;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
@@ -21,10 +19,7 @@ import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.gui.launcher.LWJGLColorGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLMainScreenGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLScrollGui;
-import gamelauncher.lwjgl.gui.launcher.LWJGLTextureGui;
+import gamelauncher.lwjgl.gui.launcher.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +51,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		this.registerGuiCreator(TextureGui.class, () -> new LWJGLTextureGui(launcher));
 		this.registerGuiCreator(ColorGui.class, () -> new LWJGLColorGui(launcher));
 		this.registerGuiCreator(ScrollGui.class, () -> new LWJGLScrollGui(launcher));
+		this.registerGuiCreator(LineGui.class, () -> new LWJGLLineGui(launcher));
 	}
 
 	@Override
@@ -106,6 +102,9 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 				framebuffer.renderThread().submit(() -> {
 					currentGui.cleanup(framebuffer);
 				});
+				if (stack.peekGui() == null) {
+					gui = this.createGui(MainScreenGui.class);
+				}
 			}
 		} else {
 			if (exit) {
@@ -113,13 +112,16 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 			}
 		}
 		if (gui != null) {
+			gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
 			gui.widthProperty().bind(framebuffer.width());
 			gui.heightProperty().bind(framebuffer.height());
 			stack.pushGui(gui);
 			gui.onOpen();
 			gui.focus();
-			framebuffer.scheduleRedraw();
+		} else {
+			logger.error("Tried to push \"null\" GUI");
 		}
+		framebuffer.scheduleRedraw();
 	}
 
 	@Override
@@ -163,7 +165,8 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 		if (this.converters.containsKey(clazz)) {
 			Set<GameFunction<? extends LauncherBasedGui, ? extends LauncherBasedGui>> c =
 					this.converters.get(clazz);
-			for (@SuppressWarnings("rawtypes") GameFunction func : c) {
+			//noinspection rawtypes
+			for (GameFunction func : c) {
 				t = clazz.cast(func.apply(t));
 			}
 		}

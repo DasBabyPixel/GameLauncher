@@ -8,11 +8,11 @@ import gamelauncher.engine.gui.guis.GuiContainer;
 import gamelauncher.engine.gui.launcher.MainScreenGui;
 import gamelauncher.engine.gui.launcher.ScrollGui;
 import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.font.Font;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
+import gamelauncher.engine.util.text.Component;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
 import java.util.stream.Collectors;
@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
  * @author DasBabyPixel
  */
 public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScreenGui {
-
-	private static int id = 0;
-	private Font font;
 
 	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
 		super(launcher);
@@ -56,12 +53,6 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 		ScrollGui scrollGui = launcher.guiManager().createGui(ScrollGui.class);
 		scrollGui.gui().setValue(container);
-		//		scrollGui.getXProperty().bind(this.getXProperty().add(this.getWidthProperty().divide(2))
-		//				.subtract(scrollGui.getWidthProperty().divide(2)));
-		//		scrollGui.getYProperty().bind(this.getYProperty().add(this.getHeightProperty().divide(2))
-		//				.subtract(scrollGui.getHeightProperty().divide(2)));
-		//		scrollGui.getWidthProperty().bind(this.getWidthProperty().divide(2));
-		//		scrollGui.getHeightProperty().bind(this.getHeightProperty().divide(2));
 		scrollGui.xProperty().bind(xProperty());
 		scrollGui.yProperty().bind(yProperty());
 		scrollGui.widthProperty().bind(widthProperty());
@@ -81,7 +72,6 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 	@Override
 	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-		font.cleanup();
 	}
 
 	private class GameGui extends ParentableAbstractGui {
@@ -100,8 +90,7 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 				}
 
 			};
-			buttonGui.text().setValue(game.key().key());
-			buttonGui.font().setValue(font);
+			buttonGui.text().setValue(Component.text(game.key().key()));
 
 			buttonGui.xProperty().bind(this.xProperty());
 			buttonGui.yProperty().bind(this.yProperty());

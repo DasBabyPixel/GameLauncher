@@ -12,7 +12,7 @@ public interface Font extends GameResource {
 
 	/**
 	 * @return the data of this font
-	 * @throws GameException
+	 * @throws GameException an exception
 	 */
 	ByteBuffer data() throws GameException;
 

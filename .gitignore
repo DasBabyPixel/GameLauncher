@@ -1,10 +1,11 @@
 # Gradle
 .gradle
 build
-.idea/.name
 .idea/**/gradle.xml
 .idea/**/libraries
 .idea/**/modules
+.idea/.name
+.idea/GameLauncher.iml
 
 # User-specific stuff
 .idea/**/workspace.xml

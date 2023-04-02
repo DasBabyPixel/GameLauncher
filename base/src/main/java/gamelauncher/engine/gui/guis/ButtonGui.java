@@ -12,6 +12,7 @@ import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry.Type;
 import gamelauncher.engine.util.property.PropertyVector4f;
+import gamelauncher.engine.util.text.Component;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,8 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ButtonGui extends ParentableAbstractGui {
 
-	private final Property<String> text;
-	private final Property<Font> font;
+	private final Property<Component> text;
 	private final InterpolatedColor textColor;
 	private final InterpolatedColor backgroundColor;
 	private final BooleanValue pressing = BooleanValue.falseValue();
@@ -41,7 +41,7 @@ public class ButtonGui extends ParentableAbstractGui {
 		colorGui.color().bind(backgroundColor.currentColor());
 		this.GUIs.add(colorGui);
 
-		TextGui textGui = new TextGui(launcher, "no text set", 50);
+		TextGui textGui = new TextGui(launcher, Component.text(getClass().getSimpleName()), 50);
 		textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2))
 				.subtract(textGui.widthProperty().divide(2)));
 		textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2))
@@ -65,7 +65,6 @@ public class ButtonGui extends ParentableAbstractGui {
 		this.hovering().addListener((p, o, n) -> recalc.run());
 		recalc.run();
 		this.text = textGui.text();
-		this.font = textGui.font();
 		this.GUIs.add(textGui);
 	}
 
@@ -100,12 +99,8 @@ public class ButtonGui extends ParentableAbstractGui {
 	/**
 	 * @return the text property
 	 */
-	public Property<String> text() {
+	public Property<Component> text() {
 		return this.text;
-	}
-
-	public Property<Font> font() {
-		return font;
 	}
 
 	protected void buttonPressed(MouseButtonKeybindEntry e) throws GameException {}

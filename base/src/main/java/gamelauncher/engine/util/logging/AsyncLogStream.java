@@ -48,6 +48,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	protected void stopExecuting() {
 	}
 
+	@SuppressWarnings("RedundantThrows")
 	@Override
 	protected void handleElement(LogEntry<?> element) throws GameException {
 		this.log(element);
@@ -234,7 +235,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		return input.split("(\\r\\n|\\r|\\n)");
 	}
 
-	static class LogEntry<T> {
+	protected static class LogEntry<T> {
 
 		final Logger logger;
 
@@ -268,12 +269,12 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		}
 
 		public <V> LogEntry<V> withObject(V object) {
-			return new LogEntry<V>(this.logger, this.thread, object, this.level, this.caller,
+			return new LogEntry<>(this.logger, this.thread, object, this.level, this.caller,
 					this.time);
 		}
 
 		public LogEntry<T> withLevel(LogLevel level) {
-			return new LogEntry<T>(this.logger, this.thread, this.object, level, this.caller,
+			return new LogEntry<>(this.logger, this.thread, this.object, level, this.caller,
 					this.time);
 		}
 

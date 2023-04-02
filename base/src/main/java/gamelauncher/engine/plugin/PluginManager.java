@@ -81,9 +81,9 @@ public class PluginManager {
 	/**
 	 * Loads the given plugin
 	 *
-	 * @param plugin
+	 * @param plugin the plugin to load
 	 *
-	 * @throws GameException
+	 * @throws GameException when some error happens
 	 */
 	public void loadPlugin(Path plugin) throws GameException {
 		logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
@@ -97,7 +97,8 @@ public class PluginManager {
 				while (ein.hasNextEntry()) {
 					e = ein.nextEntry();
 
-					if (!e.name().endsWith(".class") || e.name().startsWith("META-INF")) {
+					if (!e.name().endsWith(".class") || e.name().startsWith("META-INF") || e.name()
+							.equals("module-info.class")) {
 						continue;
 					}
 					String className =

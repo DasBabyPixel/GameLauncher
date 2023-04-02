@@ -2,6 +2,7 @@ package gamelauncher.engine.util.concurrent;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,15 +24,10 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 
 	private final ExecutorService service;
 
-	private final Waiter waiter;
-
-	/**
-	 * @param service
-	 */
 	public WrapperExecutorThreadService(ExecutorService service) {
 		this.service = service;
-		this.waiter = new Waiter();
-		this.waiter.start();
+		Waiter waiter = new Waiter();
+		waiter.start();
 	}
 
 	@Override
@@ -44,6 +40,11 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 		WrapperCallable<T> w = new WrapperCallable<>(callable, WrapperEntry.newEntry());
 		service.submit(w);
 		return w.fut;
+	}
+
+	@Override
+	public Executor executor() {
+		return service;
 	}
 
 	@Override

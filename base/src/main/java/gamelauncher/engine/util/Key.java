@@ -2,6 +2,8 @@ package gamelauncher.engine.util;
 
 import gamelauncher.engine.plugin.Plugin;
 
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -19,6 +21,18 @@ public class Key {
 	public Key(Plugin plugin, String key) {
 		this.plugin = plugin;
 		this.key = key;
+	}
+
+	public Key(String key) {
+		this(null, key);
+	}
+
+	public Path toPath(Path root) {
+		Path path = root;
+		if (plugin != null)
+			path = path.resolve(plugin.name());
+		path = path.resolve(key);
+		return path;
 	}
 
 	/**
@@ -49,6 +63,8 @@ public class Key {
 
 	@Override
 	public String toString() {
+		if (plugin == null)
+			return this.key;
 		return String.format("%s:%s", this.plugin.name(), this.key);
 	}
 

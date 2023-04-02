@@ -7,8 +7,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 
-@SuppressWarnings("javadoc")
 public class EmbedURLConnection extends URLConnection {
 
 	private final ClassLoader cl;
@@ -19,7 +19,7 @@ public class EmbedURLConnection extends URLConnection {
 	}
 
 	@Override
-	public void connect() throws IOException {
+	public void connect() {
 		if (!connected) {
 			connected = true;
 		}
@@ -29,9 +29,9 @@ public class EmbedURLConnection extends URLConnection {
 	public long getContentLengthLong() {
 		URL ourl = cl.getResource(url.getPath());
 		try {
-			URLConnection con = ourl.openConnection();
+			URLConnection con = Objects.requireNonNull(ourl).openConnection();
 			return con.getContentLengthLong();
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 		return super.getContentLengthLong();
@@ -40,10 +40,7 @@ public class EmbedURLConnection extends URLConnection {
 	@Override
 	public InputStream getInputStream() throws IOException {
 		try {
-			InputStream in = Files.newInputStream(Paths.get(url.toURI()));
-			return in;
-		} catch (IOException ex) {
-			throw ex;
+			return Files.newInputStream(Paths.get(url.toURI()));
 		} catch (URISyntaxException ex) {
 			throw new IOException(ex);
 		}
