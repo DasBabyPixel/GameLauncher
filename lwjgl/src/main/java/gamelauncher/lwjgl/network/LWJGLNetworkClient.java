@@ -87,6 +87,14 @@ public class LWJGLNetworkClient implements NetworkClient {
 
 	@Override
 	public void stopClient() {
+		try {
+			lock.lock();
+			running = false;
+			bossGroup.shutdownGracefully().syncUninterruptibly();
+			childGroup.shutdownGracefully().syncUninterruptibly();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -151,8 +159,22 @@ public class LWJGLNetworkClient implements NetworkClient {
 		}
 	}
 
+	static class HandlerEntry<T extends Packet> {
+		private final Class<T> clazz;
+		private final PacketHandler<T> handler;
 
-	record HandlerEntry<T extends Packet>(Class<T> clazz, PacketHandler<T> handler) {
+		public HandlerEntry(Class<T> clazz, PacketHandler<T> handler) {
+			this.clazz = clazz;
+			this.handler = handler;
+		}
+
+		public Class<T> clazz() {
+			return clazz;
+		}
+
+		public PacketHandler<T> handler() {
+			return handler;
+		}
 
 		public void receivePacket(Object packet) {
 			handler.receivePacket(clazz.cast(packet));

@@ -70,7 +70,8 @@ public class GuiRenderer extends Renderer {
 		@EventHandler
 		public void handle(KeybindEntryEvent event) {
 			KeybindEntry e = event.entry();
-			if (e instanceof MouseMoveKeybindEntry m) {
+			if (e instanceof MouseMoveKeybindEntry) {
+				MouseMoveKeybindEntry m = (MouseMoveKeybindEntry) e;
 				mx = m.mouseX();
 				my = m.mouseY();
 			}

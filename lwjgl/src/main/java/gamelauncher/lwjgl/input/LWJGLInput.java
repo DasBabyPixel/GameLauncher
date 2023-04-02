@@ -58,9 +58,12 @@ public class LWJGLInput implements Input {
 
 	private void event(Entry entry, InputType input) throws GameException {
 		switch (entry.type) {
-			case KEYBOARD -> this.keyEvent(input, entry.key, entry.scancode);
-			case MOUSE ->
-					this.mouseEvent(input, entry.key, entry.omx, entry.omy, entry.mx, entry.my);
+			case KEYBOARD:
+				this.keyEvent(input, entry.key, entry.scancode);
+				break;
+			case MOUSE:
+				this.mouseEvent(input, entry.key, entry.omx, entry.omy, entry.mx, entry.my);
+				break;
 		}
 	}
 
@@ -92,16 +95,21 @@ public class LWJGLInput implements Input {
 				if (keybind.uniqueId() != id) {
 					return null;
 				}
-				return switch (inputType) {
-					case HELD -> new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
-							MouseButtonKeybindEntry.Type.HOLD);
-					case MOVE -> new LWJGLMouseMoveKeybindEntry(keybind, omx, omy, mx, my);
-					case PRESSED -> new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
-							MouseButtonKeybindEntry.Type.PRESS);
-					case RELEASED -> new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
-							MouseButtonKeybindEntry.Type.RELEASE);
-					default -> throw new UnsupportedOperationException();
-				};
+				switch (inputType) {
+					case HELD:
+						return new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
+								MouseButtonKeybindEntry.Type.HOLD);
+					case MOVE:
+						return new LWJGLMouseMoveKeybindEntry(keybind, omx, omy, mx, my);
+					case PRESSED:
+						return new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
+								MouseButtonKeybindEntry.Type.PRESS);
+					case RELEASED:
+						return new LWJGLMouseButtonKeybindEntry(keybind, mx, my,
+								MouseButtonKeybindEntry.Type.RELEASE);
+					default:
+						throw new UnsupportedOperationException();
+				}
 			});
 		}
 	}
@@ -116,18 +124,22 @@ public class LWJGLInput implements Input {
 			if (keybind.uniqueId() != id) {
 				return null;
 			}
-			return switch (inputType) {
-				case HELD -> new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.HOLD);
-				case PRESSED ->
-						new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.PRESS);
-				case RELEASED ->
-						new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.RELEASE);
-				case REPEAT ->
-						new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.REPEAT);
-				case CHARACTER ->
-						new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.CHARACTER);
-				default -> throw new UnsupportedOperationException();
-			};
+			switch (inputType) {
+				case HELD:
+					return new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.HOLD);
+				case PRESSED:
+					return new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.PRESS);
+				case RELEASED:
+					return new LWJGLKeyboardKeybindEntry(keybind,
+							KeyboardKeybindEntry.Type.RELEASE);
+				case REPEAT:
+					return new LWJGLKeyboardKeybindEntry(keybind, KeyboardKeybindEntry.Type.REPEAT);
+				case CHARACTER:
+					return new LWJGLKeyboardKeybindEntry(keybind,
+							KeyboardKeybindEntry.Type.CHARACTER);
+				default:
+					throw new UnsupportedOperationException();
+			}
 		});
 	}
 
@@ -226,7 +238,23 @@ public class LWJGLInput implements Input {
 	}
 
 
-	private record QueueEntry(Entry entry, InputType type) {
+	private static class QueueEntry {
+
+		private final Entry entry;
+		private final InputType type;
+
+		public QueueEntry(Entry entry, InputType type) {
+			this.entry = entry;
+			this.type = type;
+		}
+
+		public InputType type() {
+			return type;
+		}
+
+		public Entry entry() {
+			return entry;
+		}
 
 		@Override
 		public boolean equals(Object obj) {

@@ -90,7 +90,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		String[] logColorReplacements = new String[data.length];
 		for (int i = 0; i < data.length; i++) {
 			data[i] = f.getObjects()[i];
-			if (data[i] instanceof Throwable t) {
+			if (data[i] instanceof Throwable) {
+				Throwable t = (Throwable) data[i];
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				t.printStackTrace(pw);
@@ -106,7 +107,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 					sb.append(Ansi.ansi().reset().a(m.group()));
 				}
 				data[i] = sb.toString();
-			} else if (data[i] instanceof Collection<?> c) {
+			} else if (data[i] instanceof Collection<?>) {
+				Collection<?> c = (Collection<?>) data[i];
 				StringBuilder sb = new StringBuilder();
 				sb.append(c.getClass().getName()).append("<?> (Size: ").append(c.size())
 						.append(")");
@@ -117,13 +119,14 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 			} else if (data[i].getClass().isArray()) {
 				Object[] a = (Object[]) data[i];
 				StringBuilder sb = new StringBuilder();
-				sb.append(a.getClass().componentType().getName()).append('[').append(a.length)
+				sb.append(a.getClass().getComponentType().getName()).append('[').append(a.length)
 						.append(']');
 				for (int j = 0; j < a.length; j++) {
-					sb.append("\n - ").append(j).append(": ").append(Objects.toString(a[j]));
+					sb.append("\n - ").append(j).append(": ").append(a[j]);
 				}
 				data[i] = sb.toString();
-			} else if (data[i] instanceof LogColor c) {
+			} else if (data[i] instanceof LogColor) {
+				LogColor c = (LogColor) data[i];
 				if (c.color() == null) {
 					// Reset
 					c = resetTo;
@@ -169,7 +172,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 		if (message == null) {
 			message = "null";
 		}
-		if (message instanceof Formatted f) {
+		if (message instanceof Formatted) {
+			Formatted f = (Formatted) message;
 			this.log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
 		} else {
 			this.logString(LogLevel.ERROR, entry.time, entry.caller, entry.thread, entry.logger,

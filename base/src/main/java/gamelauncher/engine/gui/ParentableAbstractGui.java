@@ -263,23 +263,38 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 	@Override
 	public final void handle(KeybindEntry entry) throws GameException {
 		if (this.doHandle(entry)) {
-			if (entry instanceof KeyboardKeybindEntry c) {
+			if (entry instanceof KeyboardKeybindEntry) {
+				KeyboardKeybindEntry c = (KeyboardKeybindEntry) entry;
 				switch (c.type()) {
-					case HOLD, PRESS, RELEASE, REPEAT, CHARACTER -> this.forFocused(c);
+					case HOLD:
+					case PRESS:
+					case RELEASE:
+					case REPEAT:
+					case CHARACTER:
+						this.forFocused(c);
 				}
-			} else if (entry instanceof MouseButtonKeybindEntry c) {
+			} else if (entry instanceof MouseButtonKeybindEntry) {
+				MouseButtonKeybindEntry c = (MouseButtonKeybindEntry) entry;
 				this.lastMouseX.setNumber(c.mouseX());
 				this.lastMouseY.setNumber(c.mouseY());
 				switch (c.type()) {
-					case HOLD -> this.forFocused(c);
-					case PRESS -> this.mouseClicked(c);
-					case RELEASE -> this.mouseReleased(c);
+					case HOLD:
+						this.forFocused(c);
+						break;
+					case PRESS:
+						this.mouseClicked(c);
+						break;
+					case RELEASE:
+						this.mouseReleased(c);
+						break;
 				}
-			} else if (entry instanceof MouseMoveKeybindEntry c) {
+			} else if (entry instanceof MouseMoveKeybindEntry) {
+				MouseMoveKeybindEntry c = (MouseMoveKeybindEntry) entry;
 				this.lastMouseX.setNumber(c.mouseX());
 				this.lastMouseY.setNumber(c.mouseY());
 				this.mouseMove(c);
-			} else if (entry instanceof ScrollKeybindEntry c) {
+			} else if (entry instanceof ScrollKeybindEntry) {
+				ScrollKeybindEntry c = (ScrollKeybindEntry) entry;
 				this.scroll(c);
 			}
 			this.postDoHandle(entry);

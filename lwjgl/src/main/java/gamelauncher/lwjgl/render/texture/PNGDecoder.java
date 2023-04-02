@@ -41,6 +41,7 @@ public class PNGDecoder {
 	private byte[] palette;
 	private byte[] paletteA;
 	private byte[] transPixel;
+
 	public PNGDecoder(InputStream input) throws IOException {
 		this.input = input;
 		this.crc = new CRC32();
@@ -99,10 +100,12 @@ public class PNGDecoder {
 	 *
 	 * @param buffer the buffer
 	 * @param stride the stride in bytes from start of a line to start of the next line, can be
-	 * negative.
-	 * @param fmt the target format into which the image should be decoded.
-	 * @throws IOException if a read or data error occurred
-	 * @throws IllegalArgumentException if the start position of a line falls outside the buffer
+	 *               negative.
+	 * @param fmt    the target format into which the image should be decoded.
+	 *
+	 * @throws IOException                   if a read or data error occurred
+	 * @throws IllegalArgumentException      if the start position of a line falls outside the
+	 *                                       buffer
 	 * @throws UnsupportedOperationException if the image can't be decoded into the desired format
 	 */
 	public void decode(ByteBuffer buffer, int stride, PNGDecoder.Format fmt) throws IOException {
@@ -121,68 +124,102 @@ public class PNGDecoder {
 				buffer.position(offset + y * stride);
 
 				switch (colorType) {
-					case COLOR_TRUECOLOR -> {
+					case COLOR_TRUECOLOR:
 						switch (fmt) {
-							case ABGR -> copyRGBtoABGR(buffer, curLine);
-							case RGBA -> copyRGBtoRGBA(buffer, curLine);
-							case BGRA -> copyRGBtoBGRA(buffer, curLine);
-							case RGB -> copy(buffer, curLine);
-							default -> throw new UnsupportedOperationException(
-									"Unsupported format for this image");
+							case ABGR:
+								copyRGBtoABGR(buffer, curLine);
+								break;
+							case RGBA:
+								copyRGBtoRGBA(buffer, curLine);
+								break;
+							case BGRA:
+								copyRGBtoBGRA(buffer, curLine);
+								break;
+							case RGB:
+								copy(buffer, curLine);
+								break;
+							default:
+								throw new UnsupportedOperationException(
+										"Unsupported format for this image");
 						}
-					}
-					case COLOR_TRUEALPHA -> {
+						break;
+					case COLOR_TRUEALPHA:
 						switch (fmt) {
-							case ABGR -> copyRGBAtoABGR(buffer, curLine);
-							case RGBA -> copy(buffer, curLine);
-							case BGRA -> copyRGBAtoBGRA(buffer, curLine);
-							case RGB -> copyRGBAtoRGB(buffer, curLine);
-							default -> throw new UnsupportedOperationException(
-									"Unsupported format for this image");
+							case ABGR:
+								copyRGBAtoABGR(buffer, curLine);
+								break;
+							case RGBA:
+								copy(buffer, curLine);
+								break;
+							case BGRA:
+								copyRGBAtoBGRA(buffer, curLine);
+								break;
+							case RGB:
+								copyRGBAtoRGB(buffer, curLine);
+								break;
+							default:
+								throw new UnsupportedOperationException(
+										"Unsupported format for this image");
+
 						}
-					}
-					case COLOR_GREYSCALE -> {
+						break;
+					case COLOR_GREYSCALE:
 						switch (fmt) {
-							case LUMINANCE, ALPHA -> copy(buffer, curLine);
-							default -> throw new UnsupportedOperationException(
-									"Unsupported format for this image");
+							case LUMINANCE:
+							case ALPHA:
+								copy(buffer, curLine);
+								break;
+							default:
+								throw new UnsupportedOperationException(
+										"Unsupported format for this image");
 						}
-					}
-					case COLOR_GREYALPHA -> {
+						break;
+					case COLOR_GREYALPHA:
 						if (Objects.requireNonNull(fmt) == Format.LUMINANCE_ALPHA) {
 							copy(buffer, curLine);
 						} else {
 							throw new UnsupportedOperationException(
 									"Unsupported format for this image");
 						}
-					}
-					case COLOR_INDEXED -> {
+						break;
+					case COLOR_INDEXED:
 						switch (bitdepth) {
-							case 8 -> palLine = curLine;
-							case 4 -> {
+							case 8:
+								palLine = curLine;
+								break;
+							case 4:
 								assert palLine != null;
 								expand4(curLine, palLine);
-							}
-							case 2 -> {
+								break;
+							case 2:
 								assert palLine != null;
 								expand2(curLine, palLine);
-							}
-							case 1 -> {
+								break;
+							case 1:
 								assert palLine != null;
 								expand1(curLine, palLine);
-							}
-							default -> throw new UnsupportedOperationException(
-									"Unsupported bitdepth for this image");
+								break;
+							default:
+								throw new UnsupportedOperationException(
+										"Unsupported bitdepth for this image");
 						}
 						switch (fmt) {
-							case ABGR -> copyPALtoABGR(buffer, palLine);
-							case RGBA -> copyPALtoRGBA(buffer, palLine);
-							case BGRA -> copyPALtoBGRA(buffer, palLine);
-							default -> throw new UnsupportedOperationException(
-									"Unsupported format for this image");
+							case ABGR:
+								copyPALtoABGR(buffer, palLine);
+								break;
+							case RGBA:
+								copyPALtoRGBA(buffer, palLine);
+								break;
+							case BGRA:
+								copyPALtoBGRA(buffer, palLine);
+								break;
+							default:
+								throw new UnsupportedOperationException(
+										"Unsupported format for this image");
 						}
-					}
-					default -> throw new UnsupportedOperationException("Not yet implemented");
+						break;
+					default:
+						throw new UnsupportedOperationException("Not yet implemented");
 				}
 
 				byte[] tmp = curLine;
@@ -483,37 +520,44 @@ public class PNGDecoder {
 		colorType = buffer[9] & 255;
 
 		switch (colorType) {
-			case COLOR_GREYSCALE -> {
+			case COLOR_GREYSCALE:
 				if (bitdepth != 8) {
 					throw new IOException("Unsupported bit depth: " + bitdepth);
 				}
 				bytesPerPixel = 1;
-			}
-			case COLOR_GREYALPHA -> {
+				break;
+			case COLOR_GREYALPHA:
 				if (bitdepth != 8) {
 					throw new IOException("Unsupported bit depth: " + bitdepth);
 				}
 				bytesPerPixel = 2;
-			}
-			case COLOR_TRUECOLOR -> {
+				break;
+			case COLOR_TRUECOLOR:
 				if (bitdepth != 8) {
 					throw new IOException("Unsupported bit depth: " + bitdepth);
 				}
 				bytesPerPixel = 3;
-			}
-			case COLOR_TRUEALPHA -> {
+				break;
+			case COLOR_TRUEALPHA:
 				if (bitdepth != 8) {
 					throw new IOException("Unsupported bit depth: " + bitdepth);
 				}
 				bytesPerPixel = 4;
-			}
-			case COLOR_INDEXED -> {
+				break;
+			case COLOR_INDEXED:
 				switch (bitdepth) {
-					case 8, 4, 2, 1 -> bytesPerPixel = 1;
-					default -> throw new IOException("Unsupported bit depth: " + bitdepth);
+					case 8:
+					case 4:
+					case 2:
+					case 1:
+						bytesPerPixel = 1;
+						break;
+					default:
+						throw new IOException("Unsupported bit depth: " + bitdepth);
 				}
-			}
-			default -> throw new IOException("unsupported color format: " + colorType);
+				break;
+			default:
+				throw new IOException("unsupported color format: " + colorType);
 		}
 
 		if (buffer[10] != 0) {
@@ -538,26 +582,24 @@ public class PNGDecoder {
 
 	private void readtRNS() throws IOException {
 		switch (colorType) {
-			case COLOR_GREYSCALE -> {
+			case COLOR_GREYSCALE:
 				checkChunkLength(2);
 				transPixel = new byte[2];
 				readChunk(transPixel, 2);
-			}
-			case COLOR_TRUECOLOR -> {
+				break;
+			case COLOR_TRUECOLOR:
 				checkChunkLength(6);
 				transPixel = new byte[6];
 				readChunk(transPixel, 6);
-			}
-			case COLOR_INDEXED -> {
+				break;
+			case COLOR_INDEXED:
 				if (palette == null) {
 					throw new IOException("tRNS chunk without PLTE chunk");
 				}
 				paletteA = new byte[palette.length / 3];
 				Arrays.fill(paletteA, (byte) 0xFF);
 				readChunk(paletteA, paletteA.length);
-			}
-			default -> {
-			}
+				break;
 			// just ignore it
 		}
 	}

@@ -3,6 +3,7 @@ package gamelauncher.lwjgl.render;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.Transformations.Projection;
+import gamelauncher.engine.render.Transformations.Projection.Projection3D;
 import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
@@ -221,7 +222,8 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 		if (projection == null) {
 			return;
 		}
-		if (projection instanceof Transformations.Projection.Projection3D p3d) {
+		if (projection instanceof Transformations.Projection.Projection3D) {
+			Projection3D p3d = (Projection3D) projection;
 			float aspectRatio =
 					this.framebuffer.width().floatValue() / this.framebuffer.height().floatValue();
 			this.projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
@@ -292,7 +294,8 @@ public class LWJGLDrawContext extends AbstractGameResource implements DrawContex
 			item.applyToTransformationMatrix(this.modelMatrix);
 			this.pDrawModel(item.model(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier,
 					colorAdd);
-		} else if (model instanceof LWJGLCombinedModelsModel comb) {
+		} else if (model instanceof LWJGLCombinedModelsModel) {
+			LWJGLCombinedModelsModel comb = (LWJGLCombinedModelsModel) model;
 			this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
 			comb.modelMatix.set(this.modelMatrix);
 			for (Model m : comb.getModels()) {

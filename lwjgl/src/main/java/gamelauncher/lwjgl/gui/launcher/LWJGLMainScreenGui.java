@@ -15,6 +15,8 @@ import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
 import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
+import java.util.stream.Collectors;
+
 /**
  * @author DasBabyPixel
  */
@@ -27,8 +29,7 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		super(launcher);
 
 		font = launcher().fontFactory().createFont(launcher().resourceLoader()
-				.resource(
-						launcher().embedFileSystem().getPath("fonts", "garamond_bold.ttf"))
+				.resource(launcher().embedFileSystem().getPath("fonts", "garamond_bold.ttf"))
 				.newResourceStream());
 
 		GuiContainer container = new GuiContainer(launcher);
@@ -37,7 +38,8 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 		NumberValue currentY = null;
 		GameGui ogui = null;
 
-		for (Game game : launcher.gameRegistry().games().stream().sorted().toList()) {
+		for (Game game : launcher.gameRegistry().games().stream().sorted()
+				.collect(Collectors.toList())) {
 			GameGui gui = new GameGui(game);
 			if (currentY == null) {
 				currentY = container.yProperty();
@@ -70,7 +72,8 @@ public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScr
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof KeyboardKeybindEntry e) {
+		if (entry instanceof KeyboardKeybindEntry) {
+			KeyboardKeybindEntry e = (KeyboardKeybindEntry) entry;
 			e.keybind().uniqueId();
 		}
 		return super.doHandle(entry);

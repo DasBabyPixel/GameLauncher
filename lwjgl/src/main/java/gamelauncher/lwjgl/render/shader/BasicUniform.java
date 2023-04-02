@@ -49,12 +49,25 @@ public class BasicUniform implements Uniform {
 		//		}
 		//		if (hasValue.compareAndSet(true, false)) {
 		switch (this.type) {
-			case FLOAT1 -> c.uniform1fv(this.id, this.floatBuffer);
-			case FLOAT2 -> c.uniform2fv(this.id, this.floatBuffer);
-			case FLOAT3 -> c.uniform3fv(this.id, this.floatBuffer);
-			case FLOAT4 -> c.uniform4fv(this.id, this.floatBuffer);
-			case INT1, SAMPLER2D -> c.uniform1iv(this.id, this.intBuffer);
-			case MAT4 -> c.uniformMatrix4fv(this.id, false, this.floatBuffer);
+			case FLOAT1:
+				c.uniform1fv(this.id, this.floatBuffer);
+				break;
+			case FLOAT2:
+				c.uniform2fv(this.id, this.floatBuffer);
+				break;
+			case FLOAT3:
+				c.uniform3fv(this.id, this.floatBuffer);
+				break;
+			case FLOAT4:
+				c.uniform4fv(this.id, this.floatBuffer);
+				break;
+			case INT1:
+			case SAMPLER2D:
+				c.uniform1iv(this.id, this.intBuffer);
+				break;
+			case MAT4:
+				c.uniformMatrix4fv(this.id, false, this.floatBuffer);
+				break;
 		}
 		//		}
 		return this;

@@ -71,7 +71,8 @@ public class ButtonGui extends ParentableAbstractGui {
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof MouseButtonKeybindEntry mb) {
+		if (entry instanceof MouseButtonKeybindEntry) {
+			MouseButtonKeybindEntry mb = (MouseButtonKeybindEntry) entry;
 			if (mb.type() == Type.RELEASE) {
 				if (hovering(mb.mouseX(), mb.mouseY())) {
 					try {

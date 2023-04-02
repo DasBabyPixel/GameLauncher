@@ -56,26 +56,25 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 
 		for (String line : content.split("\\R")) {
 			String[] l = line.split("\\s");
+			Vector3f vec3;
+			Vector2f vec2;
 			switch (l[0]) {
-				case "v" -> {
-					Vector3f vec =
-							new Vector3f(parseFloat(l[1]), parseFloat(l[2]), parseFloat(l[3]));
-					v.add(vec);
+				case "v":
+					vec3 = new Vector3f(parseFloat(l[1]), parseFloat(l[2]), parseFloat(l[3]));
+					v.add(vec3);
 					break;
-				}
-				case "vt" -> {
-					Vector2f vec = new Vector2f(parseFloat(l[1]), parseFloat(l[2]));
-					vt.add(vec);
+				case "vt":
+					vec2 = new Vector2f(parseFloat(l[1]), parseFloat(l[2]));
+					vt.add(vec2);
 					break;
-				}
-				case "vn" -> {
-					Vector3f vec =
-							new Vector3f(parseFloat(l[1]), parseFloat(l[2]), parseFloat(l[3]));
-					vn.add(vec);
+				case "vn":
+					vec3 = new Vector3f(parseFloat(l[1]), parseFloat(l[2]), parseFloat(l[3]));
+					vn.add(vec3);
 					break;
-				}
-				case "f" -> faces.add(new Face(Arrays.copyOfRange(l, 1, l.length)));
-				case "mtllib" -> {
+				case "f":
+					faces.add(new Face(Arrays.copyOfRange(l, 1, l.length)));
+					break;
+				case "mtllib":
 					String fileName = line.split("\\s", 2)[1];
 					Path file = in.getPath().getParent().resolve(fileName);
 					String mtlcontent = Files.readUTF8(file);
@@ -121,15 +120,22 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 							Path mapFile = file.resolveSibling(map);
 							byte[] texture = Files.readAllBytes(mapFile);
 							switch (mtll[0]) {
-								case "map_Kd" -> material.diffuseColor.texture = texture;
-								case "map_Ka" -> material.ambientColor.texture = texture;
-								case "map_Ks" -> material.specularColor.texture = texture;
+								case "map_Kd":
+									material.diffuseColor.texture = texture;
+									break;
+								case "map_Ka":
+									material.ambientColor.texture = texture;
+									break;
+								case "map_Ks":
+									material.specularColor.texture = texture;
+									break;
 							}
 						}
 					}
-				}
+					break;
 			}
 		}
+
 		List<IndexGroup> groups = new ArrayList<>();
 		int index = 0;
 		for (Face face : faces) {
@@ -144,6 +150,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 				}
 			}
 		}
+
 		float[] vertices = new float[groups.size() * 3];
 		float[] texCoords = new float[groups.size() * 2];
 		float[] normals = new float[groups.size() * 3];
@@ -162,6 +169,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 			normals[i * 3 + 2] = v3f.z;
 			i++;
 		}
+
 		List<Integer> indexList = new ArrayList<>();
 		for (Face face : faces) {
 			for (int groupId = 0; groupId < face.idxGroups.length; groupId++) {
@@ -172,6 +180,7 @@ public class WaveFrontModelLoader implements ModelSubLoader {
 				}
 			}
 		}
+
 		int[] indices = indexList.stream().mapToInt(a -> a).toArray();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try (ResourceStream r = new ResourceStream(null, false, null, out)) {

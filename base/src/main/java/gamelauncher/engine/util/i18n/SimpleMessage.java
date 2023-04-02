@@ -2,11 +2,22 @@ package gamelauncher.engine.util.i18n;
 
 import gamelauncher.engine.plugin.Plugin;
 
-public record SimpleMessage(Plugin plugin, String key) implements Message {
+public class SimpleMessage implements Message {
 
-	@Override
+	private final Plugin plugin;
+	private final String key;
+
+	public SimpleMessage(Plugin plugin, String key) {
+		this.plugin = plugin;
+		this.key = key;
+	}
+
 	public String key() {
 		return key;
+	}
+
+	public Plugin plugin() {
+		return plugin;
 	}
 
 	@Override

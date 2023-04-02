@@ -392,19 +392,27 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 			});
 			GLFW.glfwSetMouseButtonCallback(this.glfwId, (wid, button, action, mods) -> {
 				switch (action) {
-					case GLFW_PRESS -> this.frame.input.mousePress(button,
-							(float) this.frame.mouse().getX(),
-							(float) this.frame.mouse().getY());
-					case GLFW_RELEASE -> this.frame.input.mouseRelease(button,
-							(float) this.frame.mouse().getX(),
-							(float) this.frame.mouse().getY());
+					case GLFW_PRESS:
+						this.frame.input.mousePress(button, (float) this.frame.mouse().getX(),
+								(float) this.frame.mouse().getY());
+						break;
+					case GLFW_RELEASE:
+						this.frame.input.mouseRelease(button, (float) this.frame.mouse().getX(),
+								(float) this.frame.mouse().getY());
+						break;
 				}
 			});
 			GLFW.glfwSetKeyCallback(this.glfwId, (wid, key, scancode, action, mods) -> {
 				switch (action) {
-					case GLFW_PRESS -> this.frame.input.keyPress(key, scancode, (char) 0);
-					case GLFW_RELEASE -> this.frame.input.keyRelease(key, scancode, (char) 0);
-					case GLFW_REPEAT -> this.frame.input.keyRepeat(key, scancode, (char) 0);
+					case GLFW_PRESS:
+						this.frame.input.keyPress(key, scancode, (char) 0);
+						break;
+					case GLFW_RELEASE:
+						this.frame.input.keyRelease(key, scancode, (char) 0);
+						break;
+					case GLFW_REPEAT:
+						this.frame.input.keyRepeat(key, scancode, (char) 0);
+						break;
 				}
 			});
 			GLFW.glfwSetWindowContentScaleCallback(this.glfwId, (window, xscale, yscale) -> {

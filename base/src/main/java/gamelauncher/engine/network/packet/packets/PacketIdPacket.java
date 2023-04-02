@@ -3,7 +3,6 @@ package gamelauncher.engine.network.packet.packets;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketBuffer;
 
-@SuppressWarnings("javadoc")
 public class PacketIdPacket extends Packet {
 
 	public int id;

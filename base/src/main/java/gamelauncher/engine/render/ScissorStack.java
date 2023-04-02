@@ -21,9 +21,8 @@ public abstract class ScissorStack {
 	}
 
 	public Scissor pushScissor(Gui gui) {
-		Scissor scissor =
-				pushScissor(gui.xProperty(), gui.yProperty(), gui.widthProperty(),
-						gui.heightProperty());
+		Scissor scissor = pushScissor(gui.xProperty(), gui.yProperty(), gui.widthProperty(),
+				gui.heightProperty());
 		gui.visibleXProperty().setValue(scissor.x);
 		gui.visibleYProperty().setValue(scissor.y);
 		gui.visibleWidthProperty().setValue(scissor.w);
@@ -102,6 +101,30 @@ public abstract class ScissorStack {
 	/**
 	 * @author DasBabyPixel
 	 */
-	public record Scissor(int x, int y, int w, int h) {
+	public static class Scissor {
+		private final int x, y, w, h;
+
+		public Scissor(int x, int y, int w, int h) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+		}
+
+		public int x() {
+			return x;
+		}
+
+		public int y() {
+			return y;
+		}
+
+		public int w() {
+			return w;
+		}
+
+		public int h() {
+			return h;
+		}
 	}
 }

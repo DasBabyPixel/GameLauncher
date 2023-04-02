@@ -355,12 +355,13 @@ public class LWJGLTexture extends AbstractGameResource implements Texture {
 	@Override
 	public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY,
 			int width, int height) throws GameException {
-		if (!(other instanceof final LWJGLTexture lwjgl)) {
+		if (!(other instanceof LWJGLTexture)) {
 			ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
 			GameException ge = new GameException(cause);
 			ge.setStackTrace(new StackTraceElement[0]);
 			throw ge;
 		}
+		final LWJGLTexture lwjgl = (LWJGLTexture) other;
 		return owner.submit(() -> {
 			lock.readLock().lock();
 			lwjgl.lock.writeLock().lock();

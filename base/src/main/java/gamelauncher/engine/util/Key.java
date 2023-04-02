@@ -7,19 +7,23 @@ import java.util.Objects;
 /**
  * @author DasBabyPixel
  */
-public record Key(Plugin plugin, String key) {
+public class Key {
+
+	private final Plugin plugin;
+	private final String key;
 
 	/**
 	 * @param plugin the plugin
 	 * @param key    the key
 	 */
-	public Key {
+	public Key(Plugin plugin, String key) {
+		this.plugin = plugin;
+		this.key = key;
 	}
 
 	/**
 	 * @return the key
 	 */
-	@Override
 	public String key() {
 		return this.key;
 	}
@@ -27,7 +31,6 @@ public record Key(Plugin plugin, String key) {
 	/**
 	 * @return the plugin
 	 */
-	@Override
 	public Plugin plugin() {
 		return this.plugin;
 	}

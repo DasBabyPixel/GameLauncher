@@ -172,8 +172,22 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 		return this.submitLast(element);
 	}
 
-	protected record QueueEntry<T>(CompletableFuture<Void> fut, T val) {
+	protected static class QueueEntry<T> {
+		private final CompletableFuture<Void> fut;
+		private final T val;
 
+		public QueueEntry(CompletableFuture<Void> fut, T val) {
+			this.fut = fut;
+			this.val = val;
+		}
+
+		public CompletableFuture<Void> fut() {
+			return fut;
+		}
+
+		public T val() {
+			return val;
+		}
 	}
 
 }

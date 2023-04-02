@@ -20,6 +20,7 @@ allprojects {
     group = 'de.dasbabypixel.gamelauncher'
     version = '0.0.1-SNAPSHOT'
     pluginManager.withPlugin('java') {
+        java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
         pluginManager.withPlugin('maven-publish') {
             java {
                 withSourcesJar()

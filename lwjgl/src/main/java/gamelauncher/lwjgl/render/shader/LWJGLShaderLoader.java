@@ -57,7 +57,8 @@ public class LWJGLShaderLoader implements ShaderLoader {
 	private static Uniform loadUniform(LWJGLShaderProgram program, String uniform, Struct struct) {
 		Uniform u = struct.createUniform(program, uniform);
 		program.uniformMap.put(uniform, u);
-		if (struct instanceof Custom c) {
+		if (struct instanceof Custom) {
+			Custom c = (Custom) struct;
 			for (Map.Entry<String, Struct> variable : c.getVariables().entrySet()) {
 				loadUniform(program, uniform + "." + variable.getKey(), variable.getValue());
 			}

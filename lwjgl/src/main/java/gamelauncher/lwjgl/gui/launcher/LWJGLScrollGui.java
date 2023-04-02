@@ -126,7 +126,8 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 	@Override
 	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof ScrollKeybindEntry s) {
+		if (entry instanceof ScrollKeybindEntry) {
+			ScrollKeybindEntry s = (ScrollKeybindEntry) entry;
 			float mulx = this.displayWidth.floatValue() / 10;
 			float muly = this.displayHeight.floatValue() / 5;
 			float dx = s.deltaX();
@@ -322,7 +323,8 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 
 		@Override
 		protected boolean doHandle(KeybindEntry entry) throws GameException {
-			if (entry instanceof MouseMoveKeybindEntry mm) {
+			if (entry instanceof MouseMoveKeybindEntry) {
+				MouseMoveKeybindEntry mm = (MouseMoveKeybindEntry) entry;
 				if (Gui.hovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(),
 						this.scrollbarWidth.floatValue(), this.scrollbarHeight.floatValue(),
 						mm.mouseX(), mm.mouseY())) {
@@ -335,7 +337,8 @@ public class LWJGLScrollGui extends ParentableAbstractGui implements ScrollGui {
 				if (this.dragging.booleanValue()) {
 					this.drag(mm);
 				}
-			} else if (entry instanceof MouseButtonKeybindEntry mb) {
+			} else if (entry instanceof MouseButtonKeybindEntry) {
+				MouseButtonKeybindEntry mb = (MouseButtonKeybindEntry) entry;
 				if (mb.type() == MouseButtonKeybindEntry.Type.PRESS) {
 					if (this.highlight.booleanValue()) {
 						if ((mb.keybind().uniqueId() - LWJGLKeybindManager.MOUSE_ADD) == 0) {

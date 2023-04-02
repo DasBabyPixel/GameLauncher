@@ -121,7 +121,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 
 		Keybind keybind = keybindManager().createKeybind(GLFW.GLFW_KEY_F11);
 		keybind.addHandler(entry -> {
-			if (entry instanceof KeyboardKeybindEntry e) {
+			if (entry instanceof KeyboardKeybindEntry) {
+				KeyboardKeybindEntry e = (KeyboardKeybindEntry) entry;
 				if (e.type() == Type.PRESS)
 					mainFrame.fullscreen().setValue(!mainFrame.fullscreen().booleanValue());
 			}

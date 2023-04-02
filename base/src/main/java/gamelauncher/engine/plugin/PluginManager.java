@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.io.Files;
@@ -123,9 +124,10 @@ public class PluginManager {
 			for (Class<?> cls : pluginClasses) {
 				String className = cls.getName();
 				Object instance = cls.getConstructor().newInstance();
-				if (!(instance instanceof Plugin pl)) {
+				if (!(instance instanceof Plugin)) {
 					continue;
 				}
+				Plugin pl = (Plugin) instance;
 				pcl.plugins.add(pl);
 				pl.launcher(launcher);
 				String name = pl.name();
@@ -159,7 +161,8 @@ public class PluginManager {
 	 * @throws GameException an exception
 	 */
 	public void unloadPlugins() throws GameException {
-		for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).toList()) {
+		for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get())
+				.collect(Collectors.toList())) {
 			unloadPlugin(plugin);
 		}
 	}

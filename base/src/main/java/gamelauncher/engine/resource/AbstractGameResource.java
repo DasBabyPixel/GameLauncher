@@ -58,7 +58,8 @@ public abstract class AbstractGameResource implements GameResource {
 	 */
 	public static void exit() {
 		for (GameResource resource : AbstractGameResource.resources) {
-			if (resource instanceof AbstractGameResource aresource) {
+			if (resource instanceof AbstractGameResource) {
+				AbstractGameResource aresource = (AbstractGameResource) resource;
 				Exception ex = new Exception("Stack: " + aresource.exName);
 				ex.setStackTrace(aresource.stack);
 				AbstractGameResource.logger().errorf("Memory Leak: %s%n%s", resource, ex);

@@ -1,6 +1,7 @@
 # Gradle
 .gradle
 build
+.idea/.name
 .idea/**/gradle.xml
 .idea/**/libraries
 .idea/**/modules
