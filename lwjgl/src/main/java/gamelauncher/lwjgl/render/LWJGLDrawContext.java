@@ -4,6 +4,8 @@ import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.Transformations.Projection;
 import gamelauncher.engine.render.Transformations.Projection.Projection3D;
+import gamelauncher.engine.render.light.DirectionalLight;
+import gamelauncher.engine.render.light.PointLight;
 import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
@@ -12,8 +14,6 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
-import gamelauncher.lwjgl.render.light.DirectionalLight;
-import gamelauncher.lwjgl.render.light.PointLight;
 import gamelauncher.lwjgl.render.model.LWJGLCombinedModelsModel;
 import gamelauncher.lwjgl.render.shader.LWJGLShaderProgram;
 import org.joml.Matrix4f;
@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-@SuppressWarnings("javadoc")
 public class LWJGLDrawContext extends AbstractGameResource implements DrawContext {
 
 	protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);

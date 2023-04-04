@@ -1,5 +1,12 @@
 import org.gradle.api.initialization.resolve.RepositoriesMode
 
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 dependencyResolutionManagement {
     repositories {
         maven {
@@ -8,6 +15,7 @@ dependencyResolutionManagement {
             url 'https://nexus.darkcube.eu/repository/dasbabypixel/'
         }
         mavenCentral()
+        google()
     }
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
 }
@@ -19,3 +27,5 @@ include('lwjgl')
 include('orbits')
 include('labyrinth')
 include('example')
+include('android')
+include('gles')

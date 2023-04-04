@@ -31,8 +31,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	private static final LogColor fgTime = new LogColor(new Color(70, 255, 70, 255));
 	final PrintStream out;
 	final SelectiveStream system;
-	private final DateTimeFormatter formatter =
-			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
+	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+//			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
 	public AsyncLogStream() {
 		this.system = Logger.system;

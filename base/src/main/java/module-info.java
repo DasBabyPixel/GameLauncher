@@ -35,8 +35,9 @@ module gamelauncher.base {
 	exports gamelauncher.engine.util.text;
 	exports gamelauncher.engine.util;
 	exports gamelauncher.engine;
+    exports gamelauncher.engine.render.light;
 
-	requires transitive com.google.gson;
+    requires transitive com.google.gson;
 	requires transitive de.dasbabypixel.property;
 	requires java.base;
 	requires org.fusesource.jansi;

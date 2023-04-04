@@ -7,7 +7,6 @@ import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 
-@SuppressWarnings("javadoc")
 public class DrawContextFramebufferChangeListener extends AbstractGameResource implements NumberChangeListener {
 
 	private final WeakReference<LWJGLDrawContext> ref;
@@ -45,5 +44,4 @@ public class DrawContextFramebufferChangeListener extends AbstractGameResource i
 		w.removeListener(this);
 		h.removeListener(this);
 	}
-
 }

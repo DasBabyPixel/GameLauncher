@@ -1,6 +1,8 @@
 package gamelauncher.engine.resource;
 
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.Key;
+import gamelauncher.engine.util.function.GameSupplier;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -9,21 +11,27 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface GameResource {
 
-	/**
-	 * Cleanes up this {@link GameResource resource}
-	 *
-	 * @throws GameException an exception
-	 */
-	void cleanup() throws GameException;
+    void storeValue(Key key, Object value);
 
-	/**
-	 * @return if this resource is cleaned up
-	 */
-	boolean cleanedUp();
+    <T> T storedValue(Key key);
 
-	/**
-	 * @return the future for when this object is cleaned up
-	 */
-	CompletableFuture<Void> cleanupFuture();
+    <T> T storedValue(Key key, GameSupplier<T> defaultSupplier);
+
+    /**
+     * Cleanes up this {@link GameResource resource}
+     *
+     * @throws GameException an exception
+     */
+    void cleanup() throws GameException;
+
+    /**
+     * @return if this resource is cleaned up
+     */
+    boolean cleanedUp();
+
+    /**
+     * @return the future for when this object is cleaned up
+     */
+    CompletableFuture<Void> cleanupFuture();
 
 }

@@ -147,7 +147,6 @@ public class BasicUniform implements Uniform {
 
 	@Override
 	public Uniform clear() {
-
 		this.floatBuffer.clear();
 		this.hasValue.set(false);
 		return this;

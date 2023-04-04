@@ -1,5 +1,8 @@
 package gamelauncher.labyrinth;
 
+import de.dasbabypixel.api.property.NumberChangeListener;
+import de.dasbabypixel.api.property.NumberInvalidationListener;
+import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
@@ -91,9 +94,12 @@ public class Labyrinth extends Plugin {
 						model = launcher().modelLoader().loadModel(launcher().resourceLoader()
 								.resource(launcher().embedFileSystem().getPath("cube.obj")));
 						GameItem item = new GameItem(model);
-						item.position(300, 300, 0);
-						item.scale(400);
 						item.rotation(40, 40, 40);
+						item.position().x.bind(framebuffer.height().divide(2));
+						item.position().y.bind(item.position().x);
+						item.scale().x.bind(framebuffer.height().divide(2));
+						item.scale().y.bind(item.scale().x);
+						item.scale().z.bind(item.scale().x);
 						model = item.createModel();
 					}
 

@@ -11,7 +11,6 @@ import gamelauncher.engine.resource.AbstractGameResource;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("javadoc")
 public abstract class ShaderProgram extends AbstractGameResource {
 
 	protected final GameLauncher launcher;
@@ -35,9 +34,6 @@ public abstract class ShaderProgram extends AbstractGameResource {
 	public Uniform uapplyLighting = EmptyUniform.instance;
 	public Uniform uhasTexture = EmptyUniform.instance;
 
-	/**
-	 * @param launcher
-	 */
 	public ShaderProgram(GameLauncher launcher) {
 		this.launcher = launcher;
 		this.uniformMap = new HashMap<>();
@@ -61,7 +57,7 @@ public abstract class ShaderProgram extends AbstractGameResource {
 	}
 	
 	/**
-	 * @param name
+	 * @param name the name of the uniform
 	 * @return if this {@link ShaderProgram} has a {@link Uniform} with the given name
 	 */
 	public boolean hasUniform(String name) {
@@ -72,11 +68,9 @@ public abstract class ShaderProgram extends AbstractGameResource {
 	 * Uploads all {@link Uniform}s in this {@link ShaderProgram}
 	 */
 	public void uploadUniforms() {
-		this.clearUniforms();
 		for (Uniform uniform : this.uploadUniforms) {
 			uniform.upload();
 		}
-		this.clearUniforms();
 	}
 
 	/**

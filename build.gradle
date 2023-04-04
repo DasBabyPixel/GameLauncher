@@ -1,3 +1,9 @@
+plugins {
+    id 'com.android.application' version '7.4.2' apply false
+    id 'com.android.library' version '7.4.2' apply false
+    id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
+}
+
 tasks.register("generateRunDirectory") {
     doLast {
         mkdir "run"
@@ -7,6 +13,10 @@ tasks.register("generateRunDirectory") {
 allprojects {
     group = 'de.dasbabypixel.gamelauncher'
     version = '0.0.1-SNAPSHOT'
+    tasks.withType(JavaCompile).configureEach {
+        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11
+    }
     pluginManager.withPlugin('java') {
         java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
         pluginManager.withPlugin('maven-publish') {
