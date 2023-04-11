@@ -1,14 +1,15 @@
 package gamelauncher.engine.util.concurrent;
 
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameSupplier;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author DasBabyPixel
@@ -17,49 +18,58 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
 
     protected volatile boolean cleanedUp = false;
 
+    private final GameLauncher launcher;
     protected final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
     private final Map<Key, Object> map = new ConcurrentHashMap<>();
 
     /**
      *
      */
-    public AbstractGameThread() {
+    public AbstractGameThread(GameLauncher launcher) {
         super();
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(Runnable target, String name) {
+    public AbstractGameThread(GameLauncher launcher, Runnable target, String name) {
         super(target, name);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(Runnable target) {
+    public AbstractGameThread(GameLauncher launcher, Runnable target) {
         super(target);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(String name) {
+    public AbstractGameThread(GameLauncher launcher, String name) {
         super(name);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(ThreadGroup group, Runnable target, String name, long stackSize) {
+    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name, long stackSize) {
         super(group, target, name, stackSize);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(ThreadGroup group, Runnable target, String name) {
+    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name) {
         super(group, target, name);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(ThreadGroup group, Runnable target) {
+    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target) {
         super(group, target);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(ThreadGroup group, String name) {
+    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, String name) {
         super(group, name);
+        this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
@@ -108,4 +118,7 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
 
     protected abstract void cleanup0() throws GameException;
 
+    public GameLauncher launcher() {
+        return launcher;
+    }
 }

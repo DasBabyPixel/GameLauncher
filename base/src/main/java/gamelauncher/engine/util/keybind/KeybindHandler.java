@@ -5,9 +5,6 @@ package gamelauncher.engine.util.keybind;
  */
 public interface KeybindHandler {
 
-	/**
-	 * @param entry
-	 */
 	void handle(KeybindEntry entry);
 	
 }

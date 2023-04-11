@@ -18,6 +18,17 @@ open module gamelauncher.lwjgl {
 	requires io.netty.common;
 	requires io.netty.handler;
 	requires io.netty.transport;
+    requires gamelauncher.gles;
 
-	exports gamelauncher.lwjgl;
+    exports gamelauncher.lwjgl;
+	exports gamelauncher.lwjgl.gui;
+	exports gamelauncher.lwjgl.gui.launcher;
+	exports gamelauncher.lwjgl.input;
+	exports gamelauncher.lwjgl.render;
+	exports gamelauncher.lwjgl.render.font.bitmap;
+	exports gamelauncher.lwjgl.render.glfw;
+	exports gamelauncher.lwjgl.settings.controls;
+	exports gamelauncher.lwjgl.util;
+	exports gamelauncher.lwjgl.util.keybind;
+	exports gamelauncher.lwjgl.util.profiler;
 }

@@ -5,6 +5,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -56,6 +57,8 @@ public interface Frame extends GameResource {
 	 * @return the {@link FrameRenderer} for this {@link Frame}
 	 */
 	FrameRenderer frameRenderer();
+
+	ExecutorThread renderThread();
 
 	/**
 	 * @return a new frame that shares resources with this {@link Frame}

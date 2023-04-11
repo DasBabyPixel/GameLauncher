@@ -10,9 +10,6 @@ public abstract class AbstractKeybindEntry implements KeybindEntry {
 
 	private final Keybind keybind;
 
-	/**
-	 * @param keybind
-	 */
 	public AbstractKeybindEntry(Keybind keybind) {
 		this.keybind = keybind;
 	}

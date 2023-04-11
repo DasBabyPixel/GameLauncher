@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.lwjgl.render.glfw;
 
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -7,89 +14,144 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.LogColor;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
-import gamelauncher.lwjgl.render.states.GlStates;
-import gamelauncher.lwjgl.render.states.StateRegistry;
+import gamelauncher.gles.gl.*;
+import gamelauncher.gles.states.StateRegistry;
+import gamelauncher.lwjgl.render.LWJGLGLES;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES32;
+import org.lwjgl.opengles.GLES;
 
 import java.util.Collection;
 
-public class GLFWGLContext extends AbstractGameResource {
+public class GLFWGLContext extends AbstractGameResource implements GLContext {
 
-	private static final Logger logger = Logger.logger();
+    private static final Logger logger = Logger.logger();
 
-	private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
-	final Collection<GLFWGLContext> sharedContexts;
-	volatile long glfwId;
-	ExecutorThread owner = null;
-	boolean owned = false;
-	GLFWFrame parent;
+    private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
+    final Collection<GLFWGLContext> sharedContexts;
+    volatile long glfwId;
+    GLFWFrame parent;
+    private ExecutorThread owner = null;
+    private boolean owned = false;
+    private GLFWFrame frame;
+    private GLES32 gl;
 
-	GLFWGLContext(Collection<GLFWGLContext> sharedContexts) {
-		super();
-		this.sharedContexts = sharedContexts;
-		this.sharedContexts.add(this);
-	}
+    GLFWGLContext(Collection<GLFWGLContext> sharedContexts) {
+        super();
+        this.sharedContexts = sharedContexts;
+        this.sharedContexts.add(this);
+    }
 
-	public long getGLFWId() {
-		return this.glfwId;
-	}
+    public long getGLFWId() {
+        return this.glfwId;
+    }
 
-	GLFWFrame.Creator create(GLFWFrame frame) {
-		GLFWFrame.Creator creator = new GLFWFrame.Creator(frame);
-		creator.run();
-		this.glfwId = creator.glfwId;
-		StateRegistry.addWindow(this.glfwId);
-		return creator;
-	}
+    GLFWFrame.Creator create(GLFWFrame frame) {
+        this.frame = frame;
+        GLFWFrame.Creator creator = new GLFWFrame.Creator(frame);
+        creator.run();
+        this.gl = LWJGLGLES.instance;
+        this.glfwId = creator.glfwId;
+        StateRegistry.addContext(this);
+        return creator;
+    }
 
-	@Override
-	protected void cleanup0() throws GameException {
-		if (this.owned) {
-			Threads.waitFor(this.owner.submit(() -> {
-				StateRegistry.removeContext(this.glfwId);
-				this.destroyCurrent();
-			}));
-			this.owned = false;
-			this.owner = null;
-		}
-		GLFW.glfwDestroyWindow(this.glfwId);
-		StateRegistry.removeWindow(this.glfwId);
-	}
+    @Override
+    protected void cleanup0() throws GameException {
+        if (this.owned) {
+            Threads.waitFor(this.owner.submit(() -> {
+                StateRegistry.removeContext(this);
+                this.destroyCurrent();
+            }));
+            this.owned = false;
+            this.owner = null;
+        }
+        GLFW.glfwDestroyWindow(this.glfwId);
+    }
 
-	synchronized void beginCreationShared() throws GameException {
-		if (this.owned) {
-			Threads.waitFor(this.owner.submit(() -> {
-				StateRegistry.setContextHoldingThread(this.glfwId, null);
-			}));
-		}
-	}
+    synchronized void beginCreationShared() throws GameException {
+        if (this.owned) {
+            Threads.waitFor(this.owner.submit(() -> {
+                StateRegistry.currentContext(null);
+                GLFW.glfwMakeContextCurrent(0L);
+                GLES.setCapabilities(null);
+            }));
+        }
+    }
 
-	synchronized void endCreationShared() throws GameException {
-		if (this.owned) {
-			Threads.waitFor(this.owner.submit(() -> {
-				StateRegistry.setContextHoldingThread(this.glfwId, Thread.currentThread());
-			}));
-		}
-	}
+    synchronized void endCreationShared() throws GameException {
+        if (this.owned) {
+            Threads.waitFor(this.owner.submit(() -> {
+                StateRegistry.currentContext(this);
+                GLFW.glfwMakeContextCurrent(glfwId);
+                GLES.createCapabilities();
+            }));
+        }
+    }
 
-	synchronized void destroyCurrent() {
-		if (this.owned) {
-			StateRegistry.setContextHoldingThread(this.glfwId, null);
-			this.owned = false;
-			this.owner = null;
-		}
-	}
+    public synchronized void destroyCurrent() {
+        if (this.owned) {
+            StateRegistry.currentContext(null);
+            GLFW.glfwMakeContextCurrent(0L);
+            GLES.setCapabilities(null);
+            this.owned = false;
+            this.owner = null;
+        }
+    }
 
-	synchronized void makeCurrent() {
-		if (!this.owned) {
-			this.owned = true;
-			this.owner = (ExecutorThread) Thread.currentThread();
-			StateRegistry.setContextHoldingThread(this.glfwId, Thread.currentThread());
-			GlStates.current().enable(GLES32.GL_DEBUG_OUTPUT);
-			GLUtil.setupDebugMessageCallback(
-					GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
-		}
-	}
+    @Override
+    public GLFWFrame frame() {
+        return frame;
+    }
 
+    @Override
+    public GLFWGLContext createSharedContext() throws GameException {
+        GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
+        ctx.parent = frame;
+        frame.contexts.add(ctx);
+        for (GLFWGLContext c : ctx.sharedContexts) {
+            c.beginCreationShared();
+        }
+        Threads.waitFor(frame.launcher().getGLFWThread().submit(() -> {
+            GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
+            ctx.create(f2);
+            f2.renderThread.start();
+        }));
+        for (GLFWGLContext c : ctx.sharedContexts) {
+            c.endCreationShared();
+        }
+        return ctx;
+    }
+
+    @Override
+    public GLES20 gl20() {
+        return gl;
+    }
+
+    @Override
+    public GLES30 gl30() {
+        return gl;
+    }
+
+    @Override
+    public GLES31 gl31() {
+        return gl;
+    }
+
+    @Override
+    public GLES32 gl32() {
+        return gl;
+    }
+
+    public synchronized void makeCurrent() {
+        if (!this.owned) {
+            this.owned = true;
+            this.owner = (ExecutorThread) Thread.currentThread();
+            StateRegistry.currentContext(this);
+            GLFW.glfwMakeContextCurrent(glfwId);
+            GLES.createCapabilities();
+            gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
+            GLUtil.setupDebugMessageCallback(
+                    GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+        }
+    }
 }

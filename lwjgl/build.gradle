@@ -25,6 +25,7 @@ switch (OperatingSystem.current()) {
 
 dependencies {
     api parent.project('api')
+    api parent.project('gles')
     api libs.bundles.netty
 
     var lwjgl = libs.versions.lwjgl.get()

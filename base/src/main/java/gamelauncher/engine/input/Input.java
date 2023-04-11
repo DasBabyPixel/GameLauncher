@@ -9,7 +9,7 @@ public interface Input {
 	
 	/**
 	 * Handles the Input queue and fires all events
-	 * @throws GameException 
+	 * @throws GameException an exception
 	 */
 	void handleInput() throws GameException;
 	

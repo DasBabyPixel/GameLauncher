@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" activateToolWindowBeforeRun="false">
+  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="gamelauncher.lwjgl.main" />
     <option name="PROGRAM_PARAMETERS" value="externalPlugin:../orbits/build/classes/java/main externalPlugin:../example/build/classes/java/main externalPlugin:../labyrinth/build/classes/java/main" />
@@ -11,8 +11,6 @@
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
-    <method v="2">
-      <option name="Gradle.BeforeRunTask" enabled="false" tasks="generateRunDirectory classes" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

@@ -10,11 +10,11 @@ public interface RenderThread extends ExecutorThread {
 	/**
 	 * @return the frame of this {@link RenderThread}
 	 */
-	Frame getFrame();
+	Frame frame();
 	
 	/**
 	 * @return the name of this {@link Thread}
 	 */
-	String getName();
+	String name();
 	
 }

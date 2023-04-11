@@ -1,22 +1,16 @@
 package gamelauncher.android;
 
 import android.app.Activity;
-import android.opengl.*;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.*;
+import android.view.WindowInsetsController;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-import gamelauncher.android.gl.GLSurfaceView20;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 public class AndroidLauncher extends Activity {
 
@@ -42,9 +36,12 @@ public class AndroidLauncher extends Activity {
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         getWindow().getDecorView().getWindowInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
-
-        GLSurfaceView view = new GLSurfaceView20(getApplicationContext());
-        setContentView(view);
+        AndroidGameLauncher launcher = new AndroidGameLauncher(this);
+        try {
+            launcher.start(new String[0]);
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

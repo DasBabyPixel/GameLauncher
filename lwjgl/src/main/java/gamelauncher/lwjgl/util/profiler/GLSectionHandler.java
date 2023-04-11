@@ -1,13 +1,11 @@
 package gamelauncher.lwjgl.util.profiler;
 
-import static org.lwjgl.opengles.GLES20.*;
-
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.SectionHandler;
-import gamelauncher.lwjgl.render.states.GlStates;
-import gamelauncher.lwjgl.render.states.StateRegistry;
+import gamelauncher.gles.states.StateRegistry;
 
-@SuppressWarnings("javadoc")
+import static org.lwjgl.opengles.GLES20.GL_NO_ERROR;
+
 public class GLSectionHandler implements SectionHandler {
 
 	private static final Logger logger = Logger.logger("GL");
@@ -15,7 +13,7 @@ public class GLSectionHandler implements SectionHandler {
 	@Override
 	public void handleBegin(String type, String section) {
 		if (StateRegistry.currentContext() != null) {
-			int error = GlStates.current().getError();
+			int error = StateRegistry.currentGl().glGetError();
 			if (error != GL_NO_ERROR) {
 				logger.errorf("OpenGL error detected: 0x%s%nType: %s, Section: %s%nError out of profiler render section",
 						Integer.toHexString(error), type, section);
@@ -31,7 +29,7 @@ public class GLSectionHandler implements SectionHandler {
 	@Override
 	public void check(String type, String section) {
 		if (StateRegistry.currentContext() != null) {
-			int error = GlStates.current().getError();
+			int error = StateRegistry.currentGl().glGetError();
 			if (error != GL_NO_ERROR) {
 				logger.errorf("OpenGL error detected: 0x%s%nType: %s, Section: %s", Integer.toHexString(error), type,
 						section);

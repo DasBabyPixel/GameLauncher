@@ -1,7 +1,6 @@
 package gamelauncher.lwjgl.util.keybind;
 
 import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEntry;
 import gamelauncher.engine.util.keybind.KeybindHandler;
@@ -62,7 +61,6 @@ public class AllKeybind extends AbstractGameResource implements Keybind {
 	}
 
 	@Override
-	protected final void cleanup0() throws GameException {
+	protected final void cleanup0() {
 	}
-
 }

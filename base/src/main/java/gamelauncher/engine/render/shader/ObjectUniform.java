@@ -1,28 +1,35 @@
 package gamelauncher.engine.render.shader;
 
-import java.util.concurrent.atomic.AtomicReference;
-
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.util.GameException;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * @author DasBabyPixel
  */
-public class ObjectUniform implements Uniform {
+public class ObjectUniform extends AbstractGameResource implements Uniform {
 
 	private final AtomicReference<ProgramObject> value = new AtomicReference<>();
 	private final ShaderProgram program;
 	private final String name;
 
-	/**
-	 * @param program
-	 * @param name
-	 */
 	public ObjectUniform(ShaderProgram program, String name) {
 		this.program = program;
 		this.name = name;
+	}
+
+	@Override
+	public boolean cleanedUp() {
+		return true;
+	}
+
+	@Override
+	protected void cleanup0() throws GameException {
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package gamelauncher.engine.util.logging;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
@@ -12,7 +13,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Objects;
@@ -34,7 +34,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 //			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
-	public AsyncLogStream() {
+	public AsyncLogStream(GameLauncher launcher) {
+		super(launcher);
 		this.system = Logger.system;
 		this.setName("AsyncLogStream");
 		this.out = new PrintStream(this.system, false);

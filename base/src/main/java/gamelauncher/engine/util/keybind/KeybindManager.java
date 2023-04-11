@@ -13,7 +13,7 @@ public interface KeybindManager extends GameResource {
 	 * @param keybind
 	 * @return the created {@link Keybind}
 	 */
-	Keybind createKeybind(int keybind);
+	Keybind getKeybind(int keybind);
 
 	/**
 	 * Posts a {@link KeybindEntry} to all Keybinds. Return null in the function to

@@ -9,6 +9,7 @@ tasks.register("generateRunDirectory") {
         mkdir "run"
     }
 }
+generateRunDirectory
 
 allprojects {
     group = 'de.dasbabypixel.gamelauncher'

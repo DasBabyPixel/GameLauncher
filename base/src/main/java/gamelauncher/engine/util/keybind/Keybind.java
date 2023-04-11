@@ -15,7 +15,7 @@ public interface Keybind extends GameResource {
 
 	/**
 	 * @return the uniqueId of this Keybind. Can be used for storage, will be the
-	 *         same for the same key.
+	 *         same for the same key. May vary on different devices
 	 */
 	int uniqueId();
 

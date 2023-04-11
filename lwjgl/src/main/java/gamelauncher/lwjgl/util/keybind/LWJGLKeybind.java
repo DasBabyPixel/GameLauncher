@@ -9,58 +9,57 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author DasBabyPixel
  */
 public class LWJGLKeybind extends AbstractGameResource implements Keybind {
 
-	private final String name;
-	private final AtomicInteger id = new AtomicInteger();
-	private final KeybindManager manager;
-	private final Collection<KeybindHandler> handlers = ConcurrentHashMap.newKeySet();
+    private final String name;
+    private final int id;
+    private final KeybindManager manager;
+    private final Collection<KeybindHandler> handlers = ConcurrentHashMap.newKeySet();
 
-	public LWJGLKeybind(String name, int id, KeybindManager manager) {
-		this.name = name;
-		this.id.set(id);
-		this.manager = manager;
-	}
+    public LWJGLKeybind(String name, int id, KeybindManager manager) {
+        this.name = name;
+        this.id = id;
+        this.manager = manager;
+    }
 
-	@Override
-	public String name() {
-		return name;
-	}
+    @Override
+    public String name() {
+        return name;
+    }
 
-	@Override
-	public int uniqueId() {
-		return id.get();
-	}
+    @Override
+    public int uniqueId() {
+        return id;
+    }
 
-	@Override
-	public void handle(KeybindEntry entry) {
-		for (KeybindHandler handler : handlers) {
-			handler.handle(entry);
-		}
-	}
+    @Override
+    public void handle(KeybindEntry entry) {
+        for (KeybindHandler handler : handlers) {
+            handler.handle(entry);
+        }
+    }
 
-	@Override
-	public void addHandler(KeybindHandler handler) {
-		handlers.add(handler);
-	}
+    @Override
+    public void addHandler(KeybindHandler handler) {
+        handlers.add(handler);
+    }
 
-	@Override
-	public void removeHandler(KeybindHandler handler) {
-		handlers.remove(handler);
-	}
+    @Override
+    public void removeHandler(KeybindHandler handler) {
+        handlers.remove(handler);
+    }
 
-	@Override
-	public KeybindManager manager() {
-		return manager;
-	}
+    @Override
+    public KeybindManager manager() {
+        return manager;
+    }
 
-	@Override
-	public void cleanup0() throws GameException {
-		handlers.clear();
-	}
+    @Override
+    public void cleanup0() throws GameException {
+        handlers.clear();
+    }
 }

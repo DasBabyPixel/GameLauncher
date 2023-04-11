@@ -39,7 +39,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 	/**
 	 * The Map of {@link Keybind}s, by ID
 	 */
-	public final Map<Integer, Keybind> keybinds = new ConcurrentHashMap<>();
+	private final Map<Integer, Keybind> keybinds = new ConcurrentHashMap<>();
 	private final GameLauncher launcher;
 	private final Map<Integer, String> names = new ConcurrentHashMap<>();
 
@@ -48,7 +48,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
 	}
 
 	@Override
-	public Keybind createKeybind(int keybind) {
+	public Keybind getKeybind(int keybind) {
 		loadName(keybind);
 		loadKeybind(keybind);
 		return keybinds.get(keybind);

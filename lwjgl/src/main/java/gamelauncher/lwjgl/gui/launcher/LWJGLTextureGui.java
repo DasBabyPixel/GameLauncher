@@ -7,16 +7,16 @@ import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.gles.model.Texture2DModel;
+import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.render.model.Texture2DModel;
-import gamelauncher.lwjgl.render.texture.LWJGLTexture;
 
 /**
  * @author DasBabyPixel
  */
 public class LWJGLTextureGui extends ParentableAbstractGui implements TextureGui {
 
-	private final LWJGLTexture texture;
+	private final GLESTexture texture;
 	private final Camera camera;
 	private GameItemModel model;
 	private DrawContext hud;

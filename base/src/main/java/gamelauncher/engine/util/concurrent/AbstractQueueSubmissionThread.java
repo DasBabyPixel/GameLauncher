@@ -1,5 +1,6 @@
 package gamelauncher.engine.util.concurrent;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
@@ -28,7 +29,8 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 	/**
 	 *
 	 */
-	public AbstractQueueSubmissionThread() {
+	public AbstractQueueSubmissionThread(GameLauncher launcher) {
+		super(launcher);
 	}
 
 	/**

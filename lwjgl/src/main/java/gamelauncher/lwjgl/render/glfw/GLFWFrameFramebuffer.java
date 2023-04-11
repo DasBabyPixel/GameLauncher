@@ -1,15 +1,13 @@
 package gamelauncher.lwjgl.render.glfw;
 
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES20;
-
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.render.LWJGLScissorStack;
+import gamelauncher.gles.GLESScissorStack;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengles.GLES20;
 
 public class GLFWFrameFramebuffer extends AbstractGameResource implements Framebuffer {
 
@@ -21,11 +19,11 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
 
 	private final GLFWFrame frame;
 
-	private final LWJGLScissorStack scissor;
+	private final GLESScissorStack scissor;
 
 	public GLFWFrameFramebuffer(GLFWFrame frame) {
 		this.frame = frame;
-		this.scissor = new LWJGLScissorStack(this);
+		this.scissor = new GLESScissorStack(this);
 	}
 
 	@Override
@@ -44,10 +42,11 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
 
 	@Override
 	public void scheduleRedraw() {
+		frame.scheduleDraw();
 	}
 
 	@Override
-	protected void cleanup0() throws GameException {
+	protected void cleanup0() {
 	}
 
 	@Override
