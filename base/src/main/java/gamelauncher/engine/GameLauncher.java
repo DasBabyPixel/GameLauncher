@@ -20,7 +20,6 @@ import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.io.embed.EmbedFileSystem;
 import gamelauncher.engine.io.embed.EmbedFileSystemProvider;
-import gamelauncher.engine.io.embed.url.EmbedURLStreamHandlerFactory;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.ContextProvider;
@@ -38,17 +37,17 @@ import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.concurrent.ExecutorThreadHelper;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.keybind.KeybindManager;
+import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
-import org.fusesource.jansi.AnsiConsole;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
@@ -78,15 +77,15 @@ public abstract class GameLauncher {
     private final EventManager eventManager;
 
     private final Logger logger;
-    private final Path gameDirectory;
-    private final Path dataDirectory;
-    private final Path settingsFile;
-    private final Path pluginsDirectory;
     private final Threads threads;
     private final PluginManager pluginManager;
     private final Profiler profiler;
     private final Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
     private final GameRegistry gameRegistry;
+    private Path gameDirectory;
+    private Path dataDirectory;
+    private Path settingsFile;
+    private Path pluginsDirectory;
     private GameThread gameThread;
     private Frame frame;
     private FileSystem embedFileSystem;
@@ -101,6 +100,7 @@ public abstract class GameLauncher {
     private TextureManager textureManager;
     private FontFactory fontFactory;
     private NetworkClient networkClient;
+    private ExecutorThreadHelper executorThreadHelper;
     private ResourceLoader resourceLoader;
     private boolean debugMode = false;
     private ContextProvider contextProvider;
@@ -113,33 +113,27 @@ public abstract class GameLauncher {
      * Creates a new GameLauncher
      */
     public GameLauncher() {
-        AnsiConsole.systemInstall();
         Logger.Initializer.init(this);
         Logger.asyncLogStream().start();
         this.logger = Logger.logger(this.getClass());
         this.threads = new Threads();
-        this.gameDirectory = Paths.get(GameLauncher.NAME).toAbsolutePath();
-        this.dataDirectory = this.gameDirectory.resolve("data");
-        this.settingsFile = this.gameDirectory.resolve("settings.json");
-        this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+        this.gameDirectory(Paths.get(GameLauncher.NAME).toAbsolutePath());
         this.profiler = new Profiler();
         this.gameRegistry = new GameRegistry();
 
-        if (embedFileSystem == null) {
-            try {
-                URL.setURLStreamHandlerFactory(new EmbedURLStreamHandlerFactory());
-                URI uri = URI.create("embed:/");
-                this.embedFileSystem = EmbedFileSystemProvider.instance.newFileSystem(uri, null);
-            } catch (ProviderNotFoundException ex) {
-                this.logger.error(ex);
-                this.startupFailed = true;
-            } catch (IOException ex) {
-                throw new AssertionError(ex);
-            }
-        }
-
         this.eventManager = new EventManager(this);
         this.pluginManager = new PluginManager(this);
+    }
+
+    public AnsiProvider ansi() {
+        return new AnsiProvider.Unsupported();
+    }
+
+    protected void gameDirectory(Path path) {
+        this.gameDirectory = path;
+        this.dataDirectory = this.gameDirectory.resolve("data");
+        this.settingsFile = this.gameDirectory.resolve("settings.json");
+        this.pluginsDirectory = this.gameDirectory.resolve("plugins");
     }
 
     protected void contextProvider(ContextProvider contextProvider) {
@@ -148,18 +142,26 @@ public abstract class GameLauncher {
 
     public final void start(String[] args) throws GameException {
 
-        if (this.frame != null) {
-            return;
+        Threads.sleep(1000);
+
+        if (embedFileSystem == null) {
+            try {
+                this.embedFileSystem = EmbedFileSystemProvider.instance.newFileSystem((URI) null, null);
+            } catch (ProviderNotFoundException ex) {
+                this.logger.error(ex);
+                this.startupFailed = true;
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
 
         if (this.startupFailed) {
-
             try {
-                if (this.embedFileSystem != null)
-                    this.embedFileSystem.close();
+                if (this.embedFileSystem != null) this.embedFileSystem.close();
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+            logger.error("Failed to start");
             Logger.asyncLogStream().cleanup();
             this.threads.cleanup();
             return;
@@ -200,35 +202,20 @@ public abstract class GameLauncher {
             this.settings.deserialize(element);
             JsonElement serialized = this.settingsGson.toJsonTree(this.settings.serialize());
             if (!serialized.equals(element)) {
-                this.logger()
-                        .warnf("Unexpected change in settings.json. Creating backup and replacing file.");
-                DateTimeFormatter formatter =
-                        new DateTimeFormatterBuilder().appendValue(ChronoField.YEAR, 4, 10,
-                                        SignStyle.EXCEEDS_PAD).appendLiteral('-')
-                                .appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-')
-                                .appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_')
-                                .appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-')
-                                .appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-')
-                                .appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
-                Files.move(this.settingsFile, this.settingsFile.getParent().resolve(
-                        String.format("backup-settings-%s.json",
-                                formatter.format(LocalDateTime.now()).replace(':', '-'))));
+                this.logger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+                DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD).appendLiteral('-').appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-').appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_').appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-').appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-').appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
+                Files.move(this.settingsFile, this.settingsFile.getParent().resolve(String.format("backup-settings-%s.json", formatter.format(LocalDateTime.now()).replace(':', '-'))));
                 this.saveSettings();
             }
         }
 
         this.gameThread.runLater(() -> {
             this.start0();
-            if (this.gameRenderer.renderer() != null
-                    && !(this.gameRenderer.renderer() instanceof GuiRenderer)) {
-                this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.renderer().getClass()
-                        .getName());
+            if (this.gameRenderer.renderer() != null && !(this.gameRenderer.renderer() instanceof GuiRenderer)) {
+                this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.renderer().getClass().getName());
             }
             //			window.scheduleDrawAndWaitForFrame();
             // TODO: Gotta render the frame twice in beginning, dunno why
-            this.frame.scheduleDrawWaitForFrame();
-            this.frame.scheduleDrawWaitForFrame();
-            this.frame.scheduleDrawWaitForFrame();
             this.frame.scheduleDrawWaitForFrame();
             this.eventManager().post(new LauncherInitializedEvent(this));
         });
@@ -248,7 +235,6 @@ public abstract class GameLauncher {
                 this.embedFileSystem.close();
                 Logger.asyncLogStream().cleanup();
                 AbstractGameResource.exit();
-                AnsiConsole.systemUninstall();
             } catch (IOException ex) {
                 throw new GameException(ex);
             }
@@ -477,7 +463,7 @@ public abstract class GameLauncher {
     /**
      * Sets the {@link GameLauncher}'s debug mode
      *
-     * @param debugMode
+     * @param debugMode debug
      */
     public void debugMode(boolean debugMode) {
         this.debugMode = debugMode;
@@ -504,6 +490,14 @@ public abstract class GameLauncher {
      */
     public Path gameDirectory() {
         return this.gameDirectory;
+    }
+
+    public ExecutorThreadHelper executorThreadHelper() {
+        return executorThreadHelper;
+    }
+
+    protected void executorThreadHelper(ExecutorThreadHelper executorThreadHelper) {
+        this.executorThreadHelper = executorThreadHelper;
     }
 
     /**
@@ -558,8 +552,7 @@ public abstract class GameLauncher {
      * @throws GameException an exception
      */
     public void saveSettings() throws GameException {
-        Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize())
-                .getBytes(StandardCharsets.UTF_8));
+        Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(StandardCharsets.UTF_8));
     }
 
 }

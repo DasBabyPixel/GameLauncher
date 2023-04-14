@@ -20,7 +20,7 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.gl.GLES30;
-import gamelauncher.gles.gl.GLES32;
+import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.util.MemoryManagement;
 
@@ -53,7 +53,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     private int cheight = 0;
 
     public GLESTexture(GLES gles, ExecutorThread owner, ExecutorThreadService service) {
-        System.out.println(owner + ": Created texture " + hashCode());
         this.memoryManagement = gles.memoryManagement();
         this.manager = gles.textureManager();
         this.owner = owner;
@@ -62,7 +61,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     }
 
     private static ByteBuffer getBufferedImageBuffer(MemoryManagement memory, int texture, int width, int height) {
-        GLES32 cur = StateRegistry.currentGl();
+        GLES31 cur = StateRegistry.currentGl();
         ByteBuffer pixels = memory.callocDirect(4 * width * height);
         cur.glBindTexture(GL_TEXTURE_2D, texture);
         int fbo = cur.glGenFramebuffers();
@@ -74,6 +73,42 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         cur.glBindTexture(GL_TEXTURE_2D, 0);
         return pixels;
     }
+
+//    private static BufferedImage getBufferedImage(MemoryManagement memory, int texture, int width, int height) {
+//        ByteBuffer pixels = getBufferedImageBuffer(memory, texture, width, height);
+//        BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
+//        for (int y = 0; y < height; y++) {
+//            for (int x = 0; x < width; x++) {
+//                int r = pixels.get((y * width + x) * Integer.BYTES);
+//                int g = pixels.get((y * width + x) * Integer.BYTES + 1);
+//                int b = pixels.get((y * width + x) * Integer.BYTES + 2);
+//                int a = pixels.get((y * width + x) * Integer.BYTES + 3);
+//
+//                int argb = a << 24 | r << 16 | g << 8 | b;
+//                img.setRGB(x, y, argb);
+//            }
+//        }
+//        memory.free(pixels);
+//        return img;
+//    }
+
+//    public CompletableFuture<Void> write() {
+//        return owner.submit(() -> {
+//            try {
+//                lock.readLock().lock();
+//                BufferedImage img = getBufferedImage(manager.gles.memoryManagement(), textureId.get(), cwidth, cheight);
+//                manager.launcher().threads().cached.submit(() -> {
+//                    try {
+//                        ImageIO.write(img, "png", new File("img" + tid.incrementAndGet() + ".png"));
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+//            } finally {
+//                lock.readLock().unlock();
+//            }
+//        });
+//    }
 
     public MemoryManagement memoryManagement() {
         return memoryManagement;
@@ -193,7 +228,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
 
     @Override
     public void cleanup0() throws GameException {
-        System.out.println("try cleanup: " + hashCode());
         Threads.waitFor(owner.submit(() -> {
             lock.writeLock().lock();
             int id = textureId.getAndSet(0);
@@ -202,7 +236,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
             }
             lock.writeLock().unlock();
         }));
-        System.out.println(Thread.currentThread() + ": Cleaned texture " + hashCode());
     }
 
     @Override
@@ -341,7 +374,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
             int copyh = Math.min(width, maxcopyh);
 
             if (copyw >= 1 && copyh >= 1) {
-                StateRegistry.currentGl().glCopyImageSubData(id, GL_TEXTURE_2D, 0, srcX, srcY, 0, oid, GL_TEXTURE_2D, 0, dstX, dstY, 0, copyw, copyh, 1);
+                StateRegistry.currentContext().context().gl32().glCopyImageSubData(id, GL_TEXTURE_2D, 0, srcX, srcY, 0, oid, GL_TEXTURE_2D, 0, dstX, dstY, 0, copyw, copyh, 1);
             }
 
             lwjgl.lock.writeLock().unlock();

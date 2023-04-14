@@ -23,7 +23,7 @@ public class BasicFontFactory implements FontFactory {
     }
 
     @Override
-    public Font createFont(ResourceStream stream, boolean close) throws GameException {
+    public Font createFont(ResourceStream stream, boolean close) {
         Path path = stream.getPath();
         BasicFont font;
         if (path == null) {

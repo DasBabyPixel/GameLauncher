@@ -9,7 +9,10 @@ import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import gamelauncher.android.gl.AndroidFrame;
+import gamelauncher.android.gl.LauncherGLSurfaceView;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 
 public class AndroidLauncher extends Activity {
@@ -36,10 +39,16 @@ public class AndroidLauncher extends Activity {
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         getWindow().getDecorView().getWindowInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
-        AndroidGameLauncher launcher = new AndroidGameLauncher(this);
+        Activity activity = this;
         try {
+            AndroidGameLauncher launcher = new AndroidGameLauncher(this);
+            launcher.frame(new AndroidFrame(launcher));
+            launcher.view = new LauncherGLSurfaceView(launcher, activity.getApplicationContext());
+            setContentView(launcher.view());
             launcher.start(new String[0]);
         } catch (GameException e) {
+            e.printStackTrace();
+            Threads.sleep(5000);
             throw new RuntimeException(e);
         }
     }

@@ -11,7 +11,7 @@ import gamelauncher.gles.context.GLESDrawContext;
 import gamelauncher.gles.context.GLESStates;
 import gamelauncher.gles.framebuffer.BasicFramebuffer;
 import gamelauncher.gles.gl.GLES20;
-import gamelauncher.gles.gl.GLES32;
+import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.states.StateRegistry;
 
@@ -141,7 +141,7 @@ public class GLESGameRenderer implements GameRenderer {
         //		}
 
         public void refreshDisplay(Renderer renderer) throws GameException {
-            GLES32 cur = StateRegistry.currentGl();
+            GLES31 cur = StateRegistry.currentGl();
             this.frame.framebuffer().beginFrame();
             cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(),
                     this.frame.framebuffer().height().intValue());
@@ -155,7 +155,7 @@ public class GLESGameRenderer implements GameRenderer {
         }
 
         public void renderFrame(Renderer renderer) throws GameException {
-            GLES32 cur = StateRegistry.currentGl();
+            GLES31 cur = StateRegistry.currentGl();
             this.frame.framebuffer().beginFrame();
             cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(),
                     this.frame.framebuffer().height().intValue());

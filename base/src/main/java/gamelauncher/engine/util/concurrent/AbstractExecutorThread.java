@@ -135,9 +135,9 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
     private void work(GameRunnable run, CompletableFuture<Void> fut) {
         try {
 
-            logger.warn(run);
-            GameException ex2 = this.buildStacktrace();
-            AbstractExecutorThread.logger.error(ex2);
+//            logger.warn(run);
+//            GameException ex2 = this.buildStacktrace();
+//            AbstractExecutorThread.logger.error(ex2);
 
             run.run();
             fut.complete(null);
@@ -207,6 +207,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
             throw new SecurityException("May not call this from any other thread than self");
         }
         LockSupport.park();
+        workQueue();
     }
 
     @Override
@@ -215,6 +216,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
             throw new SecurityException("May not call this from any other thread than self");
         }
         LockSupport.parkNanos(nanos);
+        workQueue();
     }
 
     @Override

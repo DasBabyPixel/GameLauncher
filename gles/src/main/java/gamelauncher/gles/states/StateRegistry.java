@@ -5,7 +5,7 @@ import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.annotation.ThreadDependant;
 import gamelauncher.gles.gl.GLContext;
-import gamelauncher.gles.gl.GLES32;
+import gamelauncher.gles.gl.GLES31;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Set;
@@ -34,7 +34,7 @@ public class StateRegistry {
         return context.storedValue(CONTEXT, () -> new ContextDependant(context));
     }
 
-    public static GLES32 currentGl() {
+    public static GLES31 currentGl() {
         return currentContext().gl();
     }
 

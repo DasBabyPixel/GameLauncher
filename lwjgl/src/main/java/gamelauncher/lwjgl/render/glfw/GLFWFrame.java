@@ -51,8 +51,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final FrameCounter frameCounter;
     final GLFWGLContext context;
     final Collection<GLFWGLContext> contexts;
-    final Property<GameConsumer<Frame>> closeCallback =
-            ObjectProperty.withValue(GLFWFrame.simpleCCB);
+    final Property<GameConsumer<Frame>> closeCallback = ObjectProperty.withValue(GLFWFrame.simpleCCB);
     final NumberValue windowWidth = NumberValue.zero();
     final NumberValue windowHeight = NumberValue.zero();
     final BooleanValue fullscreen = BooleanValue.falseValue();
@@ -75,12 +74,12 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.manualFramebuffer = new ManualQueryFramebuffer(this.framebuffer);
         this.input = new LWJGLInput(this);
         this.context = new GLFWGLContext(new CopyOnWriteArraySet<>());
-        Threads.waitFor(this.launcher.getGLFWThread().submit(() -> this.context.create(this)));
+        Threads.waitFor(this.launcher.getGLFWThread().submit(() -> this.context.create(this, null)));
         this.renderThread.start();
         this.created = true;
     }
 
-    public GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
+    GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
         super();
         this.launcher = launcher;
         this.contexts = new CopyOnWriteArraySet<>();
@@ -103,7 +102,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     private void close0() {
         new Thread(() -> {
             try {
-                this.cleanup();
+                launcher.stop();
             } catch (GameException ex) {
                 ex.printStackTrace();
             }
@@ -114,10 +113,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     protected void cleanup0() throws GameException {
         this.renderThread.cleanupContextOnExit = true;
         Threads.waitFor(this.renderThread.exit());
-        (this.context.parent != null ? this.context.parent : this).freeContextManual(this.context,
-                true);
+//        (this.context.parent != null ? this.context.parent : this).freeContextManual(this.context,
+//                true);
         for (GLFWGLContext context : this.contexts) {
-            context.parent.freeContext(context);
+            context.cleanup();
         }
         this.manualFramebuffer.cleanup();
         this.framebuffer.cleanup();
@@ -155,8 +154,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.contexts.remove(context);
     }
 
-    public void freeContextManual(GLFWGLContext context, boolean renderThreadCleanedUp)
-            throws GameException {
+    public void freeContextManual(GLFWGLContext context, boolean renderThreadCleanedUp) throws GameException {
         if (!renderThreadCleanedUp) {
             context.cleanup();
         }
@@ -193,6 +191,9 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
     @Override
     public void frameRenderer(FrameRenderer renderer) {
+        if (this == launcher.frame() && renderer != launcher.gameRenderer()) {
+            throw new UnsupportedOperationException("Please set the renderer via GameLauncher#gameRenderer to preserve a consistent state");
+        }
         this.frameRenderer.setValue(renderer);
     }
 
@@ -259,11 +260,13 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         private final NumberValue fullscreenOldY = NumberValue.zero();
         private final NumberValue fullscreenOldW = NumberValue.zero();
         private final NumberValue fullscreenOldH = NumberValue.zero();
+        private final GLFWGLContext shared;
         public GLFWFrame frame;
         public long glfwId;
 
-        public Creator(GLFWFrame frame) {
+        public Creator(GLFWFrame frame, GLFWGLContext shared) {
             this.frame = frame;
+            this.shared = shared;
         }
 
         @Override
@@ -277,16 +280,11 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
             GLFW.glfwWindowHint(GLFW.GLFW_TRANSPARENT_FRAMEBUFFER, GLFW.GLFW_TRUE);
 
-            Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager()
-                    .getMonitor(glfwGetPrimaryMonitor());
+            Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().getMonitor(glfwGetPrimaryMonitor());
 
-            this.glfwId =
-                    GLFW.glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2,
-                            GameLauncher.NAME, 0, this.frame.context.getGLFWId());
-            GLFW.glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW.GLFW_DONT_CARE,
-                    GLFW.GLFW_DONT_CARE);
-            glfwSetWindowPos(glfwId, primaryMonitor.x() + primaryMonitor.width() / 4,
-                    primaryMonitor.y() + primaryMonitor.height() / 4);
+            this.glfwId = GLFW.glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, GameLauncher.NAME, 0, shared == null ? 0 : shared.glfwId);
+            GLFW.glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
+            glfwSetWindowPos(glfwId, primaryMonitor.x() + primaryMonitor.width() / 4, primaryMonitor.y() + primaryMonitor.height() / 4);
             int[] a0 = new int[1];
             int[] a1 = new int[1];
             GLFW.glfwGetWindowSize(this.glfwId, a0, a1);
@@ -312,12 +310,9 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 InvalidationListener l = p -> {
                     GLFWMonitorManager manager = frame.launcher.getGLFWThread().getMonitorManager();
                     Monitor nearest = null;
-                    Rect window =
-                            new Rect(xpos.doubleValue(), ypos.doubleValue(), width.doubleValue(),
-                                    height.doubleValue());
+                    Rect window = new Rect(xpos.doubleValue(), ypos.doubleValue(), width.doubleValue(), height.doubleValue());
                     for (Monitor monitor : manager.getMonitors()) {
-                        if (nearest != null && new Rect(nearest.x(), nearest.y(), nearest.width(),
-                                nearest.height()).contains(window)) {
+                        if (nearest != null && new Rect(nearest.x(), nearest.y(), nearest.width(), nearest.height()).contains(window)) {
                             break;
                         }
                         if (nearest == null) {
@@ -325,10 +320,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                             continue;
                         }
 
-                        Rect rnearest = new Rect(nearest.x(), nearest.y(), nearest.width(),
-                                nearest.height());
-                        Rect rmonitor = new Rect(monitor.x(), monitor.y(), monitor.width(),
-                                monitor.height());
+                        Rect rnearest = new Rect(nearest.x(), nearest.y(), nearest.width(), nearest.height());
+                        Rect rmonitor = new Rect(monitor.x(), monitor.y(), monitor.width(), monitor.height());
                         if (rmonitor.contains(window)) {
                             nearest = monitor;
                             continue;
@@ -347,23 +340,20 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.height.addListener(l);
 
                 this.frame.fullscreen.addListener(Property::getValue);
-                this.frame.fullscreen.addListener(
-                        (p, o, n) -> frame.launcher.getGLFWThread().submit(() -> {
-                            Monitor monitor = frame.monitor.getValue();
-                            if (n) {
-                                fullscreenOldX.setNumber(xpos.getNumber());
-                                fullscreenOldY.setNumber(ypos.getNumber());
-                                fullscreenOldW.setNumber(width.getNumber());
-                                fullscreenOldH.setNumber(height.getNumber());
-                                glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
-                                glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
-                            } else {
-                                glfwSetWindowPos(glfwId, fullscreenOldX.intValue(),
-                                        fullscreenOldY.intValue());
-                                glfwSetWindowSize(glfwId, fullscreenOldW.intValue(),
-                                        fullscreenOldH.intValue());
-                            }
-                        }));
+                this.frame.fullscreen.addListener((p, o, n) -> frame.launcher.getGLFWThread().submit(() -> {
+                    Monitor monitor = frame.monitor.getValue();
+                    if (n) {
+                        fullscreenOldX.setNumber(xpos.getNumber());
+                        fullscreenOldY.setNumber(ypos.getNumber());
+                        fullscreenOldW.setNumber(width.getNumber());
+                        fullscreenOldH.setNumber(height.getNumber());
+                        glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
+                        glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
+                    } else {
+                        glfwSetWindowPos(glfwId, fullscreenOldX.intValue(), fullscreenOldY.intValue());
+                        glfwSetWindowSize(glfwId, fullscreenOldW.intValue(), fullscreenOldH.intValue());
+                    }
+                }));
             }
             float[] f0 = new float[1];
             float[] f1 = new float[1];
@@ -381,8 +371,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     ex.printStackTrace();
                 }
             });
-            GLFW.glfwSetMonitorCallback((monitor, event) -> this.monitor.setValue(
-                    frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor)));
+            GLFW.glfwSetMonitorCallback((monitor, event) -> this.monitor.setValue(frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor)));
             GLFW.glfwSetWindowCloseCallback(this.glfwId, wid -> {
                 GameConsumer<Frame> cs = this.frame.closeCallback.getValue();
                 if (cs != null) {
@@ -393,8 +382,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     }
                 }
             });
-            GLFW.glfwSetCursorEnterCallback(this.glfwId,
-                    (wid, entered) -> this.frame.mouse.setInWindow(entered));
+            GLFW.glfwSetCursorEnterCallback(this.glfwId, (wid, entered) -> this.frame.mouse.setInWindow(entered));
             GLFW.glfwSetCursorPosCallback(this.glfwId, (wid, xpos, ypos) -> {
                 ypos = ypos + 0.5F;
                 xpos = xpos + 0.5F;
@@ -411,12 +399,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             GLFW.glfwSetMouseButtonCallback(this.glfwId, (wid, button, action, mods) -> {
                 switch (action) {
                     case GLFW_PRESS:
-                        this.frame.input.mousePress(button, (float) this.frame.mouse().getX(),
-                                (float) this.frame.mouse().getY());
+                        this.frame.input.mousePress(button, (float) this.frame.mouse().getX(), (float) this.frame.mouse().getY());
                         break;
                     case GLFW_RELEASE:
-                        this.frame.input.mouseRelease(button, (float) this.frame.mouse().getX(),
-                                (float) this.frame.mouse().getY());
+                        this.frame.input.mouseRelease(button, (float) this.frame.mouse().getX(), (float) this.frame.mouse().getY());
                         break;
                 }
             });
@@ -437,10 +423,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.scaleX.setNumber(xscale);
                 this.scaleY.setNumber(yscale);
             });
-            GLFW.glfwSetCharCallback(this.glfwId,
-                    (wid, codepoint) -> this.frame.input.character((char) codepoint));
-            GLFW.glfwSetWindowRefreshCallback(this.glfwId,
-                    wid -> this.frame.renderThread.refreshWait());
+            GLFW.glfwSetCharCallback(this.glfwId, (wid, codepoint) -> this.frame.input.character((char) codepoint));
+            GLFW.glfwSetWindowRefreshCallback(this.glfwId, wid -> this.frame.renderThread.refreshWait());
             GLFW.glfwSetFramebufferSizeCallback(this.glfwId, (wid, width, height) -> {
                 GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
                 GLFWFrameRenderThread rt = this.frame.renderThread;
@@ -485,8 +469,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         }
 
         public boolean contains(Rect other) {
-            return x <= other.x && y <= other.y && x + w >= other.x + other.w
-                    && y + h >= other.y + other.h;
+            return x <= other.x && y <= other.y && x + w >= other.x + other.w && y + h >= other.y + other.h;
         }
 
         public Rect overlap(Rect other) {

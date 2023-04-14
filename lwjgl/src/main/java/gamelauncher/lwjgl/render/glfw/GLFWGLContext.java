@@ -45,9 +45,9 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         return this.glfwId;
     }
 
-    GLFWFrame.Creator create(GLFWFrame frame) {
+    GLFWFrame.Creator create(GLFWFrame frame, GLFWGLContext shared) {
         this.frame = frame;
-        GLFWFrame.Creator creator = new GLFWFrame.Creator(frame);
+        GLFWFrame.Creator creator = new GLFWFrame.Creator(frame, shared);
         creator.run();
         this.gl = LWJGLGLES.instance;
         this.glfwId = creator.glfwId;
@@ -57,6 +57,8 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
 
     @Override
     protected void cleanup0() throws GameException {
+        sharedContexts.remove(this);
+        if (parent != null) parent.contexts.remove(this);
         if (this.owned) {
             Threads.waitFor(this.owner.submit(() -> {
                 StateRegistry.removeContext(this);
@@ -66,6 +68,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             this.owner = null;
         }
         GLFW.glfwDestroyWindow(this.glfwId);
+        if (!frame.cleanedUp()) frame.cleanup();
     }
 
     synchronized void beginCreationShared() throws GameException {
@@ -113,7 +116,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
         Threads.waitFor(frame.launcher().getGLFWThread().submit(() -> {
             GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
-            ctx.create(f2);
+            ctx.create(f2, this);
             f2.renderThread.start();
         }));
         for (GLFWGLContext c : ctx.sharedContexts) {
@@ -137,11 +140,13 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         return gl;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public GLES32 gl32() {
         return gl;
     }
 
+    @Override
     public synchronized void makeCurrent() {
         if (!this.owned) {
             this.owned = true;
@@ -149,9 +154,9 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             StateRegistry.currentContext(this);
             GLFW.glfwMakeContextCurrent(glfwId);
             GLES.createCapabilities();
+            //noinspection deprecation
             gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
-            GLUtil.setupDebugMessageCallback(
-                    GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+            GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
         }
     }
 }

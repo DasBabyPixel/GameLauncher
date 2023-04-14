@@ -18,8 +18,9 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.keybind.Keybind;
-import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
-import gamelauncher.engine.util.keybind.KeyboardKeybindEntry.Type;
+import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
+import gamelauncher.engine.util.keybind.KeyboardKeybindEvent.Type;
+import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.engine.util.math.Math;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESGameRenderer;
@@ -37,6 +38,8 @@ import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
 import gamelauncher.lwjgl.render.glfw.GLUtil;
 import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
+import gamelauncher.lwjgl.util.LWJGLAnsiProvider;
+import gamelauncher.lwjgl.util.LWJGLExecutorThreadHelper;
 import gamelauncher.lwjgl.util.LWJGLMemoryManagement;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.profiler.GLSectionHandler;
@@ -63,6 +66,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     public LWJGLGameLauncher() throws GameException {
         this.memoryManagement = new LWJGLMemoryManagement();
         this.gles = new GLES(this, this.memoryManagement, new LWJGLGLFactory(this));
+        this.executorThreadHelper(new LWJGLExecutorThreadHelper());
         this.contextProvider(new GLESContextProvider(gles, this));
         this.keybindManager(new LWJGLKeybindManager(this));
         this.resourceLoader(new SimpleResourceLoader(this));
@@ -85,6 +89,11 @@ public class LWJGLGameLauncher extends GameLauncher {
         }
 
         this.mouseMovement(false);
+    }
+
+    @Override
+    public AnsiProvider ansi() {
+        return new LWJGLAnsiProvider();
     }
 
     @Override
@@ -135,8 +144,8 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         Keybind keybind = keybindManager().getKeybind(GLFW.GLFW_KEY_F11);
         keybind.addHandler(entry -> {
-            if (entry instanceof KeyboardKeybindEntry) {
-                KeyboardKeybindEntry e = (KeyboardKeybindEntry) entry;
+            if (entry instanceof KeyboardKeybindEvent) {
+                KeyboardKeybindEvent e = (KeyboardKeybindEvent) entry;
                 if (e.type() == Type.PRESS)
                     mainFrame.fullscreen().setValue(!mainFrame.fullscreen().booleanValue());
             }
@@ -151,8 +160,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         // this.asyncUploader.cleanup();
         // Threads.waitFor(this.mainFrame.destroy());
-        if (!this.mainFrame.cleanedUp())
-            this.mainFrame.cleanup();
+        this.mainFrame.cleanup();
         Threads.waitFor(this.glfwThread.exit());
     }
 
@@ -169,11 +177,6 @@ public class LWJGLGameLauncher extends GameLauncher {
     @Override
     public LWJGLGuiManager guiManager() {
         return (LWJGLGuiManager) super.guiManager();
-    }
-
-    @Override
-    public GLESGameRenderer gameRenderer() {
-        return (GLESGameRenderer) super.gameRenderer();
     }
 
     private void mouseMovement(boolean movement) {

@@ -17,7 +17,7 @@ public class GLES {
         this.launcher = launcher;
         this.memoryManagement = memoryManagement;
         this.glFactory = glFactory;
-        this.textureManager = new GLESTextureManager(this);
+        this.textureManager = new GLESTextureManager(launcher, this);
     }
 
     public MemoryManagement memoryManagement() {

@@ -10,7 +10,7 @@ tasks.withType(JavaCompile).configureEach {
 dependencies {
     api libs.disruptor
     api libs.annotations
-    api libs.jansi
+    api libs.pixelannotations
     api libs.fastutil
     api libs.guava
     api libs.property

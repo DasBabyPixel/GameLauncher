@@ -5,6 +5,6 @@ package gamelauncher.engine.util.keybind;
  */
 public interface KeybindHandler {
 
-	void handle(KeybindEntry entry);
-	
+    void handle(KeybindEvent entry);
+
 }

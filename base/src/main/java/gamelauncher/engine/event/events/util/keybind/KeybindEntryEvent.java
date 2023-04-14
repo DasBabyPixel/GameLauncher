@@ -1,27 +1,23 @@
 package gamelauncher.engine.event.events.util.keybind;
 
 import gamelauncher.engine.event.Event;
-import gamelauncher.engine.util.keybind.KeybindEntry;
+import gamelauncher.engine.util.keybind.KeybindEvent;
 
 /**
  * @author DasBabyPixel
- *
  */
 public class KeybindEntryEvent extends Event {
 
-	private final KeybindEntry entry;
+    private final KeybindEvent entry;
 
-	/**
-	 * @param entry
-	 */
-	public KeybindEntryEvent(KeybindEntry entry) {
-		this.entry = entry;
-	}
+    public KeybindEntryEvent(KeybindEvent entry) {
+        this.entry = entry;
+    }
 
-	/**
-	 * @return the KeybindEntry of the event
-	 */
-	public KeybindEntry entry() {
-		return entry;
-	}
+    /**
+     * @return the KeybindEntry of the event
+     */
+    public KeybindEvent entry() {
+        return entry;
+    }
 }

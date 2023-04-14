@@ -7,6 +7,7 @@
 
 package gamelauncher.gles.texture;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.render.texture.TextureManager;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -22,18 +23,22 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GLESTextureManager extends AbstractGameResource implements TextureManager {
 
     public final ExecutorThreadService service;
-
     public final GLES gles;
-
     public final ContextLocal<CLTextureUtility> clTextureUtility;
     private final Lock lock = new ReentrantLock(true);
     private Frame frame;
+    private final GameLauncher launcher;
 
-    public GLESTextureManager(GLES gles) {
+    public GLESTextureManager(GameLauncher launcher, GLES gles) {
+        this.launcher = launcher;
         this.gles = gles;
         this.clTextureUtility = CLTextureUtility.local(gles);
         this.service = gles.launcher().threads().workStealing;
         this.frame = null;
+    }
+
+    public GameLauncher launcher() {
+        return launcher;
     }
 
     @Override

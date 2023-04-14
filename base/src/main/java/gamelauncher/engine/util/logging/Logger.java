@@ -25,6 +25,43 @@ public abstract class Logger {
     }
 
     /**
+     * @return {@link Logger}
+     */
+    public static Logger logger() {
+        StackTraceElement[] st = Thread.currentThread().getStackTrace();
+        StackTraceElement caller = null;
+        String cname = Logger.class.getName();
+        boolean next = false;
+        for (StackTraceElement t : st) {
+            if (t.getClassName().equals(cname)) {
+                next = true;
+            } else if (next) {
+                next = false;
+                caller = t;
+            }
+        }
+        assert caller != null;
+        int index = caller.getClassName().lastIndexOf('.');
+        return Logger.logger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
+    }
+
+    /**
+     * * @param clazz
+     * * @return {@link Logger}
+     */
+    public static Logger logger(Class<?> clazz) {
+        return Logger.logger(clazz.getSimpleName());
+    }
+
+    /**
+     * @param name
+     * @return {@link Logger}
+     */
+    public static Logger logger(String name) {
+        return new SimpleLogger(name);
+    }
+
+    /**
      * @param message
      */
     public void info(Object message) {
@@ -119,43 +156,6 @@ public abstract class Logger {
      * @return the {@link PrintStream}
      */
     public abstract PrintStream createPrintStream(LogLevel level);
-
-    /**
-     * @return {@link Logger}
-     */
-    public static Logger logger() {
-        StackTraceElement[] st = Thread.currentThread().getStackTrace();
-        StackTraceElement caller = null;
-        String cname = Logger.class.getName();
-        boolean next = false;
-        for (StackTraceElement t : st) {
-            if (t.getClassName().equals(cname)) {
-                next = true;
-            } else if (next) {
-                next = false;
-                caller = t;
-            }
-        }
-        assert caller != null;
-        int index = caller.getClassName().lastIndexOf('.');
-        return Logger.logger(caller.getClassName().substring(index == -1 ? 0 : index + 1));
-    }
-
-    /**
-     * * @param clazz
-     * * @return {@link Logger}
-     */
-    public static Logger logger(Class<?> clazz) {
-        return Logger.logger(clazz.getSimpleName());
-    }
-
-    /**
-     * @param name
-     * @return {@link Logger}
-     */
-    public static Logger logger(String name) {
-        return new SimpleLogger(name, Logger.asyncLogStream);
-    }
 
     public static class Initializer {
         public static void init(GameLauncher launcher) {

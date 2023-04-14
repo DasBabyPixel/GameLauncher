@@ -11,6 +11,7 @@ import gamelauncher.gles.util.MemoryManagement;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class AndroidMemoryManagement implements MemoryManagement {
     @Override
@@ -25,12 +26,12 @@ public class AndroidMemoryManagement implements MemoryManagement {
 
     @Override
     public ByteBuffer allocDirect(int size) {
-        return ByteBuffer.allocateDirect(size);
+        return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
     @Override
     public ByteBuffer callocDirect(int size) {
-        return ByteBuffer.allocateDirect(size);
+        return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
     @Override

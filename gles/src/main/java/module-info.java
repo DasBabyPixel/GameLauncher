@@ -13,4 +13,6 @@ module gamelauncher.gles {
     exports gamelauncher.gles.font.bitmap;
     exports gamelauncher.gles.shader;
     exports gamelauncher.gles.modelloader;
+    
+    opens shaders.hud;
 }

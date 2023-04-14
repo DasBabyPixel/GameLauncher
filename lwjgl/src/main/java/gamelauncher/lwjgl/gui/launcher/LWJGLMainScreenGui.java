@@ -7,12 +7,11 @@ import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.gui.guis.GuiContainer;
 import gamelauncher.engine.gui.launcher.MainScreenGui;
 import gamelauncher.engine.gui.launcher.ScrollGui;
-import gamelauncher.engine.render.Framebuffer;
-import gamelauncher.engine.render.font.Font;
+import gamelauncher.engine.gui.launcher.TextureGui;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.keybind.KeybindEntry;
-import gamelauncher.engine.util.keybind.KeyboardKeybindEntry;
-import gamelauncher.engine.util.keybind.MouseButtonKeybindEntry;
+import gamelauncher.engine.util.keybind.KeybindEvent;
+import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
+import gamelauncher.engine.util.keybind.MouseButtonKeybindEvent;
 import gamelauncher.engine.util.text.Component;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 
@@ -23,79 +22,82 @@ import java.util.stream.Collectors;
  */
 public class LWJGLMainScreenGui extends ParentableAbstractGui implements MainScreenGui {
 
-	public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
-		super(launcher);
+    public LWJGLMainScreenGui(LWJGLGameLauncher launcher) throws GameException {
+        super(launcher);
 
-		GuiContainer container = new GuiContainer(launcher);
+        GuiContainer container = new GuiContainer(launcher);
 
-		NumberValue spacing = NumberValue.withValue(5);
-		NumberValue currentY = null;
-		GameGui ogui = null;
+        NumberValue spacing = NumberValue.withValue(5);
+        NumberValue currentY = null;
+        GameGui ogui = null;
 
-		for (Game game : launcher.gameRegistry().games().stream().sorted()
-				.collect(Collectors.toList())) {
-			GameGui gui = new GameGui(game);
-			if (currentY == null) {
-				currentY = container.yProperty();
-			} else {
-				currentY = ogui.yProperty().add(ogui.heightProperty()).add(spacing);
-			}
-			gui.yProperty().bind(currentY);
-			gui.xProperty().bind(container.xProperty());
-			gui.height(80);
-			gui.width(600);
-			container.addGui(gui);
-			ogui = gui;
-		}
+        for (Game game : launcher.gameRegistry().games().stream().sorted().collect(Collectors.toList())) {
+            GameGui gui = new GameGui(game);
+            if (currentY == null) {
+                currentY = container.yProperty();
+            } else {
+                currentY = ogui.yProperty().add(ogui.heightProperty()).add(spacing);
+            }
+            gui.yProperty().bind(currentY);
+            gui.xProperty().bind(container.xProperty());
+            gui.height(80);
+            gui.width(600);
+            container.addGui(gui);
+            ogui = gui;
+        }
 
-		ScrollGui scrollGui = launcher.guiManager().createGui(ScrollGui.class);
-		scrollGui.gui().setValue(container);
-		scrollGui.xProperty().bind(xProperty());
-		scrollGui.yProperty().bind(yProperty());
-		scrollGui.widthProperty().bind(widthProperty());
-		scrollGui.heightProperty().bind(heightProperty());
+        ScrollGui scrollGui = launcher.guiManager().createGui(ScrollGui.class);
+        scrollGui.gui().setValue(container);
+        scrollGui.xProperty().bind(xProperty());
+        scrollGui.yProperty().bind(yProperty());
+        scrollGui.widthProperty().bind(widthProperty());
+        scrollGui.heightProperty().bind(heightProperty());
 
-		this.GUIs.add(scrollGui);
-	}
+        this.GUIs.add(scrollGui);
 
-	@Override
-	protected boolean doHandle(KeybindEntry entry) throws GameException {
-		if (entry instanceof KeyboardKeybindEntry) {
-			KeyboardKeybindEntry e = (KeyboardKeybindEntry) entry;
-			e.keybind().uniqueId();
-		}
-		return super.doHandle(entry);
-	}
+        TextureGui textureGui = launcher.guiManager().createGui(TextureGui.class);
+        textureGui.texture().uploadAsync(launcher.resourceLoader().resource(launcher.embedFileSystem().getPath("pixel64x64.png")).newResourceStream());
+        textureGui.heightProperty().bind(heightProperty());
+        textureGui.widthProperty().bind(heightProperty());
+        textureGui.xProperty().bind(xProperty().add(widthProperty().subtract(textureGui.widthProperty()).divide(2)));
+        textureGui.yProperty().bind(yProperty());
+        GUIs.addFirst(textureGui);
+    }
 
-	@Override
-	protected void doCleanup(Framebuffer framebuffer) throws GameException {
-	}
+    @Override
+    protected boolean doHandle(KeybindEvent entry) throws GameException {
+        if (entry instanceof KeyboardKeybindEvent) {
+            KeyboardKeybindEvent e = (KeyboardKeybindEvent) entry;
+            e.keybind().uniqueId();
+        }
+        return super.doHandle(entry);
+    }
 
-	private class GameGui extends ParentableAbstractGui {
+    private class GameGui extends ParentableAbstractGui {
 
-		public GameGui(Game game) throws GameException {
-			super(LWJGLMainScreenGui.this.launcher());
-			ButtonGui buttonGui = new ButtonGui(launcher()) {
+        public GameGui(Game game) throws GameException {
+            super(LWJGLMainScreenGui.this.launcher());
+            ButtonGui buttonGui = new ButtonGui(launcher()) {
 
-				@Override
-				protected void buttonPressed(MouseButtonKeybindEntry e) {
-					try {
-						game.launch(this.framebuffer);
-					} catch (GameException ex) {
-						ex.printStackTrace();
-					}
-				}
+                @Override
+                protected void buttonPressed(MouseButtonKeybindEvent e) {
+                    try {
+                        game.launch(this.framebuffer);
+                    } catch (GameException ex) {
+                        ex.printStackTrace();
+                    }
+                }
 
-			};
-			buttonGui.text().setValue(Component.text(game.key().key()));
+            };
+            buttonGui.text().setValue(Component.text(game.key().key()));
 
-			buttonGui.xProperty().bind(this.xProperty());
-			buttonGui.yProperty().bind(this.yProperty());
-			buttonGui.widthProperty().bind(this.widthProperty());
-			buttonGui.heightProperty().bind(this.heightProperty());
-			this.GUIs.add(buttonGui);
-		}
+            buttonGui.xProperty().bind(this.xProperty());
+            buttonGui.yProperty().bind(this.yProperty());
+            buttonGui.widthProperty().bind(this.widthProperty());
+            buttonGui.heightProperty().bind(this.heightProperty());
+            this.GUIs.add(buttonGui);
+        }
 
-	}
+    }
 
 }

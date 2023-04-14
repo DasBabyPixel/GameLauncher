@@ -51,6 +51,10 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         });
     }
 
+    public Map<GLESTexture, Collection<AtlasEntry>> byTexture() {
+        return byTexture;
+    }
+
     private static boolean intersects(Vector4i v1, Vector4i v2) {
         int tw = v1.z;
         int th = v1.w;
@@ -191,7 +195,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                 });
                 //					e.texture.write();
                 //					e.texture.write();
-            }, launcher.threads().workStealing.executor());
+            }, launcher.threads().cached.executor());
             byTexture.get(e.texture).add(e);
             glyphs.put(glyphId, e);
             return new AddFuture(true, glf);

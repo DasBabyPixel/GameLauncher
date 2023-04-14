@@ -16,7 +16,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
-import gamelauncher.engine.util.keybind.KeybindEntry;
+import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.gui.launcher.*;
@@ -186,7 +186,7 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
 
     @EventHandler
     private void handle(KeybindEntryEvent event) {
-        KeybindEntry entry = event.entry();
+        KeybindEvent entry = event.entry();
         // TODO: Gui Selection - not relevant with only one gui being able to be opened
         // in this guimanager
         this.guis.values().forEach(stack -> {
@@ -201,8 +201,8 @@ public class LWJGLGuiManager extends AbstractGameResource implements GuiManager 
         });
     }
 
-	//	private boolean isExitKeybind(KeybindEntry entry) {
+    //	private boolean isExitKeybind(KeybindEntry entry) {
     //
-	//	}
+    //	}
 
 }

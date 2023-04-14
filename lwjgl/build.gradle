@@ -27,6 +27,7 @@ dependencies {
     api parent.project('api')
     api parent.project('gles')
     api libs.bundles.netty
+    api libs.jansi
 
     var lwjgl = libs.versions.lwjgl.get()
 

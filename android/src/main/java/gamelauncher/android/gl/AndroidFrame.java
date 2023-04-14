@@ -8,8 +8,6 @@
 package gamelauncher.android.gl;
 
 import android.opengl.EGL14;
-import android.os.Handler;
-import android.os.Looper;
 import de.dasbabypixel.api.property.BooleanValue;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
@@ -39,7 +37,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         this.launcher = launcher;
         this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, EGL14.eglGetCurrentDisplay(), EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW), EGL14.eglGetCurrentContext(), AndroidGLES.instance());
         this.fullscreen = BooleanValue.trueValue();
-        this.renderThread = new AndroidNativeRenderThread(this, new Handler(Looper.getMainLooper()));
+        this.renderThread = new AndroidNativeRenderThread(this);
         this.framebuffer = new AndroidFrameFramebuffer(this);
         this.manualFramebuffer = new ManualQueryFramebuffer(framebuffer);
         this.input = new AndroidInput(launcher);
@@ -49,10 +47,12 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         this.launcher = launcher;
         this.context = context;
         this.fullscreen = BooleanValue.falseValue();
-        this.renderThread = new AndroidRenderThread(this);
+        AndroidRenderThread r = new AndroidRenderThread(this);
+        this.renderThread = r;
         this.framebuffer = new AndroidFrameFramebuffer(this);
         this.manualFramebuffer = new ManualQueryFramebuffer(framebuffer);
         this.input = new AndroidInput(launcher);
+        r.start();
     }
 
     @Override
@@ -82,6 +82,9 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
 
     @Override
     public void frameRenderer(FrameRenderer renderer) {
+        if (this == launcher.frame() && renderer != launcher.gameRenderer()) {
+            throw new UnsupportedOperationException("Please set the renderer via GameLauncher#gameRenderer to preserve a consistent state");
+        }
         this.frameRenderer = renderer;
     }
 

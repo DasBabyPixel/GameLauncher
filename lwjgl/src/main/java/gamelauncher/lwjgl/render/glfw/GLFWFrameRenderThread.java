@@ -63,7 +63,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
             }
         }
         this.frame.launcher.glThreadGroup().terminated(this);
-        if (this.cleanupContextOnExit) {
+        if (this.cleanupContextOnExit && !this.frame.context.cleanedUp()) {
             this.frame.context.cleanup();
         } else {
             this.frame.context.destroyCurrent();
@@ -71,18 +71,16 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
     }
 
     @Override
-    protected void workExecution() throws GameException {
+    protected void workExecution() {
         this.frame.manualFramebuffer.query();
         if (this.draw || this.frame.renderMode() == RenderMode.CONTINUOUSLY) {
             this.lock();
             boolean refresh = this.drawRefresh;
-            if (refresh)
-                this.drawRefresh = false;
+            if (refresh) this.drawRefresh = false;
             this.draw = false;
             this.unlock();
             this.frame(FrameType.RENDER, !refresh);
-            if (refresh)
-                this.frame(FrameType.REFRESH, true);
+            if (refresh) this.frame(FrameType.REFRESH, true);
         }
         if (this.refresh) {
             this.lock();
@@ -209,8 +207,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
     }
 
     private void lock() {
-        while (!this.modifying.compareAndSet(false, true))
-            Thread.yield();
+        while (!this.modifying.compareAndSet(false, true)) Thread.yield();
     }
 
     private void unlock() {

@@ -20,6 +20,7 @@ import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.gl.GLES32;
 import gamelauncher.gles.gl.*;
+import gamelauncher.gles.states.StateRegistry;
 
 import java.util.Collection;
 
@@ -33,21 +34,30 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
     private EGLDisplay display;
     private EGLSurface surface;
     private EGLContext context;
-    private GLES32 gl;
+    private GLES31 gl;
 
     public AndroidGLContext(AndroidGameLauncher launcher, Collection<AndroidGLContext> sharedContexts) {
         this.launcher = launcher;
         this.sharedContexts = sharedContexts;
+        this.sharedContexts.add(this);
     }
 
-    public AndroidGLContext(Collection<AndroidGLContext> sharedContexts, AndroidGameLauncher launcher, AndroidFrame frame, EGLDisplay display, EGLSurface surface, EGLContext context, GLES32 gl) {
+    public AndroidGLContext(Collection<AndroidGLContext> sharedContexts, AndroidGameLauncher launcher, AndroidFrame frame, EGLDisplay display, EGLSurface surface, EGLContext context, GLES31 gl) {
         this.sharedContexts = sharedContexts;
+        this.sharedContexts.add(this);
         this.launcher = launcher;
         this.frame = frame;
         this.display = display;
         this.surface = surface;
         this.context = context;
         this.gl = gl;
+        StateRegistry.addContext(this);
+    }
+
+    public void recreate(EGLDisplay display, EGLSurface surface, EGLContext context) {
+        this.display = display;
+        this.surface = surface;
+        this.context = context;
     }
 
     @Override
@@ -59,6 +69,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         EGLDisplay dpy = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
         int[] vers = new int[2];
         EGL14.eglInitialize(dpy, vers, 0, vers, 1);
+        java.util.logging.Logger.getGlobal().severe("OpenGL: " + vers[0] + "." + vers[1]);
         int[] configAttr = {EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER, EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT, EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE};
         EGLConfig[] configs = new EGLConfig[1];
         int[] numConfig = new int[1];
@@ -69,17 +80,20 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         EGLConfig config = configs[0];
         int[] surfAttr = {EGL14.EGL_WIDTH, 1, EGL14.EGL_HEIGHT, 1, EGL14.EGL_NONE};
         EGLSurface surf = EGL14.eglCreatePbufferSurface(dpy, config, surfAttr, 0);
-        int[] ctxAttrib = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE};
-        EGLContext ctx = EGL14.eglCreateContext(dpy, config, EGL14.EGL_NO_CONTEXT, ctxAttrib, 0);
+        int[] ctxAttrib = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE};
+        EGLContext ctx = EGL14.eglCreateContext(dpy, config, context == null ? EGL14.EGL_NO_CONTEXT : context.context, ctxAttrib, 0);
         this.display = dpy;
         this.surface = surf;
         this.context = ctx;
         this.gl = AndroidGLES.instance();
+        this.frame = new AndroidFrame(launcher, this);
+        StateRegistry.addContext(this);
         return this;
     }
 
     @Override
     protected void cleanup0() {
+        this.sharedContexts.remove(this);
         EGL14.eglDestroySurface(display, surface);
         EGL14.eglDestroyContext(display, context);
         display = null;
@@ -90,10 +104,12 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
     @Override
     public void makeCurrent() {
         EGL14.eglMakeCurrent(display, surface, surface, context);
+        StateRegistry.currentContext(this);
     }
 
     @Override
     public void destroyCurrent() {
+        StateRegistry.currentContext(null);
         EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
     }
 
@@ -118,7 +134,8 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
     }
 
     @Override
+    @Deprecated
     public GLES32 gl32() {
-        return gl;
+        return null;
     }
 }

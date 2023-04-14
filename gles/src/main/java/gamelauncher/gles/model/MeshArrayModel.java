@@ -4,7 +4,7 @@ import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.gles.gl.GLES32;
+import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.mesh.Mesh;
 import gamelauncher.gles.states.StateRegistry;
 
@@ -28,7 +28,7 @@ public class MeshArrayModel extends AbstractGameResource implements Model {
 
     @Override
     public void render(ShaderProgram program) throws GameException {
-        GLES32 gl = StateRegistry.currentGl();
+        GLES31 gl = StateRegistry.currentGl();
         for (Mesh mesh : this.meshes) {
             if (mesh.material() != null) {
                 program.umaterial.set(mesh.material());

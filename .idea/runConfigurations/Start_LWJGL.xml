@@ -2,7 +2,9 @@
   <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="gamelauncher.lwjgl.main" />
-    <option name="PROGRAM_PARAMETERS" value="externalPlugin:../orbits/build/classes/java/main externalPlugin:../example/build/classes/java/main externalPlugin:../labyrinth/build/classes/java/main" />
+    <selectedOptions>
+      <option name="environmentVariables" visible="false" />
+    </selectedOptions>
     <option name="VM_PARAMETERS" value="-DcalculateThreadStacks=true -Djansi.passthrough=true -ea" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <extension name="coverage">

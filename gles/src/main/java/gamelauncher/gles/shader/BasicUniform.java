@@ -24,6 +24,7 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
 
     private final int id;
     private final Type type;
+    private final ByteBuffer byteBuffer;
     private final IntBuffer intBuffer;
     private final FloatBuffer floatBuffer;
     private final AtomicBoolean hasValue = new AtomicBoolean(false);
@@ -34,9 +35,9 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
         this.memory = memory;
         this.type = type;
         int size = type.getSize();
-        ByteBuffer buffer = memory.alloc(size);
-        this.intBuffer = buffer.asIntBuffer();
-        this.floatBuffer = buffer.asFloatBuffer();
+        this.byteBuffer = memory.allocDirect(size);
+        this.intBuffer = this.byteBuffer.asIntBuffer();
+        this.floatBuffer = this.byteBuffer.asFloatBuffer();
     }
 
     @Override
@@ -58,6 +59,7 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
         //			}
         //		}
         //		if (hasValue.compareAndSet(true, false)) {
+
         switch (this.type) {
             case FLOAT1:
                 c.glUniform1fv(this.id, 1, this.floatBuffer);
@@ -152,7 +154,7 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
 
     @Override
     public Uniform clear() {
-        this.floatBuffer.clear();
+        this.byteBuffer.clear();
         this.hasValue.set(false);
         return this;
     }

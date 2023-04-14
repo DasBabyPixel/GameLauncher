@@ -11,7 +11,6 @@ dependencyResolutionManagement {
     repositories {
         maven {
             name 'DarkCube'
-            credentials PasswordCredentials
             url 'https://nexus.darkcube.eu/repository/dasbabypixel/'
         }
         mavenCentral()
@@ -29,3 +28,4 @@ include('labyrinth')
 include('example')
 include('android')
 include('gles')
+include('android:app')

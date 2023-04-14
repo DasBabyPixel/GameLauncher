@@ -717,7 +717,7 @@ public class LWJGLGLES implements gamelauncher.gles.gl.GLES32 {
 
     @Override
     public void glReadPixels(int x, int y, int width, int height, int format, int type, Buffer pixels) {
-        throw new LazyException();
+        GLES32.glReadPixels(x, y, width, height, format, type, memAddress(pixels));
     }
 
     @Override

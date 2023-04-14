@@ -560,6 +560,7 @@ public interface GLES30 extends GLES20 {
     /**
      * @deprecated Use the version that takes a ByteBuffer as the last argument, or the versions that return a String.
      */
+    @Deprecated
     void glGetTransformFeedbackVarying(int program, int index, int bufsize, java.nio.IntBuffer length, java.nio.IntBuffer size, java.nio.IntBuffer type, byte name);
 
     // C function void glGetTransformFeedbackVarying ( GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name )

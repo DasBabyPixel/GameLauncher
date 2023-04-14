@@ -7,42 +7,38 @@ import java.io.PrintStream;
  */
 public class SimpleLogger extends Logger {
 
-	private int level = 0;
+    private final String name;
+    private int level = LogLevel.DEBUG.level();
 
-	private final String name;
+    public SimpleLogger(String name) {
+        this.name = name;
+    }
 
-	private final AsyncLogStream logStream;
+    @Override
+    public boolean shouldDisplay(LogLevel level) {
+        return level.level() >= this.level;
+    }
 
-	public SimpleLogger(String name, AsyncLogStream stream) {
-		this.name = name;
-		this.logStream = stream;
-	}
+    @Override
+    public void log0(LogLevel level, Formatted message) {
+        if (this.shouldDisplay(level)) {
+            Logger.asyncLogStream().offerLog(this, level, message);
+        }
+    }
 
-	@Override
-	public boolean shouldDisplay(LogLevel level) {
-		return level.level() >= this.level;
-	}
+    @Override
+    public PrintStream createPrintStream() {
+        return this.createPrintStream(LogLevel.STDOUT);
+    }
 
-	@Override
-	public void log0(LogLevel level, Formatted message) {
-		if (this.shouldDisplay(level)) {
-			this.logStream.offerLog(this, level, message);
-		}
-	}
+    @Override
+    public PrintStream createPrintStream(LogLevel level) {
+        return new CallerPrintStream(level, Logger.asyncLogStream());
+    }
 
-	@Override
-	public PrintStream createPrintStream() {
-		return this.createPrintStream(LogLevel.STDOUT);
-	}
-
-	@Override
-	public PrintStream createPrintStream(LogLevel level) {
-		return new CallerPrintStream(level, this.logStream);
-	}
-
-	@Override
-	public String toString() {
-		return this.name;
-	}
+    @Override
+    public String toString() {
+        return this.name;
+    }
 
 }

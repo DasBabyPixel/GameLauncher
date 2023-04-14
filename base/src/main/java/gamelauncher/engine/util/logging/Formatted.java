@@ -1,22 +1,22 @@
 package gamelauncher.engine.util.logging;
 
-class Formatted {
+public class Formatted {
 
-	private final String format;
+    private final String format;
 
-	private final Object[] objects;
+    private final Object[] objects;
 
-	public Formatted(String format, Object... objects) {
-		this.format = format;
-		this.objects = objects;
-	}
+    public Formatted(String format, Object... objects) {
+        this.format = format;
+        this.objects = objects;
+    }
 
-	public String getFormat() {
-		return this.format;
-	}
+    public String getFormat() {
+        return this.format;
+    }
 
-	public Object[] getObjects() {
-		return this.objects;
-	}
+    public Object[] getObjects() {
+        return this.objects;
+    }
 
 }

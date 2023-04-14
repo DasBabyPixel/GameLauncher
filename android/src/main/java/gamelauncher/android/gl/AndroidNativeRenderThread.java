@@ -7,18 +7,26 @@
 
 package gamelauncher.android.gl;
 
-import android.os.Handler;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.ThreadSpecificExecutor;
 import gamelauncher.engine.util.function.GameRunnable;
 
 import java.util.concurrent.CompletableFuture;
 
 public class AndroidNativeRenderThread implements IAndroidRenderThread {
     private final AndroidFrame frame;
-    private final Handler handler;
+    private volatile ThreadSpecificExecutor executor;
 
-    public AndroidNativeRenderThread(AndroidFrame frame, Handler handler) {
+    public AndroidNativeRenderThread(AndroidFrame frame) {
         this.frame = frame;
-        this.handler = handler;
+    }
+
+    public ThreadSpecificExecutor executor() {
+        return executor;
+    }
+
+    public void executor(ThreadSpecificExecutor executor) {
+        this.executor = executor;
     }
 
     @Override
@@ -48,15 +56,27 @@ public class AndroidNativeRenderThread implements IAndroidRenderThread {
 
     @Override
     public CompletableFuture<Void> submitLast(GameRunnable runnable) {
-        CompletableFuture<Void> fut = new CompletableFuture<>();
-        if (!handler.post(() -> {
+        if (executor.isCurrentThread()) {
             try {
-                runnable.toRunnable().run();
+                runnable.run();
+            } catch (GameException e) {
+                CompletableFuture<Void> f = new CompletableFuture<>();
+                f.completeExceptionally(e);
+                return f;
+            }
+            return CompletableFuture.completedFuture(null);
+        }
+        CompletableFuture<Void> fut = new CompletableFuture<>();
+        if (!executor.post(() -> {
+            try {
+                runnable.run();
+            } catch (Throwable t) {
+                fut.completeExceptionally(t);
             } finally {
                 fut.complete(null);
             }
         })) {
-            fut.complete(null);
+            fut.completeExceptionally(new Throwable("Failed to submit task"));
         }
         return fut;
     }

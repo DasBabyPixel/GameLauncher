@@ -3,7 +3,7 @@ package gamelauncher.lwjgl.util.keybind;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
-import gamelauncher.engine.util.keybind.KeybindEntry;
+import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.KeybindHandler;
 import gamelauncher.engine.util.keybind.KeybindManager;
 
@@ -37,7 +37,7 @@ public class LWJGLKeybind extends AbstractGameResource implements Keybind {
     }
 
     @Override
-    public void handle(KeybindEntry entry) {
+    public void handle(KeybindEvent entry) {
         for (KeybindHandler handler : handlers) {
             handler.handle(entry);
         }
