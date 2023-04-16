@@ -2,7 +2,7 @@ package gamelauncher.gles;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.GuiRenderer;
-import gamelauncher.engine.gui.launcher.MainScreenGui;
+import gamelauncher.engine.gui.guis.MainScreenGui;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -27,7 +27,7 @@ public class GLESGameRenderer implements GameRenderer {
     private final Map<Frame, Entry> map = new ConcurrentHashMap<>();
     private final GLES gles;
     private final GameLauncher launcher;
-    private final GLESStates GLESStates = new GLESStates();
+    private final GLESStates states = new GLESStates();
 
     public GLESGameRenderer(GLES gles) {
         this.gles = gles;
@@ -91,12 +91,11 @@ public class GLESGameRenderer implements GameRenderer {
         }
 
         public void init() throws GameException {
-            GLESStates.depth.enabled.value.set(true);
-            GLESStates.depth.depthFunc.set(GLES20.GL_LEQUAL);
-            GLESStates.blend.enabled.value.set(true);
-            GLESStates.blend.srcrgb.set(GLES20.GL_SRC_ALPHA);
-            GLESStates.blend.dstrgb.set(GLES20.GL_ONE_MINUS_SRC_ALPHA);
-            GLESStates.replace(null);
+            states.depth.enabled.value.set(true);
+            states.depth.depthFunc.set(GLES20.GL_LEQUAL);
+            states.blend.enabled.value.set(true);
+            states.blend.separate.set(true);
+            states.replace(null);
 
             this.mainFramebuffer = new BasicFramebuffer(gles,
                     this.frame.framebuffer().width().intValue(),

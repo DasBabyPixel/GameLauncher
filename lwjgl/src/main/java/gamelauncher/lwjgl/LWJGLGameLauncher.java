@@ -15,7 +15,6 @@ import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
@@ -64,6 +63,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() throws GameException {
+        this.operatingSystem(() -> "LWJGL");
         this.memoryManagement = new LWJGLMemoryManagement();
         this.gles = new GLES(this, this.memoryManagement, new LWJGLGLFactory(this));
         this.executorThreadHelper(new LWJGLExecutorThreadHelper());
@@ -76,7 +76,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         this.guiManager(new LWJGLGuiManager(this));
         this.fontFactory(new BasicFontFactory(gles, this));
         this.textureManager(gles.textureManager());
-        this.operatingSystem(OperatingSystem.WINDOWS);
+        gles.init();
         this.glThreadGroup = new GLESThreadGroup();
     }
 
@@ -98,7 +98,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 
     @Override
     protected void tick0() throws GameException {
-        this.mainFrame.input().handleInput();
         mouse:
         if (this.mouseMovement) {
             Camera cam = this.camera;

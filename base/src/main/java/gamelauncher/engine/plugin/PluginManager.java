@@ -7,6 +7,7 @@
 
 package gamelauncher.engine.plugin;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.io.Files;
 import gamelauncher.engine.util.GameException;
@@ -28,16 +29,15 @@ import java.util.stream.Collectors;
 /**
  * @author DasBabyPixel
  */
+@Api
 public class PluginManager {
 
     private static final Logger logger = Logger.logger();
-
-    private final GameLauncher launcher;
     final Map<String, PluginInfo> infos = new ConcurrentHashMap<>();
     final Collection<PluginClassLoader> loaders = ConcurrentHashMap.newKeySet();
     final Map<String, Class<?>> loadedClasses = new ConcurrentHashMap<>();
     final Lock classLoadingLock = new ReentrantLock();
-    final Lock pluginLoadLock = new ReentrantLock(true);
+    private final GameLauncher launcher;
 
     public PluginManager(GameLauncher launcher) {
         this.launcher = launcher;
@@ -46,9 +46,9 @@ public class PluginManager {
     /**
      * Loads all the plugins in a folder
      */
+    @Api
     public void loadPlugins(Path folder) throws GameException {
-        logger.debugf("Loading plugin files in folder %s",
-                folder.toAbsolutePath().normalize().toString());
+        logger.debugf("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
         DirectoryStream<Path> stream = Files.newDirectoryStream(folder);
         for (Path path : stream) {
             if (!Files.isDirectory(path)) {
@@ -65,9 +65,9 @@ public class PluginManager {
     /**
      * Loads plugins
      *
-     * @param plugins
-     * @throws GameException
+     * @param plugins the plugins to load
      */
+    @Api
     public void loadPlugins(Collection<Path> plugins) throws GameException {
         for (Path path : plugins) {
             loadPlugin(path);
@@ -80,25 +80,21 @@ public class PluginManager {
      * @param plugin the plugin to load
      * @throws GameException when some error happens
      */
+    @Api
     public void loadPlugin(Path plugin) throws GameException {
         logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
         try {
-            PluginClassLoader pcl =
-                    new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this,
-                            plugin.toUri().toURL());
+            PluginClassLoader pcl = new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this, plugin.toUri().toURL());
             Collection<Class<?>> pluginClasses = new HashSet<>();
             try (EntryInputStream ein = new EntryInputStream(plugin)) {
                 EntryInputStream.Entry e;
                 while (ein.hasNextEntry()) {
                     e = ein.nextEntry();
 
-                    if (!e.name().endsWith(".class") || e.name().startsWith("META-INF") || e.name()
-                            .equals("module-info.class")) {
+                    if (!e.name().endsWith(".class") || e.name().startsWith("META-INF") || e.name().equals("module-info.class")) {
                         continue;
                     }
-                    String className =
-                            e.name().substring(0, e.name().length() - 6).replace("\\", "/")
-                                    .replace("/", ".");
+                    String className = e.name().substring(0, e.name().length() - 6).replace("\\", "/").replace("/", ".");
                     Class<?> ocls = loadedClasses.get(className);
                     if (ocls != null) {
                         PluginClassLoader opcl = (PluginClassLoader) ocls.getClassLoader();
@@ -140,14 +136,34 @@ public class PluginManager {
                 try {
                     pl.onEnable();
                 } catch (GameException ex) {
-                    ex.printStackTrace();
+                    logger.error(new GameException("Failed to load plugin " + name, ex));
                 }
                 info.lock.unlock();
             }
-        } catch (IOException | ClassNotFoundException | InstantiationException |
-                 IllegalAccessException | IllegalArgumentException | InvocationTargetException |
-                 NoSuchMethodException | SecurityException ex) {
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException |
+                 IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
             throw new GameException(ex);
+        }
+    }
+
+    /**
+     * Used to load a plugin that alraedy has an instance.
+     */
+    @Api
+    public void loadPlugin(Plugin plugin) {
+        PluginInfo info = new PluginInfo(plugin.name());
+        try {
+            info.lock.lock();
+            plugin.launcher(launcher);
+            info.plugin.set(plugin);
+            try {
+                plugin.onEnable();
+            } catch (GameException e) {
+                logger.error(new GameException("Failed to enable plugin " + plugin.name(), e));
+            }
+            infos.put(plugin.name(), info);
+        } finally {
+            info.lock.unlock();
         }
     }
 
@@ -156,9 +172,9 @@ public class PluginManager {
      *
      * @throws GameException an exception
      */
+    @Api
     public void unloadPlugins() throws GameException {
-        for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get())
-                .collect(Collectors.toList())) {
+        for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).collect(Collectors.toList())) {
             unloadPlugin(plugin);
         }
     }
@@ -166,16 +182,24 @@ public class PluginManager {
     /**
      * Unloads a plugin
      *
-     * @param plugin
-     * @throws GameException
+     * @param plugin the plugin to unload
      */
+    @Api
     public void unloadPlugin(Plugin plugin) throws GameException {
         PluginInfo info = this.infos.get(plugin.name());
+        if (info == null) throw new IllegalArgumentException("Plugin not found!");
         PluginClassLoader pcl = info.loader.get();
-        try {
-            pcl.pmClose();
-        } catch (IOException ex) {
-            throw new GameException(ex);
+        if (pcl != null) {
+            try {
+                pcl.pmClose();
+            } catch (IOException ex) {
+                throw new GameException(ex);
+            }
+        } else {
+            info.lock.lock();
+            info.plugin.set(null);
+            plugin.onDisable();
+            info.lock.unlock();
         }
     }
 

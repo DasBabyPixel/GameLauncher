@@ -97,16 +97,16 @@ public class LWJGLInput implements Input {
             KeybindEvent event;
             switch (inputType) {
                 case HELD:
-                    event = new LWJGLMouseButtonKeybindEvent(keybind, mx, my, MouseButtonKeybindEvent.Type.HOLD);
+                    event = new LWJGLMouseButtonKeybindEvent(keybind, mouseButton, mx, my, MouseButtonKeybindEvent.Type.HOLD);
                     break;
                 case MOVE:
                     event = new LWJGLMouseMoveKeybindEvent(keybind, omx, omy, mx, my);
                     break;
                 case PRESSED:
-                    event = new LWJGLMouseButtonKeybindEvent(keybind, mx, my, MouseButtonKeybindEvent.Type.PRESS);
+                    event = new LWJGLMouseButtonKeybindEvent(keybind, mouseButton, mx, my, MouseButtonKeybindEvent.Type.PRESS);
                     break;
                 case RELEASED:
-                    event = new LWJGLMouseButtonKeybindEvent(keybind, mx, my, MouseButtonKeybindEvent.Type.RELEASE);
+                    event = new LWJGLMouseButtonKeybindEvent(keybind, mouseButton, mx, my, MouseButtonKeybindEvent.Type.RELEASE);
                     break;
                 default:
                     throw new UnsupportedOperationException();

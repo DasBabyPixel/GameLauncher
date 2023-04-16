@@ -23,6 +23,7 @@ public class AndroidKeybindManager extends AbstractGameResource implements Keybi
     public static final int BITS_UNKNOWN = 0b00000000_00000000_00000000_00000000;
     public static final int BITS_TOUCH = 0b10000000_00000000_00000000_00000000;
     public static final int BITS_KEY = 0b01000000_00000000_00000000_00000000;
+    public static final int BITS_CHARACTER = 0b00100000_00000000_00000000_00000000;
     private final GameLauncher launcher;
     private final Map<Integer, Keybind> keybinds = new ConcurrentHashMap<>();
     private final Map<Integer, String> names = new ConcurrentHashMap<>();
@@ -48,6 +49,8 @@ public class AndroidKeybindManager extends AbstractGameResource implements Keybi
                 }
             } else if ((k & BITS_TOUCH) == BITS_TOUCH) {
                 display = "Pointer " + (k - BITS_TOUCH);
+            } else if ((k & BITS_CHARACTER) == BITS_CHARACTER) {
+                display = Character.toString((char) (k - BITS_CHARACTER));
             }
             return new AndroidKeybind(display, k, this);
         });

@@ -23,6 +23,8 @@ switch (OperatingSystem.current()) {
         break
 }
 
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+
 dependencies {
     api parent.project('api')
     api parent.project('gles')

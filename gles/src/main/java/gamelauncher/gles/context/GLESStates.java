@@ -56,7 +56,7 @@ public class GLESStates {
         public final AtomicBoolean separate = new AtomicBoolean(false);
         public final AtomicInteger srcrgb = new AtomicInteger(GL_SRC_ALPHA);
         public final AtomicInteger dstrgb = new AtomicInteger(GL_ONE_MINUS_SRC_ALPHA);
-        public final AtomicInteger srcalpha = new AtomicInteger(GL_ONE);
+        public final AtomicInteger srcalpha = new AtomicInteger(GL_ONE_MINUS_DST_ALPHA);
         public final AtomicInteger dstalpha = new AtomicInteger(GL_ONE);
 
         public void applyValues() {

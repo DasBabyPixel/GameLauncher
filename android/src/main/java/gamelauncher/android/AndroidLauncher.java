@@ -5,10 +5,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowInsetsController;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.android.gl.AndroidFrame;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
 import gamelauncher.engine.util.GameException;
@@ -19,7 +19,6 @@ public class AndroidLauncher extends Activity {
 
     private Logger logger;
 
-    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         logger = Logger.logger();
@@ -37,7 +36,9 @@ public class AndroidLauncher extends Activity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         WindowInsetsControllerCompat windowInsetsController =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        getWindow().getDecorView().getWindowInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().getDecorView().getWindowInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
         Activity activity = this;
         try {
@@ -67,5 +68,9 @@ public class AndroidLauncher extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         System.exit(0);
+    }
+
+    @Api
+    public void init(AndroidGameLauncher launcher) {
     }
 }

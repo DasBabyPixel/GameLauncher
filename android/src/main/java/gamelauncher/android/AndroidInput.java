@@ -1,6 +1,7 @@
 package gamelauncher.android;
 
 import android.annotation.SuppressLint;
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,6 +29,8 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
     private final RingBuffer<QueueEntry> ringBuffer;
     private final EventPoller<QueueEntry> poller;
     private final AndroidKeybindManager keybindManager;
+    private boolean hasDeadChar = false;
+    private int deadChar;
 
     public AndroidInput(AndroidGameLauncher launcher) {
         this.keybindManager = launcher.keybindManager();
@@ -42,7 +45,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
             keybindManager.post(new AndroidKeyboardKeybindEvent(event.keybind(), KeyboardKeybindEvent.Type.HOLD));
         }
         for (Map.Entry<Integer, PointerEntry> entry : mousePressed.entrySet()) {
-            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.getKeybind(entry.getKey()), entry.getValue().x, entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
+            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.getKeybind(entry.getKey()), entry.getValue().buttonId, entry.getValue().x, entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
         }
         try {
             poller.poll((queueEvent, sequence, endOfBatch) -> {
@@ -76,18 +79,11 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                                 entry.y = y;
                                 entry.pressure = pressure;
                             }
-//                        PointerEntry entry = mousePressed.get(keybindId);
-//                        if (entry == null)  // Sometimes happens when user releases finger while moving it. Weirdness, just ignore this and we are fine
-//                            return true;
-//                        keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, entry.y, x, y));
-//                        entry.x = x;
-//                        entry.y = y;
-//                        entry.pressure = pressure;
                         } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-                            mousePressed.put(keybindId, new PointerEntry(x, y, pressure));
-                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, x, y, MouseButtonKeybindEvent.Type.PRESS));
+                            mousePressed.put(keybindId, new PointerEntry(id, x, y, pressure));
+                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.PRESS));
                         } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
-                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, x, y, MouseButtonKeybindEvent.Type.RELEASE));
+                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.RELEASE));
                             mousePressed.remove(keybindId);
                         }
                     } finally {
@@ -116,17 +112,35 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         this.ringBuffer.publishEvent((event, sequence, h) -> event.event = h, keybindEvent);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         keybindManager.lastKeyEvent = event;
-        Keybind keybind = keybindManager.getKeybind(keyCode | AndroidKeybindManager.BITS_KEY);
+        Keybind keybind = keyCode == 0 ? null : keybindManager.getKeybind(keyCode | AndroidKeybindManager.BITS_KEY);
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
                 offer(new AndroidKeyboardKeybindEvent(keybind, KeyboardKeybindEvent.Type.PRESS));
-                offer(new AndroidKeyboardKeybindEvent.Character(keybind, KeyboardKeybindEvent.Type.CHARACTER, (char) event.getUnicodeChar()));
-                break;
+                int c = event.getUnicodeChar();
+                if (hasDeadChar) {
+                    c = KeyCharacterMap.getDeadChar(deadChar, c);
+                }
+                if ((c & KeyCharacterMap.COMBINING_ACCENT) == KeyCharacterMap.COMBINING_ACCENT) {
+                    deadChar = (char) (c & KeyCharacterMap.COMBINING_ACCENT_MASK);
+                    hasDeadChar = true;
+                } else if (c != 0) {
+                    for (char ch : Character.toChars(c)) {
+                        offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.getKeybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
+                    }
+                    break;
+                }
             case KeyEvent.ACTION_UP:
                 offer(new AndroidKeyboardKeybindEvent(keybind, KeyboardKeybindEvent.Type.RELEASE));
+                break;
+            case KeyEvent.ACTION_MULTIPLE:
+                String s = event.getCharacters();
+                for (char ch : s.toCharArray()) {
+                    offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.getKeybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
+                }
                 break;
             default:
                 break;
@@ -166,10 +180,12 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
     }
 
     private static class PointerEntry {
+        private int buttonId;
         private float x, y;
         private float pressure;
 
-        public PointerEntry(float x, float y, float pressure) {
+        public PointerEntry(int buttonId, float x, float y, float pressure) {
+            this.buttonId = buttonId;
             this.x = x;
             this.y = y;
             this.pressure = pressure;

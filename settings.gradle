@@ -23,7 +23,6 @@ rootProject.name = 'gamelauncher'
 include('api')
 project(':api').projectDir = file('base')
 include('lwjgl')
-include('orbits')
 include('labyrinth')
 include('example')
 include('android')

@@ -1,6 +1,8 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 
 dependencies {
     api parent.project('api')

@@ -4,7 +4,6 @@ import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.ParentableAbstractGui;
-import gamelauncher.engine.gui.launcher.ColorGui;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.InterpolatedColor;
 import gamelauncher.engine.util.keybind.KeybindEvent;

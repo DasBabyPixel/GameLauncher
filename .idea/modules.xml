@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.androidTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/app/gamelauncher.android.app.main.iml" filepath="$PROJECT_DIR$/.idea/modules/android/app/gamelauncher.android.app.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.main.iml" filepath="$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/android/gamelauncher.android.unitTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/gles/gamelauncher.gles.main.iml" filepath="$PROJECT_DIR$/.idea/modules/gles/gamelauncher.gles.main.iml" />

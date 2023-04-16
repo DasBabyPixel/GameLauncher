@@ -1,14 +1,14 @@
 package gamelauncher.engine.gui.launcher;
 
 import de.dasbabypixel.api.property.NumberValue;
-import gamelauncher.engine.gui.LauncherBasedGui;
+import gamelauncher.engine.gui.Gui;
 
-public interface LineGui extends LauncherBasedGui {
-	NumberValue fromX();
+public interface LineGui extends Gui {
+    NumberValue fromX();
 
-	NumberValue fromY();
+    NumberValue fromY();
 
-	NumberValue toX();
+    NumberValue toX();
 
-	NumberValue toY();
+    NumberValue toY();
 }

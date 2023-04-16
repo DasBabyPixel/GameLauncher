@@ -3,7 +3,7 @@ package gamelauncher.labyrinth;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
-import gamelauncher.engine.gui.launcher.ColorGui;
+import gamelauncher.engine.gui.guis.ColorGui;
 import gamelauncher.engine.plugin.Plugin;
 import gamelauncher.engine.plugin.Plugin.GamePlugin;
 import gamelauncher.engine.render.*;

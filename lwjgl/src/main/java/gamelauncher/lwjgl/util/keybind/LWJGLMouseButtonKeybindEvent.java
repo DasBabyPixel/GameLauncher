@@ -8,20 +8,14 @@ import gamelauncher.engine.util.keybind.MouseButtonKeybindEvent;
  */
 public class LWJGLMouseButtonKeybindEvent extends AbstractKeybindEvent implements MouseButtonKeybindEvent {
 
+    private final int buttonId;
     private final float mouseX;
-
     private final float mouseY;
-
     private final Type type;
 
-    /**
-     * @param keybind
-     * @param mouseX
-     * @param mouseY
-     * @param type
-     */
-    public LWJGLMouseButtonKeybindEvent(Keybind keybind, float mouseX, float mouseY, Type type) {
+    public LWJGLMouseButtonKeybindEvent(Keybind keybind, int buttonId, float mouseX, float mouseY, Type type) {
         super(keybind);
+        this.buttonId = buttonId;
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.type = type;
@@ -43,8 +37,13 @@ public class LWJGLMouseButtonKeybindEvent extends AbstractKeybindEvent implement
     }
 
     @Override
+    public int buttonId() {
+        return buttonId;
+    }
+
+    @Override
     public MouseButtonKeybindEvent withType(Type type) {
-        return new LWJGLMouseButtonKeybindEvent(keybind(), mouseX, mouseY, type);
+        return new LWJGLMouseButtonKeybindEvent(keybind(), buttonId, mouseX, mouseY, type);
     }
 
     @Override

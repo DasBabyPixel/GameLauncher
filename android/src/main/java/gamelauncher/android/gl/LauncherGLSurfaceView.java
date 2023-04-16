@@ -9,15 +9,10 @@ package gamelauncher.android.gl;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.PixelFormat;
 import android.opengl.EGL14;
 import android.opengl.GLSurfaceView;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.inputmethod.InputMethodManager;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -28,19 +23,15 @@ import javax.microedition.khronos.egl.EGLDisplay;
 @SuppressLint("ViewConstructor")
 public class LauncherGLSurfaceView extends GLSurfaceView {
     private static final Logger logger = Logger.logger();
-    private GLRenderer renderer;
-    private Handler handler;
 
     @SuppressLint("ClickableViewAccessibility")
     public LauncherGLSurfaceView(AndroidGameLauncher launcher, Context context) {
         super(context);
         AndroidInput input = (AndroidInput) launcher.frame().input();
-        handler = new Handler(Looper.myLooper());
         setEGLContextFactory(new EGLContextFactory() {
             @Override
             public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
                 int[] attrib_list = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE};
-                Threads.sleep(100);
                 return egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
             }
 
@@ -53,8 +44,7 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
         });
 //        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 24, 0));
-        getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        setRenderer(renderer = new GLRenderer(launcher));
+        setRenderer(new GLRenderer(launcher));
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -63,27 +53,14 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
         requestFocus();
     }
 
-    public void keyboardVisible(boolean visible) {
-        InputMethodManager manager = getContext().getSystemService(InputMethodManager.class);
-        if (visible) {
-            System.out.println("show");
-            setFocusable(true);
-            setFocusableInTouchMode(true);
-            manager.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
-        } else {
-            System.out.println("hide");
-            manager.hideSoftInputFromWindow(getWindowToken(), 0);
-        }
-    }
-
     private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
         /*
          * This EGL config specification is used to specify 2.0 rendering. We use a minimum size of 4 bits for red/green/blue, but
          * will perform actual matching in chooseConfig() below.
          */
-        private static int EGL_OPENGL_ES2_BIT = 4;
-        private static int[] s_configAttribs2 = {EGL10.EGL_RED_SIZE, 4, EGL10.EGL_GREEN_SIZE, 4, EGL10.EGL_BLUE_SIZE, 4, EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL10.EGL_NONE};
+        private static final int EGL_OPENGL_ES2_BIT = 4;
+        private static final int[] s_configAttribs2 = {EGL10.EGL_RED_SIZE, 4, EGL10.EGL_GREEN_SIZE, 4, EGL10.EGL_BLUE_SIZE, 4, EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL10.EGL_NONE};
         private final int[] mValue = new int[1];
         // Subclasses can adjust these values:
         protected int mRedSize;
@@ -133,38 +110,29 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
 
         public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
             for (EGLConfig config : configs) {
-                int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, 0);
-                int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, 0);
+                int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE);
+                int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE);
 
                 // We need at least mDepthSize and mStencilSize bits
                 if (d < mDepthSize || s < mStencilSize) continue;
 
                 // We want an *exact* match for red/green/blue/alpha
-                int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, 0);
-                int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, 0);
-                int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, 0);
-                int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, 0);
+                int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE);
+                int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE);
+                int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE);
+                int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE);
 
                 if (r == mRedSize && g == mGreenSize && b == mBlueSize && a == mAlphaSize) return config;
             }
             return null;
         }
 
-        private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config, int attribute, int defaultValue) {
+        private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config, int attribute) {
 
             if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
                 return mValue[0];
             }
-            return defaultValue;
-        }
-
-        private void printConfigs(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
-            int numConfigs = configs.length;
-            logger.warnf("%d configurations", numConfigs);
-            for (int i = 0; i < numConfigs; i++) {
-                logger.warnf("Configuration %d:\n", i);
-                printConfig(egl, display, configs[i]);
-            }
+            return 0;
         }
 
         private void printConfig(EGL10 egl, EGLDisplay display, EGLConfig config) {
@@ -181,9 +149,10 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
                 int attribute = attributes[i];
                 String name = names[i];
                 if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
-                    logger.warnf("  %s: %d\n", name, value[0]);
+                    logger.debugf("  %s: %d\n", name, value[0]);
                 } else {
                     // Log.w(TAG, String.format("  %s: failed\n", name));
+                    //noinspection StatementWithEmptyBody
                     while (egl.eglGetError() != EGL10.EGL_SUCCESS) ;
                 }
             }

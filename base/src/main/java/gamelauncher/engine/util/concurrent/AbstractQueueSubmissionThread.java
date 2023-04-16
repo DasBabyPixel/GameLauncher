@@ -83,6 +83,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
         }
         this.loop();
         this.stopExecuting();
+        this.loop();
         this.exitFuture.complete(null);
     }
 

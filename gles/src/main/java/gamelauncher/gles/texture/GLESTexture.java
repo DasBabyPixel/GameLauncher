@@ -20,7 +20,6 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.gl.GLES30;
-import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.util.MemoryManagement;
 
@@ -38,7 +37,6 @@ import static gamelauncher.gles.gl.GLES30.*;
 public class GLESTexture extends AbstractGameResource implements Texture {
 
     public static final byte[] SIGNATURE_RAW = new byte[]{0x45, (byte) 0xFF, 0x61, 0x19};
-    public static final AtomicInteger tid = new AtomicInteger();
     private final MemoryManagement memoryManagement;
     private final ExecutorThread owner;
     private final ExecutorThreadService service;
@@ -48,67 +46,19 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     private final NumberValue width = NumberValue.zero();
     private final NumberValue height = NumberValue.zero();
     private final Profiler profiler;
+    private final GLES gles;
     private final GLESTextureManager manager;
     private int cwidth = 0;
     private int cheight = 0;
 
     public GLESTexture(GLES gles, ExecutorThread owner, ExecutorThreadService service) {
+        this.gles = gles;
         this.memoryManagement = gles.memoryManagement();
         this.manager = gles.textureManager();
         this.owner = owner;
         this.service = service;
         this.profiler = gles.launcher().profiler();
     }
-
-    private static ByteBuffer getBufferedImageBuffer(MemoryManagement memory, int texture, int width, int height) {
-        GLES31 cur = StateRegistry.currentGl();
-        ByteBuffer pixels = memory.callocDirect(4 * width * height);
-        cur.glBindTexture(GL_TEXTURE_2D, texture);
-        int fbo = cur.glGenFramebuffers();
-        cur.glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-        cur.glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        cur.glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        cur.glDeleteFramebuffers(1, new int[]{fbo}, 0);
-        cur.glBindTexture(GL_TEXTURE_2D, 0);
-        return pixels;
-    }
-
-//    private static BufferedImage getBufferedImage(MemoryManagement memory, int texture, int width, int height) {
-//        ByteBuffer pixels = getBufferedImageBuffer(memory, texture, width, height);
-//        BufferedImage img = new BufferedImage(width, height, BufferedImage.TRANSLUCENT);
-//        for (int y = 0; y < height; y++) {
-//            for (int x = 0; x < width; x++) {
-//                int r = pixels.get((y * width + x) * Integer.BYTES);
-//                int g = pixels.get((y * width + x) * Integer.BYTES + 1);
-//                int b = pixels.get((y * width + x) * Integer.BYTES + 2);
-//                int a = pixels.get((y * width + x) * Integer.BYTES + 3);
-//
-//                int argb = a << 24 | r << 16 | g << 8 | b;
-//                img.setRGB(x, y, argb);
-//            }
-//        }
-//        memory.free(pixels);
-//        return img;
-//    }
-
-//    public CompletableFuture<Void> write() {
-//        return owner.submit(() -> {
-//            try {
-//                lock.readLock().lock();
-//                BufferedImage img = getBufferedImage(manager.gles.memoryManagement(), textureId.get(), cwidth, cheight);
-//                manager.launcher().threads().cached.submit(() -> {
-//                    try {
-//                        ImageIO.write(img, "png", new File("img" + tid.incrementAndGet() + ".png"));
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-//            } finally {
-//                lock.readLock().unlock();
-//            }
-//        });
-//    }
 
     public MemoryManagement memoryManagement() {
         return memoryManagement;
@@ -321,8 +271,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                     this.height.setNumber(height);
                 }
 
-                //				Threads.sleep(10);
-
                 owner.submit(() -> {
                     GLES20 cur = StateRegistry.currentGl();
                     profiler.begin("render", "upload_texture");
@@ -338,6 +286,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                     lock.writeLock().unlock();
                     cur.glFlush();
                     cur.glFinish();
+                    gles.launcher().guiManager().redrawAll();
                     profiler.end();
                     fut.complete(null);
                 }).exceptionally(throwable -> {

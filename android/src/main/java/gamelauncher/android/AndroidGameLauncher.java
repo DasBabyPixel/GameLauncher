@@ -8,7 +8,7 @@
 package gamelauncher.android;
 
 import android.opengl.GLSurfaceView;
-import android.os.Handler;
+import android.view.inputmethod.InputMethodManager;
 import gamelauncher.android.gl.AndroidGLFactory;
 import gamelauncher.android.gl.AndroidMemoryManagement;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
@@ -20,7 +20,6 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.OperatingSystem;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESGameRenderer;
 import gamelauncher.gles.GLESThreadGroup;
@@ -33,18 +32,16 @@ import java.io.IOException;
 import java.net.URI;
 
 public class AndroidGameLauncher extends GameLauncher {
-    private final AndroidLauncher activity;
-    private final Handler mainThread;
-    private final GLES gles;
     private final GLESThreadGroup glThreadGroup;
+    private final AndroidLauncher activity;
     LauncherGLSurfaceView view;
+    private volatile boolean keyboardVisible = false;
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
-        super();
+        this.operatingSystem(() -> "Android");
         this.activity = activity;
-        this.mainThread = new Handler(activity.getMainLooper());
         this.gameDirectory(activity.getFilesDir().toPath());
-        this.gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
+        GLES gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
         this.contextProvider(new GLESContextProvider(gles, this));
         try {
             this.embedFileSystem(new AndroidEmbedFileSystemProvider(activity.getAssets()).newFileSystem((URI) null, null));
@@ -60,27 +57,18 @@ public class AndroidGameLauncher extends GameLauncher {
         this.guiManager(new AndroidGuiManager(this, gles));
         this.fontFactory(new BasicFontFactory(gles, this));
         this.textureManager(gles.textureManager());
-        this.operatingSystem(OperatingSystem.ANDROID);
+        gles.init();
         this.glThreadGroup = new GLESThreadGroup();
+    }
+
+    @Override
+    protected void loadCustomPlugins() {
+        activity.init(this);
     }
 
     @Override
     public void frame(Frame frame) {
         super.frame(frame);
-    }
-
-    @Override
-    protected void tick0() throws GameException {
-        frame().input().handleInput();
-    }
-
-    @Override
-    protected void start0() throws GameException {
-        System.out.println(130);
-    }
-
-    @Override
-    protected void stop0() throws GameException {
     }
 
     public GLSurfaceView view() {
@@ -94,5 +82,30 @@ public class AndroidGameLauncher extends GameLauncher {
 
     public GLESThreadGroup glThreadGroup() {
         return glThreadGroup;
+    }
+
+    @Override
+    public void keyboardVisible(boolean visible) {
+        Runnable r = () -> {
+            InputMethodManager manager = activity.getApplicationContext().getSystemService(InputMethodManager.class);
+            this.keyboardVisible = visible;
+            if (visible) {
+                view.setFocusable(true);
+                view.setFocusableInTouchMode(true);
+                manager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+            } else {
+                manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        };
+        if (view.getHandler().getLooper().isCurrentThread()) {
+            r.run();
+        } else {
+            view.getHandler().post(r);
+        }
+    }
+
+    @Override
+    public boolean keyboardVisible() {
+        return keyboardVisible;
     }
 }

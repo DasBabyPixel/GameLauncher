@@ -61,15 +61,22 @@ public class AndroidMouse {
     }
 
     public static class ButtonEvent extends AbstractKeybindEvent implements MouseButtonKeybindEvent {
+        private final int buttonId;
         private final float mouseX;
         private final float mouseY;
         private final Type type;
 
-        public ButtonEvent(Keybind keybind, float mouseX, float mouseY, Type type) {
+        public ButtonEvent(Keybind keybind, int buttonId, float mouseX, float mouseY, Type type) {
             super(keybind);
+            this.buttonId = buttonId;
             this.mouseX = mouseX;
             this.mouseY = mouseY;
             this.type = type;
+        }
+
+        @Override
+        public int buttonId() {
+            return buttonId;
         }
 
         @Override
@@ -89,7 +96,7 @@ public class AndroidMouse {
 
         @Override
         public MouseButtonKeybindEvent withType(Type type) {
-            return new ButtonEvent(keybind(), mouseX, mouseY, type);
+            return new ButtonEvent(keybind(), buttonId, mouseX, mouseY, type);
         }
 
         @Override

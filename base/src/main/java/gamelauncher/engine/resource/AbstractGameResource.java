@@ -7,7 +7,6 @@ import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.logging.Logger;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,8 +23,8 @@ public abstract class AbstractGameResource implements GameResource {
     private final String exName;
 
     private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
-    private volatile boolean cleanedUp = false;
     private final Map<Key, Object> map = new ConcurrentHashMap<>();
+    private volatile boolean cleanedUp = false;
 
     /**
      *
@@ -34,7 +33,44 @@ public abstract class AbstractGameResource implements GameResource {
         StackTraceElement[] es = new Exception().getStackTrace();
         this.exName = Thread.currentThread().getName();
         this.stack = Arrays.copyOfRange(es, 1, es.length);
-        AbstractGameResource.create(this);
+        create(this);
+    }
+
+    /**
+     * @param resource a resource
+     */
+    public static void create(GameResource resource) {
+        resources.add(resource);
+    }
+
+    /**
+     * @param resource a resource
+     */
+    public static void logCleanup(GameResource resource) {
+        resources.remove(resource);
+    }
+
+    private static Logger logger() {
+        if (logger == null) {
+            return logger = Logger.logger();
+        }
+        return logger;
+    }
+
+    /**
+     * Called on exit
+     */
+    public static void exit() {
+        for (GameResource resource : resources) {
+            if (resource instanceof AbstractGameResource) {
+                AbstractGameResource aresource = (AbstractGameResource) resource;
+                Exception ex = new Exception("Stack: " + aresource.exName);
+                ex.setStackTrace(aresource.stack);
+                logger().errorf("Memory Leak: %s%n%s", resource, ex);
+            } else {
+                logger().errorf("Memory Leak: %s", resource);
+            }
+        }
     }
 
     @Override
@@ -58,43 +94,6 @@ public abstract class AbstractGameResource implements GameResource {
     @Override
     public void storeValue(Key key, Object value) {
         map.put(key, value);
-    }
-
-    /**
-     * @param resource a resource
-     */
-    public static void create(GameResource resource) {
-        AbstractGameResource.resources.add(resource);
-    }
-
-    /**
-     * @param resource a resource
-     */
-    public static void logCleanup(GameResource resource) {
-        AbstractGameResource.resources.remove(resource);
-    }
-
-    private static Logger logger() {
-        if (AbstractGameResource.logger == null) {
-            return AbstractGameResource.logger = Logger.logger();
-        }
-        return AbstractGameResource.logger;
-    }
-
-    /**
-     * Called on exit
-     */
-    public static void exit() {
-        for (GameResource resource : AbstractGameResource.resources) {
-            if (resource instanceof AbstractGameResource) {
-                AbstractGameResource aresource = (AbstractGameResource) resource;
-                Exception ex = new Exception("Stack: " + aresource.exName);
-                ex.setStackTrace(aresource.stack);
-                AbstractGameResource.logger().errorf("Memory Leak: %s%n%s", resource, ex);
-            } else {
-                AbstractGameResource.logger().errorf("Memory Leak: %s", resource);
-            }
-        }
     }
 
     /**

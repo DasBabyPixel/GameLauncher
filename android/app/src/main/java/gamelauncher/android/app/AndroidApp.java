@@ -7,39 +7,22 @@
 
 package gamelauncher.android.app;
 
-import android.app.Activity;
-import android.opengl.GLSurfaceView;
-import android.os.Bundle;
+import gamelauncher.android.AndroidGameLauncher;
+import gamelauncher.android.AndroidLauncher;
+import gamelauncher.engine.event.EventHandler;
+import gamelauncher.engine.event.events.gui.GuiOpenEvent;
+import gamelauncher.engine.gui.guis.MainScreenGui;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-public class AndroidApp extends Activity {
-
+public class AndroidApp extends AndroidLauncher {
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        GLSurfaceView view = new GLSurfaceView(getApplicationContext()) {
-            {
-                setRenderer(new Renderer() {
-                    @Override
-                    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-                        gl.glClearColor(1, 0, 0, 1);
-                    }
+    public void init(AndroidGameLauncher launcher) {
 
-                    @Override
-                    public void onSurfaceChanged(GL10 gl, int width, int height) {
-                        gl.glViewport(0, 0, width, height);
-                    }
+    }
 
-                    @Override
-                    public void onDrawFrame(GL10 gl) {
-                        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-                    }
-                });
-                setRenderMode(RENDERMODE_WHEN_DIRTY);
-            }
-        };
-        setContentView(view);
+    @EventHandler
+    public void handle(GuiOpenEvent event) {
+        if (event.gui() instanceof MainScreenGui) {
+
+        }
     }
 }

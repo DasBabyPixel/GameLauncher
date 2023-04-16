@@ -1,5 +1,7 @@
 package gamelauncher.engine.util.keybind;
 
+import de.dasbabypixel.annotations.Api;
+
 /**
  * @author DasBabyPixel
  */
@@ -18,6 +20,7 @@ public interface KeyboardKeybindEvent extends KeybindEvent {
     }
 
     interface CharacterKeybindEvent extends KeyboardKeybindEvent {
+        @Api
         char character();
     }
 }

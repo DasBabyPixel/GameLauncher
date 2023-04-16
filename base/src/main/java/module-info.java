@@ -24,6 +24,7 @@ module gamelauncher.base {
     exports gamelauncher.engine.settings;
     exports gamelauncher.engine.util.concurrent;
     exports gamelauncher.engine.util.function;
+    exports gamelauncher.engine.util.i18n;
     exports gamelauncher.engine.util.keybind;
     exports gamelauncher.engine.util.logging;
     exports gamelauncher.engine.util.math;

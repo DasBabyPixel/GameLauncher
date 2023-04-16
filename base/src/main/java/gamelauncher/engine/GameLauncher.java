@@ -10,11 +10,13 @@ package gamelauncher.engine;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.event.events.game.TickEvent;
 import gamelauncher.engine.game.Game;
 import gamelauncher.engine.game.GameRegistry;
+import gamelauncher.engine.gui.GuiConstructorTemplates;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
 import gamelauncher.engine.io.Files;
@@ -125,6 +127,7 @@ public abstract class GameLauncher {
         this.pluginManager = new PluginManager(this);
     }
 
+    @Api
     public AnsiProvider ansi() {
         return new AnsiProvider.Unsupported();
     }
@@ -141,8 +144,6 @@ public abstract class GameLauncher {
     }
 
     public final void start(String[] args) throws GameException {
-
-        Threads.sleep(1000);
 
         if (embedFileSystem == null) {
             try {
@@ -180,6 +181,8 @@ public abstract class GameLauncher {
         Files.createDirectories(this.dataDirectory);
         Files.createDirectories(this.pluginsDirectory);
 
+        GuiConstructorTemplates.init(this);
+
         for (Path externalPlugin : scs.externalPlugins) {
             try {
                 this.pluginManager.loadPlugin(externalPlugin);
@@ -188,6 +191,7 @@ public abstract class GameLauncher {
             }
         }
         this.pluginManager.loadPlugins(this.pluginsDirectory);
+        loadCustomPlugins();
 
         this.registerSettingInsertions();
         this.settings = new MainSettingSection(this.eventManager);
@@ -222,6 +226,9 @@ public abstract class GameLauncher {
         this.gameThread.start();
     }
 
+    protected void loadCustomPlugins() {
+    }
+
     public void stop() throws GameException {
         GameRunnable r = () -> {
             try {
@@ -244,26 +251,36 @@ public abstract class GameLauncher {
 
     protected final void tick() throws GameException {
         this.eventManager().post(new TickEvent.Game());
+        this.frame().input().handleInput();
         this.guiManager().updateGuis();
         this.tick0();
     }
 
-    protected abstract void tick0() throws GameException;
+    protected void tick0() throws GameException {
+    }
 
-    protected abstract void start0() throws GameException;
+    protected void start0() throws GameException {
+    }
 
-    protected abstract void stop0() throws GameException;
+    protected void stop0() throws GameException {
+    }
 
     /**
      * Handles an error. May cause the {@link Game} or {@link GameLauncher} to crash
      *
      * @param throwable a throwable
      */
+    @Api
     public void handleError(Throwable throwable) {
         this.logger.error(throwable);
         try {
             Logger.asyncLogStream().cleanup();
         } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         System.exit(-1);
@@ -275,6 +292,7 @@ public abstract class GameLauncher {
     /**
      * @return the current tick of the {@link GameLauncher}
      */
+    @Api
     public int currentTick() {
         return this.gameThread.currentTick();
     }
@@ -282,6 +300,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link TextureManager}
      */
+    @Api
     public TextureManager textureManager() {
         return this.textureManager;
     }
@@ -293,6 +312,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link Threads Threads utility class} for this {@link GameLauncher}
      */
+    @Api
     public Threads threads() {
         return this.threads;
     }
@@ -300,6 +320,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link KeybindManager}
      */
+    @Api
     public KeybindManager keybindManager() {
         return this.keybindManager;
     }
@@ -315,6 +336,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link NetworkClient}
      */
+    @Api
     public NetworkClient networkClient() {
         return this.networkClient;
     }
@@ -326,6 +348,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link GuiManager}
      */
+    @Api
     public GuiManager guiManager() {
         return this.guiManager;
     }
@@ -337,6 +360,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link OperatingSystem}
      */
+    @Api
     public OperatingSystem operatingSystem() {
         return this.operatingSystem;
     }
@@ -348,6 +372,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link GameRegistry}
      */
+    @Api
     public GameRegistry gameRegistry() {
         return this.gameRegistry;
     }
@@ -355,6 +380,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link PluginManager}
      */
+    @Api
     public PluginManager pluginManager() {
         return this.pluginManager;
     }
@@ -362,22 +388,22 @@ public abstract class GameLauncher {
     /**
      * @return the {@link GlyphProvider}
      */
+    @Api
     public GlyphProvider glyphProvider() {
         return this.glyphProvider;
     }
 
     /**
      * Sets the current {@link GlyphProvider}
-     *
-     * @param glyphProvider
      */
-    public void glyphProvider(GlyphProvider glyphProvider) {
+    protected void glyphProvider(GlyphProvider glyphProvider) {
         this.glyphProvider = glyphProvider;
     }
 
     /**
      * @return the {@link Profiler}
      */
+    @Api
     public Profiler profiler() {
         return this.profiler;
     }
@@ -385,6 +411,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link ShaderLoader}
      */
+    @Api
     public ShaderLoader shaderLoader() {
         return this.shaderLoader;
     }
@@ -396,15 +423,15 @@ public abstract class GameLauncher {
     /**
      * @return the current {@link Game}
      */
+    @Api
     public Game currentGame() {
         return this.currentGame;
     }
 
     /**
      * Sets the current {@link Game}
-     *
-     * @param currentGame
      */
+    @Api
     public void currentGame(Game currentGame) {
         this.currentGame = currentGame;
     }
@@ -412,6 +439,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link EventManager}
      */
+    @Api
     public EventManager eventManager() {
         return this.eventManager;
     }
@@ -419,6 +447,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link EmbedFileSystem}
      */
+    @Api
     public FileSystem embedFileSystem() {
         return this.embedFileSystem;
     }
@@ -426,6 +455,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link Logger}
      */
+    @Api
     public Logger logger() {
         return this.logger;
     }
@@ -433,6 +463,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link ModelLoader}
      */
+    @Api
     public ModelLoader modelLoader() {
         return this.modelLoader;
     }
@@ -444,6 +475,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link ResourceLoader}
      */
+    @Api
     public ResourceLoader resourceLoader() {
         return this.resourceLoader;
     }
@@ -453,9 +485,19 @@ public abstract class GameLauncher {
         loader.set();
     }
 
+    @Api
+    public void keyboardVisible(boolean visible) throws GameException {
+    }
+
+    @Api
+    public boolean keyboardVisible() throws GameException {
+        return true;
+    }
+
     /**
      * @return if the {@link GameLauncher} is in debug mode
      */
+    @Api
     public boolean debugMode() {
         return this.debugMode;
     }
@@ -465,6 +507,7 @@ public abstract class GameLauncher {
      *
      * @param debugMode debug
      */
+    @Api
     public void debugMode(boolean debugMode) {
         this.debugMode = debugMode;
     }
@@ -474,6 +517,7 @@ public abstract class GameLauncher {
         this.frame.frameRenderer(this.gameRenderer);
     }
 
+    @Api
     public Frame frame() {
         return frame;
     }
@@ -481,6 +525,7 @@ public abstract class GameLauncher {
     /**
      * @return the data directory
      */
+    @Api
     public Path dataDirectory() {
         return this.dataDirectory;
     }
@@ -488,10 +533,12 @@ public abstract class GameLauncher {
     /**
      * @return the game directory
      */
+    @Api
     public Path gameDirectory() {
         return this.gameDirectory;
     }
 
+    @Api
     public ExecutorThreadHelper executorThreadHelper() {
         return executorThreadHelper;
     }
@@ -503,6 +550,7 @@ public abstract class GameLauncher {
     /**
      * @return the plugins directory
      */
+    @Api
     public Path pluginsDirectory() {
         return this.pluginsDirectory;
     }
@@ -510,6 +558,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link FontFactory}
      */
+    @Api
     public FontFactory fontFactory() {
         return this.fontFactory;
     }
@@ -521,6 +570,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link GameThread}
      */
+    @Api
     public GameThread gameThread() {
         return this.gameThread;
     }
@@ -528,6 +578,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link ContextProvider} to use for creating contexts.
      */
+    @Api
     public ContextProvider contextProvider() {
         return this.contextProvider;
     }
@@ -535,6 +586,7 @@ public abstract class GameLauncher {
     /**
      * @return the {@link GameRenderer}
      */
+    @Api
     public GameRenderer gameRenderer() {
         return this.gameRenderer;
     }
@@ -551,6 +603,7 @@ public abstract class GameLauncher {
      *
      * @throws GameException an exception
      */
+    @Api
     public void saveSettings() throws GameException {
         Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(StandardCharsets.UTF_8));
     }

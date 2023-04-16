@@ -3,6 +3,8 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="11">
       <module name="gamelauncher.androidlibrary" target="17" />
+      <module name="gamelauncher.myapplication" target="17" />
+      <module name="gamelauncher.myapplication2" target="17" />
     </bytecodeTargetLevel>
   </component>
 </project>

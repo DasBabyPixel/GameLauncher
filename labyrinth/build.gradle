@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
 }
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 
 dependencies {
     implementation parent.project('api')

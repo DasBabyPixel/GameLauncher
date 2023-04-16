@@ -1,5 +1,7 @@
 package gamelauncher.engine.util.keybind;
 
+import de.dasbabypixel.annotations.Api;
+
 /**
  * @author DasBabyPixel
  */
@@ -21,7 +23,13 @@ public interface MouseButtonKeybindEvent extends KeybindEvent {
     Type type();
 
     /**
-     * @param type
+     * @return the button id. On PC 0 will be primary, 1 will be secondary.<br>
+     * On Android it will be the <b>n</b>th finger to touch the screen
+     */
+    @Api
+    int buttonId();
+
+    /**
      * @return the cloned {@link MouseButtonKeybindEvent}
      */
     MouseButtonKeybindEvent withType(Type type);
@@ -29,7 +37,7 @@ public interface MouseButtonKeybindEvent extends KeybindEvent {
     /**
      * @author DasBabyPixel
      */
-    public static enum Type {
+    enum Type {
         PRESS, RELEASE, HOLD
     }
 }
