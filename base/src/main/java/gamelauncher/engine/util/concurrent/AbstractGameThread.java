@@ -1,14 +1,15 @@
 package gamelauncher.engine.util.concurrent;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameSupplier;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -16,72 +17,64 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractGameThread extends Thread implements GameResource {
 
+    protected final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
+    private final GameLauncher launcher;
+    private final Map<Key, Object> map = new ConcurrentHashMap<>();
     protected volatile boolean cleanedUp = false;
 
-    private final GameLauncher launcher;
-    protected final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
-    private final Map<Key, Object> map = new ConcurrentHashMap<>();
-
-    /**
-     *
-     */
-    public AbstractGameThread(GameLauncher launcher) {
+    @Api public AbstractGameThread(GameLauncher launcher) {
         super();
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, Runnable target, String name) {
+    @Api public AbstractGameThread(GameLauncher launcher, Runnable target, String name) {
         super(target, name);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, Runnable target) {
+    @Api public AbstractGameThread(GameLauncher launcher, Runnable target) {
         super(target);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, String name) {
+    @Api public AbstractGameThread(GameLauncher launcher, String name) {
         super(name);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name, long stackSize) {
+    @Api public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name, long stackSize) {
         super(group, target, name, stackSize);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name) {
+    @Api public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target, String name) {
         super(group, target, name);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target) {
+    @Api public AbstractGameThread(GameLauncher launcher, ThreadGroup group, Runnable target) {
         super(group, target);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    public AbstractGameThread(GameLauncher launcher, ThreadGroup group, String name) {
+    @Api public AbstractGameThread(GameLauncher launcher, ThreadGroup group, String name) {
         super(group, name);
         this.launcher = launcher;
         AbstractGameResource.create(this);
     }
 
-    @Override
-    public <T> T storedValue(Key key) {
-        //noinspection unchecked
+    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key) {
         return (T) map.get(key);
     }
 
-    @Override
-    public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
-        //noinspection unchecked
+    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
         return (T) map.computeIfAbsent(key, key1 -> {
             try {
                 return defaultSupplier.get();
@@ -91,13 +84,11 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
         });
     }
 
-    @Override
-    public void storeValue(Key key, Object value) {
+    @Override public void storeValue(Key key, Object value) {
         map.put(key, value);
     }
 
-    @Override
-    public final void cleanup() throws GameException {
+    @Override public final void cleanup() throws GameException {
         if (!this.cleanedUp) {
             this.cleanup0();
             this.cleanupFuture.complete(null);
@@ -106,13 +97,11 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
         }
     }
 
-    @Override
-    public CompletableFuture<Void> cleanupFuture() {
+    @Override public CompletableFuture<Void> cleanupFuture() {
         return this.cleanupFuture;
     }
 
-    @Override
-    public boolean cleanedUp() {
+    @Override public boolean cleanedUp() {
         return this.cleanedUp;
     }
 

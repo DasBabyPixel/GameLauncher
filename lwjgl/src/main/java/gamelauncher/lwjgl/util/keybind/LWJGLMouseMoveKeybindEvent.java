@@ -13,13 +13,6 @@ public class LWJGLMouseMoveKeybindEvent extends AbstractKeybindEvent implements 
     private final float mouseX;
     private final float mouseY;
 
-    /**
-     * @param keybind
-     * @param oldMouseX
-     * @param oldMouseY
-     * @param mouseX
-     * @param mouseY
-     */
     public LWJGLMouseMoveKeybindEvent(Keybind keybind, float oldMouseX, float oldMouseY, float mouseX, float mouseY) {
         super(keybind);
         this.oldMouseX = oldMouseX;
@@ -28,23 +21,19 @@ public class LWJGLMouseMoveKeybindEvent extends AbstractKeybindEvent implements 
         this.mouseY = mouseY;
     }
 
-    @Override
-    public float oldMouseX() {
+    @Override public float oldMouseX() {
         return oldMouseX;
     }
 
-    @Override
-    public float oldMouseY() {
+    @Override public float oldMouseY() {
         return oldMouseY;
     }
 
-    @Override
-    public float mouseX() {
+    @Override public float mouseX() {
         return mouseX;
     }
 
-    @Override
-    public float mouseY() {
+    @Override public float mouseY() {
         return mouseY;
     }
 }

@@ -8,8 +8,11 @@
 package gamelauncher.android.gl;
 
 import android.opengl.*;
+import android.os.Build;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import gamelauncher.android.AndroidGameLauncher;
+import gamelauncher.android.gl.supported.SupportedAndroidGLES32;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.LogColor;
@@ -25,6 +28,7 @@ import gamelauncher.gles.states.StateRegistry;
 import java.util.Collection;
 
 public class AndroidGLContext extends AbstractGameResource implements GLContext {
+    public static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final Logger logger = Logger.logger();
     private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
 
@@ -60,16 +64,14 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         this.context = context;
     }
 
-    @Override
-    public AndroidFrame frame() {
+    @Override public AndroidFrame frame() {
         return frame;
     }
 
-    AndroidGLContext create(@Nullable AndroidGLContext context) throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.N) AndroidGLContext create(@Nullable AndroidGLContext context) throws GameException {
         EGLDisplay dpy = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
         int[] vers = new int[2];
         EGL14.eglInitialize(dpy, vers, 0, vers, 1);
-        java.util.logging.Logger.getGlobal().severe("OpenGL: " + vers[0] + "." + vers[1]);
         int[] configAttr = {EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER, EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT, EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE};
         EGLConfig[] configs = new EGLConfig[1];
         int[] numConfig = new int[1];
@@ -80,19 +82,18 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         EGLConfig config = configs[0];
         int[] surfAttr = {EGL14.EGL_WIDTH, 1, EGL14.EGL_HEIGHT, 1, EGL14.EGL_NONE};
         EGLSurface surf = EGL14.eglCreatePbufferSurface(dpy, config, surfAttr, 0);
-        int[] ctxAttrib = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE};
+        int[] ctxAttrib = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE};
         EGLContext ctx = EGL14.eglCreateContext(dpy, config, context == null ? EGL14.EGL_NO_CONTEXT : context.context, ctxAttrib, 0);
         this.display = dpy;
         this.surface = surf;
         this.context = ctx;
-        this.gl = AndroidGLES.instance();
+        this.gl = new SupportedAndroidGLES32();
         this.frame = new AndroidFrame(launcher, this);
         StateRegistry.addContext(this);
         return this;
     }
 
-    @Override
-    protected void cleanup0() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void cleanup0() {
         this.sharedContexts.remove(this);
         EGL14.eglDestroySurface(display, surface);
         EGL14.eglDestroyContext(display, context);
@@ -101,41 +102,33 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         context = null;
     }
 
-    @Override
-    public void makeCurrent() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void makeCurrent() {
         EGL14.eglMakeCurrent(display, surface, surface, context);
         StateRegistry.currentContext(this);
     }
 
-    @Override
-    public void destroyCurrent() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void destroyCurrent() {
         StateRegistry.currentContext(null);
         EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
     }
 
-    @Override
-    public AndroidGLContext createSharedContext() throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.N) @Override public AndroidGLContext createSharedContext() throws GameException {
         return new AndroidGLContext(launcher, sharedContexts).create(this);
     }
 
-    @Override
-    public GLES20 gl20() {
+    @Override public GLES20 gl20() {
         return gl;
     }
 
-    @Override
-    public GLES30 gl30() {
+    @Override public GLES30 gl30() {
         return gl;
     }
 
-    @Override
-    public GLES31 gl31() {
+    @Override public GLES31 gl31() {
         return gl;
     }
 
-    @Override
-    @Deprecated
-    public GLES32 gl32() {
+    @Override @Deprecated public GLES32 gl32() {
         return null;
     }
 }

@@ -23,12 +23,22 @@ switch (OperatingSystem.current()) {
         break
 }
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+tasks {
+    jar {
+        manifest {
+            attributes('Automatic-Module-Name': 'gamelauncher.lwjgl')
+        }
+    }
+}
 
 dependencies {
     api parent.project('api')
     api parent.project('gles')
-    api libs.bundles.netty
+    api libs.netty.buffer
+    api libs.netty.codec
+    api libs.netty.common
+    api libs.netty.handler
+    api libs.netty.transport
     api libs.jansi
 
     var lwjgl = libs.versions.lwjgl.get()
@@ -46,4 +56,15 @@ dependencies {
     api "org.lwjgl:lwjgl-opengl::$lwjglNatives"
     api "org.lwjgl:lwjgl-opengles::$lwjglNatives"
     api "org.lwjgl:lwjgl-stb::$lwjglNatives"
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId project.name
+            groupId = project.group
+            version = project.version
+            from components.java
+        }
+    }
 }

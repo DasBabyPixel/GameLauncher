@@ -4,23 +4,19 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.PrintWriter;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Phaser;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @param <T>
  * @author DasBabyPixel
  */
 public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
     private static final Logger logger = Logger.logger();
-    protected final ConcurrentLinkedDeque<QueueEntry<T>> queue = new ConcurrentLinkedDeque<>();
-    protected final AtomicInteger size = new AtomicInteger();
-    protected final Phaser sizeLocker = new Phaser(1);
+    protected final Deque<QueueEntry<T>> queue = new LinkedBlockingDeque<>();
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
     private final AtomicBoolean work = new AtomicBoolean(false);
     protected volatile boolean exit = false;
@@ -71,8 +67,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
         }
     }
 
-    @Override
-    public final void run() {
+    @Override public final void run() {
         this.startExecuting();
         while (!this.exit) {
             try {
@@ -98,10 +93,6 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
             if (!this.shouldHandle(e)) {
                 this.queue.offerFirst(e);
                 return;
-            }
-            int nsize = size.decrementAndGet();
-            if (nsize < 600) {
-                sizeLocker.arrive();
             }
             try {
                 this.handleElement(e.val);
@@ -133,14 +124,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
      */
     public final CompletableFuture<Void> submitLast(T element) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
-        do {
-            int phase = sizeLocker.getPhase();
-            if (size.get() > 1000) {
-                sizeLocker.awaitAdvance(phase);
-            }
-        } while (size.get() > 1000);
         this.queue.offerLast(new QueueEntry<>(fut, element));
-        size.incrementAndGet();
         this.signal();
         return fut;
     }
@@ -151,14 +135,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
      */
     public final CompletableFuture<Void> submitFirst(T element) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
-        do {
-            int phase = sizeLocker.getPhase();
-            if (size.get() > 1000) {
-                sizeLocker.awaitAdvance(phase);
-            }
-        } while (size.get() > 1000);
         this.queue.offerFirst(new QueueEntry<T>(fut, element));
-        size.incrementAndGet();
         this.signal();
         return fut;
     }

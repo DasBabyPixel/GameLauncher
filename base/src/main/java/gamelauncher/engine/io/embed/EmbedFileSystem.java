@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class EmbedFileSystem extends FileSystem {
 
-    private static final Set<String> supportedFileAttributeViews = Set.of("basic", "embed");
+    private static final Set<String> supportedFileAttributeViews = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("basic", "embed")));
     private final DataSupplier dataSupplier;
     private final EmbedFileSystemProvider provider;
     private final Path path;
@@ -102,7 +102,7 @@ public class EmbedFileSystem extends FileSystem {
 
     @Override
     public Iterable<FileStore> getFileStores() {
-        return List.of(new EmbedFileStore(this));
+        return Collections.singleton(new EmbedFileStore(this));
     }
 
     @Override

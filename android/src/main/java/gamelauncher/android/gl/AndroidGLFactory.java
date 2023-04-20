@@ -7,6 +7,8 @@
 
 package gamelauncher.android.gl;
 
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.gl.GLFactory;
@@ -20,8 +22,7 @@ public class AndroidGLFactory implements GLFactory {
         this.launcher = launcher;
     }
 
-    @Override
-    public AndroidGLContext createContext() throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.N) @Override public AndroidGLContext createContext() throws GameException {
         return new AndroidGLContext(launcher, new CopyOnWriteArraySet<>()).create(null);
     }
 }

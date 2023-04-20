@@ -1,5 +1,6 @@
 package gamelauncher.gles.gl.redirect;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.gles.gl.GLES32;
 
 import java.nio.Buffer;
@@ -7,10 +8,10 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-public class RedirectGLES32 extends RedirectGLES31 {
+@SuppressWarnings("deprecation") @Api public class RedirectGLES32 extends RedirectGLES31 implements GLES32 {
     private final GLES32 wrapper;
 
-    public RedirectGLES32(GLES32 wrapper) {
+    @Api public RedirectGLES32(GLES32 wrapper) {
         super(wrapper);
         this.wrapper = wrapper;
     }

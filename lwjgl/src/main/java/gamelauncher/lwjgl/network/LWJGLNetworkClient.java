@@ -26,159 +26,159 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class LWJGLNetworkClient implements NetworkClient {
 
-	public static final int PORT = 15684;
+    public static final int PORT = 15684;
 
-	private static final Logger logger = Logger.logger();
+    private static final Logger logger = Logger.logger();
 
-	private final Lock lock = new ReentrantLock(true);
+    private final Lock lock = new ReentrantLock(true);
 
-	private final Lock handlerLock = new ReentrantLock(true);
-	private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
-	private final PacketRegistry packetRegistry = new PacketRegistry();
-	private final LWJGLNetworkHandler handler =
-			new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
-	private final KeyManagment keyManagment;
-	private EventLoopGroup bossGroup;
-	private EventLoopGroup childGroup;
-	private volatile boolean running = false;
-	private volatile boolean connected = false;
+    private final Lock handlerLock = new ReentrantLock(true);
+    private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
+    private final PacketRegistry packetRegistry = new PacketRegistry();
+    private final LWJGLNetworkHandler handler =
+            new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
+    private final KeyManagment keyManagment;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup childGroup;
+    private volatile boolean running = false;
+    private volatile boolean connected = false;
 
-	public LWJGLNetworkClient(LWJGLGameLauncher launcher) {
-		this.keyManagment = new KeyManagment(launcher);
-	}
+    public LWJGLNetworkClient(LWJGLGameLauncher launcher) {
+        this.keyManagment = new KeyManagment(launcher);
+    }
 
-	@Override
-	public void startClient() {
-		try {
-			lock.lock();
-			if (running) {
-				return;
-			}
-			bossGroup = new NioEventLoopGroup();
-			childGroup = new NioEventLoopGroup();
-			ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup)
-					.channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
+    @Override
+    public void startClient() {
+        try {
+            lock.lock();
+            if (running) {
+                return;
+            }
+            bossGroup = new NioEventLoopGroup();
+            childGroup = new NioEventLoopGroup();
+            ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup)
+                    .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer() {
 
-						@Override
-						protected void initChannel(@NotNull Channel ch) throws Exception {
-							ChannelPipeline p = ch.pipeline();
-							SslContext sslContext =
-									SslContextBuilder.forServer(keyManagment.privateKey,
-											keyManagment.certificate).build();
-							SSLEngine engine = sslContext.newEngine(ch.alloc());
-							p.addLast("ssl", new SslHandler(engine));
-							p.addLast("packet_decoder", new LWJGLNetworkDecoder(handler));
-							p.addLast("packet_acceptor",
-									new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
-							p.addLast("packet_encoder", new LWJGLNetworkEncoder(handler));
-						}
+                        @Override
+                        protected void initChannel(@NotNull Channel ch) throws Exception {
+                            ChannelPipeline p = ch.pipeline();
+                            SslContext sslContext =
+                                    SslContextBuilder.forServer(keyManagment.privateKey,
+                                            keyManagment.certificate).build();
+                            SSLEngine engine = sslContext.newEngine(ch.alloc());
+                            p.addLast("ssl", new SslHandler(engine));
+                            p.addLast("packet_decoder", new LWJGLNetworkDecoder(handler));
+                            p.addLast("packet_acceptor",
+                                    new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
+                            p.addLast("packet_encoder", new LWJGLNetworkEncoder(handler));
+                        }
 
-					}).option(ChannelOption.SO_KEEPALIVE, true)
-					.childOption(ChannelOption.SO_KEEPALIVE, true);
-			Channel ch = b.bind(PORT).syncUninterruptibly().channel();
-			ch.closeFuture().addListener(future -> {
+                    }).option(ChannelOption.SO_KEEPALIVE, true)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+            Channel ch = b.bind(PORT).syncUninterruptibly().channel();
+            ch.closeFuture().addListener(future -> {
 
-			});
-			running = true;
-		} finally {
-			lock.unlock();
-		}
-	}
+            });
+            running = true;
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	@Override
-	public void stopClient() {
-		try {
-			lock.lock();
-			running = false;
-			bossGroup.shutdownGracefully().syncUninterruptibly();
-			childGroup.shutdownGracefully().syncUninterruptibly();
-		} finally {
-			lock.unlock();
-		}
-	}
+    @Override
+    public void stopClient() {
+        try {
+            lock.lock();
+            running = false;
+            bossGroup.shutdownGracefully().syncUninterruptibly();
+            childGroup.shutdownGracefully().syncUninterruptibly();
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	@Override
-	public boolean isRunning() {
-		return running;
-	}
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
 
-	@Override
-	public boolean isServer() {
-		return true;
-	}
+    @Override
+    public boolean isServer() {
+        return true;
+    }
 
-	@Override
-	public boolean isConnected() {
-		return connected;
-	}
+    @Override
+    public boolean isConnected() {
+        return connected;
+    }
 
-	@Override
-	public void connect(NetworkAddress address) {
-	}
+    @Override
+    public void connect(NetworkAddress address) {
+    }
 
-	@Override
-	public void disconnect() {
-	}
+    @Override
+    public void disconnect() {
+    }
 
-	@Override
-	public <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler) {
-		handlerLock.lock();
-		if (!handlers.containsKey(packetTpye)) {
-			handlers.put(packetTpye, ConcurrentHashMap.newKeySet());
-		}
-		handlers.get(packetTpye).add(new HandlerEntry<>(packetTpye, handler));
-		handlerLock.unlock();
-	}
+    @Override
+    public <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler) {
+        handlerLock.lock();
+        if (!handlers.containsKey(packetTpye)) {
+            handlers.put(packetTpye, ConcurrentHashMap.newKeySet());
+        }
+        handlers.get(packetTpye).add(new HandlerEntry<>(packetTpye, handler));
+        handlerLock.unlock();
+    }
 
-	@Override
-	public <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler) {
-		handlerLock.lock();
-		if (handlers.containsKey(packetType)) {
-			Collection<HandlerEntry<?>> col = handlers.get(packetType);
-			col.removeIf(he -> he.clazz.equals(packetType));
-			if (col.isEmpty()) {
-				handlers.remove(packetType);
-			}
-		}
-		handlerLock.unlock();
-	}
+    @Override
+    public <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler) {
+        handlerLock.lock();
+        if (handlers.containsKey(packetType)) {
+            Collection<HandlerEntry<?>> col = handlers.get(packetType);
+            col.removeIf(he -> he.clazz.equals(packetType));
+            if (col.isEmpty()) {
+                handlers.remove(packetType);
+            }
+        }
+        handlerLock.unlock();
+    }
 
-	@Override
-	public PacketRegistry getPacketRegistry() {
-		return packetRegistry;
-	}
+    @Override
+    public PacketRegistry getPacketRegistry() {
+        return packetRegistry;
+    }
 
-	public void handleIncomingPacket(Packet packet) {
-		Collection<HandlerEntry<?>> col = handlers.get(packet.getClass());
-		if (col == null) {
-			logger.info("Received unhandled packet: " + packet.getClass());
-			return;
-		}
-		for (HandlerEntry<?> h : col) {
-			h.receivePacket(packet);
-		}
-	}
+    public void handleIncomingPacket(Packet packet) {
+        Collection<HandlerEntry<?>> col = handlers.get(packet.getClass());
+        if (col == null) {
+            logger.info("Received unhandled packet: " + packet.getClass());
+            return;
+        }
+        for (HandlerEntry<?> h : col) {
+            h.receivePacket(packet);
+        }
+    }
 
-	static class HandlerEntry<T extends Packet> {
-		private final Class<T> clazz;
-		private final PacketHandler<T> handler;
+    static class HandlerEntry<T extends Packet> {
+        private final Class<T> clazz;
+        private final PacketHandler<T> handler;
 
-		public HandlerEntry(Class<T> clazz, PacketHandler<T> handler) {
-			this.clazz = clazz;
-			this.handler = handler;
-		}
+        public HandlerEntry(Class<T> clazz, PacketHandler<T> handler) {
+            this.clazz = clazz;
+            this.handler = handler;
+        }
 
-		public Class<T> clazz() {
-			return clazz;
-		}
+        public Class<T> clazz() {
+            return clazz;
+        }
 
-		public PacketHandler<T> handler() {
-			return handler;
-		}
+        public PacketHandler<T> handler() {
+            return handler;
+        }
 
-		public void receivePacket(Object packet) {
-			handler.receivePacket(clazz.cast(packet));
-		}
+        public void receivePacket(Object packet) {
+            handler.receivePacket(clazz.cast(packet));
+        }
 
-	}
+    }
 }

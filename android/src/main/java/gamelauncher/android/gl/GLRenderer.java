@@ -3,6 +3,8 @@ package gamelauncher.android.gl;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.util.GameException;
@@ -28,17 +30,14 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         this.frame = (AndroidFrame) launcher.frame();
     }
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Thread thread = Thread.currentThread();
         executor = new ThreadSpecificExecutor() {
-            @Override
-            public Thread thread() {
+            @Override public Thread thread() {
                 return thread;
             }
 
-            @Override
-            public boolean post(Runnable runnable) {
+            @Override public boolean post(Runnable runnable) {
                 queue.offer(runnable);
                 return true;
             }
@@ -56,8 +55,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         }
     }
 
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    @Override public void onSurfaceChanged(GL10 gl, int width, int height) {
         frame.framebuffer().width().setNumber(width);
         frame.framebuffer().height().setNumber(height);
         if (renderer != null) {
@@ -72,8 +70,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
     }
 
-    @Override
-    public void onDrawFrame(GL10 gl) {
+    @Override public void onDrawFrame(GL10 gl) {
         loop();
         FrameRenderer cfr = frame.frameRenderer();
         if (renderer != cfr) {

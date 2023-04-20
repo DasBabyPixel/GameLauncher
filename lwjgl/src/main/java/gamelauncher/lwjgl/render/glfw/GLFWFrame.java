@@ -7,6 +7,7 @@
 
 package gamelauncher.lwjgl.render.glfw;
 
+import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
@@ -28,10 +29,10 @@ import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
+import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -113,8 +114,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     protected void cleanup0() throws GameException {
         this.renderThread.cleanupContextOnExit = true;
         Threads.waitFor(this.renderThread.exit());
-//        (this.context.parent != null ? this.context.parent : this).freeContextManual(this.context,
-//                true);
         for (GLFWGLContext context : this.contexts) {
             context.cleanup();
         }
@@ -146,6 +145,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         return context;
     }
 
+    @Api
     public void freeContext(GLFWGLContext context) throws GameException {
         if (!this.contexts.contains(context)) {
             throw new IllegalStateException("Frame does not contain context");
@@ -446,22 +446,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             this.y = y;
             this.w = w;
             this.h = h;
-        }
-
-        public double x() {
-            return x;
-        }
-
-        public double y() {
-            return y;
-        }
-
-        public double w() {
-            return w;
-        }
-
-        public double h() {
-            return h;
         }
 
         public double size() {

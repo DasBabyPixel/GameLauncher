@@ -8,7 +8,9 @@
 package gamelauncher.android;
 
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
+import androidx.annotation.RequiresApi;
 import gamelauncher.android.gl.AndroidGLFactory;
 import gamelauncher.android.gl.AndroidMemoryManagement;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
@@ -61,13 +63,11 @@ public class AndroidGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
-    @Override
-    protected void loadCustomPlugins() {
+    @Override protected void loadCustomPlugins() {
         activity.init(this);
     }
 
-    @Override
-    public void frame(Frame frame) {
+    @Override public void frame(Frame frame) {
         super.frame(frame);
     }
 
@@ -75,8 +75,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return view;
     }
 
-    @Override
-    public AndroidKeybindManager keybindManager() {
+    @Override public AndroidKeybindManager keybindManager() {
         return (AndroidKeybindManager) super.keybindManager();
     }
 
@@ -84,8 +83,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return glThreadGroup;
     }
 
-    @Override
-    public void keyboardVisible(boolean visible) {
+    @RequiresApi(api = Build.VERSION_CODES.M) @Override public void keyboardVisible(boolean visible) {
         Runnable r = () -> {
             InputMethodManager manager = activity.getApplicationContext().getSystemService(InputMethodManager.class);
             this.keyboardVisible = visible;
@@ -104,8 +102,7 @@ public class AndroidGameLauncher extends GameLauncher {
         }
     }
 
-    @Override
-    public boolean keyboardVisible() {
+    @Override public boolean keyboardVisible() {
         return keyboardVisible;
     }
 }

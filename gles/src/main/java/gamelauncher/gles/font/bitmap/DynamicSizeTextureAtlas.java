@@ -19,13 +19,13 @@ import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.texture.GLESTexture;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4i;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;

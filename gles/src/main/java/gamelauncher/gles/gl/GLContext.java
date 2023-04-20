@@ -1,5 +1,6 @@
 package gamelauncher.gles.gl;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
@@ -27,13 +28,12 @@ public interface GLContext extends GameResource {
      */
     GLContext createSharedContext() throws GameException;
 
-    GLES20 gl20();
+    @Api GLES20 gl20();
 
-    GLES30 gl30();
+    @Api GLES30 gl30();
 
-    GLES31 gl31();
+    @Api GLES31 gl31();
 
-    @Deprecated
-    GLES32 gl32();
+    @Api @Deprecated GLES32 gl32();
 
 }

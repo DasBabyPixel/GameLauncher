@@ -5,10 +5,10 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -73,15 +73,11 @@ public abstract class AbstractGameResource implements GameResource {
         }
     }
 
-    @Override
-    public <T> T storedValue(Key key) {
-        //noinspection unchecked
+    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key) {
         return (T) map.get(key);
     }
 
-    @Override
-    public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
-        //noinspection unchecked
+    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
         return (T) map.computeIfAbsent(key, key1 -> {
             try {
                 return defaultSupplier.get();
@@ -91,8 +87,7 @@ public abstract class AbstractGameResource implements GameResource {
         });
     }
 
-    @Override
-    public void storeValue(Key key, Object value) {
+    @Override public void storeValue(Key key, Object value) {
         map.put(key, value);
     }
 
@@ -101,8 +96,7 @@ public abstract class AbstractGameResource implements GameResource {
      *
      * @throws GameException an exception
      */
-    @Override
-    public final void cleanup() throws GameException {
+    @Override public final void cleanup() throws GameException {
         if (!this.cleanedUp()) {
             this.setCleanedUp();
             this.cleanup0();
@@ -115,13 +109,11 @@ public abstract class AbstractGameResource implements GameResource {
         }
     }
 
-    @Override
-    public boolean cleanedUp() {
+    @Override public boolean cleanedUp() {
         return this.cleanedUp;
     }
 
-    @Override
-    public CompletableFuture<Void> cleanupFuture() {
+    @Override public CompletableFuture<Void> cleanupFuture() {
         return this.cleanupFuture;
     }
 

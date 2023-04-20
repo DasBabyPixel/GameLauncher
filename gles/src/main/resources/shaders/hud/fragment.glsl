@@ -1,8 +1,6 @@
-#version 310 es
-precision highp float;
+precision mediump float;
 
-in vec2 outTexCoord;
-out vec4 fragColor;
+varying vec2 outTexCoord;
 
 uniform int hasTexture;
 uniform sampler2D texture_sampler;
@@ -12,10 +10,10 @@ uniform vec4 textureAddColor;
 void main() {
     vec4 fc;
     if (hasTexture==1) {
-        fc = texture(texture_sampler, outTexCoord);
+        fc = texture2D(texture_sampler, outTexCoord.xy);
     } else {
         fc = vec4(1, 1, 1, 1);
     }
 
-    fragColor = color * (textureAddColor + fc);
+    gl_FragColor = color * (textureAddColor + fc);
 }

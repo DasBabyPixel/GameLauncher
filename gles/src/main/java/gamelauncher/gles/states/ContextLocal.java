@@ -13,15 +13,13 @@ public abstract class ContextLocal<T> {
     /**
      * @return the current value for this context
      */
-    @SuppressWarnings("unchecked")
-    public final T get() {
+    @SuppressWarnings("unchecked") public final T get() {
         ContextDependant cd = StateRegistry.currentContext(); // TODO: Atomic replacement in contextLocals
         if (cd.contextLocals.containsKey(this)) {
             return (T) cd.contextLocals.get(this);
         }
         T initial = initialValue();
-        if (initial != null)
-            cd.contextLocals.put(this, initial);
+        if (initial != null) cd.contextLocals.put(this, initial);
         return initial;
     }
 
@@ -45,9 +43,8 @@ public abstract class ContextLocal<T> {
         remove(StateRegistry.currentContext());
     }
 
-    final void remove(ContextDependant cd) {
+    @SuppressWarnings("unchecked") final void remove(ContextDependant cd) {
         cd.contextLocals.computeIfPresent(this, (t, u) -> {
-            //noinspection unchecked
             valueRemoved((T) u);
             return null;
         });
@@ -57,18 +54,16 @@ public abstract class ContextLocal<T> {
      * @return an empty contextlocal
      */
     public static <T> ContextLocal<T> empty() {
-        return new ContextLocal<>() {
+        return new EmptyContextLocal<>();
+    }
 
-            @Override
-            protected void valueRemoved(T value) {
-            }
+    private static class EmptyContextLocal<T> extends ContextLocal<T> {
+        @Override protected void valueRemoved(T value) {
+        }
 
-            @Override
-            protected T initialValue() {
-                return null;
-            }
-
-        };
+        @Override protected T initialValue() {
+            return null;
+        }
     }
 
     protected abstract void valueRemoved(T value);

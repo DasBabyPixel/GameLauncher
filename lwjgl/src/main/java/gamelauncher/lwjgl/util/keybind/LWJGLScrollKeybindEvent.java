@@ -11,24 +11,17 @@ public class LWJGLScrollKeybindEvent extends AbstractKeybindEvent implements Scr
     private final float deltaX;
     private final float deltaY;
 
-    /**
-     * @param keybind
-     * @param deltaX
-     * @param deltaY
-     */
     public LWJGLScrollKeybindEvent(Keybind keybind, float deltaX, float deltaY) {
         super(keybind);
         this.deltaX = deltaX;
         this.deltaY = deltaY;
     }
 
-    @Override
-    public float deltaX() {
+    @Override public float deltaX() {
         return deltaX;
     }
 
-    @Override
-    public float deltaY() {
+    @Override public float deltaY() {
         return deltaY;
     }
 }

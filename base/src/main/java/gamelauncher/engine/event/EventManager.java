@@ -6,7 +6,6 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -66,7 +65,8 @@ public class EventManager {
         for (Listener l : listeners.values()) {
             Collections.addAll(nodes, l.nodes);
         }
-        nodes.sort((o1, o2) -> -Integer.compare(o1.priority(), o2.priority()));
+        //noinspection Java8ListSort
+        Collections.sort(nodes, (o1, o2) -> -Integer.compare(o1.priority(), o2.priority()));
         sorted.clear();
         sorted.addAll(nodes);
     }
@@ -97,18 +97,18 @@ public class EventManager {
                 EventHandler handler = method.getAnnotation(EventHandler.class);
                 if (handler == null)
                     continue;
-                if (method.getParameterCount() != 1) {
+                if (method.getParameterTypes().length != 1) {
                     logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
                             + " - More than 1 Parameters!");
                     continue;
                 }
-                Parameter param = method.getParameters()[0];
-                if (!Event.class.isAssignableFrom(param.getType())) {
+                Class<?> param = method.getParameterTypes()[0];
+                if (!Event.class.isAssignableFrom(param)) {
                     logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
-                            + " - Param " + param.getType().getName() + " is not of type Event!");
+                            + " - Param " + param.getName() + " is not of type Event!");
                     continue;
                 }
-                nodes.add(new MethodNode(listener, method, param.getType(), handler.priority()));
+                nodes.add(new MethodNode(listener, method, param, handler.priority()));
             }
             if (listener instanceof Node) {
                 Node node = (Node) listener;

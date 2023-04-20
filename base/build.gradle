@@ -2,20 +2,34 @@ plugins {
     id 'java-library'
     id 'maven-publish'
 }
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['-Xlint:module']
+tasks {
+    jar {
+        manifest {
+            attributes('Automatic-Module-Name': 'gamelauncher.base')
+        }
+    }
 }
 
 dependencies {
     api libs.disruptor
     api libs.annotations
     api libs.pixelannotations
-    api libs.fastutil
+    api libs.streamsupport.cfuture
     api libs.guava
     api libs.property
     api libs.joml
     api libs.gson
     api libs.pngdecoder
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId project.name
+            groupId = project.group
+            version = project.version
+            from components.java
+        }
+    }
 }

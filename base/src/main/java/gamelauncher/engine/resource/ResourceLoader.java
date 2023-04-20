@@ -1,7 +1,9 @@
 package gamelauncher.engine.resource;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
 import java.nio.file.Path;
@@ -27,7 +29,7 @@ public abstract class ResourceLoader extends AbstractGameResource {
     /**
      * Sets this as the {@link ResourceLoader}
      */
-    public final void set() {
+    @ApiStatus.Internal public final void set() {
         instance = this;
     }
 
@@ -36,25 +38,23 @@ public abstract class ResourceLoader extends AbstractGameResource {
      * @return if this {@link ResourceLoader} has the given {@link Path}
      * @throws GameException an exception
      */
-    @Contract(pure = true)
-    public final boolean hasResource(Path path) throws GameException {
+    @Contract(pure = true) @Api public final boolean hasResource(Path path) throws GameException {
         if (isResourceLoaded(path)) {
             return true;
         }
         return canLoadResource(path);
     }
 
-    @Contract(pure = true)
-    protected abstract boolean canLoadResource(Path path) throws GameException;
+    @Contract(pure = true) @Api protected abstract boolean canLoadResource(Path path) throws GameException;
 
-    protected abstract Resource loadResource(Path path) throws GameException;
+    @Api protected abstract Resource loadResource(Path path) throws GameException;
 
     /**
      * @param path the path
      * @return if this {@link ResourceLoader} has loaded a {@link Resource} for the given
      * {@link Path}
      */
-    public final boolean isResourceLoaded(Path path) {
+    @Api public final boolean isResourceLoaded(Path path) {
         return resources.containsKey(path);
     }
 
@@ -65,7 +65,7 @@ public abstract class ResourceLoader extends AbstractGameResource {
      * @return the {@link Resource}
      * @throws GameException an exception
      */
-    public final Resource resource(Path path) throws GameException {
+    @Api public final Resource resource(Path path) throws GameException {
         path = path.toAbsolutePath();
         if (isResourceLoaded(path)) {
             lock.lock();
@@ -80,8 +80,7 @@ public abstract class ResourceLoader extends AbstractGameResource {
         return resource;
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         for (Path path : resources.keySet()) {
             resources.remove(path).cleanup();
         }
@@ -90,8 +89,7 @@ public abstract class ResourceLoader extends AbstractGameResource {
     /**
      * @return the instance
      */
-    @Contract(pure = true)
-    public static ResourceLoader getInstance() {
+    @Contract(pure = true) public static ResourceLoader getInstance() {
         return instance;
     }
 }

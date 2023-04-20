@@ -22,16 +22,16 @@ import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 
-import java.lang.reflect.*;
-import java.util.Arrays;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
 
 public class SimpleGuiManager extends AbstractGameResource implements GuiManager {
     private static final Logger logger = Logger.logger();
@@ -47,8 +47,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         registerGuiCreator(ScrollGui.class);
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         this.launcher.eventManager().unregisterListener(this);
         CompletableFuture<?>[] futures = new CompletableFuture[this.guis.size()];
         int i = 0;
@@ -79,8 +78,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         return CompletableFuture.completedFuture(null);
     }
 
-    @Override
-    public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
+    @Override public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
         GuiStack stack = this.guis.get(framebuffer);
         if (stack == null) {
             stack = new GuiStack();
@@ -93,9 +91,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
             currentGui.unfocus();
             currentGui.onClose();
             if (exit) {
-                framebuffer.renderThread().submit(() -> {
-                    currentGui.cleanup(framebuffer);
-                });
+                framebuffer.renderThread().submit(() -> currentGui.cleanup(framebuffer));
                 if (stack.peekGui() == null) {
                     gui = this.createGui(MainScreenGui.class);
                 }
@@ -122,9 +118,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         framebuffer.scheduleRedraw();
     }
 
-    @Api
-    @Override
-    public Gui currentGui(Framebuffer framebuffer) throws GameException {
+    @Api @Override public Gui currentGui(Framebuffer framebuffer) throws GameException {
         if (!this.guis.containsKey(framebuffer)) {
             return null;
         }
@@ -132,18 +126,15 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         return e == null ? null : e.gui;
     }
 
-    @Override
-    public void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
         Threads.waitFor(this.cleanupLater(framebuffer));
     }
 
-    @Override
-    public GameLauncher launcher() {
+    @Override public GameLauncher launcher() {
         return this.launcher;
     }
 
-    @Override
-    public void updateGuis() throws GameException {
+    @Override public void updateGuis() throws GameException {
         for (GuiStack stack : this.guis.values()) {
             GuiStack.StackEntry e = stack.peekGui();
             if (e != null) {
@@ -152,9 +143,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Gui> T createGui(Class<T> clazz) throws GameException {
+    @SuppressWarnings("unchecked") @Override public <T extends Gui> T createGui(Class<T> clazz) throws GameException {
         GameSupplier<? extends Gui> sup = this.registeredGuis.get(clazz);
         if (sup == null) {
             throw new GameException("Gui " + clazz.getName() + " not registered! Outdated launcher?");
@@ -170,53 +159,48 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         return t;
     }
 
-    @Override
-    public <T extends Gui> void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter) {
+    @Override public <T extends Gui> void registerGuiConverter(Class<T> clazz, GameFunction<T, T> converter) {
         Set<GameFunction<? extends Gui, ? extends Gui>> c = this.converters.computeIfAbsent(clazz, k -> new CopyOnWriteArraySet<>());
         c.add(converter);
     }
 
-    @Override
-    public <T extends Gui> void registerGuiCreator(Class<T> clazz, GameSupplier<T> sup) {
+    @Override public <T extends Gui> void registerGuiCreator(Class<T> clazz, GameSupplier<T> sup) {
         this.registeredGuis.put(clazz, sup);
     }
 
-    @Override
-    public <T extends Gui> void registerGuiCreator(Class<T> clazz) {
+    @Override public <T extends Gui> void registerGuiCreator(Class<T> clazz) {
         registerGuiCreator0(clazz, clazz, null);
     }
 
-    @Override
-    public <T extends Gui> void registerGuiCreator(Class<T> clazz, GuiConstructorTemplate constructorTemplate) {
+    @Override public <T extends Gui> void registerGuiCreator(Class<T> clazz, GuiConstructorTemplate constructorTemplate) {
         if (constructorTemplate == null)
             throw new IllegalArgumentException("GuiConstructorTemplate is null", new NullPointerException());
         registerGuiCreator0(clazz, clazz, constructorTemplate);
     }
 
-    @Override
-    public <T extends Gui> void registerGuiCreator(Class<T> guiClass, Class<? extends T> implementationClass, GuiConstructorTemplate constructorTemplate) {
+    @Override public <T extends Gui> void registerGuiCreator(Class<T> guiClass, Class<? extends T> implementationClass, GuiConstructorTemplate constructorTemplate) {
         if (constructorTemplate == null)
             throw new IllegalArgumentException("GuiConstructorTemplate is null", new NullPointerException());
         registerGuiCreator0(guiClass, implementationClass, constructorTemplate);
     }
 
-    @Override
-    public <T extends Gui> void registerGuiCreator(Class<T> clazz, Class<? extends T> implementationClass) {
+    @Override public <T extends Gui> void registerGuiCreator(Class<T> clazz, Class<? extends T> implementationClass) {
         registerGuiCreator0(clazz, implementationClass, null);
     }
 
     private <T extends Gui> void registerGuiCreator0(Class<T> clazz, Class<? extends T> implementationClass, GuiConstructorTemplate constructorTemplate) {
         Class<?> found = null;
         for (Class<?> c : implementationClass.getDeclaredClasses()) {
-            if (c.getSimpleName().equals(launcher.operatingSystem().name())) {
+            if (c.getSimpleName().equals(launcher.operatingSystem().name()) && !c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
                 found = c;
                 break;
             }
         }
-        if (found == null) {
-            logger.debug("Using default implementation for " + clazz.getName() + " with possibilities: " + Arrays.stream(clazz.getDeclaredClasses()).map(Class::getSimpleName).collect(Collectors.toList()));
-        }
+//        if (found == null)
+//            logger.debug("Using default implementation for " + clazz.getName() + " with possibilities: " + Arrays.stream(clazz.getDeclaredClasses()).map(Class::getSimpleName).collect(Collectors.toList()));
+
         Class<?> defaultCls = implementationClass;
+        if (found != null) defaultCls = found;
         if (defaultCls.isInterface() || Modifier.isAbstract(defaultCls.getModifiers())) {
             for (Class<?> cls : defaultCls.getDeclaredClasses()) {
                 if (!clazz.isAssignableFrom(cls)) {
@@ -243,13 +227,13 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                     }
                 } catch (NoSuchFieldException ignored) {
                     for (Constructor<?> constructor : defaultCls.getConstructors()) {
-                        Parameter[] parameters = constructor.getParameters();
+                        Class<?>[] parameters = constructor.getParameterTypes();
 
                         templates:
                         for (GuiConstructorTemplate template : GuiConstructorTemplates.defaults()) {
                             Class<?>[] args = template.argumentTypes();
                             for (int i = 0; i < args.length; i++) {
-                                if (!args[i].equals(parameters[i].getType())) {
+                                if (!args[i].equals(parameters[i])) {
                                     continue templates;
                                 }
                             }
@@ -275,11 +259,10 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         }
     }
 
-    @EventHandler
-    private void handle(KeybindEntryEvent event) {
+    @EventHandler private void handle(KeybindEntryEvent event) {
         KeybindEvent entry = event.entry();
         // TODO: Gui Selection - not relevant with only one frame visible in this guimanager
-        this.guis.values().forEach(stack -> {
+        for (GuiStack stack : guis.values()) {
             GuiStack.StackEntry e = stack.peekGui();
             if (e != null) {
                 try {
@@ -288,7 +271,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                     logger.error(ex);
                 }
             }
-        });
+        }
     }
 
     protected static class GuiConstructor<T extends Gui> implements GameSupplier<T> {
@@ -303,13 +286,12 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         public T instantiate() throws GameException {
             try {
                 return constructor.newInstance(template.arguments());
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            } catch (Exception e) {
                 throw new GameException(e);
             }
         }
 
-        @Override
-        public T get() throws GameException {
+        @Override public T get() throws GameException {
             return instantiate();
         }
     }

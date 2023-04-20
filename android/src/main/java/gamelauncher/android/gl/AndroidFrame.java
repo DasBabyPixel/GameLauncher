@@ -8,16 +8,19 @@
 package gamelauncher.android.gl;
 
 import android.opengl.EGL14;
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import de.dasbabypixel.api.property.BooleanValue;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
+import gamelauncher.android.gl.supported.SupportedAndroidGLES32;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
+import java8.util.concurrent.CompletableFuture;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class AndroidFrame extends AbstractGameResource implements Frame {
@@ -33,9 +36,9 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
     private volatile RenderMode renderMode;
     private volatile FrameRenderer frameRenderer = null;
 
-    public AndroidFrame(AndroidGameLauncher launcher) {
+    @RequiresApi(api = Build.VERSION_CODES.N) public AndroidFrame(AndroidGameLauncher launcher) {
         this.launcher = launcher;
-        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, EGL14.eglGetCurrentDisplay(), EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW), EGL14.eglGetCurrentContext(), AndroidGLES.instance());
+        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, EGL14.eglGetCurrentDisplay(), EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW), EGL14.eglGetCurrentContext(), new SupportedAndroidGLES32());
         this.fullscreen = BooleanValue.trueValue();
         this.renderThread = new AndroidNativeRenderThread(this);
         this.framebuffer = new AndroidFrameFramebuffer(this);
@@ -43,7 +46,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         this.input = new AndroidInput(launcher);
     }
 
-    AndroidFrame(AndroidGameLauncher launcher, AndroidGLContext context) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) AndroidFrame(AndroidGameLauncher launcher, AndroidGLContext context) {
         this.launcher = launcher;
         this.context = context;
         this.fullscreen = BooleanValue.falseValue();
@@ -55,56 +58,46 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         r.start();
     }
 
-    @Override
-    public Input input() {
+    @Override public Input input() {
         return input;
     }
 
-    @Override
-    public CompletableFuture<Frame> frameCloseFuture() {
+    @Override public CompletableFuture<Frame> frameCloseFuture() {
         return closeFuture;
     }
 
-    @Override
-    public Framebuffer framebuffer() {
+    @Override public Framebuffer framebuffer() {
         return framebuffer;
     }
 
-    @Override
-    public RenderMode renderMode() {
+    @Override public RenderMode renderMode() {
         return renderMode;
     }
 
-    @Override
-    public void renderMode(RenderMode renderMode) {
+    @Override public void renderMode(RenderMode renderMode) {
         this.renderMode = renderMode;
     }
 
-    @Override
-    public void frameRenderer(FrameRenderer renderer) {
+    @Override public void frameRenderer(FrameRenderer renderer) {
         if (this == launcher.frame() && renderer != launcher.gameRenderer()) {
             throw new UnsupportedOperationException("Please set the renderer via GameLauncher#gameRenderer to preserve a consistent state");
         }
         this.frameRenderer = renderer;
     }
 
-    @Override
-    public BooleanValue fullscreen() {
+    @Override public BooleanValue fullscreen() {
         return fullscreen;
     }
 
-    @Override
-    public FrameRenderer frameRenderer() {
+    @Override public FrameRenderer frameRenderer() {
         return frameRenderer;
     }
 
-    @Override
-    public RenderThread renderThread() {
+    @Override public RenderThread renderThread() {
         return renderThread;
     }
 
-    @Override
-    public AndroidFrame newFrame() throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.N) @Override public AndroidFrame newFrame() throws GameException {
         return context.createSharedContext().frame();
     }
 
@@ -112,33 +105,27 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         return context;
     }
 
-    @Override
-    public FrameCounter frameCounter() {
+    @Override public FrameCounter frameCounter() {
         return frameCounter;
     }
 
-    @Override
-    public void scheduleDraw() {
+    @Override public void scheduleDraw() {
         renderThread.scheduleDraw();
     }
 
-    @Override
-    public void waitForFrame() {
+    @Override public void waitForFrame() {
         renderThread.waitForFrame();
     }
 
-    @Override
-    public void scheduleDrawWaitForFrame() {
+    @Override public void scheduleDrawWaitForFrame() {
         renderThread.scheduleDrawWaitForFrame();
     }
 
-    @Override
-    public AndroidGameLauncher launcher() {
+    @Override public AndroidGameLauncher launcher() {
         return launcher;
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         this.manualFramebuffer.cleanup();
     }
 }

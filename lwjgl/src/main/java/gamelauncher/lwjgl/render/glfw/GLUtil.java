@@ -1,5 +1,6 @@
 package gamelauncher.lwjgl.render.glfw;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.gles.states.ContextLocal;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
@@ -33,9 +34,10 @@ public final class GLUtil {
      * Detects the best debug output functionality to use and creates a callback that prints
      * information to {@link APIUtil#DEBUG_STREAM}. The callback function is returned as a
      * {@link Callback}, that should be {@link Callback#free freed} when no longer needed.
+     *
+     * @return the generated callback function
      */
-    @Nullable
-    public static Callback setupDebugMessageCallback() {
+    @Api @Nullable public static Callback setupDebugMessageCallback() {
         return GLUtil.setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
     }
 
@@ -45,41 +47,36 @@ public final class GLUtil {
      * {@link Callback}, that should be {@link Callback#free freed} when no longer needed.
      *
      * @param stream the output {@link PrintStream}
+     * @return the generated callback function
      */
-    @Nullable
-    public static Callback setupDebugMessageCallback(PrintStream stream) {
+    @Api @Nullable public static Callback setupDebugMessageCallback(PrintStream stream) {
         GLESCapabilities caps = GLES.getCapabilities();
 
         if (caps.GLES32) {
             APIUtil.apiLog("[GL] Using OpenGL 4.3 for error logging.");
-            GLDebugMessageCallback proc = GLDebugMessageCallback.create(
-                    (source, type, id, severity, length, message, userParam) -> {
-                        if (id == 0x20071) {
-                            // Notification about buffer details
-                            return;
-                        }
-                        if (StateRegistry.currentContext() != null) {
-                            if (GLUtil.skip.has()) {
-                                return;
-                            }
-                        } else {
-                            stream.println("OpenGL Error on Thread without OpenGL context: "
-                                    + Thread.currentThread().getName());
-                        }
-                        stream.println("[LWJGL] OpenGL debug message");
-                        GLUtil.printDetail(stream, "ID", String.format("0x%X", id));
-                        GLUtil.printDetail(stream, "Source", GLUtil.getDebugSource(source));
-                        GLUtil.printDetail(stream, "Type", GLUtil.getDebugType(type));
-                        GLUtil.printDetail(stream, "Severity", GLUtil.getDebugSeverity(severity));
-                        GLUtil.printDetail(stream, "Message",
-                                GLDebugMessageCallback.getMessage(length, message));
-                        Thread.dumpStack();
-                    });
+            GLDebugMessageCallback proc = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
+                if (id == 0x20071) {
+                    // Notification about buffer details
+                    return;
+                }
+                if (StateRegistry.currentContext() != null) {
+                    if (GLUtil.skip.has()) {
+                        return;
+                    }
+                } else {
+                    stream.println("OpenGL Error on Thread without OpenGL context: " + Thread.currentThread().getName());
+                }
+                stream.println("[LWJGL] OpenGL debug message");
+                GLUtil.printDetail(stream, "ID", String.format("0x%X", id));
+                GLUtil.printDetail(stream, "Source", GLUtil.getDebugSource(source));
+                GLUtil.printDetail(stream, "Type", GLUtil.getDebugType(type));
+                GLUtil.printDetail(stream, "Severity", GLUtil.getDebugSeverity(severity));
+                GLUtil.printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
+                Thread.dumpStack();
+            });
             GLES32.glDebugMessageCallback(proc, MemoryUtil.NULL);
-            if ((GLES20.glGetInteger(GLUtil.GL_CONTEXT_FLAGS) & GLES32.GL_CONTEXT_FLAG_DEBUG_BIT)
-                    == 0) {
-                APIUtil.apiLog(
-                        "[GL] Warning: A non-debug context may not produce any debug output.");
+            if ((GLES20.glGetInteger(GLUtil.GL_CONTEXT_FLAGS) & GLES32.GL_CONTEXT_FLAG_DEBUG_BIT) == 0) {
+                APIUtil.apiLog("[GL] Warning: A non-debug context may not produce any debug output.");
             }
             return proc;
         }

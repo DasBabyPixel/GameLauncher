@@ -7,574 +7,575 @@
 
 package gamelauncher.gles.gl;
 
+import de.dasbabypixel.annotations.Api;
+
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 public interface GLES20 {
-    int GL_ACTIVE_TEXTURE = 0x84E0;
-    int GL_DEPTH_BUFFER_BIT = 0x00000100;
-    int GL_STENCIL_BUFFER_BIT = 0x00000400;
-    int GL_COLOR_BUFFER_BIT = 0x00004000;
-    int GL_FALSE = 0;
-    int GL_TRUE = 1;
-    int GL_POINTS = 0x0000;
-    int GL_LINES = 0x0001;
-    int GL_LINE_LOOP = 0x0002;
-    int GL_LINE_STRIP = 0x0003;
-    int GL_TRIANGLES = 0x0004;
-    int GL_TRIANGLE_STRIP = 0x0005;
-    int GL_TRIANGLE_FAN = 0x0006;
-    int GL_ZERO = 0;
-    int GL_ONE = 1;
-    int GL_SRC_COLOR = 0x0300;
-    int GL_ONE_MINUS_SRC_COLOR = 0x0301;
-    int GL_SRC_ALPHA = 0x0302;
-    int GL_ONE_MINUS_SRC_ALPHA = 0x0303;
-    int GL_DST_ALPHA = 0x0304;
-    int GL_ONE_MINUS_DST_ALPHA = 0x0305;
-    int GL_DST_COLOR = 0x0306;
-    int GL_ONE_MINUS_DST_COLOR = 0x0307;
-    int GL_SRC_ALPHA_SATURATE = 0x0308;
-    int GL_FUNC_ADD = 0x8006;
-    int GL_BLEND_EQUATION = 0x8009;
-    int GL_BLEND_EQUATION_RGB = 0x8009;   /* same as BLEND_EQUATION */
-    int GL_BLEND_EQUATION_ALPHA = 0x883D;
-    int GL_FUNC_SUBTRACT = 0x800A;
-    int GL_FUNC_REVERSE_SUBTRACT = 0x800B;
-    int GL_BLEND_DST_RGB = 0x80C8;
-    int GL_BLEND_SRC_RGB = 0x80C9;
-    int GL_BLEND_DST_ALPHA = 0x80CA;
-    int GL_BLEND_SRC_ALPHA = 0x80CB;
-    int GL_CONSTANT_COLOR = 0x8001;
-    int GL_ONE_MINUS_CONSTANT_COLOR = 0x8002;
-    int GL_CONSTANT_ALPHA = 0x8003;
-    int GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
-    int GL_BLEND_COLOR = 0x8005;
-    int GL_ARRAY_BUFFER = 0x8892;
-    int GL_ELEMENT_ARRAY_BUFFER = 0x8893;
-    int GL_ARRAY_BUFFER_BINDING = 0x8894;
-    int GL_ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
-    int GL_STREAM_DRAW = 0x88E0;
-    int GL_STATIC_DRAW = 0x88E4;
-    int GL_DYNAMIC_DRAW = 0x88E8;
-    int GL_BUFFER_SIZE = 0x8764;
-    int GL_BUFFER_USAGE = 0x8765;
-    int GL_CURRENT_VERTEX_ATTRIB = 0x8626;
-    int GL_FRONT = 0x0404;
-    int GL_BACK = 0x0405;
-    int GL_FRONT_AND_BACK = 0x0408;
-    int GL_TEXTURE_2D = 0x0DE1;
-    int GL_CULL_FACE = 0x0B44;
-    int GL_BLEND = 0x0BE2;
-    int GL_DITHER = 0x0BD0;
-    int GL_STENCIL_TEST = 0x0B90;
-    int GL_DEPTH_TEST = 0x0B71;
-    int GL_SCISSOR_TEST = 0x0C11;
-    int GL_POLYGON_OFFSET_FILL = 0x8037;
-    int GL_SAMPLE_ALPHA_TO_COVERAGE = 0x809E;
-    int GL_SAMPLE_COVERAGE = 0x80A0;
-    int GL_NO_ERROR = 0;
-    int GL_INVALID_ENUM = 0x0500;
-    int GL_INVALID_VALUE = 0x0501;
-    int GL_INVALID_OPERATION = 0x0502;
-    int GL_OUT_OF_MEMORY = 0x0505;
-    int GL_CW = 0x0900;
-    int GL_CCW = 0x0901;
-    int GL_LINE_WIDTH = 0x0B21;
-    int GL_ALIASED_POINT_SIZE_RANGE = 0x846D;
-    int GL_ALIASED_LINE_WIDTH_RANGE = 0x846E;
-    int GL_CULL_FACE_MODE = 0x0B45;
-    int GL_FRONT_FACE = 0x0B46;
-    int GL_DEPTH_RANGE = 0x0B70;
-    int GL_DEPTH_WRITEMASK = 0x0B72;
-    int GL_DEPTH_CLEAR_VALUE = 0x0B73;
-    int GL_DEPTH_FUNC = 0x0B74;
-    int GL_STENCIL_CLEAR_VALUE = 0x0B91;
-    int GL_STENCIL_FUNC = 0x0B92;
-    int GL_STENCIL_FAIL = 0x0B94;
-    int GL_STENCIL_PASS_DEPTH_FAIL = 0x0B95;
-    int GL_STENCIL_PASS_DEPTH_PASS = 0x0B96;
-    int GL_STENCIL_REF = 0x0B97;
-    int GL_STENCIL_VALUE_MASK = 0x0B93;
-    int GL_STENCIL_WRITEMASK = 0x0B98;
-    int GL_STENCIL_BACK_FUNC = 0x8800;
-    int GL_STENCIL_BACK_FAIL = 0x8801;
-    int GL_STENCIL_BACK_PASS_DEPTH_FAIL = 0x8802;
-    int GL_STENCIL_BACK_PASS_DEPTH_PASS = 0x8803;
-    int GL_STENCIL_BACK_REF = 0x8CA3;
-    int GL_STENCIL_BACK_VALUE_MASK = 0x8CA4;
-    int GL_STENCIL_BACK_WRITEMASK = 0x8CA5;
-    int GL_VIEWPORT = 0x0BA2;
-    int GL_SCISSOR_BOX = 0x0C10;
-    int GL_COLOR_CLEAR_VALUE = 0x0C22;
-    int GL_COLOR_WRITEMASK = 0x0C23;
-    int GL_UNPACK_ALIGNMENT = 0x0CF5;
-    int GL_PACK_ALIGNMENT = 0x0D05;
-    int GL_MAX_TEXTURE_SIZE = 0x0D33;
-    int GL_MAX_VIEWPORT_DIMS = 0x0D3A;
-    int GL_SUBPIXEL_BITS = 0x0D50;
-    int GL_RED_BITS = 0x0D52;
-    int GL_GREEN_BITS = 0x0D53;
-    int GL_BLUE_BITS = 0x0D54;
-    int GL_ALPHA_BITS = 0x0D55;
-    int GL_DEPTH_BITS = 0x0D56;
-    int GL_STENCIL_BITS = 0x0D57;
-    int GL_POLYGON_OFFSET_UNITS = 0x2A00;
-    int GL_POLYGON_OFFSET_FACTOR = 0x8038;
-    int GL_TEXTURE_BINDING_2D = 0x8069;
-    int GL_SAMPLE_BUFFERS = 0x80A8;
-    int GL_SAMPLES = 0x80A9;
-    int GL_SAMPLE_COVERAGE_VALUE = 0x80AA;
-    int GL_SAMPLE_COVERAGE_INVERT = 0x80AB;
-    int GL_NUM_COMPRESSED_TEXTURE_FORMATS = 0x86A2;
-    int GL_COMPRESSED_TEXTURE_FORMATS = 0x86A3;
-    int GL_DONT_CARE = 0x1100;
-    int GL_FASTEST = 0x1101;
-    int GL_NICEST = 0x1102;
-    int GL_GENERATE_MIPMAP_HINT = 0x8192;
-    int GL_BYTE = 0x1400;
-    int GL_UNSIGNED_BYTE = 0x1401;
-    int GL_SHORT = 0x1402;
-    int GL_UNSIGNED_SHORT = 0x1403;
-    int GL_INT = 0x1404;
-    int GL_UNSIGNED_INT = 0x1405;
-    int GL_FLOAT = 0x1406;
-    int GL_FIXED = 0x140C;
-    int GL_DEPTH_COMPONENT = 0x1902;
-    int GL_ALPHA = 0x1906;
-    int GL_RGB = 0x1907;
-    int GL_RGBA = 0x1908;
-    int GL_LUMINANCE = 0x1909;
-    int GL_LUMINANCE_ALPHA = 0x190A;
-    int GL_UNSIGNED_SHORT_4_4_4_4 = 0x8033;
-    int GL_UNSIGNED_SHORT_5_5_5_1 = 0x8034;
-    int GL_UNSIGNED_SHORT_5_6_5 = 0x8363;
-    int GL_FRAGMENT_SHADER = 0x8B30;
-    int GL_VERTEX_SHADER = 0x8B31;
-    int GL_MAX_VERTEX_ATTRIBS = 0x8869;
-    int GL_MAX_VERTEX_UNIFORM_VECTORS = 0x8DFB;
-    int GL_MAX_VARYING_VECTORS = 0x8DFC;
-    int GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
-    int GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS = 0x8B4C;
-    int GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872;
-    int GL_MAX_FRAGMENT_UNIFORM_VECTORS = 0x8DFD;
-    int GL_SHADER_TYPE = 0x8B4F;
-    int GL_DELETE_STATUS = 0x8B80;
-    int GL_LINK_STATUS = 0x8B82;
-    int GL_VALIDATE_STATUS = 0x8B83;
-    int GL_ATTACHED_SHADERS = 0x8B85;
-    int GL_ACTIVE_UNIFORMS = 0x8B86;
-    int GL_ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87;
-    int GL_ACTIVE_ATTRIBUTES = 0x8B89;
-    int GL_ACTIVE_ATTRIBUTE_MAX_LENGTH = 0x8B8A;
-    int GL_SHADING_LANGUAGE_VERSION = 0x8B8C;
-    int GL_CURRENT_PROGRAM = 0x8B8D;
-    int GL_NEVER = 0x0200;
-    int GL_LESS = 0x0201;
-    int GL_EQUAL = 0x0202;
-    int GL_LEQUAL = 0x0203;
-    int GL_GREATER = 0x0204;
-    int GL_NOTEQUAL = 0x0205;
-    int GL_GEQUAL = 0x0206;
-    int GL_ALWAYS = 0x0207;
-    int GL_KEEP = 0x1E00;
-    int GL_REPLACE = 0x1E01;
-    int GL_INCR = 0x1E02;
-    int GL_DECR = 0x1E03;
-    int GL_INVERT = 0x150A;
-    int GL_INCR_WRAP = 0x8507;
-    int GL_DECR_WRAP = 0x8508;
-    int GL_VENDOR = 0x1F00;
-    int GL_RENDERER = 0x1F01;
-    int GL_VERSION = 0x1F02;
-    int GL_EXTENSIONS = 0x1F03;
-    int GL_NEAREST = 0x2600;
-    int GL_LINEAR = 0x2601;
-    int GL_NEAREST_MIPMAP_NEAREST = 0x2700;
-    int GL_LINEAR_MIPMAP_NEAREST = 0x2701;
-    int GL_NEAREST_MIPMAP_LINEAR = 0x2702;
-    int GL_LINEAR_MIPMAP_LINEAR = 0x2703;
-    int GL_TEXTURE_MAG_FILTER = 0x2800;
-    int GL_TEXTURE_MIN_FILTER = 0x2801;
-    int GL_TEXTURE_WRAP_S = 0x2802;
-    int GL_TEXTURE_WRAP_T = 0x2803;
-    int GL_TEXTURE = 0x1702;
-    int GL_TEXTURE_CUBE_MAP = 0x8513;
-    int GL_TEXTURE_BINDING_CUBE_MAP = 0x8514;
-    int GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515;
-    int GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516;
-    int GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517;
-    int GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518;
-    int GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
-    int GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
-    int GL_MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
-    int GL_TEXTURE0 = 0x84C0;
-    int GL_TEXTURE1 = 0x84C1;
-    int GL_TEXTURE2 = 0x84C2;
-    int GL_TEXTURE3 = 0x84C3;
-    int GL_TEXTURE4 = 0x84C4;
-    int GL_TEXTURE5 = 0x84C5;
-    int GL_TEXTURE6 = 0x84C6;
-    int GL_TEXTURE7 = 0x84C7;
-    int GL_TEXTURE8 = 0x84C8;
-    int GL_TEXTURE9 = 0x84C9;
-    int GL_TEXTURE10 = 0x84CA;
-    int GL_TEXTURE11 = 0x84CB;
-    int GL_TEXTURE12 = 0x84CC;
-    int GL_TEXTURE13 = 0x84CD;
-    int GL_TEXTURE14 = 0x84CE;
-    int GL_TEXTURE15 = 0x84CF;
-    int GL_TEXTURE16 = 0x84D0;
-    int GL_TEXTURE17 = 0x84D1;
-    int GL_TEXTURE18 = 0x84D2;
-    int GL_TEXTURE19 = 0x84D3;
-    int GL_TEXTURE20 = 0x84D4;
-    int GL_TEXTURE21 = 0x84D5;
-    int GL_TEXTURE22 = 0x84D6;
-    int GL_TEXTURE23 = 0x84D7;
-    int GL_TEXTURE24 = 0x84D8;
-    int GL_TEXTURE25 = 0x84D9;
-    int GL_TEXTURE26 = 0x84DA;
-    int GL_TEXTURE27 = 0x84DB;
-    int GL_TEXTURE28 = 0x84DC;
-    int GL_TEXTURE29 = 0x84DD;
-    int GL_TEXTURE30 = 0x84DE;
-    int GL_TEXTURE31 = 0x84DF;
-    int GL_REPEAT = 0x2901;
-    int GL_CLAMP_TO_EDGE = 0x812F;
-    int GL_MIRRORED_REPEAT = 0x8370;
-    int GL_FLOAT_VEC2 = 0x8B50;
-    int GL_FLOAT_VEC3 = 0x8B51;
-    int GL_FLOAT_VEC4 = 0x8B52;
-    int GL_INT_VEC2 = 0x8B53;
-    int GL_INT_VEC3 = 0x8B54;
-    int GL_INT_VEC4 = 0x8B55;
-    int GL_BOOL = 0x8B56;
-    int GL_BOOL_VEC2 = 0x8B57;
-    int GL_BOOL_VEC3 = 0x8B58;
-    int GL_BOOL_VEC4 = 0x8B59;
-    int GL_FLOAT_MAT2 = 0x8B5A;
-    int GL_FLOAT_MAT3 = 0x8B5B;
-    int GL_FLOAT_MAT4 = 0x8B5C;
-    int GL_SAMPLER_2D = 0x8B5E;
-    int GL_SAMPLER_CUBE = 0x8B60;
-    int GL_VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622;
-    int GL_VERTEX_ATTRIB_ARRAY_SIZE = 0x8623;
-    int GL_VERTEX_ATTRIB_ARRAY_STRIDE = 0x8624;
-    int GL_VERTEX_ATTRIB_ARRAY_TYPE = 0x8625;
-    int GL_VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A;
-    int GL_VERTEX_ATTRIB_ARRAY_POINTER = 0x8645;
-    int GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
-    int GL_IMPLEMENTATION_COLOR_READ_TYPE = 0x8B9A;
-    int GL_IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
-    int GL_COMPILE_STATUS = 0x8B81;
-    int GL_INFO_LOG_LENGTH = 0x8B84;
-    int GL_SHADER_SOURCE_LENGTH = 0x8B88;
-    int GL_SHADER_COMPILER = 0x8DFA;
-    int GL_SHADER_BINARY_FORMATS = 0x8DF8;
-    int GL_NUM_SHADER_BINARY_FORMATS = 0x8DF9;
-    int GL_LOW_FLOAT = 0x8DF0;
-    int GL_MEDIUM_FLOAT = 0x8DF1;
-    int GL_HIGH_FLOAT = 0x8DF2;
-    int GL_LOW_INT = 0x8DF3;
-    int GL_MEDIUM_INT = 0x8DF4;
-    int GL_HIGH_INT = 0x8DF5;
-    int GL_FRAMEBUFFER = 0x8D40;
-    int GL_RENDERBUFFER = 0x8D41;
-    int GL_RGBA4 = 0x8056;
-    int GL_RGB5_A1 = 0x8057;
-    int GL_RGB565 = 0x8D62;
-    int GL_DEPTH_COMPONENT16 = 0x81A5;
+    @Api int GL_ACTIVE_TEXTURE = 0x84E0;
+    @Api int GL_DEPTH_BUFFER_BIT = 0x00000100;
+    @Api int GL_STENCIL_BUFFER_BIT = 0x00000400;
+    @Api int GL_COLOR_BUFFER_BIT = 0x00004000;
+    @Api int GL_FALSE = 0;
+    @Api int GL_TRUE = 1;
+    @Api int GL_POINTS = 0x0000;
+    @Api int GL_LINES = 0x0001;
+    @Api int GL_LINE_LOOP = 0x0002;
+    @Api int GL_LINE_STRIP = 0x0003;
+    @Api int GL_TRIANGLES = 0x0004;
+    @Api int GL_TRIANGLE_STRIP = 0x0005;
+    @Api int GL_TRIANGLE_FAN = 0x0006;
+    @Api int GL_ZERO = 0;
+    @Api int GL_ONE = 1;
+    @Api int GL_SRC_COLOR = 0x0300;
+    @Api int GL_ONE_MINUS_SRC_COLOR = 0x0301;
+    @Api int GL_SRC_ALPHA = 0x0302;
+    @Api int GL_ONE_MINUS_SRC_ALPHA = 0x0303;
+    @Api int GL_DST_ALPHA = 0x0304;
+    @Api int GL_ONE_MINUS_DST_ALPHA = 0x0305;
+    @Api int GL_DST_COLOR = 0x0306;
+    @Api int GL_ONE_MINUS_DST_COLOR = 0x0307;
+    @Api int GL_SRC_ALPHA_SATURATE = 0x0308;
+    @Api int GL_FUNC_ADD = 0x8006;
+    @Api int GL_BLEND_EQUATION = 0x8009;
+    @Api int GL_BLEND_EQUATION_RGB = 0x8009;   /* same as BLEND_EQUATION */
+    @Api int GL_BLEND_EQUATION_ALPHA = 0x883D;
+    @Api int GL_FUNC_SUBTRACT = 0x800A;
+    @Api int GL_FUNC_REVERSE_SUBTRACT = 0x800B;
+    @Api int GL_BLEND_DST_RGB = 0x80C8;
+    @Api int GL_BLEND_SRC_RGB = 0x80C9;
+    @Api int GL_BLEND_DST_ALPHA = 0x80CA;
+    @Api int GL_BLEND_SRC_ALPHA = 0x80CB;
+    @Api int GL_CONSTANT_COLOR = 0x8001;
+    @Api int GL_ONE_MINUS_CONSTANT_COLOR = 0x8002;
+    @Api int GL_CONSTANT_ALPHA = 0x8003;
+    @Api int GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
+    @Api int GL_BLEND_COLOR = 0x8005;
+    @Api int GL_ARRAY_BUFFER = 0x8892;
+    @Api int GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+    @Api int GL_ARRAY_BUFFER_BINDING = 0x8894;
+    @Api int GL_ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
+    @Api int GL_STREAM_DRAW = 0x88E0;
+    @Api int GL_STATIC_DRAW = 0x88E4;
+    @Api int GL_DYNAMIC_DRAW = 0x88E8;
+    @Api int GL_BUFFER_SIZE = 0x8764;
+    @Api int GL_BUFFER_USAGE = 0x8765;
+    @Api int GL_CURRENT_VERTEX_ATTRIB = 0x8626;
+    @Api int GL_FRONT = 0x0404;
+    @Api int GL_BACK = 0x0405;
+    @Api int GL_FRONT_AND_BACK = 0x0408;
+    @Api int GL_TEXTURE_2D = 0x0DE1;
+    @Api int GL_CULL_FACE = 0x0B44;
+    @Api int GL_BLEND = 0x0BE2;
+    @Api int GL_DITHER = 0x0BD0;
+    @Api int GL_STENCIL_TEST = 0x0B90;
+    @Api int GL_DEPTH_TEST = 0x0B71;
+    @Api int GL_SCISSOR_TEST = 0x0C11;
+    @Api int GL_POLYGON_OFFSET_FILL = 0x8037;
+    @Api int GL_SAMPLE_ALPHA_TO_COVERAGE = 0x809E;
+    @Api int GL_SAMPLE_COVERAGE = 0x80A0;
+    @Api int GL_NO_ERROR = 0;
+    @Api int GL_INVALID_ENUM = 0x0500;
+    @Api int GL_INVALID_VALUE = 0x0501;
+    @Api int GL_INVALID_OPERATION = 0x0502;
+    @Api int GL_OUT_OF_MEMORY = 0x0505;
+    @Api int GL_CW = 0x0900;
+    @Api int GL_CCW = 0x0901;
+    @Api int GL_LINE_WIDTH = 0x0B21;
+    @Api int GL_ALIASED_POINT_SIZE_RANGE = 0x846D;
+    @Api int GL_ALIASED_LINE_WIDTH_RANGE = 0x846E;
+    @Api int GL_CULL_FACE_MODE = 0x0B45;
+    @Api int GL_FRONT_FACE = 0x0B46;
+    @Api int GL_DEPTH_RANGE = 0x0B70;
+    @Api int GL_DEPTH_WRITEMASK = 0x0B72;
+    @Api int GL_DEPTH_CLEAR_VALUE = 0x0B73;
+    @Api int GL_DEPTH_FUNC = 0x0B74;
+    @Api int GL_STENCIL_CLEAR_VALUE = 0x0B91;
+    @Api int GL_STENCIL_FUNC = 0x0B92;
+    @Api int GL_STENCIL_FAIL = 0x0B94;
+    @Api int GL_STENCIL_PASS_DEPTH_FAIL = 0x0B95;
+    @Api int GL_STENCIL_PASS_DEPTH_PASS = 0x0B96;
+    @Api int GL_STENCIL_REF = 0x0B97;
+    @Api int GL_STENCIL_VALUE_MASK = 0x0B93;
+    @Api int GL_STENCIL_WRITEMASK = 0x0B98;
+    @Api int GL_STENCIL_BACK_FUNC = 0x8800;
+    @Api int GL_STENCIL_BACK_FAIL = 0x8801;
+    @Api int GL_STENCIL_BACK_PASS_DEPTH_FAIL = 0x8802;
+    @Api int GL_STENCIL_BACK_PASS_DEPTH_PASS = 0x8803;
+    @Api int GL_STENCIL_BACK_REF = 0x8CA3;
+    @Api int GL_STENCIL_BACK_VALUE_MASK = 0x8CA4;
+    @Api int GL_STENCIL_BACK_WRITEMASK = 0x8CA5;
+    @Api int GL_VIEWPORT = 0x0BA2;
+    @Api int GL_SCISSOR_BOX = 0x0C10;
+    @Api int GL_COLOR_CLEAR_VALUE = 0x0C22;
+    @Api int GL_COLOR_WRITEMASK = 0x0C23;
+    @Api int GL_UNPACK_ALIGNMENT = 0x0CF5;
+    @Api int GL_PACK_ALIGNMENT = 0x0D05;
+    @Api int GL_MAX_TEXTURE_SIZE = 0x0D33;
+    @Api int GL_MAX_VIEWPORT_DIMS = 0x0D3A;
+    @Api int GL_SUBPIXEL_BITS = 0x0D50;
+    @Api int GL_RED_BITS = 0x0D52;
+    @Api int GL_GREEN_BITS = 0x0D53;
+    @Api int GL_BLUE_BITS = 0x0D54;
+    @Api int GL_ALPHA_BITS = 0x0D55;
+    @Api int GL_DEPTH_BITS = 0x0D56;
+    @Api int GL_STENCIL_BITS = 0x0D57;
+    @Api int GL_POLYGON_OFFSET_UNITS = 0x2A00;
+    @Api int GL_POLYGON_OFFSET_FACTOR = 0x8038;
+    @Api int GL_TEXTURE_BINDING_2D = 0x8069;
+    @Api int GL_SAMPLE_BUFFERS = 0x80A8;
+    @Api int GL_SAMPLES = 0x80A9;
+    @Api int GL_SAMPLE_COVERAGE_VALUE = 0x80AA;
+    @Api int GL_SAMPLE_COVERAGE_INVERT = 0x80AB;
+    @Api int GL_NUM_COMPRESSED_TEXTURE_FORMATS = 0x86A2;
+    @Api int GL_COMPRESSED_TEXTURE_FORMATS = 0x86A3;
+    @Api int GL_DONT_CARE = 0x1100;
+    @Api int GL_FASTEST = 0x1101;
+    @Api int GL_NICEST = 0x1102;
+    @Api int GL_GENERATE_MIPMAP_HINT = 0x8192;
+    @Api int GL_BYTE = 0x1400;
+    @Api int GL_UNSIGNED_BYTE = 0x1401;
+    @Api int GL_SHORT = 0x1402;
+    @Api int GL_UNSIGNED_SHORT = 0x1403;
+    @Api int GL_INT = 0x1404;
+    @Api int GL_UNSIGNED_INT = 0x1405;
+    @Api int GL_FLOAT = 0x1406;
+    @Api int GL_FIXED = 0x140C;
+    @Api int GL_DEPTH_COMPONENT = 0x1902;
+    @Api int GL_ALPHA = 0x1906;
+    @Api int GL_RGB = 0x1907;
+    @Api int GL_RGBA = 0x1908;
+    @Api int GL_LUMINANCE = 0x1909;
+    @Api int GL_LUMINANCE_ALPHA = 0x190A;
+    @Api int GL_UNSIGNED_SHORT_4_4_4_4 = 0x8033;
+    @Api int GL_UNSIGNED_SHORT_5_5_5_1 = 0x8034;
+    @Api int GL_UNSIGNED_SHORT_5_6_5 = 0x8363;
+    @Api int GL_FRAGMENT_SHADER = 0x8B30;
+    @Api int GL_VERTEX_SHADER = 0x8B31;
+    @Api int GL_MAX_VERTEX_ATTRIBS = 0x8869;
+    @Api int GL_MAX_VERTEX_UNIFORM_VECTORS = 0x8DFB;
+    @Api int GL_MAX_VARYING_VECTORS = 0x8DFC;
+    @Api int GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
+    @Api int GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS = 0x8B4C;
+    @Api int GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872;
+    @Api int GL_MAX_FRAGMENT_UNIFORM_VECTORS = 0x8DFD;
+    @Api int GL_SHADER_TYPE = 0x8B4F;
+    @Api int GL_DELETE_STATUS = 0x8B80;
+    @Api int GL_LINK_STATUS = 0x8B82;
+    @Api int GL_VALIDATE_STATUS = 0x8B83;
+    @Api int GL_ATTACHED_SHADERS = 0x8B85;
+    @Api int GL_ACTIVE_UNIFORMS = 0x8B86;
+    @Api int GL_ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87;
+    @Api int GL_ACTIVE_ATTRIBUTES = 0x8B89;
+    @Api int GL_ACTIVE_ATTRIBUTE_MAX_LENGTH = 0x8B8A;
+    @Api int GL_SHADING_LANGUAGE_VERSION = 0x8B8C;
+    @Api int GL_CURRENT_PROGRAM = 0x8B8D;
+    @Api int GL_NEVER = 0x0200;
+    @Api int GL_LESS = 0x0201;
+    @Api int GL_EQUAL = 0x0202;
+    @Api int GL_LEQUAL = 0x0203;
+    @Api int GL_GREATER = 0x0204;
+    @Api int GL_NOTEQUAL = 0x0205;
+    @Api int GL_GEQUAL = 0x0206;
+    @Api int GL_ALWAYS = 0x0207;
+    @Api int GL_KEEP = 0x1E00;
+    @Api int GL_REPLACE = 0x1E01;
+    @Api int GL_INCR = 0x1E02;
+    @Api int GL_DECR = 0x1E03;
+    @Api int GL_INVERT = 0x150A;
+    @Api int GL_INCR_WRAP = 0x8507;
+    @Api int GL_DECR_WRAP = 0x8508;
+    @Api int GL_VENDOR = 0x1F00;
+    @Api int GL_RENDERER = 0x1F01;
+    @Api int GL_VERSION = 0x1F02;
+    @Api int GL_EXTENSIONS = 0x1F03;
+    @Api int GL_NEAREST = 0x2600;
+    @Api int GL_LINEAR = 0x2601;
+    @Api int GL_NEAREST_MIPMAP_NEAREST = 0x2700;
+    @Api int GL_LINEAR_MIPMAP_NEAREST = 0x2701;
+    @Api int GL_NEAREST_MIPMAP_LINEAR = 0x2702;
+    @Api int GL_LINEAR_MIPMAP_LINEAR = 0x2703;
+    @Api int GL_TEXTURE_MAG_FILTER = 0x2800;
+    @Api int GL_TEXTURE_MIN_FILTER = 0x2801;
+    @Api int GL_TEXTURE_WRAP_S = 0x2802;
+    @Api int GL_TEXTURE_WRAP_T = 0x2803;
+    @Api int GL_TEXTURE = 0x1702;
+    @Api int GL_TEXTURE_CUBE_MAP = 0x8513;
+    @Api int GL_TEXTURE_BINDING_CUBE_MAP = 0x8514;
+    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515;
+    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516;
+    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517;
+    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518;
+    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
+    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
+    @Api int GL_MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
+    @Api int GL_TEXTURE0 = 0x84C0;
+    @Api int GL_TEXTURE1 = 0x84C1;
+    @Api int GL_TEXTURE2 = 0x84C2;
+    @Api int GL_TEXTURE3 = 0x84C3;
+    @Api int GL_TEXTURE4 = 0x84C4;
+    @Api int GL_TEXTURE5 = 0x84C5;
+    @Api int GL_TEXTURE6 = 0x84C6;
+    @Api int GL_TEXTURE7 = 0x84C7;
+    @Api int GL_TEXTURE8 = 0x84C8;
+    @Api int GL_TEXTURE9 = 0x84C9;
+    @Api int GL_TEXTURE10 = 0x84CA;
+    @Api int GL_TEXTURE11 = 0x84CB;
+    @Api int GL_TEXTURE12 = 0x84CC;
+    @Api int GL_TEXTURE13 = 0x84CD;
+    @Api int GL_TEXTURE14 = 0x84CE;
+    @Api int GL_TEXTURE15 = 0x84CF;
+    @Api int GL_TEXTURE16 = 0x84D0;
+    @Api int GL_TEXTURE17 = 0x84D1;
+    @Api int GL_TEXTURE18 = 0x84D2;
+    @Api int GL_TEXTURE19 = 0x84D3;
+    @Api int GL_TEXTURE20 = 0x84D4;
+    @Api int GL_TEXTURE21 = 0x84D5;
+    @Api int GL_TEXTURE22 = 0x84D6;
+    @Api int GL_TEXTURE23 = 0x84D7;
+    @Api int GL_TEXTURE24 = 0x84D8;
+    @Api int GL_TEXTURE25 = 0x84D9;
+    @Api int GL_TEXTURE26 = 0x84DA;
+    @Api int GL_TEXTURE27 = 0x84DB;
+    @Api int GL_TEXTURE28 = 0x84DC;
+    @Api int GL_TEXTURE29 = 0x84DD;
+    @Api int GL_TEXTURE30 = 0x84DE;
+    @Api int GL_TEXTURE31 = 0x84DF;
+    @Api int GL_REPEAT = 0x2901;
+    @Api int GL_CLAMP_TO_EDGE = 0x812F;
+    @Api int GL_MIRRORED_REPEAT = 0x8370;
+    @Api int GL_FLOAT_VEC2 = 0x8B50;
+    @Api int GL_FLOAT_VEC3 = 0x8B51;
+    @Api int GL_FLOAT_VEC4 = 0x8B52;
+    @Api int GL_INT_VEC2 = 0x8B53;
+    @Api int GL_INT_VEC3 = 0x8B54;
+    @Api int GL_INT_VEC4 = 0x8B55;
+    @Api int GL_BOOL = 0x8B56;
+    @Api int GL_BOOL_VEC2 = 0x8B57;
+    @Api int GL_BOOL_VEC3 = 0x8B58;
+    @Api int GL_BOOL_VEC4 = 0x8B59;
+    @Api int GL_FLOAT_MAT2 = 0x8B5A;
+    @Api int GL_FLOAT_MAT3 = 0x8B5B;
+    @Api int GL_FLOAT_MAT4 = 0x8B5C;
+    @Api int GL_SAMPLER_2D = 0x8B5E;
+    @Api int GL_SAMPLER_CUBE = 0x8B60;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_SIZE = 0x8623;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_STRIDE = 0x8624;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_TYPE = 0x8625;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_POINTER = 0x8645;
+    @Api int GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
+    @Api int GL_IMPLEMENTATION_COLOR_READ_TYPE = 0x8B9A;
+    @Api int GL_IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
+    @Api int GL_COMPILE_STATUS = 0x8B81;
+    @Api int GL_INFO_LOG_LENGTH = 0x8B84;
+    @Api int GL_SHADER_SOURCE_LENGTH = 0x8B88;
+    @Api int GL_SHADER_COMPILER = 0x8DFA;
+    @Api int GL_SHADER_BINARY_FORMATS = 0x8DF8;
+    @Api int GL_NUM_SHADER_BINARY_FORMATS = 0x8DF9;
+    @Api int GL_LOW_FLOAT = 0x8DF0;
+    @Api int GL_MEDIUM_FLOAT = 0x8DF1;
+    @Api int GL_HIGH_FLOAT = 0x8DF2;
+    @Api int GL_LOW_INT = 0x8DF3;
+    @Api int GL_MEDIUM_INT = 0x8DF4;
+    @Api int GL_HIGH_INT = 0x8DF5;
+    @Api int GL_FRAMEBUFFER = 0x8D40;
+    @Api int GL_RENDERBUFFER = 0x8D41;
+    @Api int GL_RGBA4 = 0x8056;
+    @Api int GL_RGB5_A1 = 0x8057;
+    @Api int GL_RGB565 = 0x8D62;
+    @Api int GL_DEPTH_COMPONENT16 = 0x81A5;
     // GL_STENCIL_INDEX does not appear in gl2.h or gl2ext.h, and there is no
     // token with value 0x1901.
     //
-    @Deprecated
-    int GL_STENCIL_INDEX = 0x1901;
-    int GL_STENCIL_INDEX8 = 0x8D48;
-    int GL_RENDERBUFFER_WIDTH = 0x8D42;
-    int GL_RENDERBUFFER_HEIGHT = 0x8D43;
-    int GL_RENDERBUFFER_INTERNAL_FORMAT = 0x8D44;
-    int GL_RENDERBUFFER_RED_SIZE = 0x8D50;
-    int GL_RENDERBUFFER_GREEN_SIZE = 0x8D51;
-    int GL_RENDERBUFFER_BLUE_SIZE = 0x8D52;
-    int GL_RENDERBUFFER_ALPHA_SIZE = 0x8D53;
-    int GL_RENDERBUFFER_DEPTH_SIZE = 0x8D54;
-    int GL_RENDERBUFFER_STENCIL_SIZE = 0x8D55;
-    int GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = 0x8CD0;
-    int GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME = 0x8CD1;
-    int GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL = 0x8CD2;
-    int GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE = 0x8CD3;
-    int GL_COLOR_ATTACHMENT0 = 0x8CE0;
-    int GL_DEPTH_ATTACHMENT = 0x8D00;
-    int GL_STENCIL_ATTACHMENT = 0x8D20;
-    int GL_NONE = 0;
-    int GL_FRAMEBUFFER_COMPLETE = 0x8CD5;
-    int GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT = 0x8CD6;
-    int GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
-    int GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS = 0x8CD9;
-    int GL_FRAMEBUFFER_UNSUPPORTED = 0x8CDD;
-    int GL_FRAMEBUFFER_BINDING = 0x8CA6;
-    int GL_RENDERBUFFER_BINDING = 0x8CA7;
-    int GL_MAX_RENDERBUFFER_SIZE = 0x84E8;
-    int GL_INVALID_FRAMEBUFFER_OPERATION = 0x0506;
+    @Deprecated @Api int GL_STENCIL_INDEX = 0x1901;
+    @Api int GL_STENCIL_INDEX8 = 0x8D48;
+    @Api int GL_RENDERBUFFER_WIDTH = 0x8D42;
+    @Api int GL_RENDERBUFFER_HEIGHT = 0x8D43;
+    @Api int GL_RENDERBUFFER_INTERNAL_FORMAT = 0x8D44;
+    @Api int GL_RENDERBUFFER_RED_SIZE = 0x8D50;
+    @Api int GL_RENDERBUFFER_GREEN_SIZE = 0x8D51;
+    @Api int GL_RENDERBUFFER_BLUE_SIZE = 0x8D52;
+    @Api int GL_RENDERBUFFER_ALPHA_SIZE = 0x8D53;
+    @Api int GL_RENDERBUFFER_DEPTH_SIZE = 0x8D54;
+    @Api int GL_RENDERBUFFER_STENCIL_SIZE = 0x8D55;
+    @Api int GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE = 0x8CD0;
+    @Api int GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME = 0x8CD1;
+    @Api int GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL = 0x8CD2;
+    @Api int GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE = 0x8CD3;
+    @Api int GL_COLOR_ATTACHMENT0 = 0x8CE0;
+    @Api int GL_DEPTH_ATTACHMENT = 0x8D00;
+    @Api int GL_STENCIL_ATTACHMENT = 0x8D20;
+    @Api int GL_NONE = 0;
+    @Api int GL_FRAMEBUFFER_COMPLETE = 0x8CD5;
+    @Api int GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT = 0x8CD6;
+    @Api int GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
+    @Api int GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS = 0x8CD9;
+    @Api int GL_FRAMEBUFFER_UNSUPPORTED = 0x8CDD;
+    @Api int GL_FRAMEBUFFER_BINDING = 0x8CA6;
+    @Api int GL_RENDERBUFFER_BINDING = 0x8CA7;
+    @Api int GL_MAX_RENDERBUFFER_SIZE = 0x84E8;
+    @Api int GL_INVALID_FRAMEBUFFER_OPERATION = 0x0506;
 
-    void glActiveTexture(int texture);
+    @Api void glActiveTexture(int texture);
 
-    void glAttachShader(int program, int shader);
+    @Api void glAttachShader(int program, int shader);
 
-    void glBindAttribLocation(int program, int index, String name);
+    @Api void glBindAttribLocation(int program, int index, String name);
 
-    void glBindBuffer(int target, int buffer);
+    @Api void glBindBuffer(int target, int buffer);
 
-    void glBindFramebuffer(int target, int framebuffer);
+    @Api void glBindFramebuffer(int target, int framebuffer);
 
-    void glBindRenderbuffer(int target, int renderbuffer);
+    @Api void glBindRenderbuffer(int target, int renderbuffer);
 
-    void glBindTexture(int target, int texture);
+    @Api void glBindTexture(int target, int texture);
 
-    void glBlendColor(float red, float green, float blue, float alpha);
+    @Api void glBlendColor(float red, float green, float blue, float alpha);
 
-    void glBlendEquation(int mode);
+    @Api void glBlendEquation(int mode);
 
-    void glBlendEquationSeparate(int modeRGB, int modeAlpha);
+    @Api void glBlendEquationSeparate(int modeRGB, int modeAlpha);
 
-    void glBlendFunc(int sfactor, int dfactor);
+    @Api void glBlendFunc(int sfactor, int dfactor);
 
-    void glBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+    @Api void glBlendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
 
-    void glBufferData(int target, long size, java.nio.Buffer data, int usage);
+    @Api void glBufferData(int target, long size, java.nio.Buffer data, int usage);
 
-    default void glBufferData(int target, IntBuffer buffer, int usage) {
+    @Api default void glBufferData(int target, IntBuffer buffer, int usage) {
         glBufferData(target, Integer.toUnsignedLong(buffer.remaining()) << 2, buffer, usage);
     }
 
-    default void glBufferData(int target, FloatBuffer buffer, int usage) {
+    @Api default void glBufferData(int target, FloatBuffer buffer, int usage) {
         glBufferData(target, Integer.toUnsignedLong(buffer.remaining()) << 2, buffer, usage);
     }
 
-    void glBufferSubData(int target, int offset, long size, java.nio.Buffer data);
+    @Api void glBufferSubData(int target, int offset, long size, java.nio.Buffer data);
 
-    int glCheckFramebufferStatus(int target);
+    @Api int glCheckFramebufferStatus(int target);
 
-    void glClear(int mask);
+    @Api void glClear(int mask);
 
-    void glClearColor(float red, float green, float blue, float alpha);
+    @Api void glClearColor(float red, float green, float blue, float alpha);
 
-    void glClearDepthf(float depth);
+    @Api void glClearDepthf(float depth);
 
-    void glClearStencil(int s);
+    @Api void glClearStencil(int s);
 
-    void glColorMask(boolean red, boolean green, boolean blue, boolean alpha);
+    @Api void glColorMask(boolean red, boolean green, boolean blue, boolean alpha);
 
-    void glCompileShader(int shader);
+    @Api void glCompileShader(int shader);
 
-    void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, java.nio.Buffer data);
+    @Api void glCompressedTexImage2D(int target, int level, int internalformat, int width, int height, int border, int imageSize, java.nio.Buffer data);
 
-    void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, java.nio.Buffer data);
+    @Api void glCompressedTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int imageSize, java.nio.Buffer data);
 
-    void glCopyTexImage2D(int target, int level, int internalformat, int x, int y, int width, int height, int border);
+    @Api void glCopyTexImage2D(int target, int level, int internalformat, int x, int y, int width, int height, int border);
 
-    void glCopyTexSubImage2D(int target, int level, int xoffset, int yoffset, int x, int y, int width, int height);
+    @Api void glCopyTexSubImage2D(int target, int level, int xoffset, int yoffset, int x, int y, int width, int height);
 
-    int glCreateProgram();
+    @Api int glCreateProgram();
 
-    int glCreateShader(int type);
+    @Api int glCreateShader(int type);
 
-    void glCullFace(int mode);
+    @Api void glCullFace(int mode);
 
-    void glDeleteBuffers(int n, int[] buffers, int offset);
+    @Api void glDeleteBuffers(int n, int[] buffers, int offset);
 
-    void glDeleteBuffers(int n, java.nio.IntBuffer buffers);
+    @Api void glDeleteBuffers(int n, java.nio.IntBuffer buffers);
 
-    void glDeleteFramebuffers(int n, int[] framebuffers, int offset);
+    @Api void glDeleteFramebuffers(int n, int[] framebuffers, int offset);
 
-    void glDeleteFramebuffers(int n, java.nio.IntBuffer framebuffers);
+    @Api void glDeleteFramebuffers(int n, java.nio.IntBuffer framebuffers);
 
-    void glDeleteProgram(int program);
+    @Api void glDeleteProgram(int program);
 
-    void glDeleteRenderbuffers(int n, int[] renderbuffers, int offset);
+    @Api void glDeleteRenderbuffers(int n, int[] renderbuffers, int offset);
 
-    void glDeleteRenderbuffers(int n, java.nio.IntBuffer renderbuffers);
+    @Api void glDeleteRenderbuffers(int n, java.nio.IntBuffer renderbuffers);
 
-    void glDeleteShader(int shader);
+    @Api void glDeleteShader(int shader);
 
-    void glDeleteTextures(int n, int[] textures, int offset);
+    @Api void glDeleteTextures(int n, int[] textures, int offset);
 
-    void glDeleteTextures(int n, java.nio.IntBuffer textures);
+    @Api void glDeleteTextures(int n, java.nio.IntBuffer textures);
 
-    void glDepthFunc(int func);
+    @Api void glDepthFunc(int func);
 
-    void glDepthMask(boolean flag);
+    @Api void glDepthMask(boolean flag);
 
-    void glDepthRangef(float zNear, float zFar);
+    @Api void glDepthRangef(float zNear, float zFar);
 
-    void glDetachShader(int program, int shader);
+    @Api void glDetachShader(int program, int shader);
 
-    void glDisable(int cap);
+    @Api void glDisable(int cap);
 
-    void glDisableVertexAttribArray(int index);
+    @Api void glDisableVertexAttribArray(int index);
 
-    void glDrawArrays(int mode, int first, int count);
+    @Api void glDrawArrays(int mode, int first, int count);
 
-    void glDrawElements(int mode, int count, int type, int offset);
+    @Api void glDrawElements(int mode, int count, int type, int offset);
 
-    void glDrawElements(int mode, int count, int type, java.nio.Buffer indices);
+    @Api void glDrawElements(int mode, int count, int type, java.nio.Buffer indices);
 
-    void glEnable(int cap);
+    @Api void glEnable(int cap);
 
-    void glEnableVertexAttribArray(int index);
+    @Api void glEnableVertexAttribArray(int index);
 
-    void glFinish();
+    @Api void glFinish();
 
-    void glFlush();
+    @Api void glFlush();
 
-    void glFramebufferRenderbuffer(int target, int attachment, int renderbuffertarget, int renderbuffer);
+    @Api void glFramebufferRenderbuffer(int target, int attachment, int renderbuffertarget, int renderbuffer);
 
-    void glFramebufferTexture2D(int target, int attachment, int textarget, int texture, int level);
+    @Api void glFramebufferTexture2D(int target, int attachment, int textarget, int texture, int level);
 
-    void glFrontFace(int mode);
+    @Api void glFrontFace(int mode);
 
-    void glGenBuffers(int n, int[] buffers, int offset);
+    @Api void glGenBuffers(int n, int[] buffers, int offset);
 
-    default int glGenBuffers() {
+    @Api default int glGenBuffers() {
         int[] a = new int[1];
         glGenBuffers(1, a, 0);
         return a[0];
     }
 
-    void glGenBuffers(int n, java.nio.IntBuffer buffers);
+    @Api void glGenBuffers(int n, java.nio.IntBuffer buffers);
 
-    void glGenerateMipmap(int target);
+    @Api void glGenerateMipmap(int target);
 
-    void glGenFramebuffers(int n, int[] framebuffers, int offset);
+    @Api void glGenFramebuffers(int n, int[] framebuffers, int offset);
 
-    void glGenFramebuffers(int n, java.nio.IntBuffer framebuffers);
+    @Api void glGenFramebuffers(int n, java.nio.IntBuffer framebuffers);
 
-    default int glGenFramebuffers() {
+    @Api default int glGenFramebuffers() {
         int[] a = new int[1];
         glGenFramebuffers(1, a, 0);
         return a[0];
     }
 
-    void glGenRenderbuffers(int n, int[] renderbuffers, int offset);
+    @Api void glGenRenderbuffers(int n, int[] renderbuffers, int offset);
 
-    void glGenRenderbuffers(int n, java.nio.IntBuffer renderbuffers);
+    @Api void glGenRenderbuffers(int n, java.nio.IntBuffer renderbuffers);
 
-    default int glGenRenderbuffers() {
+    @Api default int glGenRenderbuffers() {
         int[] a = new int[1];
         glGenRenderbuffers(1, a, 0);
         return a[0];
     }
 
-    void glGenTextures(int n, int[] textures, int offset);
+    @Api void glGenTextures(int n, int[] textures, int offset);
 
-    void glGenTextures(int n, java.nio.IntBuffer textures);
+    @Api void glGenTextures(int n, java.nio.IntBuffer textures);
 
-    default int glGenTextures() {
+    @Api default int glGenTextures() {
         int[] a = new int[1];
         glGenTextures(1, a, 0);
         return a[0];
     }
 
-    void glGetActiveAttrib(int program, int index, int bufsize, int[] length, int lengthOffset, int[] size, int sizeOffset, int[] type, int typeOffset, byte[] name, int nameOffset);
+    @Api void glGetActiveAttrib(int program, int index, int bufsize, int[] length, int lengthOffset, int[] size, int sizeOffset, int[] type, int typeOffset, byte[] name, int nameOffset);
 
     String glGetActiveAttrib(int program, int index, int[] size, int sizeOffset, int[] type, int typeOffset);
 
     String glGetActiveAttrib(int program, int index, java.nio.IntBuffer size, java.nio.IntBuffer type);
 
-    void glGetActiveUniform(int program, int index, int bufsize, int[] length, int lengthOffset, int[] size, int sizeOffset, int[] type, int typeOffset, byte[] name, int nameOffset);
+    @Api void glGetActiveUniform(int program, int index, int bufsize, int[] length, int lengthOffset, int[] size, int sizeOffset, int[] type, int typeOffset, byte[] name, int nameOffset);
 
     String glGetActiveUniform(int program, int index, int[] size, int sizeOffset, int[] type, int typeOffset);
 
     String glGetActiveUniform(int program, int index, java.nio.IntBuffer size, java.nio.IntBuffer type);
 
-    void glGetAttachedShaders(int program, int maxcount, int[] count, int countOffset, int[] shaders, int shadersOffset);
+    @Api void glGetAttachedShaders(int program, int maxcount, int[] count, int countOffset, int[] shaders, int shadersOffset);
 
-    void glGetAttachedShaders(int program, int maxcount, java.nio.IntBuffer count, java.nio.IntBuffer shaders);
+    @Api void glGetAttachedShaders(int program, int maxcount, java.nio.IntBuffer count, java.nio.IntBuffer shaders);
 
-    int glGetAttribLocation(int program, String name);
+    @Api int glGetAttribLocation(int program, String name);
 
-    void glGetBooleanv(int pname, boolean[] params, int offset);
+    @Api void glGetBooleanv(int pname, boolean[] params, int offset);
 
-    void glGetBooleanv(int pname, java.nio.IntBuffer params);
+    @Api void glGetBooleanv(int pname, java.nio.IntBuffer params);
 
-    void glGetBufferParameteriv(int target, int pname, int[] params, int offset);
+    @Api void glGetBufferParameteriv(int target, int pname, int[] params, int offset);
 
-    void glGetBufferParameteriv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glGetBufferParameteriv(int target, int pname, java.nio.IntBuffer params);
 
-    int glGetError();
+    @Api int glGetError();
 
-    void glGetFloatv(int pname, float[] params, int offset);
+    @Api void glGetFloatv(int pname, float[] params, int offset);
 
-    void glGetFloatv(int pname, java.nio.FloatBuffer params);
+    @Api void glGetFloatv(int pname, java.nio.FloatBuffer params);
 
-    void glGetFramebufferAttachmentParameteriv(int target, int attachment, int pname, int[] params, int offset);
+    @Api void glGetFramebufferAttachmentParameteriv(int target, int attachment, int pname, int[] params, int offset);
 
-    void glGetFramebufferAttachmentParameteriv(int target, int attachment, int pname, java.nio.IntBuffer params);
+    @Api void glGetFramebufferAttachmentParameteriv(int target, int attachment, int pname, java.nio.IntBuffer params);
 
-    void glGetIntegerv(int pname, int[] params, int offset);
+    @Api void glGetIntegerv(int pname, int[] params, int offset);
 
-    default int glGetInteger(int pname) {
+    @Api default int glGetInteger(int pname) {
         int[] a = new int[1];
         glGetIntegerv(pname, a, 0);
         return a[0];
     }
 
-    void glGetIntegerv(int pname, java.nio.IntBuffer params);
+    @Api void glGetIntegerv(int pname, java.nio.IntBuffer params);
 
-    void glGetProgramiv(int program, int pname, int[] params, int offset);
+    @Api void glGetProgramiv(int program, int pname, int[] params, int offset);
 
-    void glGetProgramiv(int program, int pname, java.nio.IntBuffer params);
+    @Api void glGetProgramiv(int program, int pname, java.nio.IntBuffer params);
 
     String glGetProgramInfoLog(int program);
 
-    void glGetRenderbufferParameteriv(int target, int pname, int[] params, int offset);
+    @Api void glGetRenderbufferParameteriv(int target, int pname, int[] params, int offset);
 
-    void glGetRenderbufferParameteriv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glGetRenderbufferParameteriv(int target, int pname, java.nio.IntBuffer params);
 
-    void glGetShaderiv(int shader, int pname, int[] params, int offset);
+    @Api void glGetShaderiv(int shader, int pname, int[] params, int offset);
 
-    void glGetShaderiv(int shader, int pname, java.nio.IntBuffer params);
+    @Api void glGetShaderiv(int shader, int pname, java.nio.IntBuffer params);
 
     String glGetShaderInfoLog(int shader);
 
-    void glGetShaderPrecisionFormat(int shadertype, int precisiontype, int[] range, int rangeOffset, int[] precision, int precisionOffset);
+    @Api void glGetShaderPrecisionFormat(int shadertype, int precisiontype, int[] range, int rangeOffset, int[] precision, int precisionOffset);
 
-    void glGetShaderPrecisionFormat(int shadertype, int precisiontype, java.nio.IntBuffer range, java.nio.IntBuffer precision);
+    @Api void glGetShaderPrecisionFormat(int shadertype, int precisiontype, java.nio.IntBuffer range, java.nio.IntBuffer precision);
 
-    void glGetShaderSource(int shader, int bufsize, int[] length, int lengthOffset, byte[] source, int sourceOffset);
+    @Api void glGetShaderSource(int shader, int bufsize, int[] length, int lengthOffset, byte[] source, int sourceOffset);
 
     String glGetShaderSource(int shader);
 
     String glGetString(int name);
 
-    void glGetTexParameterfv(int target, int pname, float[] params, int offset);
+    @Api void glGetTexParameterfv(int target, int pname, float[] params, int offset);
 
-    void glGetTexParameterfv(int target, int pname, java.nio.FloatBuffer params);
+    @Api void glGetTexParameterfv(int target, int pname, java.nio.FloatBuffer params);
 
-    void glGetTexParameteriv(int target, int pname, int[] params, int offset);
+    @Api void glGetTexParameteriv(int target, int pname, int[] params, int offset);
 
-    void glGetTexParameteriv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glGetTexParameteriv(int target, int pname, java.nio.IntBuffer params);
 
-    void glGetUniformfv(int program, int location, float[] params, int offset);
+    @Api void glGetUniformfv(int program, int location, float[] params, int offset);
 
-    void glGetUniformfv(int program, int location, java.nio.FloatBuffer params);
+    @Api void glGetUniformfv(int program, int location, java.nio.FloatBuffer params);
 
-    void glGetUniformiv(int program, int location, int[] params, int offset);
+    @Api void glGetUniformiv(int program, int location, int[] params, int offset);
 
-    void glGetUniformiv(int program, int location, java.nio.IntBuffer params);
+    @Api void glGetUniformiv(int program, int location, java.nio.IntBuffer params);
 
-    int glGetUniformLocation(int program, String name);
+    @Api int glGetUniformLocation(int program, String name);
 
-    void glGetVertexAttribfv(int index, int pname, float[] params, int offset);
+    @Api void glGetVertexAttribfv(int index, int pname, float[] params, int offset);
 
-    void glGetVertexAttribfv(int index, int pname, java.nio.FloatBuffer params);
+    @Api void glGetVertexAttribfv(int index, int pname, java.nio.FloatBuffer params);
 
-    void glGetVertexAttribiv(int index, int pname, int[] params, int offset);
+    @Api void glGetVertexAttribiv(int index, int pname, int[] params, int offset);
 
-    void glGetVertexAttribiv(int index, int pname, java.nio.IntBuffer params);
+    @Api void glGetVertexAttribiv(int index, int pname, java.nio.IntBuffer params);
 
-    void glHint(int target, int mode);
+    @Api void glHint(int target, int mode);
 
     boolean glIsBuffer(int buffer);
 
@@ -590,154 +591,151 @@ public interface GLES20 {
 
     boolean glIsTexture(int texture);
 
-    void glLineWidth(float width);
+    @Api void glLineWidth(float width);
 
-    void glLinkProgram(int program);
+    @Api void glLinkProgram(int program);
 
-    void glPixelStorei(int pname, int param);
+    @Api void glPixelStorei(int pname, int param);
 
-    void glPolygonOffset(float factor, float units);
+    @Api void glPolygonOffset(float factor, float units);
 
-    void glReadPixels(int x, int y, int width, int height, int format, int type, java.nio.Buffer pixels);
+    @Api void glReadPixels(int x, int y, int width, int height, int format, int type, java.nio.Buffer pixels);
 
-    void glReleaseShaderCompiler();
+    @Api void glReleaseShaderCompiler();
 
-    void glRenderbufferStorage(int target, int internalformat, int width, int height);
+    @Api void glRenderbufferStorage(int target, int internalformat, int width, int height);
 
-    void glSampleCoverage(float value, boolean invert);
+    @Api void glSampleCoverage(float value, boolean invert);
 
-    void glScissor(int x, int y, int width, int height);
+    @Api void glScissor(int x, int y, int width, int height);
 
-    void glShaderBinary(int n, int[] shaders, int offset, int binaryformat, java.nio.Buffer binary, int length);
+    @Api void glShaderBinary(int n, int[] shaders, int offset, int binaryformat, java.nio.Buffer binary, int length);
 
-    void glShaderBinary(int n, java.nio.IntBuffer shaders, int binaryformat, java.nio.Buffer binary, int length);
+    @Api void glShaderBinary(int n, java.nio.IntBuffer shaders, int binaryformat, java.nio.Buffer binary, int length);
 
-    void glShaderSource(int shader, String string);
+    @Api void glShaderSource(int shader, String string);
 
-    void glStencilFunc(int func, int ref, int mask);
+    @Api void glStencilFunc(int func, int ref, int mask);
 
-    void glStencilFuncSeparate(int face, int func, int ref, int mask);
+    @Api void glStencilFuncSeparate(int face, int func, int ref, int mask);
 
-    void glStencilMask(int mask);
+    @Api void glStencilMask(int mask);
 
-    void glStencilMaskSeparate(int face, int mask);
+    @Api void glStencilMaskSeparate(int face, int mask);
 
-    void glStencilOp(int fail, int zfail, int zpass);
+    @Api void glStencilOp(int fail, int zfail, int zpass);
 
-    void glStencilOpSeparate(int face, int fail, int zfail, int zpass);
+    @Api void glStencilOpSeparate(int face, int fail, int zfail, int zpass);
 
-    void glTexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, java.nio.Buffer pixels);
+    @Api void glTexImage2D(int target, int level, int internalformat, int width, int height, int border, int format, int type, java.nio.Buffer pixels);
 
-    void glTexParameterf(int target, int pname, float param);
+    @Api void glTexParameterf(int target, int pname, float param);
 
-    void glTexParameterfv(int target, int pname, float[] params, int offset);
+    @Api void glTexParameterfv(int target, int pname, float[] params, int offset);
 
-    void glTexParameterfv(int target, int pname, java.nio.FloatBuffer params);
+    @Api void glTexParameterfv(int target, int pname, java.nio.FloatBuffer params);
 
-    void glTexParameteri(int target, int pname, int param);
+    @Api void glTexParameteri(int target, int pname, int param);
 
-    void glTexParameteriv(int target, int pname, int[] params, int offset);
+    @Api void glTexParameteriv(int target, int pname, int[] params, int offset);
 
-    void glTexParameteriv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glTexParameteriv(int target, int pname, java.nio.IntBuffer params);
 
-    void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, java.nio.Buffer pixels);
+    @Api void glTexSubImage2D(int target, int level, int xoffset, int yoffset, int width, int height, int format, int type, java.nio.Buffer pixels);
 
-    void glUniform1f(int location, float x);
+    @Api void glUniform1f(int location, float x);
 
-    void glUniform1fv(int location, int count, float[] v, int offset);
+    @Api void glUniform1fv(int location, int count, float[] v, int offset);
 
-    void glUniform1fv(int location, int count, java.nio.FloatBuffer v);
+    @Api void glUniform1fv(int location, int count, java.nio.FloatBuffer v);
 
-    void glUniform1i(int location, int x);
+    @Api void glUniform1i(int location, int x);
 
-    void glUniform1iv(int location, int count, int[] v, int offset);
+    @Api void glUniform1iv(int location, int count, int[] v, int offset);
 
-    void glUniform1iv(int location, int count, java.nio.IntBuffer v);
+    @Api void glUniform1iv(int location, int count, java.nio.IntBuffer v);
 
-    void glUniform2f(int location, float x, float y);
+    @Api void glUniform2f(int location, float x, float y);
 
-    void glUniform2fv(int location, int count, float[] v, int offset);
+    @Api void glUniform2fv(int location, int count, float[] v, int offset);
 
-    void glUniform2fv(int location, int count, java.nio.FloatBuffer v);
+    @Api void glUniform2fv(int location, int count, java.nio.FloatBuffer v);
 
-    void glUniform2i(int location, int x, int y);
+    @Api void glUniform2i(int location, int x, int y);
 
-    void glUniform2iv(int location, int count, int[] v, int offset);
+    @Api void glUniform2iv(int location, int count, int[] v, int offset);
 
-    void glUniform2iv(int location, int count, java.nio.IntBuffer v);
+    @Api void glUniform2iv(int location, int count, java.nio.IntBuffer v);
 
-    void glUniform3f(int location, float x, float y, float z);
+    @Api void glUniform3f(int location, float x, float y, float z);
 
-    void glUniform3fv(int location, int count, float[] v, int offset);
+    @Api void glUniform3fv(int location, int count, float[] v, int offset);
 
-    void glUniform3fv(int location, int count, java.nio.FloatBuffer v);
+    @Api void glUniform3fv(int location, int count, java.nio.FloatBuffer v);
 
-    void glUniform3i(int location, int x, int y, int z);
+    @Api void glUniform3i(int location, int x, int y, int z);
 
-    void glUniform3iv(int location, int count, int[] v, int offset);
+    @Api void glUniform3iv(int location, int count, int[] v, int offset);
 
-    void glUniform3iv(int location, int count, java.nio.IntBuffer v);
+    @Api void glUniform3iv(int location, int count, java.nio.IntBuffer v);
 
-    void glUniform4f(int location, float x, float y, float z, float w);
+    @Api void glUniform4f(int location, float x, float y, float z, float w);
 
-    void glUniform4fv(int location, int count, float[] v, int offset);
+    @Api void glUniform4fv(int location, int count, float[] v, int offset);
 
-    void glUniform4fv(int location, int count, java.nio.FloatBuffer v);
+    @Api void glUniform4fv(int location, int count, java.nio.FloatBuffer v);
 
-    void glUniform4i(int location, int x, int y, int z, int w);
+    @Api void glUniform4i(int location, int x, int y, int z, int w);
 
-    void glUniform4iv(int location, int count, int[] v, int offset);
+    @Api void glUniform4iv(int location, int count, int[] v, int offset);
 
-    void glUniform4iv(int location, int count, java.nio.IntBuffer v);
+    @Api void glUniform4iv(int location, int count, java.nio.IntBuffer v);
 
-    void glUniformMatrix2fv(int location, int count, boolean transpose, float[] value, int offset);
+    @Api void glUniformMatrix2fv(int location, int count, boolean transpose, float[] value, int offset);
 
-    void glUniformMatrix2fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
+    @Api void glUniformMatrix2fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
 
-    void glUniformMatrix3fv(int location, int count, boolean transpose, float[] value, int offset);
+    @Api void glUniformMatrix3fv(int location, int count, boolean transpose, float[] value, int offset);
 
-    void glUniformMatrix3fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
+    @Api void glUniformMatrix3fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
 
-    void glUniformMatrix4fv(int location, int count, boolean transpose, float[] value, int offset);
+    @Api void glUniformMatrix4fv(int location, int count, boolean transpose, float[] value, int offset);
 
-    void glUniformMatrix4fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
+    @Api void glUniformMatrix4fv(int location, int count, boolean transpose, java.nio.FloatBuffer value);
 
-    void glUseProgram(int program);
+    @Api void glUseProgram(int program);
 
-    void glValidateProgram(int program);
+    @Api void glValidateProgram(int program);
 
-    void glVertexAttrib1f(int indx, float x);
+    @Api void glVertexAttrib1f(int indx, float x);
 
-    void glVertexAttrib1fv(int indx, float[] values, int offset);
+    @Api void glVertexAttrib1fv(int indx, float[] values, int offset);
 
-    void glVertexAttrib1fv(int indx, java.nio.FloatBuffer values);
+    @Api void glVertexAttrib1fv(int indx, java.nio.FloatBuffer values);
 
-    void glVertexAttrib2f(int indx, float x, float y);
+    @Api void glVertexAttrib2f(int indx, float x, float y);
 
-    void glVertexAttrib2fv(int indx, float[] values, int offset);
+    @Api void glVertexAttrib2fv(int indx, float[] values, int offset);
 
-    void glVertexAttrib2fv(int indx, java.nio.FloatBuffer values);
+    @Api void glVertexAttrib2fv(int indx, java.nio.FloatBuffer values);
 
-    void glVertexAttrib3f(int indx, float x, float y, float z);
+    @Api void glVertexAttrib3f(int indx, float x, float y, float z);
 
-    void glVertexAttrib3fv(int indx, float[] values, int offset);
+    @Api void glVertexAttrib3fv(int indx, float[] values, int offset);
 
-    void glVertexAttrib3fv(int indx, java.nio.FloatBuffer values);
+    @Api void glVertexAttrib3fv(int indx, java.nio.FloatBuffer values);
 
-    void glVertexAttrib4f(int indx, float x, float y, float z, float w);
+    @Api void glVertexAttrib4f(int indx, float x, float y, float z, float w);
 
-    void glVertexAttrib4fv(int indx, float[] values, int offset);
+    @Api void glVertexAttrib4fv(int indx, float[] values, int offset);
 
-    void glVertexAttrib4fv(int indx, java.nio.FloatBuffer values);
+    @Api void glVertexAttrib4fv(int indx, java.nio.FloatBuffer values);
 
-    void glVertexAttribPointer(int indx, int size, int type, boolean normalized, int stride, int offset);
+    @Api void glVertexAttribPointer(int indx, int size, int type, boolean normalized, int stride, int offset);
 
 //    private static native void glVertexAttribPointerBounds(int indx, int size, int type, boolean normalized, int stride, java.nio.Buffer ptr, int remaining);
 
-    void glVertexAttribPointer(int indx, int size, int type, boolean normalized, int stride, java.nio.Buffer ptr);
-//    {
-//        glVertexAttribPointerBounds(indx, size, type, normalized, stride, ptr, ptr.remaining());
-//    }
+    @Api void glVertexAttribPointer(int indx, int size, int type, boolean normalized, int stride, java.nio.Buffer ptr);
 
-    void glViewport(int x, int y, int width, int height);
+    @Api void glViewport(int x, int y, int width, int height);
 }

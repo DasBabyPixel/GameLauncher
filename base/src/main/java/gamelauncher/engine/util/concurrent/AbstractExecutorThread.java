@@ -7,14 +7,15 @@
 
 package gamelauncher.engine.util.concurrent;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Deque;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
@@ -134,11 +135,6 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
 
     private void work(GameRunnable run, CompletableFuture<Void> fut) {
         try {
-
-//            logger.warn(run);
-//            GameException ex2 = this.buildStacktrace();
-//            AbstractExecutorThread.logger.error(ex2);
-
             run.run();
             fut.complete(null);
         } catch (GameException ex) {
@@ -164,6 +160,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return ex;
     }
 
+    @Api
     protected boolean shouldHandle(QueueEntry entry) {
         return true;
     }

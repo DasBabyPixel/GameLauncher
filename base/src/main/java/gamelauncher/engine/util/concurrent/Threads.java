@@ -12,6 +12,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService.WrapperCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -41,9 +42,9 @@ public class Threads extends AbstractGameResource {
     public final ExecutorThreadService workStealing;
 
     /**
-     * A cached {@link Executor}
+     * A cached {@link java.util.concurrent.Executor}
      *
-     * @see Executors#newCachedThreadPool()
+     * @see java.util.concurrent.Executors#newCachedThreadPool()
      */
     public final ExecutorThreadService cached;
 

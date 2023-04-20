@@ -1,5 +1,6 @@
 package gamelauncher.gles.gl.unsupported;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.gl.GLES32;
 import gamelauncher.gles.gl.redirect.RedirectGLES31;
@@ -9,8 +10,11 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+@SuppressWarnings("deprecation")
+@Api
 public class UnsupportedGLES32 extends RedirectGLES31 implements GLES32 {
 
+    @Api
     public UnsupportedGLES32(GLES31 wrapper) {
         super(wrapper);
     }

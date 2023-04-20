@@ -32,6 +32,7 @@ import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.gles.util.MemoryManagement;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4i;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.stb.STBTruetype;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
 

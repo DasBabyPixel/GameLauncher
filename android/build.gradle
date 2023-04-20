@@ -8,7 +8,8 @@ android {
     compileSdk 33
 
     defaultConfig {
-        minSdk 26
+        multiDexEnabled true
+        minSdk 16
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -20,24 +21,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        coreLibraryDesugaringEnabled true
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            mavenAll(MavenPublication) {
-                from components.all
-            }
-        }
-        repositories {
-            maven {
-                name = 'DarkCube'
-                credentials PasswordCredentials
-                url = 'https://nexus.darkcube.eu/repository/dasbabypixel/'
+publishing {
+    publications {
+        release(MavenPublication) {
+            afterEvaluate {
+                from components.release
             }
         }
     }
@@ -47,4 +48,5 @@ dependencies {
     api parent.project('gles')
     api parent.project('api')
     api 'androidx.appcompat:appcompat:1.6.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.3'
 }

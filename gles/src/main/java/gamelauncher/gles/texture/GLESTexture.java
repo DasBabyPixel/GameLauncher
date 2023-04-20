@@ -22,11 +22,11 @@ import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.util.MemoryManagement;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -176,8 +176,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         profiler.end();
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         Threads.waitFor(owner.submit(() -> {
             lock.writeLock().lock();
             int id = textureId.getAndSet(0);
@@ -188,8 +187,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         }));
     }
 
-    @Override
-    public CompletableFuture<Void> allocate(int width, int height) {
+    @Override public CompletableFuture<Void> allocate(int width, int height) {
         this.width.setValue(width);
         this.height.setValue(height);
         return owner.submit(() -> {
@@ -200,8 +198,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         });
     }
 
-    @Override
-    public CompletableFuture<Void> resize(int width, int height) {
+    @Override public CompletableFuture<Void> resize(int width, int height) {
         this.width.setValue(width);
         this.height.setValue(height);
         return owner.submit(() -> {
@@ -214,23 +211,19 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         });
     }
 
-    @Override
-    public NumberValue width() {
+    @Override public NumberValue width() {
         return width;
     }
 
-    @Override
-    public NumberValue height() {
+    @Override public NumberValue height() {
         return height;
     }
 
-    @Override
-    public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
+    @Override public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
         return uploadSubAsync(stream, 0, 0);
     }
 
-    @Override
-    public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
+    @Override public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
         service.submit(() -> {
             profiler.begin("render", "upload_texture_worker");
@@ -302,8 +295,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return fut;
     }
 
-    @Override
-    public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
+    @SuppressWarnings("deprecation") @Override public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
         if (!(other instanceof GLESTexture)) {
             ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
             GameException ge = new GameException(cause);
@@ -335,7 +327,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return StateRegistry.currentGl().glGenTextures();
     }
 
-    public void setInternalFormat(GLESTextureFormat format) {
+    public void internalFormat(GLESTextureFormat format) {
         lock.writeLock().lock();
         this.format.set(format);
         lock.writeLock().unlock();

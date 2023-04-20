@@ -10,8 +10,7 @@ package gamelauncher.android.gl;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ThreadSpecificExecutor;
 import gamelauncher.engine.util.function.GameRunnable;
-
-import java.util.concurrent.CompletableFuture;
+import java8.util.concurrent.CompletableFuture;
 
 public class AndroidNativeRenderThread implements IAndroidRenderThread {
     private final AndroidFrame frame;

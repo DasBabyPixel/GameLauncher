@@ -13,8 +13,9 @@
             android:allowBackup="true"
             android:label="@string/app_name"
             android:icon="@mipmap/pixel"
+            android:roundIcon="@mipmap/pixel_round"
             android:supportsRtl="true"
-            android:theme="@style/Theme.GameLauncher">
+            android:theme="@style/GameLauncher">
         <activity android:name="gamelauncher.android.app.AndroidApp"
                   android:exported="true"
                   android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout">

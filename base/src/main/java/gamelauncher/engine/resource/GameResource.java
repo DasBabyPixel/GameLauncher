@@ -3,8 +3,7 @@ package gamelauncher.engine.resource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameSupplier;
-
-import java.util.concurrent.CompletableFuture;
+import java8.util.concurrent.CompletableFuture;
 
 /**
  * @author DasBabyPixel

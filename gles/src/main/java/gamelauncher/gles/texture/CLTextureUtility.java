@@ -22,27 +22,34 @@ public class CLTextureUtility extends AbstractGameResource {
      * @return a new {@link ContextLocal}
      */
     public static ContextLocal<CLTextureUtility> local(GLES gles) {
-        return new ContextLocal<>() {
-
-            @Override
-            protected void valueRemoved(CLTextureUtility value) {
-                try {
-                    value.cleanup();
-                } catch (GameException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-
-            @Override
-            protected CLTextureUtility initialValue() {
-                return new CLTextureUtility(gles.launcher().frame());
-            }
-        };
+        return new TUContextLocal(gles);
     }
 
     @Override
     public void cleanup0() throws GameException {
         this.framebuffer1.cleanup();
         this.framebuffer2.cleanup();
+    }
+
+    private static class TUContextLocal extends ContextLocal<CLTextureUtility> {
+        private final GLES gles;
+
+        public TUContextLocal(GLES gles) {
+            this.gles = gles;
+        }
+
+        @Override
+        protected void valueRemoved(CLTextureUtility value) {
+            try {
+                value.cleanup();
+            } catch (GameException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        protected CLTextureUtility initialValue() {
+            return new CLTextureUtility(gles.launcher().frame());
+        }
     }
 }

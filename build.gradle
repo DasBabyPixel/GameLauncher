@@ -14,33 +14,31 @@ generateRunDirectory
 allprojects {
     group = 'de.dasbabypixel.gamelauncher'
     version = '0.0.1-SNAPSHOT'
-    tasks.withType(JavaCompile).configureEach {
-        targetCompatibility = JavaVersion.VERSION_11
-        sourceCompatibility = JavaVersion.VERSION_11
-    }
     pluginManager.withPlugin('java') {
+        javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+        java.toolchain.languageVersion = JavaLanguageVersion.of(11)
         pluginManager.withPlugin('maven-publish') {
             java {
                 withSourcesJar()
                 withJavadocJar()
             }
-            publishing {
-                publications {
-                    maven(MavenPublication) {
-                        artifactId project.name
-                        groupId = project.group
-                        version = project.version
-                        from components.java
-                    }
-                }
-                repositories {
-                    maven {
-                        name = 'DarkCube'
-                        credentials PasswordCredentials
-                        url = 'https://nexus.darkcube.eu/repository/dasbabypixel/'
-                    }
+        }
+    }
+
+    pluginManager.withPlugin('maven-publish') {
+        publishing {
+            repositories {
+                maven {
+                    name = 'DarkCube'
+                    credentials PasswordCredentials
+                    url = 'https://nexus.darkcube.eu/repository/dasbabypixel/'
                 }
             }
         }
+    }
+
+
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
     }
 }

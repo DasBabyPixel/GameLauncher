@@ -7,6 +7,8 @@
 
 package gamelauncher.android.gl;
 
+import android.os.Build;
+import androidx.annotation.RequiresApi;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.RenderThread;
@@ -21,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-public class AndroidRenderThread extends AbstractExecutorThread implements RenderThread, IAndroidRenderThread {
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) public class AndroidRenderThread extends AbstractExecutorThread implements RenderThread, IAndroidRenderThread {
     private static final AtomicInteger ids = new AtomicInteger();
     private final AndroidFrame frame;
     private final AtomicBoolean modifying = new AtomicBoolean(false);
@@ -35,7 +37,7 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
     private ManualQueryFramebuffer fb;
     private FrameRenderer frameRenderer = null;
 
-    AndroidRenderThread(AndroidFrame frame) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) AndroidRenderThread(AndroidFrame frame) {
         super(frame.launcher(), frame.launcher().glThreadGroup());
         this.phaser = new Phaser(1);
         this.refreshPhaser = new Phaser(1);
@@ -43,8 +45,7 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         this.setName("GLFWFrameRenderThread-" + ids.incrementAndGet());
     }
 
-    @Override
-    protected void startExecuting() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void startExecuting() {
         this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
         this.fb.query();
         this.frame.context().makeCurrent();
@@ -58,8 +59,7 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         states.replace(null);
     }
 
-    @Override
-    protected void stopExecuting() throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void stopExecuting() throws GameException {
         this.fb.cleanup();
         if (this.frameRenderer != null) {
             try {
@@ -76,19 +76,16 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         }
     }
 
-    @Override
-    protected void workExecution() {
+    @Override protected void workExecution() {
         this.frame.manualFramebuffer.query();
         if (this.draw || this.frame.renderMode() == RenderMode.CONTINUOUSLY) {
             this.lock();
             boolean refresh = this.drawRefresh;
-            if (refresh)
-                this.drawRefresh = false;
+            if (refresh) this.drawRefresh = false;
             this.draw = false;
             this.unlock();
             this.frame(FrameType.RENDER, !refresh);
-            if (refresh)
-                this.frame(FrameType.REFRESH, true);
+            if (refresh) this.frame(FrameType.REFRESH, true);
         }
         if (this.refresh) {
             this.lock();
@@ -98,12 +95,11 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         }
     }
 
-    @Override
-    protected boolean shouldWaitForSignal() {
+    @Override protected boolean shouldWaitForSignal() {
         return super.shouldWaitForSignal() && this.frame.renderMode() != RenderMode.CONTINUOUSLY;
     }
 
-    private void frame(FrameType type, boolean wait) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) private void frame(FrameType type, boolean wait) {
         FrameRenderer cfr = this.frame.frameRenderer();
         cfr:
         if (cfr != null) {
@@ -158,23 +154,20 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         }
     }
 
-    @Override
-    public void scheduleDraw() {
+    @Override public void scheduleDraw() {
         this.lock();
         this.draw = true;
         this.unlock();
         this.signal();
     }
 
-    @Override
-    public void scheduleDrawWaitForFrame() {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) @Override public void scheduleDrawWaitForFrame() {
         int frame = this.phaser.getPhase();
         this.scheduleDraw();
         this.phaser.awaitAdvance(frame);
     }
 
-    @Override
-    public void waitForFrame() {
+    @Override public void waitForFrame() {
         this.phaser.awaitAdvance(this.phaser.getPhase());
     }
 
@@ -207,19 +200,16 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         this.refreshPhaser.awaitAdvance(refreshPhase);
     }
 
-    @Override
-    public AndroidFrame frame() {
+    @Override public AndroidFrame frame() {
         return this.frame;
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return getName();
     }
 
     private void lock() {
-        while (!this.modifying.compareAndSet(false, true))
-            Thread.yield();
+        while (!this.modifying.compareAndSet(false, true)) Thread.yield();
     }
 
     private void unlock() {

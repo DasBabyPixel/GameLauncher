@@ -6,8 +6,7 @@ import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.texture.GLESTexture;
-
-import java.util.concurrent.CompletableFuture;
+import java8.util.concurrent.CompletableFuture;
 
 import static gamelauncher.gles.gl.GLES20.*;
 import static gamelauncher.gles.gl.GLES30.*;

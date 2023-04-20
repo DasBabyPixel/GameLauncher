@@ -7,7 +7,7 @@ import static gamelauncher.gles.gl.GLES20.*;
  */
 public enum GLESTextureFormat {
 
-    RGBA(GL_RGBA, 4), ALPHA(GL_ALPHA, GL_ALPHA, 1);;
+    RGBA(GL_RGBA, 4), ALPHA(GL_ALPHA, GL_ALPHA, 1);
 
     private final int gl;
     private final int glInternal;

@@ -6,6 +6,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -15,7 +16,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

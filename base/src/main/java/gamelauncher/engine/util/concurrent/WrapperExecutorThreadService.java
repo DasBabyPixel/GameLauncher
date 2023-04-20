@@ -11,24 +11,23 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * @author DasBabyPixel
  */
 public class WrapperExecutorThreadService implements ExecutorThreadService {
 
+    static final AtomicInteger id = new AtomicInteger();
     private static final Logger logger = Logger.logger(WrapperExecutorThreadService.class);
-
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
-
     private final ExecutorService service;
 
     public WrapperExecutorThreadService(ExecutorService service) {
@@ -73,10 +72,11 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
     @Override
     public Collection<GameRunnable> exitNow() {
         Collection<Runnable> col = service.shutdownNow();
-        return col.stream()
-                .map(r -> (WrapperCallable<?>) r)
-                .map(w -> w.callable.toRunnable())
-                .collect(Collectors.toList());
+        Collection<GameRunnable> c2 = new ArrayList<>();
+        for (Runnable runnable : col) {
+            c2.add(((WrapperCallable<?>) runnable).callable.toRunnable());
+        }
+        return c2;
     }
 
     @Override
@@ -154,8 +154,6 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 
     }
 
-    static final AtomicInteger id = new AtomicInteger();
-
     class Waiter extends Thread {
 
         public Waiter() {
@@ -167,6 +165,7 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
         public void run() {
             while (!service.isShutdown()) {
                 try {
+                    //noinspection ResultOfMethodCallIgnored
                     service.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
