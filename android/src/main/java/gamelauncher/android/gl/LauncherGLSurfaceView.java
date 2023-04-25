@@ -29,14 +29,15 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
         super(context);
         AndroidInput input = (AndroidInput) launcher.frame().input();
         setEGLContextFactory(new EGLContextFactory() {
-            @Override
-            public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
+            @Override public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
+                launcher.egl(egl);
+                AndroidFrame frame = (AndroidFrame) launcher.frame();
+                frame.context().recreate(egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY), egl.eglGetCurrentSurface(EGL10.EGL_DRAW), egl.eglGetCurrentContext());
                 int[] attrib_list = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE};
                 return egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
             }
 
-            @Override
-            public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
+            @Override public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context) {
                 if (!egl.eglDestroyContext(display, context)) {
                     logger.error("Failed to destroy OpenGL ES Context. Display: " + display + ", Context: " + context + ", eglError: " + egl.eglGetError());
                 }
@@ -79,9 +80,7 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
             mStencilSize = stencil;
         }
 
-        @Override
-        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
-
+        @Override public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
             /*
              * Get the number of minimally matching EGL configurations
              */
@@ -108,7 +107,7 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
             return cfg;
         }
 
-        public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
+        private EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
             for (EGLConfig config : configs) {
                 int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE);
                 int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE);

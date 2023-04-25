@@ -10,6 +10,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.gles.GLES;
+import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -37,8 +38,7 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     protected final Matrix4f viewMatrix;
     protected final AtomicReference<ShaderProgram> shaderProgram;
     protected final AtomicReference<Transformations.Projection> projection;
-    protected final Collection<WeakReference<GLESDrawContext>> children =
-            ConcurrentHashMap.newKeySet();
+    protected final Collection<WeakReference<GLESDrawContext>> children = ConcurrentHashMap.newKeySet();
     protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
     protected final GLESDrawContextFramebufferChangeListener listener;
     // Used temporarily
@@ -54,12 +54,9 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     Vector3f lightPosition = new Vector3f(2, 2, 2);
     Vector3f lightColor = new Vector3f(1, 1, 1);
     float specularPower = 200;
-    PointLight pointLight =
-            new PointLight(this.lightColor, new Vector3f(this.lightPosition), this.lightIntensity,
-                    new PointLight.Attenuation(0, 0, 1));
+    PointLight pointLight = new PointLight(this.lightColor, new Vector3f(this.lightPosition), this.lightIntensity, new PointLight.Attenuation(0, 0, 1));
     Vector3f directionalLightDirection = new Vector3f(0, -1, 0);
-    DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1),
-            new Vector3f(this.directionalLightDirection), 1);
+    DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(this.directionalLightDirection), 1);
     float lightAngle = 0;
 
     // Used for combined models
@@ -67,23 +64,17 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         this(gles, null, framebuffer, 0, 0, 0, 1, 1, 1);
     }
 
-    private GLESDrawContext(GLES gles, GLESDrawContext parent, Framebuffer framebuffer, double tx, double ty,
-                            double tz, double sx, double sy, double sz) {
-        this(gles, parent, framebuffer, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(),
-                new Matrix4f(), new AtomicReference<>());
+    private GLESDrawContext(GLES gles, GLESDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz, double sx, double sy, double sz) {
+        this(gles, parent, framebuffer, tx, ty, tz, sx, sy, sz, new AtomicReference<>(), new Matrix4f(), new Matrix4f(), new AtomicReference<>());
     }
 
-    private GLESDrawContext(GLES gles, GLESDrawContext parent, Framebuffer framebuffer, double tx, double ty,
-                            double tz, double sx, double sy, double sz,
-                            AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix,
-                            Matrix4f viewMatrix, AtomicReference<Transformations.Projection> projection) {
+    private GLESDrawContext(GLES gles, GLESDrawContext parent, Framebuffer framebuffer, double tx, double ty, double tz, double sx, double sy, double sz, AtomicReference<ShaderProgram> shaderProgram, Matrix4f projectionMatrix, Matrix4f viewMatrix, AtomicReference<Transformations.Projection> projection) {
         if (parent != null) {
             parent.children.add(new WeakReference<>(this));
         }
         this.gles = gles;
         this.framebuffer = framebuffer;
-        this.listener = new GLESDrawContextFramebufferChangeListener(this, this.framebuffer.width(),
-                this.framebuffer.height());
+        this.listener = new GLESDrawContextFramebufferChangeListener(this, this.framebuffer.width(), this.framebuffer.height());
         this.tx = tx;
         this.ty = ty;
         this.tz = tz;
@@ -97,75 +88,54 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     }
 
     @Override
-    public void drawModel(Model model, double x, double y, double z, double rx, double ry,
-                          double rz) throws GameException {
+    public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz) throws GameException {
         this.drawModel(model, x, y, z, rx, ry, rz, 1, 1, 1);
     }
 
     @Override
-    public void drawModel(Model model, double x, double y, double z, double rx, double ry,
-                          double rz, double sx, double sy, double sz) throws GameException {
+    public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz) throws GameException {
         this.modelMatrix.identity();
         this.setupColors(this.colorMultiplier, this.colorAdd);
-        this.pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, this.colorMultiplier,
-                this.colorAdd);
+        this.pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, this.colorMultiplier, this.colorAdd);
     }
 
-    @Override
-    public void drawModel(Model model, double x, double y, double z) throws GameException {
+    @Override public void drawModel(Model model, double x, double y, double z) throws GameException {
         this.drawModel(model, x, y, z, 0, 0, 0);
     }
 
-    @Override
-    public void drawModel(Model model) throws GameException {
+    @Override public void drawModel(Model model) throws GameException {
         this.drawModel(model, 0, 0, 0);
     }
 
-    @Override
-    public GLESDrawContext withProjection(Transformations.Projection projection) {
-        GLESDrawContext ctx =
-                new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx,
-                        this.sy, this.sz, this.shaderProgram, new Matrix4f(), this.viewMatrix,
-                        new AtomicReference<>(projection));
+    @Override public GLESDrawContext withProjection(Transformations.Projection projection) {
+        GLESDrawContext ctx = new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz, this.shaderProgram, new Matrix4f(), this.viewMatrix, new AtomicReference<>(projection));
         ctx.reloadProjectionMatrix();
         return ctx;
     }
 
-    @Override
-    public GLESDrawContext withProgram(ShaderProgram program) {
-        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx,
-                this.sy, this.sz, new AtomicReference<>(program), this.projectionMatrix,
-                this.viewMatrix, this.projection);
+    @Override public GLESDrawContext withProgram(ShaderProgram program) {
+        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz, new AtomicReference<>(program), this.projectionMatrix, this.viewMatrix, this.projection);
     }
 
-    @Override
-    public Transformations.Projection projection() {
+    @Override public Transformations.Projection projection() {
         return this.projection.get();
     }
 
-    @Override
-    public void projection(Transformations.Projection projection) {
+    @Override public void projection(Transformations.Projection projection) {
         if (this.projection.getAndSet(projection) != projection) {
             this.reloadProjectionMatrix();
         }
     }
 
-    @Override
-    public GLESDrawContext translate(double x, double y, double z) {
-        return new GLESDrawContext(gles, this, this.framebuffer, this.tx + x, this.ty + y, this.tz + z,
-                this.sx, this.sy, this.sz, this.shaderProgram, this.projectionMatrix,
-                this.viewMatrix, this.projection);
+    @Override public GLESDrawContext translate(double x, double y, double z) {
+        return new GLESDrawContext(gles, this, this.framebuffer, this.tx + x, this.ty + y, this.tz + z, this.sx, this.sy, this.sz, this.shaderProgram, this.projectionMatrix, this.viewMatrix, this.projection);
     }
 
-    @Override
-    public GLESDrawContext scale(double x, double y, double z) {
-        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx * x,
-                this.sy * y, this.sz * z, this.shaderProgram, this.projectionMatrix,
-                this.viewMatrix, this.projection);
+    @Override public GLESDrawContext scale(double x, double y, double z) {
+        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx * x, this.sy * y, this.sz * z, this.shaderProgram, this.projectionMatrix, this.viewMatrix, this.projection);
     }
 
-    @Override
-    public void update(Camera camera) {
+    @Override public void update(Camera camera) {
         if (this.projectionMatrixValid.compareAndSet(false, true)) {
             this.reloadProjectionMatrix();
         }
@@ -193,43 +163,34 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         shaderProgram.udirectionalLight.set(this.directionalLight);
     }
 
-    @Override
-    public GLESDrawContext duplicate() {
-        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx,
-                this.sy, this.sz, new AtomicReference<>(this.shaderProgram.get()), new Matrix4f(),
-                new Matrix4f(), new AtomicReference<>(this.projection.get()));
+    @Override public GLESDrawContext duplicate() {
+        return new GLESDrawContext(gles, this, this.framebuffer, this.tx, this.ty, this.tz, this.sx, this.sy, this.sz, new AtomicReference<>(this.shaderProgram.get()), new Matrix4f(), new Matrix4f(), new AtomicReference<>(this.projection.get()));
     }
 
-    @Override
-    public void reloadProjectionMatrix() {
+    @Override public void reloadProjectionMatrix() {
         Transformations.Projection projection = this.projection.get();
         if (projection == null) {
             return;
         }
         if (projection instanceof Transformations.Projection.Projection3D) {
             Transformations.Projection.Projection3D p3d = (Transformations.Projection.Projection3D) projection;
-            float aspectRatio =
-                    this.framebuffer.width().floatValue() / this.framebuffer.height().floatValue();
+            float aspectRatio = this.framebuffer.width().floatValue() / this.framebuffer.height().floatValue();
             this.projectionMatrix.setPerspective(p3d.fov, aspectRatio, p3d.zNear, p3d.zFar);
         } else if (projection instanceof Transformations.Projection.Projection2D) {
             this.projectionMatrix.identity();
             if (this.swapTopBottom) {
-                this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), 0,
-                        this.framebuffer.height().floatValue(), -10000, 10000);
+                this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), 0, this.framebuffer.height().floatValue(), -10000, 10000);
             } else {
-                this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(),
-                        this.framebuffer.height().floatValue(), 0, -10000, 10000);
+                this.projectionMatrix.ortho(0, this.framebuffer.width().floatValue(), this.framebuffer.height().floatValue(), 0, -10000, 10000);
             }
         }
     }
 
-    @Override
-    public ShaderProgram program() {
+    @Override public ShaderProgram program() {
         return this.shaderProgram.get();
     }
 
-    @Override
-    public void program(ShaderProgram program) {
+    @Override public void program(ShaderProgram program) {
         this.shaderProgram.set(program);
     }
 
@@ -250,15 +211,12 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         this.runForChildren(GLESDrawContext::invalidateProjectionMatrix);
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         this.listener.cleanup();
         this.runForChildren(GLESDrawContext::cleanup);
     }
 
-    private void pDrawModel(Model model, double x, double y, double z, double rx, double ry,
-                            double rz, double sx, double sy, double sz, Vector4f colorMultiplier, Vector4f colorAdd)
-            throws GameException {
+    private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz, Vector4f colorMultiplier, Vector4f colorAdd) throws GameException {
         if (model instanceof ColorMultiplierModel) {
             Vector4f mult = ((ColorMultiplierModel) model).getColor();
             colorMultiplier.mul(mult);
@@ -270,8 +228,7 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         if (model instanceof GameItem.GameItemModel) {
             GameItem item = ((GameItem.GameItemModel) model).gameItem;
             item.applyToTransformationMatrix(this.modelMatrix);
-            this.pDrawModel(item.model(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier,
-                    colorAdd);
+            this.pDrawModel(item.model(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
         } else if (model instanceof CombinedModelsModel) {
             CombinedModelsModel comb = (CombinedModelsModel) model;
             this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
@@ -283,16 +240,14 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
                 this.pDrawModel(m, 0, 0, 0, 0, 0, 0, 1, 1, 1, combColorMultiplier, combColorAdd);
             }
         } else if (model instanceof WrapperModel) {
-            this.pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz,
-                    colorMultiplier, colorAdd);
+            this.pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
         } else {
             this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
             this.drawMesh(model, colorMultiplier, colorAdd);
         }
     }
 
-    private void drawMesh(Model model, Vector4f colorMultiplier, Vector4f colorAdd)
-            throws GameException {
+    private void drawMesh(Model model, Vector4f colorMultiplier, Vector4f colorAdd) throws GameException {
         ShaderProgram shaderProgram = this.shaderProgram.get();
         shaderProgram.bind();
         shaderProgram.umodelMatrix.set(this.modelMatrix);
@@ -310,21 +265,15 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         colorAdd.set(0, 0, 0, 0);
     }
 
-    private void setupModelMatrix(double x, double y, double z, double rx, double ry, double rz,
-                                  double sx, double sy, double sz) {
-        this.modelMatrix.translate((float) (x + this.tx), (float) (y + this.ty),
-                (float) (z + this.tz));
-        this.modelMatrix.rotateXYZ((float) Math.toRadians(-rx), (float) Math.toRadians(-ry),
-                (float) Math.toRadians(-rz));
-        this.modelMatrix.scale((float) (sx * this.sx), (float) (sy * this.sy),
-                (float) (sz * this.sz));
+    private void setupModelMatrix(double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz) {
+        this.modelMatrix.translate((float) (x + this.tx), (float) (y + this.ty), (float) (z + this.tz));
+        this.modelMatrix.rotateXYZ((float) Math.toRadians(-rx), (float) Math.toRadians(-ry), (float) Math.toRadians(-rz));
+        this.modelMatrix.scale((float) (sx * this.sx), (float) (sy * this.sy), (float) (sz * this.sz));
     }
 
     private void loadViewMatrix(Camera camera) {
         this.viewMatrix.identity();
-        this.viewMatrix.rotate((float) Math.toRadians(camera.rotX()), GLESDrawContext.X_AXIS)
-                .rotate((float) Math.toRadians(camera.rotY()), GLESDrawContext.Y_AXIS)
-                .rotate((float) Math.toRadians(camera.rotZ()), GLESDrawContext.Z_AXIS);
+        this.viewMatrix.rotate(Math.toRadians(camera.rotX()), GLESDrawContext.X_AXIS).rotate(Math.toRadians(camera.rotY()), GLESDrawContext.Y_AXIS).rotate(Math.toRadians(camera.rotZ()), GLESDrawContext.Z_AXIS);
         this.viewMatrix.translate(-camera.x(), -camera.y(), -camera.z());
     }
 }

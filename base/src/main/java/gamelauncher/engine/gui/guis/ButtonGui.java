@@ -40,23 +40,17 @@ public class ButtonGui extends ParentableAbstractGui {
         this.GUIs.add(colorGui);
 
         TextGui textGui = new TextGui(launcher, Component.text(getClass().getSimpleName()), 50);
-        textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2))
-                .subtract(textGui.widthProperty().divide(2)));
-        textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2))
-                .subtract(textGui.heightProperty().divide(2)));
+        textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2)).subtract(textGui.widthProperty().divide(2)));
+        textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2)).subtract(textGui.heightProperty().divide(2)));
         textGui.heightProperty().bind(this.heightProperty());
         textGui.color().bind(textColor.currentColor());
         Runnable recalc = () -> {
             if (this.hovering().booleanValue() || this.pressing.booleanValue()) {
-                textColor.setDesired(new PropertyVector4f(0.7F, 0.7F, 0.7F, 1F),
-                        TimeUnit.MILLISECONDS.toNanos(50));
-                backgroundColor.setDesired(new PropertyVector4f(0.1F, 0, 0, 0.8F),
-                        TimeUnit.MICROSECONDS.toNanos(150));
+                textColor.setDesired(new PropertyVector4f(0.7F, 0.7F, 0.7F, 1F), TimeUnit.MILLISECONDS.toNanos(50));
+                backgroundColor.setDesired(new PropertyVector4f(0.1F, 0, 0, 0.8F), TimeUnit.MICROSECONDS.toNanos(150));
             } else {
-                textColor.setDesired(new PropertyVector4f(1F, 1F, 1F, 1F),
-                        TimeUnit.MILLISECONDS.toNanos(150));
-                backgroundColor.setDesired(new PropertyVector4f(0F, 0, 0, 0.8F),
-                        TimeUnit.MICROSECONDS.toNanos(250));
+                textColor.setDesired(new PropertyVector4f(1F, 1F, 1F, 1F), TimeUnit.MILLISECONDS.toNanos(150));
+                backgroundColor.setDesired(new PropertyVector4f(0F, 0, 0, 0.8F), TimeUnit.MICROSECONDS.toNanos(250));
             }
         };
         this.pressing.addListener(p -> recalc.run());
@@ -66,8 +60,7 @@ public class ButtonGui extends ParentableAbstractGui {
         this.GUIs.add(textGui);
     }
 
-    @Override
-    protected boolean doHandle(KeybindEvent entry) throws GameException {
+    @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
         if (entry instanceof MouseButtonKeybindEvent) {
             MouseButtonKeybindEvent mb = (MouseButtonKeybindEvent) entry;
             if (mb.type() == Type.RELEASE) {
@@ -75,20 +68,19 @@ public class ButtonGui extends ParentableAbstractGui {
                     try {
                         this.buttonPressed(mb);
                     } catch (GameException ex) {
-                        this.pressing.setValue(false);
+                        this.pressing.value(false);
                         throw ex;
                     }
                 }
-                this.pressing.setValue(false);
+                this.pressing.value(false);
             } else if (mb.type() == Type.PRESS) {
-                this.pressing.setValue(true);
+                this.pressing.value(true);
             }
         }
         return super.doHandle(entry);
     }
 
-    @Override
-    protected void doUpdate() throws GameException {
+    @Override protected void doUpdate() throws GameException {
         if (textColor.calculateCurrent() | backgroundColor.calculateCurrent()) {
             redraw();
         }

@@ -18,14 +18,15 @@ public class BasicFramebuffer extends GLESFramebuffer {
 
     public BasicFramebuffer(GLES gles, int width, int height) throws GameException {
         super(gles.mainFrame());
-        this.width().setNumber(width);
-        this.height().setNumber(height);
+        this.width().number(width);
+        this.height().number(height);
         this.bind();
 
         GLES20 c = StateRegistry.currentGl();
         this.colorTexture = gles.textureManager().createTexture(gles.launcher().executorThreadHelper().currentThread());
         Threads.waitFor(this.colorTexture.allocate(this.width().intValue(), this.height().intValue()));
         c.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getTextureId(), 0);
+        System.out.println(this.colorTexture.getTextureId());
         this.depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, this.width().intValue(), this.height().intValue());
         c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this.depthStencilRenderbuffer.getId());
         this.checkComplete();
@@ -36,8 +37,8 @@ public class BasicFramebuffer extends GLESFramebuffer {
         if (this.width().intValue() == width && this.height().intValue() == height) {
             return;
         }
-        this.width().setNumber(width);
-        this.height().setNumber(height);
+        this.width().number(width);
+        this.height().number(height);
         Threads.waitFor(this.resizeColorTexture());
         this.bind();
         StateRegistry.currentGl().glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getTextureId(), 0);
@@ -62,8 +63,7 @@ public class BasicFramebuffer extends GLESFramebuffer {
         return this.colorTexture.allocate(this.width().intValue(), this.height().intValue());
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         this.colorTexture.cleanup();
         this.depthStencilRenderbuffer.cleanup();
         super.cleanup0();

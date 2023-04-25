@@ -7,7 +7,7 @@
 
 package gamelauncher.android.gl;
 
-import android.opengl.*;
+import android.opengl.EGL14;
 import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -18,13 +18,10 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.LogColor;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
-import gamelauncher.gles.gl.GLES20;
-import gamelauncher.gles.gl.GLES30;
-import gamelauncher.gles.gl.GLES31;
-import gamelauncher.gles.gl.GLES32;
 import gamelauncher.gles.gl.*;
 import gamelauncher.gles.states.StateRegistry;
 
+import javax.microedition.khronos.egl.*;
 import java.util.Collection;
 
 public class AndroidGLContext extends AbstractGameResource implements GLContext {
@@ -68,22 +65,24 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         return frame;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N) AndroidGLContext create(@Nullable AndroidGLContext context) throws GameException {
-        EGLDisplay dpy = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    AndroidGLContext create(@Nullable AndroidGLContext context) throws GameException {
+        EGL10 egl = launcher.egl();
+        EGLDisplay dpy = egl.eglGetDisplay(egl.EGL_DEFAULT_DISPLAY);
         int[] vers = new int[2];
-        EGL14.eglInitialize(dpy, vers, 0, vers, 1);
-        int[] configAttr = {EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER, EGL14.EGL_LEVEL, 0, EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT, EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT, EGL14.EGL_NONE};
+        egl.eglInitialize(dpy, vers);
+        int[] configAttr = {egl.EGL_COLOR_BUFFER_TYPE, egl.EGL_RGB_BUFFER, egl.EGL_LEVEL, 0, egl.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT, egl.EGL_SURFACE_TYPE, egl.EGL_PBUFFER_BIT, egl.EGL_NONE};
         EGLConfig[] configs = new EGLConfig[1];
         int[] numConfig = new int[1];
-        EGL14.eglChooseConfig(dpy, configAttr, 0, configs, 0, 1, numConfig, 0);
+        egl.eglChooseConfig(dpy, configAttr, configs, 1, numConfig);
         if (numConfig[0] == 0) {
             throw new GameException("No Config for EGL found");
         }
         EGLConfig config = configs[0];
-        int[] surfAttr = {EGL14.EGL_WIDTH, 1, EGL14.EGL_HEIGHT, 1, EGL14.EGL_NONE};
-        EGLSurface surf = EGL14.eglCreatePbufferSurface(dpy, config, surfAttr, 0);
-        int[] ctxAttrib = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL14.EGL_NONE};
-        EGLContext ctx = EGL14.eglCreateContext(dpy, config, context == null ? EGL14.EGL_NO_CONTEXT : context.context, ctxAttrib, 0);
+        int[] surfAttr = {egl.EGL_WIDTH, 1, egl.EGL_HEIGHT, 1, egl.EGL_NONE};
+        EGLSurface surf = egl.eglCreatePbufferSurface(dpy, config, surfAttr);
+        int[] ctxAttrib = {EGL_CONTEXT_CLIENT_VERSION, 3, egl.EGL_NONE};
+        EGLContext ctx = egl.eglCreateContext(dpy, config, context == null ? egl.EGL_NO_CONTEXT : context.context, ctxAttrib);
         this.display = dpy;
         this.surface = surf;
         this.context = ctx;
@@ -95,24 +94,26 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void cleanup0() {
         this.sharedContexts.remove(this);
-        EGL14.eglDestroySurface(display, surface);
-        EGL14.eglDestroyContext(display, context);
+        EGL10 egl = launcher.egl();
+        egl.eglDestroySurface(display, surface);
+        egl.eglDestroyContext(display, context);
         display = null;
         surface = null;
         context = null;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void makeCurrent() {
-        EGL14.eglMakeCurrent(display, surface, surface, context);
+        launcher.egl().eglMakeCurrent(display, surface, surface, context);
         StateRegistry.currentContext(this);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void destroyCurrent() {
         StateRegistry.currentContext(null);
-        EGL14.eglMakeCurrent(display, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
+        launcher.egl().eglMakeCurrent(display, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N) @Override public AndroidGLContext createSharedContext() throws GameException {
+    @RequiresApi(api = Build.VERSION_CODES.N) @Override
+    public AndroidGLContext createSharedContext() throws GameException {
         return new AndroidGLContext(launcher, sharedContexts).create(this);
     }
 

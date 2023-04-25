@@ -11,70 +11,58 @@ import org.lwjgl.opengles.GLES20;
 
 public class GLFWFrameFramebuffer extends AbstractGameResource implements Framebuffer {
 
-	private final NumberValue width = NumberValue.zero();
+    private final NumberValue width = NumberValue.withValue(0);
+    private final NumberValue height = NumberValue.withValue(0);
+    private final BooleanValue swapBuffers = BooleanValue.falseValue();
+    private final GLFWFrame frame;
+    private final GLESScissorStack scissor;
 
-	private final NumberValue height = NumberValue.zero();
+    public GLFWFrameFramebuffer(GLFWFrame frame) {
+        this.frame = frame;
+        this.scissor = new GLESScissorStack(this);
+    }
 
-	private final BooleanValue swapBuffers = BooleanValue.falseValue();
+    @Override public void beginFrame() {
+    }
 
-	private final GLFWFrame frame;
+    @Override public void endFrame() {
+        if (this.swapBuffers.booleanValue()) {
+            GLUtil.skip.set(true);
+            GLFW.glfwSwapBuffers(this.frame.context.glfwId);
+            GLUtil.skip.remove();
+            GLES20.glGetError();
+        }
+    }
 
-	private final GLESScissorStack scissor;
+    @Override public void scheduleRedraw() {
+        frame.scheduleDraw();
+    }
 
-	public GLFWFrameFramebuffer(GLFWFrame frame) {
-		this.frame = frame;
-		this.scissor = new GLESScissorStack(this);
-	}
+    @Override protected void cleanup0() {
+    }
 
-	@Override
-	public void beginFrame() {
-	}
+    @Override public GLFWFrameRenderThread renderThread() {
+        return this.frame.renderThread;
+    }
 
-	@Override
-	public void endFrame() {
-		if (this.swapBuffers.booleanValue()) {
-			GLUtil.skip.set(true);
-			GLFW.glfwSwapBuffers(this.frame.context.glfwId);
-			GLUtil.skip.remove();
-			GLES20.glGetError();
-		}
-	}
+    @Override public ScissorStack scissorStack() {
+        return this.scissor;
+    }
 
-	@Override
-	public void scheduleRedraw() {
-		frame.scheduleDraw();
-	}
+    public BooleanValue swapBuffers() {
+        return this.swapBuffers;
+    }
 
-	@Override
-	protected void cleanup0() {
-	}
+    @Override public NumberValue width() {
+        return this.width;
+    }
 
-	@Override
-	public GLFWFrameRenderThread renderThread() {
-		return this.frame.renderThread;
-	}
+    @Override public NumberValue height() {
+        return this.height;
+    }
 
-	@Override
-	public ScissorStack scissorStack() {
-		return this.scissor;
-	}
-
-	public BooleanValue swapBuffers() {
-		return this.swapBuffers;
-	}
-
-	@Override
-	public NumberValue width() {
-		return this.width;
-	}
-
-	@Override
-	public NumberValue height() {
-		return this.height;
-	}
-
-	public GLFWFrame frame() {
-		return this.frame;
-	}
+    public GLFWFrame frame() {
+        return this.frame;
+    }
 
 }

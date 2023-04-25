@@ -15,7 +15,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.engine.util.math.Math;
 import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
@@ -23,6 +22,7 @@ import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
+import org.joml.Math;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,8 +43,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     private final AtomicReference<GLESTextureFormat> format = new AtomicReference<>(GLESTextureFormat.RGBA);
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final AtomicInteger textureId = new AtomicInteger(0);
-    private final NumberValue width = NumberValue.zero();
-    private final NumberValue height = NumberValue.zero();
+    private final NumberValue width = NumberValue.withValue(0);
+    private final NumberValue height = NumberValue.withValue(0);
     private final Profiler profiler;
     private final GLES gles;
     private final GLESTextureManager manager;
@@ -188,8 +188,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     }
 
     @Override public CompletableFuture<Void> allocate(int width, int height) {
-        this.width.setValue(width);
-        this.height.setValue(height);
+        this.width.number(width);
+        this.height.number(height);
         return owner.submit(() -> {
             lock.writeLock().lock();
             safeCreate();
@@ -199,8 +199,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     }
 
     @Override public CompletableFuture<Void> resize(int width, int height) {
-        this.width.setValue(width);
-        this.height.setValue(height);
+        this.width.number(width);
+        this.height.number(height);
         return owner.submit(() -> {
             try {
                 lock.writeLock().lock();
@@ -258,10 +258,10 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                 bin.close();
 
                 if (this.width.intValue() < width) {
-                    this.width.setNumber(width);
+                    this.width.number(width);
                 }
                 if (this.height.intValue() < height) {
-                    this.height.setNumber(height);
+                    this.height.number(height);
                 }
 
                 owner.submit(() -> {
@@ -295,7 +295,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return fut;
     }
 
-    @SuppressWarnings("deprecation") @Override public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
+    @SuppressWarnings("deprecation") @Override
+    public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
         if (!(other instanceof GLESTexture)) {
             ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
             GameException ge = new GameException(cause);

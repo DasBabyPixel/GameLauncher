@@ -7,7 +7,6 @@
 
 package gamelauncher.android.gl;
 
-import android.opengl.EGL14;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 import de.dasbabypixel.api.property.BooleanValue;
@@ -21,6 +20,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import java8.util.concurrent.CompletableFuture;
 
+import javax.microedition.khronos.egl.EGL10;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class AndroidFrame extends AbstractGameResource implements Frame {
@@ -36,9 +36,10 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
     private volatile RenderMode renderMode;
     private volatile FrameRenderer frameRenderer = null;
 
-    @RequiresApi(api = Build.VERSION_CODES.N) public AndroidFrame(AndroidGameLauncher launcher) {
+    public AndroidFrame(AndroidGameLauncher launcher) {
         this.launcher = launcher;
-        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, EGL14.eglGetCurrentDisplay(), EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW), EGL14.eglGetCurrentContext(), new SupportedAndroidGLES32());
+        EGL10 egl = launcher.egl();
+        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, null, null, null, new SupportedAndroidGLES32());
         this.fullscreen = BooleanValue.trueValue();
         this.renderThread = new AndroidNativeRenderThread(this);
         this.framebuffer = new AndroidFrameFramebuffer(this);
@@ -46,7 +47,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         this.input = new AndroidInput(launcher);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) AndroidFrame(AndroidGameLauncher launcher, AndroidGLContext context) {
+    AndroidFrame(AndroidGameLauncher launcher, AndroidGLContext context) {
         this.launcher = launcher;
         this.context = context;
         this.fullscreen = BooleanValue.falseValue();

@@ -14,7 +14,6 @@ tasks {
 dependencies {
     api libs.disruptor
     api libs.annotations
-    api libs.pixelannotations
     api libs.streamsupport.cfuture
     api libs.guava
     api libs.property

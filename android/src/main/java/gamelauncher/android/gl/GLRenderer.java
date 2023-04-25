@@ -1,6 +1,5 @@
 package gamelauncher.android.gl;
 
-import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
@@ -12,6 +11,7 @@ import gamelauncher.engine.util.concurrent.ThreadSpecificExecutor;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.states.StateRegistry;
 
+import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import java.util.Queue;
@@ -30,7 +30,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         this.frame = (AndroidFrame) launcher.frame();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Thread thread = Thread.currentThread();
         executor = new ThreadSpecificExecutor() {
             @Override public Thread thread() {
@@ -48,7 +49,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         logger.info("Extensions: " + GLES20.glGetString(GLES20.GL_EXTENSIONS));
         AndroidNativeRenderThread rt = ((AndroidNativeRenderThread) frame.renderThread());
         rt.executor(executor);
-        rt.frame().context().recreate(EGL14.eglGetCurrentDisplay(), EGL14.eglGetCurrentSurface(EGL14.EGL_DRAW), EGL14.eglGetCurrentContext());
+        rt.frame().context().recreate(launcher.egl().eglGetCurrentDisplay(), launcher.egl().eglGetCurrentSurface(EGL10.EGL_DRAW), launcher.egl().eglGetCurrentContext());
         if (renderer == null) {
             logger.warn("Fallback render");
             GLES20.glClearColor(0.4f, 0.0f, 0.0f, 1.0f);

@@ -24,8 +24,7 @@ public interface Gui {
      * @param mouseY the mouse y position
      * @return true if the mouse is inside the given rectangle
      */
-    static boolean hovering(float x, float y, float width, float height, float mouseX,
-                            float mouseY) {
+    static boolean hovering(float x, float y, float width, float height, float mouseX, float mouseY) {
         return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
     }
 
@@ -81,8 +80,7 @@ public interface Gui {
      * @param partialTick the partial tick
      * @throws GameException an exception
      */
-    void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick)
-            throws GameException;
+    void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException;
 
     /**
      * Called when the contents of this {@link Gui} should be cleaned up
@@ -149,7 +147,7 @@ public interface Gui {
      * @return if this gui is focused
      */
     default boolean focused() {
-        return focusedProperty().getValue();
+        return focusedProperty().value();
     }
 
     /**
@@ -175,7 +173,7 @@ public interface Gui {
      * @param width the new width
      */
     default void width(float width) {
-        widthProperty().setNumber(width);
+        widthProperty().number(width);
     }
 
     /**
@@ -191,7 +189,7 @@ public interface Gui {
      * @param height the new height
      */
     default void height(float height) {
-        heightProperty().setNumber(height);
+        heightProperty().number(height);
     }
 
     /**
@@ -207,7 +205,7 @@ public interface Gui {
      * @param x the new x position
      */
     default void x(float x) {
-        xProperty().setNumber(x);
+        xProperty().number(x);
     }
 
     /**
@@ -223,7 +221,7 @@ public interface Gui {
      * @param y the new y position
      */
     default void y(float y) {
-        yProperty().setNumber(y);
+        yProperty().number(y);
     }
 
     /**
@@ -234,9 +232,7 @@ public interface Gui {
      * @return true if the mouse is inside this {@link Gui}
      */
     default boolean hovering(float mouseX, float mouseY) {
-        return hovering(visibleXProperty().floatValue(), visibleYProperty().floatValue(),
-                visibleWidthProperty().floatValue(), visibleHeightProperty().floatValue(),
-                mouseX, mouseY);
+        return hovering(visibleXProperty().floatValue(), visibleYProperty().floatValue(), visibleWidthProperty().floatValue(), visibleHeightProperty().floatValue(), mouseX, mouseY);
     }
 
     /**

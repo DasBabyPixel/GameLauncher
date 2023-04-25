@@ -20,7 +20,6 @@ import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent.Type;
 import gamelauncher.engine.util.logging.AnsiProvider;
-import gamelauncher.engine.util.math.Math;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESGameRenderer;
 import gamelauncher.gles.GLESThreadGroup;
@@ -42,6 +41,7 @@ import gamelauncher.lwjgl.util.LWJGLExecutorThreadHelper;
 import gamelauncher.lwjgl.util.LWJGLMemoryManagement;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
 import gamelauncher.lwjgl.util.profiler.GLSectionHandler;
+import org.joml.Math;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
@@ -58,7 +58,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     private final MemoryManagement memoryManagement;
     private GLFWFrame mainFrame;
     private boolean mouseMovement = false;
-    private float mouseSensivity = 1.0F;
+    private final float mouseSensivity = 1.0F;
     private boolean ignoreNextMovement = false;
     private GLFWThread glfwThread;
 
@@ -80,8 +80,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
-    @EventHandler
-    public void handle(LauncherInitializedEvent event) {
+    @EventHandler public void handle(LauncherInitializedEvent event) {
         try {
             Threads.waitFor(this.mainFrame.showWindow());
         } catch (GameException ex) {
@@ -91,13 +90,11 @@ public class LWJGLGameLauncher extends GameLauncher {
         this.mouseMovement(false);
     }
 
-    @Override
-    public AnsiProvider ansi() {
+    @Override public AnsiProvider ansi() {
         return new LWJGLAnsiProvider();
     }
 
-    @Override
-    protected void tick0() throws GameException {
+    @Override protected void tick0() throws GameException {
         mouse:
         if (this.mouseMovement) {
             Camera cam = this.camera;
@@ -112,8 +109,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         }
     }
 
-    @Override
-    protected void start0() throws GameException {
+    @Override protected void start0() throws GameException {
         GLUtil.clinit(this);
 
         this.profiler().addHandler("render", new GLSectionHandler());
@@ -127,10 +123,9 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         this.mainFrame = new GLFWFrame(this);
         this.frame(this.mainFrame);
-        this.mainFrame.framebuffer().renderThread()
-                .submit(() -> this.glyphProvider(new LWJGLGlyphProvider(this)));
+        this.mainFrame.framebuffer().renderThread().submit(() -> this.glyphProvider(new LWJGLGlyphProvider(this)));
         this.mainFrame.renderMode(RenderMode.ON_UPDATE);
-        this.mainFrame.closeCallback().setValue(frame -> {
+        this.mainFrame.closeCallback().value(frame -> {
             this.mainFrame.hideWindow();
             try {
                 LWJGLGameLauncher.this.stop();
@@ -145,14 +140,12 @@ public class LWJGLGameLauncher extends GameLauncher {
         keybind.addHandler(entry -> {
             if (entry instanceof KeyboardKeybindEvent) {
                 KeyboardKeybindEvent e = (KeyboardKeybindEvent) entry;
-                if (e.type() == Type.PRESS)
-                    mainFrame.fullscreen().setValue(!mainFrame.fullscreen().booleanValue());
+                if (e.type() == Type.PRESS) mainFrame.fullscreen().value(!mainFrame.fullscreen().booleanValue());
             }
         });
     }
 
-    @Override
-    protected void stop0() throws GameException {
+    @Override protected void stop0() throws GameException {
 
         this.glyphProvider().cleanup();
         this.textureManager().cleanup();
@@ -163,27 +156,22 @@ public class LWJGLGameLauncher extends GameLauncher {
         Threads.waitFor(this.glfwThread.exit());
     }
 
-    @Override
-    protected void registerSettingInsertions() {
+    @Override protected void registerSettingInsertions() {
         new MouseSensivityInsertion().register(this);
     }
 
-    @Override
-    public GLESTextureManager textureManager() {
+    @Override public GLESTextureManager textureManager() {
         return (GLESTextureManager) super.textureManager();
     }
 
-    @Override
-    public LWJGLGuiManager guiManager() {
+    @Override public LWJGLGuiManager guiManager() {
         return (LWJGLGuiManager) super.guiManager();
     }
 
     private void mouseMovement(boolean movement) {
         this.mainFrame.mouse().grabbed(movement).thenRun(() -> {
             if (!movement) {
-                GLFW.glfwSetCursorPos(this.mainFrame.getGLFWId(),
-                        this.mainFrame.framebuffer().width().doubleValue() / 2,
-                        this.mainFrame.framebuffer().height().doubleValue() / 2);
+                GLFW.glfwSetCursorPos(this.mainFrame.getGLFWId(), this.mainFrame.framebuffer().width().doubleValue() / 2, this.mainFrame.framebuffer().height().doubleValue() / 2);
             } else {
                 GLFW.glfwSetCursorPos(this.mainFrame.getGLFWId(), 0, 0);
                 this.ignoreNextMovement = true;
@@ -196,8 +184,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         return memoryManagement;
     }
 
-    @Override
-    public GLFWFrame frame() {
+    @Override public GLFWFrame frame() {
         return (GLFWFrame) super.frame();
     }
 

@@ -83,8 +83,7 @@ public interface MainScreenGui extends Gui {
                 super(Simple.this.launcher());
                 ButtonGui buttonGui = new ButtonGui(launcher()) {
 
-                    @Override
-                    protected void buttonPressed(MouseButtonKeybindEvent e) {
+                    @Override protected void buttonPressed(MouseButtonKeybindEvent e) {
                         try {
                             game.launch(this.framebuffer);
                         } catch (GameException ex) {
@@ -93,7 +92,7 @@ public interface MainScreenGui extends Gui {
                     }
 
                 };
-                buttonGui.text().setValue(Component.text(game.key().key()));
+                buttonGui.text().value(Component.text(game.key().key()));
 
                 buttonGui.xProperty().bind(this.xProperty());
                 buttonGui.yProperty().bind(this.yProperty());

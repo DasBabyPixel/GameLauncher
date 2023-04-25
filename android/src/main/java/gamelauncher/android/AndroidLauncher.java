@@ -5,7 +5,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowInsetsController;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -20,7 +19,7 @@ public class AndroidLauncher extends Activity {
 
     private Logger logger;
 
-    @RequiresApi(api = Build.VERSION_CODES.N) @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
         logger = Logger.logger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {

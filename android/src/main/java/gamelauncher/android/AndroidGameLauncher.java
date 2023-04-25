@@ -30,6 +30,7 @@ import gamelauncher.gles.font.bitmap.BasicFontFactory;
 import gamelauncher.gles.modelloader.GLESModelLoader;
 import gamelauncher.gles.shader.GLESShaderLoader;
 
+import javax.microedition.khronos.egl.EGL10;
 import java.io.IOException;
 import java.net.URI;
 
@@ -38,6 +39,7 @@ public class AndroidGameLauncher extends GameLauncher {
     private final AndroidLauncher activity;
     LauncherGLSurfaceView view;
     private volatile boolean keyboardVisible = false;
+    private EGL10 egl;
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
         this.operatingSystem(() -> "Android");
@@ -100,6 +102,14 @@ public class AndroidGameLauncher extends GameLauncher {
         } else {
             view.getHandler().post(r);
         }
+    }
+
+    public void egl(EGL10 egl) {
+        this.egl = egl;
+    }
+
+    public EGL10 egl() {
+        return egl;
     }
 
     @Override public boolean keyboardVisible() {

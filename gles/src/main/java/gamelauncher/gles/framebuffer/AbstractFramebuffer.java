@@ -15,8 +15,8 @@ import gamelauncher.gles.GLESScissorStack;
 public abstract class AbstractFramebuffer extends AbstractGameResource implements Framebuffer {
 
     protected final Runnable draw;
-    private final NumberValue width = NumberValue.zero();
-    private final NumberValue height = NumberValue.zero();
+    private final NumberValue width = NumberValue.withValue(0);
+    private final NumberValue height = NumberValue.withValue(0);
     private final RenderThread renderThread;
     private final ScissorStack scissor;
 
@@ -30,33 +30,27 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
         this.scissor = new GLESScissorStack(this);
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         this.renderThread.frame().launcher().guiManager().cleanup(this);
     }
 
-    @Override
-    public NumberValue width() {
+    @Override public NumberValue width() {
         return this.width;
     }
 
-    @Override
-    public NumberValue height() {
+    @Override public NumberValue height() {
         return this.height;
     }
 
-    @Override
-    public RenderThread renderThread() {
+    @Override public RenderThread renderThread() {
         return this.renderThread;
     }
 
-    @Override
-    public ScissorStack scissorStack() {
+    @Override public ScissorStack scissorStack() {
         return this.scissor;
     }
 
-    @Override
-    public void scheduleRedraw() {
+    @Override public void scheduleRedraw() {
         this.draw.run();
     }
 
