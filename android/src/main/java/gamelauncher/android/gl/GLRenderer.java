@@ -57,8 +57,8 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     }
 
     @Override public void onSurfaceChanged(GL10 gl, int width, int height) {
-        frame.framebuffer().width().setNumber(width);
-        frame.framebuffer().height().setNumber(height);
+        frame.framebuffer().width().number(width);
+        frame.framebuffer().height().number(height);
         if (renderer != null) {
             try {
                 renderer.windowSizeChanged(frame);

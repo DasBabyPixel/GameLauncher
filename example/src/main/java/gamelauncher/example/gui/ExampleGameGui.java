@@ -13,8 +13,7 @@ public class ExampleGameGui extends ParentableAbstractGui {
         super(launcher);
         ButtonGui button = new ButtonGui(launcher) {
 
-            @Override
-            protected void buttonPressed(MouseButtonKeybindEvent e) {
+            @Override protected void buttonPressed(MouseButtonKeybindEvent e) {
                 System.out.println("gayyy");
             }
 
@@ -23,9 +22,7 @@ public class ExampleGameGui extends ParentableAbstractGui {
         button.heightProperty().bind(this.heightProperty());
         button.xProperty().bind(this.xProperty());
         button.yProperty().bind(this.yProperty());
-        button.text().setValue(Component.text(
-                "Deine MuddalhagsDOiguzSAPIgh U?SiaNPviUHNvfiposAUHvPAuvUA+oVAMR)A0Rb+" + "aßr"
-                        + "bs+*RBmüaOPIR+ücoms+"));
+        button.text().value(Component.text("Deine MuddalhagsDOiguzSAPIgh U?SiaNPviUHNvfiposAUHvPAuvUA+oVAMR)A0Rb+" + "aßr" + "bs+*RBmüaOPIR+ücoms+"));
         this.GUIs.add(button);
     }
 }

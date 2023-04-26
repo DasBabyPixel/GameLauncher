@@ -16,8 +16,8 @@ import gamelauncher.gles.GLESScissorStack;
 
 public class AndroidFrameFramebuffer extends AbstractGameResource implements Framebuffer {
     private final AndroidFrame frame;
-    private final NumberValue width = NumberValue.zero();
-    private final NumberValue height = NumberValue.zero();
+    private final NumberValue width = NumberValue.withValue(0);
+    private final NumberValue height = NumberValue.withValue(0);
     private final ScissorStack scissor;
 
     public AndroidFrameFramebuffer(AndroidFrame frame) {
@@ -25,40 +25,32 @@ public class AndroidFrameFramebuffer extends AbstractGameResource implements Fra
         this.scissor = new GLESScissorStack(this);
     }
 
-    @Override
-    public void beginFrame() {
+    @Override public void beginFrame() {
     }
 
-    @Override
-    public void endFrame() {
+    @Override public void endFrame() {
     }
 
-    @Override
-    public NumberValue width() {
+    @Override public NumberValue width() {
         return width;
     }
 
-    @Override
-    public NumberValue height() {
+    @Override public NumberValue height() {
         return height;
     }
 
-    @Override
-    public RenderThread renderThread() {
+    @Override public RenderThread renderThread() {
         return frame.renderThread();
     }
 
-    @Override
-    public ScissorStack scissorStack() {
+    @Override public ScissorStack scissorStack() {
         return scissor;
     }
 
-    @Override
-    public void scheduleRedraw() {
+    @Override public void scheduleRedraw() {
         frame.scheduleDraw();
     }
 
-    @Override
-    protected void cleanup0() {
+    @Override protected void cleanup0() {
     }
 }

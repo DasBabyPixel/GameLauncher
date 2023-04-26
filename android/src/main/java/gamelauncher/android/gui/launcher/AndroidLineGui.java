@@ -21,26 +21,26 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
-    private final NumberValue fromX = NumberValue.zero();
-    private final NumberValue fromY = NumberValue.zero();
-    private final NumberValue toX = NumberValue.zero();
-    private final NumberValue toY = NumberValue.zero();
+    private final NumberValue fromX = NumberValue.withValue(0);
+    private final NumberValue fromY = NumberValue.withValue(0);
+    private final NumberValue toX = NumberValue.withValue(0);
+    private final NumberValue toY = NumberValue.withValue(0);
     private final GLES gles;
-    private boolean arrow = true;
+    private final boolean arrow = true;
     private DrawContext context;
     private GameItem arrowItem;
     private Model arrowModel;
     private GameItem lineItem;
     private Model lineModel;
-    private float lineWidth = 2;
+    private final float lineWidth = 2;
 
     public AndroidLineGui(GameLauncher launcher, GLES gles) {
         super(launcher);
         this.gles = gles;
-        NumberValue x = NumberValue.zero();
-        NumberValue y = NumberValue.zero();
-        NumberValue w = NumberValue.zero();
-        NumberValue h = NumberValue.zero();
+        NumberValue x = NumberValue.withValue(0);
+        NumberValue y = NumberValue.withValue(0);
+        NumberValue w = NumberValue.withValue(0);
+        NumberValue h = NumberValue.withValue(0);
         this.xProperty().bind(x);
         this.yProperty().bind(y);
         this.widthProperty().bind(w);
@@ -54,21 +54,19 @@ public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
                 arrowItem.scale(lineWidth * 10, lineWidth * 10, 0);
                 Vector2f norm = direction.normalize(new Vector2f()).mul(-lineWidth * 5);
                 arrowItem.position(to.x + norm.x, to.y + norm.y, 0);
-                arrowItem.rotation(0, 0,
-                        (float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
+                arrowItem.rotation(0, 0, (float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
             }
             if (lineItem != null) {
                 lineItem.position(from.x, from.y, 0);
                 lineItem.scale(lineWidth, direction.length() - lineWidth * 10, 0);
-                lineItem.rotation(0, 0,
-                        (float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
+                lineItem.rotation(0, 0, (float) Math.toDegrees(direction.angle(new Vector2f(0, 1))));
             }
             float minX = Math.min(from.x, to.x) - lineWidth * 6;
             float minY = Math.min(from.y, to.y) - lineWidth * 6;
-            x.setNumber(minX);
-            y.setNumber(minY);
-            w.setNumber(Math.abs(from.x - to.x) + lineWidth * 12);
-            h.setNumber(Math.abs(from.y - to.y) + lineWidth * 12);
+            x.number(minX);
+            y.number(minY);
+            w.number(Math.abs(from.x - to.x) + lineWidth * 12);
+            h.number(Math.abs(from.y - to.y) + lineWidth * 12);
             redraw();
         };
         fromX.addListener(invalidationListener);
@@ -77,28 +75,23 @@ public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
         toY.addListener(invalidationListener);
     }
 
-    @Override
-    public NumberValue fromX() {
+    @Override public NumberValue fromX() {
         return fromX;
     }
 
-    @Override
-    public NumberValue fromY() {
+    @Override public NumberValue fromY() {
         return fromY;
     }
 
-    @Override
-    public NumberValue toX() {
+    @Override public NumberValue toX() {
         return toX;
     }
 
-    @Override
-    public NumberValue toY() {
+    @Override public NumberValue toY() {
         return toY;
     }
 
-    @Override
-    protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
         super.doCleanup(framebuffer);
         launcher().contextProvider().freeContext(context, ContextType.HUD);
         lineModel.cleanup();
@@ -108,15 +101,12 @@ public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
         }
     }
 
-    @Override
-    protected void doInit(Framebuffer framebuffer) throws GameException {
+    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
         super.doInit(framebuffer);
         context = launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
         if (arrow) {
 
-            Mesh mesh = new Mesh(gles, new float[]{-0.5F, -0.5F, 0, 0, 0.5F, 0, 0.5F, -0.5F, 0},
-                    new float[]{0, 0, 0, 0, 0, 0}, new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    new int[]{0, 2, 1}, GLES20.GL_TRIANGLES);
+            Mesh mesh = new Mesh(gles, new float[]{-0.5F, -0.5F, 0, 0, 0.5F, 0, 0.5F, -0.5F, 0}, new float[]{0, 0, 0, 0, 0, 0}, new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0}, new int[]{0, 2, 1}, GLES20.GL_TRIANGLES);
             Mesh.Material mat = mesh.material();
             mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
             MeshModel model = new MeshModel(mesh);
@@ -124,10 +114,7 @@ public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
             arrowItem.color().set(1, 1, 1, 1);
             arrowModel = arrowItem.createModel();
         }
-        Mesh mesh = new Mesh(gles, new float[]{-0.5F, 0, 0, -0.5F, 1, 0, 0.5F, 1, 0, 0.5F, 0, 0},
-                new float[]{0, 0, 0, 0, 0, 0, 0, 0,},
-                new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,}, new int[]{0, 3, 2, 0, 2, 1,},
-                GLES20.GL_TRIANGLES);
+        Mesh mesh = new Mesh(gles, new float[]{-0.5F, 0, 0, -0.5F, 1, 0, 0.5F, 1, 0, 0.5F, 0, 0}, new float[]{0, 0, 0, 0, 0, 0, 0, 0,}, new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,}, new int[]{0, 3, 2, 0, 2, 1,}, GLES20.GL_TRIANGLES);
         Mesh.Material mat = mesh.material();
         mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
         MeshModel model = new MeshModel(mesh);
@@ -138,8 +125,7 @@ public class AndroidLineGui extends ParentableAbstractGui implements LineGui {
     }
 
     @Override
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
-                               float partialTick) throws GameException {
+    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         context.update(EmptyCamera.instance());
         context.drawModel(lineModel);
         if (arrowModel != null) {
