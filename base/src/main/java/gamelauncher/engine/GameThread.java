@@ -1,14 +1,13 @@
 package gamelauncher.engine;
 
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.collection.AtomicConcurrentLinkedDeque;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import java8.util.concurrent.CompletableFuture;
 
-import java.util.Deque;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,10 +24,8 @@ public class GameThread extends Thread {
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
 
     private final Queue<GameRunnable> queue = new ConcurrentLinkedQueue<>();
-
-    private final Deque<Long> ticks = new AtomicConcurrentLinkedDeque<>();
-
-    private final Deque<Long> tickTimes = new AtomicConcurrentLinkedDeque<>();
+    private final Queue<Long> ticks = new ConcurrentLinkedDeque<>();
+    private final Queue<Long> tickTimes = new ConcurrentLinkedDeque<>();
 
     private final GameLauncher gameLauncher;
 
@@ -44,9 +41,6 @@ public class GameThread extends Thread {
 
     private volatile long ticksTimeSumCount = 0;
 
-    /**
-     * @param launcher
-     */
     public GameThread(GameLauncher launcher) {
         this.gameLauncher = launcher;
         this.setName("GameThread");
@@ -68,8 +62,7 @@ public class GameThread extends Thread {
         return diff / (float) tickTime;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
         // t1 - t2 < 0 | t1 < t2
         workQueue();
         long lastTick = System.nanoTime();
@@ -103,11 +96,7 @@ public class GameThread extends Thread {
                 if (tickTook > tickTime) {
                     long tooLong = tickTook - tickTime;
                     long ticksToSkip = tooLong / tickTime;
-                    gameLauncher.logger()
-                            .infof("Tick took %sms. This is %sms longer than expected!%s",
-                                    TimeUnit.NANOSECONDS.toMillis(tickTook), TimeUnit.NANOSECONDS.toMillis(tooLong),
-                                    ticksToSkip > 0 ? String.format("%nSkipping %s ticks to compensate", ticksToSkip)
-                                            : "");
+                    gameLauncher.logger().infof("Tick took %sms. This is %sms longer than expected!%s", TimeUnit.NANOSECONDS.toMillis(tickTook), TimeUnit.NANOSECONDS.toMillis(tooLong), ticksToSkip > 0 ? String.format("%nSkipping %s ticks to compensate", ticksToSkip) : "");
                     if (ticksToSkip > 0) {
                         lastTick += (ticksToSkip - 1) * tickTime;
                     }
@@ -118,7 +107,7 @@ public class GameThread extends Thread {
             }
 
             if (exit.get()) {
-                break mainLoop;
+                break;
             }
         }
         workQueue();
@@ -129,10 +118,10 @@ public class GameThread extends Thread {
     private void removeOldTicks() {
         long compareTo = System.nanoTime() - second;
         while (!ticks.isEmpty()) {
-            long first = ticks.peekFirst();
+            long first = ticks.peek();
             if (compareTo - first > 0) {
-                ticks.pollFirst();
-                long took = tickTimes.pollFirst();
+                ticks.poll();
+                long took = tickTimes.poll();
                 ticksTimeSum -= took;
                 ticksTimeSumCount--;
                 continue;
@@ -175,7 +164,6 @@ public class GameThread extends Thread {
     /**
      * Runs a {@link GameRunnable} on the {@link GameThread}
      *
-     * @param runnable
      * @return a completionFuture
      */
     public CompletableFuture<Void> runLater(GameRunnable runnable) {
@@ -188,8 +176,6 @@ public class GameThread extends Thread {
     /**
      * Runs a {@link GameCallable} on the {@link GameThread}
      *
-     * @param <T>
-     * @param callable
      * @return a completionFuture
      */
     public <T> CompletableFuture<T> runLater(GameCallable<T> callable) {
@@ -201,8 +187,7 @@ public class GameThread extends Thread {
     private <T> void runLater(GameCallable<T> callable, CompletableFuture<T> future) {
         queue.offer(new GameRunnable() {
 
-            @Override
-            public void run() throws GameException {
+            @Override public void run() throws GameException {
                 try {
                     T t = callable.call();
                     future.complete(t);

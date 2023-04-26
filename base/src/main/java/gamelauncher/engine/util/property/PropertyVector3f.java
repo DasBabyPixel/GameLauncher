@@ -72,6 +72,6 @@ public class PropertyVector3f {
     }
 
     @Override public String toString() {
-        return "PropertyVector3f{" + "x=" + x + ", y=" + y + ", z=" + z + '}';
+        return "PropertyVector3f{" + "x=" + x.floatValue() + ", y=" + y.floatValue() + ", z=" + z.floatValue() + '}';
     }
 }

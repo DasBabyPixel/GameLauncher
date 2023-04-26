@@ -12,6 +12,7 @@ tasks {
 }
 
 dependencies {
+    api libs.fastutil
     api libs.disruptor
     api libs.annotations
     api libs.streamsupport.cfuture

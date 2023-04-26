@@ -22,14 +22,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GLESDrawContext extends AbstractGameResource implements DrawContext {
+    protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
+    protected static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
+    protected static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
     private static final Key GLES_COMBINED_MODELS_MODELMATRIX = new Key("gles_combined_models_modelmatrix");
     private static final Key GLES_COMBINED_MODELS_COLORMULTIPLIER = new Key("gles_combined_models_modelmatrix");
     private static final Key GLES_COMBINED_MODELS_COLORADD = new Key("gles_combined_models_modelmatrix");
-    protected static final Vector3f X_AXIS = new Vector3f(1, 0, 0);
-
-    protected static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
-
-    protected static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
     protected final Framebuffer framebuffer;
     protected final double tx, ty, tz;
     protected final double sx, sy, sz;
@@ -74,7 +72,7 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         }
         this.gles = gles;
         this.framebuffer = framebuffer;
-        this.listener = new GLESDrawContextFramebufferChangeListener(this, this.framebuffer.width(), this.framebuffer.height());
+        this.listener = new GLESDrawContextFramebufferChangeListener(gles.launcher(), this, this.framebuffer.width(), this.framebuffer.height());
         this.tx = tx;
         this.ty = ty;
         this.tz = tz;

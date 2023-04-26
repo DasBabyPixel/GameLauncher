@@ -51,8 +51,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final GLFWGLContext context;
     final Collection<GLFWGLContext> contexts;
     final Property<GameConsumer<Frame>> closeCallback = Property.withValue(GLFWFrame.simpleCCB);
-    final NumberValue windowWidth = NumberValue.withValue(0);
-    final NumberValue windowHeight = NumberValue.withValue(0);
+    final NumberValue windowWidth = NumberValue.withValue(0D);
+    final NumberValue windowHeight = NumberValue.withValue(0D);
     final BooleanValue fullscreen = BooleanValue.falseValue();
     final Property<Monitor> monitor = Property.empty();
     final ManualQueryFramebuffer manualFramebuffer;
@@ -229,19 +229,19 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
     static class Creator implements Runnable {
 
-        public final NumberValue width = NumberValue.withValue(0);
-        public final NumberValue height = NumberValue.withValue(0);
-        public final NumberValue fbwidth = NumberValue.withValue(0);
-        public final NumberValue fbheight = NumberValue.withValue(0);
+        public final NumberValue width = NumberValue.withValue(0D);
+        public final NumberValue height = NumberValue.withValue(0D);
+        public final NumberValue fbwidth = NumberValue.withValue(0D);
+        public final NumberValue fbheight = NumberValue.withValue(0D);
         public final NumberValue scaleX = NumberValue.withValue(0F);
         public final NumberValue scaleY = NumberValue.withValue(0F);
-        public final NumberValue xpos = NumberValue.withValue(0);
-        public final NumberValue ypos = NumberValue.withValue(0);
+        public final NumberValue xpos = NumberValue.withValue(0D);
+        public final NumberValue ypos = NumberValue.withValue(0D);
         public final Property<Monitor> monitor = Property.empty();
-        private final NumberValue fullscreenOldX = NumberValue.withValue(0);
-        private final NumberValue fullscreenOldY = NumberValue.withValue(0);
-        private final NumberValue fullscreenOldW = NumberValue.withValue(0);
-        private final NumberValue fullscreenOldH = NumberValue.withValue(0);
+        private final NumberValue fullscreenOldX = NumberValue.withValue(0D);
+        private final NumberValue fullscreenOldY = NumberValue.withValue(0D);
+        private final NumberValue fullscreenOldW = NumberValue.withValue(0D);
+        private final NumberValue fullscreenOldH = NumberValue.withValue(0D);
         private final GLFWGLContext shared;
         public GLFWFrame frame;
         public long glfwId;

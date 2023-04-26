@@ -35,24 +35,21 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         this.color.w.addListener((NumberValue v) -> this.redraw());
     }
 
-    @Override
-    protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
         this.launcher().contextProvider().freeContext(this.context, ContextProvider.ContextType.HUD);
         this.model.cleanup();
     }
 
-    @Override
-    protected void doInit(Framebuffer framebuffer) throws GameException {
-        this.context =
-                this.launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
+    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
+        this.context = this.launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
 
         Mesh mesh = new PlaneMesh(gles);
         Mesh.Material mat = mesh.material();
         mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
         MeshModel model = new MeshModel(mesh);
         GameItem item = new GameItem(model);
-        item.position().x.bind(this.xProperty().add(this.widthProperty().divide(2)));
-        item.position().y.bind(this.yProperty().add(this.heightProperty().divide(2)));
+        item.position().x.bind(this.xProperty().add(this.widthProperty().divide(2D)));
+        item.position().y.bind(this.yProperty().add(this.heightProperty().divide(2D)));
         item.scale().x.bind(this.widthProperty());
         item.scale().y.bind(this.heightProperty());
         this.model = item.createModel();
@@ -64,16 +61,14 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
     }
 
     @Override
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY,
-                               float partialTick) throws GameException {
+    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         this.context.update(EmptyCamera.instance());
         this.context.drawModel(this.model);
         this.context.program().clearUniforms();
         return super.doRender(framebuffer, mouseX, mouseY, partialTick);
     }
 
-    @Override
-    public PropertyVector4f color() {
+    @Override public PropertyVector4f color() {
         return this.color;
     }
 
