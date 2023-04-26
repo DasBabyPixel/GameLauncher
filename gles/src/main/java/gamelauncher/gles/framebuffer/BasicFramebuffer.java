@@ -20,10 +20,6 @@ public class BasicFramebuffer extends GLESFramebuffer {
         super(gles.mainFrame());
         this.width().number(width);
         this.height().number(height);
-        System.out.println(this.width().intValue());
-        System.out.println(this.height().intValue());
-        System.out.println(width);
-        System.out.println(height);
         this.bind();
 
         GLES20 c = StateRegistry.currentGl();

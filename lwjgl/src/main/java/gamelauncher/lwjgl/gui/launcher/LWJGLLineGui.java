@@ -90,7 +90,6 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
     }
 
     @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
-        super.doCleanup(framebuffer);
         launcher().contextProvider().freeContext(context, ContextType.HUD);
         lineModel.cleanup();
         if (arrowModel != null) {

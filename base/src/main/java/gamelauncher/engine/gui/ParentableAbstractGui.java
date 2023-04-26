@@ -12,6 +12,7 @@ import gamelauncher.engine.util.keybind.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,7 +28,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
     /**
      * The {@link Gui}s of this {@link ParentableAbstractGui} object
      */
-    public final Deque<Gui> GUIs = new ArrayDeque<>();
+    public final Deque<Gui> GUIs = new ConcurrentLinkedDeque<>();
     private final AtomicReference<Gui> focusedGui = new AtomicReference<>(null);
     private final AtomicBoolean initialized = new AtomicBoolean();
     private final NumberValue lastMouseX = NumberValue.withValue(0D);

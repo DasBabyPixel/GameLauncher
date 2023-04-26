@@ -105,7 +105,14 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
             Gui oldGui = gui;
             gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
             if (oldGui != gui) {
-                framebuffer.renderThread().submit(() -> oldGui.cleanup(framebuffer));
+                oldGui.onOpen();
+                oldGui.focus();
+                oldGui.unfocus();
+                oldGui.onClose();
+                framebuffer.renderThread().submit(() -> {
+                    oldGui.init(framebuffer);
+                    oldGui.cleanup(framebuffer);
+                });
             }
             gui.widthProperty().bind(framebuffer.width());
             gui.heightProperty().bind(framebuffer.height());
@@ -172,13 +179,15 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         registerGuiCreator0(clazz, clazz, null);
     }
 
-    @Override public <T extends Gui> void registerGuiCreator(Class<T> clazz, GuiConstructorTemplate constructorTemplate) {
+    @Override
+    public <T extends Gui> void registerGuiCreator(Class<T> clazz, GuiConstructorTemplate constructorTemplate) {
         if (constructorTemplate == null)
             throw new IllegalArgumentException("GuiConstructorTemplate is null", new NullPointerException());
         registerGuiCreator0(clazz, clazz, constructorTemplate);
     }
 
-    @Override public <T extends Gui> void registerGuiCreator(Class<T> guiClass, Class<? extends T> implementationClass, GuiConstructorTemplate constructorTemplate) {
+    @Override
+    public <T extends Gui> void registerGuiCreator(Class<T> guiClass, Class<? extends T> implementationClass, GuiConstructorTemplate constructorTemplate) {
         if (constructorTemplate == null)
             throw new IllegalArgumentException("GuiConstructorTemplate is null", new NullPointerException());
         registerGuiCreator0(guiClass, implementationClass, constructorTemplate);
@@ -253,7 +262,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         }
     }
 
-    public void redrawAll() {
+    @Override public void redrawAll() {
         for (Map.Entry<Framebuffer, GuiStack> e : guis.entrySet()) {
             e.getKey().scheduleRedraw();
         }
