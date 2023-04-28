@@ -6,6 +6,7 @@ build
 .idea/**/modules
 .idea/.name
 .idea/GameLauncher.iml
+.idea/modules.xml
 
 # User-specific stuff
 .idea/**/workspace.xml
