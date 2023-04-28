@@ -9,13 +9,16 @@ package gamelauncher.lwjgl.input;
 
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.keybind.*;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.util.keybind.*;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Queue;
 
 /**
  * @author DasBabyPixel
@@ -24,7 +27,7 @@ public class LWJGLInput implements Input {
     private static final int ALL_MOUSE_PRESSED = -1;
 
     private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
-    private final Queue<QueueEntry> queue = new ConcurrentLinkedQueue<>();
+    private final Queue<QueueEntry> queue = Collections.newConcurrentQueue();
     private final List<Entry> mousePressed = new ArrayList<>();
     private final KeybindManager keybindManager;
 
@@ -32,8 +35,7 @@ public class LWJGLInput implements Input {
         this.keybindManager = frame.launcher().keybindManager();
     }
 
-    @Override
-    public void handleInput() throws GameException {
+    @Override public void handleInput() throws GameException {
         QueueEntry qe;
         while ((qe = this.queue.poll()) != null) {
             this.event(qe.entry, qe.type);
@@ -57,8 +59,10 @@ public class LWJGLInput implements Input {
                     break;
             }
         }
-        for (Entry entry : this.pressed) {
-            this.event(entry, InputType.HELD);
+        synchronized (pressed) {
+            for (int i = 0; i < pressed.size(); i++) {
+                event(pressed.get(i), InputType.HELD);
+            }
         }
     }
 
@@ -243,8 +247,7 @@ public class LWJGLInput implements Input {
             this.type = type;
         }
 
-        @Override
-        public boolean equals(Object obj) {
+        @Override public boolean equals(Object obj) {
             if (this == obj) return true;
             if (obj == null) return false;
             if (this.getClass() != obj.getClass()) return false;
@@ -282,13 +285,11 @@ public class LWJGLInput implements Input {
             this.omy = omy;
         }
 
-        @Override
-        public int hashCode() {
+        @Override public int hashCode() {
             return Objects.hash(this.key, this.ch, this.scancode, this.type);
         }
 
-        @Override
-        public boolean equals(Object obj) {
+        @Override public boolean equals(Object obj) {
             if (this == obj) return true;
             if (obj == null) return false;
             if (this.getClass() != obj.getClass()) return false;
@@ -296,8 +297,7 @@ public class LWJGLInput implements Input {
             return this.key == other.key && this.type == other.type && this.scancode == other.scancode && this.ch == other.ch;
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
             return "Entry [key=" + this.key + ", type=" + this.type + ", mx=" + this.mx + ", my=" + this.my + "]";
         }
 

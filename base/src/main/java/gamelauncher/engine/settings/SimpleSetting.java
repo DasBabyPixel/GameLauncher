@@ -16,7 +16,7 @@ public class SimpleSetting<T> implements Setting<T> {
     protected final AtomicReference<T> value = new AtomicReference<>(null);
     protected final Type type;
     protected final Supplier<T> defaultSupplier;
-    protected Gson gson;
+    protected final Gson gson;
 
     public SimpleSetting(Type type, Supplier<T> defaultSupplier) {
         this.type = type;

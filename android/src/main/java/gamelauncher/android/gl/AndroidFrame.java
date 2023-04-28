@@ -12,7 +12,6 @@ import androidx.annotation.RequiresApi;
 import de.dasbabypixel.api.property.BooleanValue;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
-import gamelauncher.android.gl.supported.SupportedAndroidGLES32;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -20,7 +19,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import java8.util.concurrent.CompletableFuture;
 
-import javax.microedition.khronos.egl.EGL10;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class AndroidFrame extends AbstractGameResource implements Frame {
@@ -38,8 +36,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
 
     public AndroidFrame(AndroidGameLauncher launcher) {
         this.launcher = launcher;
-        EGL10 egl = launcher.egl();
-        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, null, null, null, new SupportedAndroidGLES32());
+        this.context = new AndroidGLContext(new CopyOnWriteArraySet<>(), launcher, this, null, null, null, launcher.glLoader().gles());
         this.fullscreen = BooleanValue.trueValue();
         this.renderThread = new AndroidNativeRenderThread(this);
         this.framebuffer = new AndroidFrameFramebuffer(this);

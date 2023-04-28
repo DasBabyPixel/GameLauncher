@@ -35,22 +35,19 @@ public class GLESGameRenderer implements GameRenderer {
         this.renderer.set(new GuiRenderer(launcher));
     }
 
-    @Override
-    public void renderFrame(Frame frame) throws GameException {
+    @Override public void renderFrame(Frame frame) throws GameException {
         this.launcher.profiler().begin("render", "frame");
         this.map.get(frame).renderFrame(this.renderer.get());
         this.launcher.profiler().end();
     }
 
-    @Override
-    public void windowSizeChanged(Frame frame) throws GameException {
+    @Override public void windowSizeChanged(Frame frame) throws GameException {
         this.launcher.profiler().begin("render", "windowSizeChanged");
         this.map.get(frame).windowSizeChanged();
         this.launcher.profiler().end();
     }
 
-    @Override
-    public void init(Frame frame) throws GameException {
+    @Override public void init(Frame frame) throws GameException {
         this.launcher.profiler().begin("render", "init");
         this.launcher.logger().info("Initializing RenderEngine");
         this.map.put(frame, new Entry(frame));
@@ -59,8 +56,7 @@ public class GLESGameRenderer implements GameRenderer {
         this.launcher.profiler().end();
     }
 
-    @Override
-    public void cleanup(Frame frame) throws GameException {
+    @Override public void cleanup(Frame frame) throws GameException {
         this.launcher.profiler().begin("render", "cleanup");
         this.launcher.logger().info("Cleaning up RenderEngine");
         this.map.remove(frame).cleanup();
@@ -68,21 +64,28 @@ public class GLESGameRenderer implements GameRenderer {
         this.launcher.profiler().end();
     }
 
-    @Override
-    public void refreshDisplay(Frame frame) throws GameException {
+    @Override public void refreshDisplay(Frame frame) throws GameException {
         this.launcher.profiler().begin("render", "refresh");
         this.map.get(frame).refreshDisplay(this.renderer.get());
         this.launcher.profiler().end();
     }
 
+    @Override public void setRenderer(Renderer renderer) {
+        this.renderer.set(renderer);
+    }
+
+    @Override public Renderer renderer() {
+        return this.renderer.get();
+    }
+
     public class Entry extends AbstractGameResource {
 
         public final Frame frame;
+        public final Camera camera;
         public BasicFramebuffer mainFramebuffer;
         public GameItem mainScreenItem;
         public GameItem.GameItemModel mainScreenItemModel;
         public Renderer crenderer;
-        public Camera camera;
         public DrawContext contexthud;
 
         public Entry(Frame frame) {
@@ -97,11 +100,8 @@ public class GLESGameRenderer implements GameRenderer {
             states.blend.separate.set(true);
             states.replace(null);
 
-            this.mainFramebuffer = new BasicFramebuffer(gles,
-                    this.frame.framebuffer().width().intValue(),
-                    this.frame.framebuffer().height().intValue());
-            this.mainScreenItem =
-                    new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
+            this.mainFramebuffer = new BasicFramebuffer(gles, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
+            this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
             this.mainScreenItem.scale().x.bind(this.mainFramebuffer.width());
             this.mainScreenItem.scale().y.bind(this.mainFramebuffer.height());
             this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2));
@@ -109,8 +109,7 @@ public class GLESGameRenderer implements GameRenderer {
 
             this.mainScreenItemModel = this.mainScreenItem.createModel();
 
-            this.contexthud = launcher.contextProvider()
-                    .loadContext(this.mainFramebuffer, ContextType.HUD);
+            this.contexthud = launcher.contextProvider().loadContext(this.mainFramebuffer, ContextType.HUD);
             ((GLESDrawContext) this.contexthud).swapTopBottom = true;
 
             launcher.guiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
@@ -119,16 +118,14 @@ public class GLESGameRenderer implements GameRenderer {
 
         }
 
-        @Override
-        public void cleanup0() throws GameException {
+        @Override public void cleanup0() throws GameException {
             this.mainScreenItemModel.cleanup();
             launcher.contextProvider().freeContext(this.contexthud, ContextType.HUD);
             this.mainFramebuffer.cleanup();
         }
 
         public void windowSizeChanged() throws GameException {
-            this.mainFramebuffer.resize(this.frame.framebuffer().width().intValue(),
-                    this.frame.framebuffer().height().intValue());
+            this.mainFramebuffer.resize(this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             //			updateScreenItems();
         }
 
@@ -142,8 +139,7 @@ public class GLESGameRenderer implements GameRenderer {
         public void refreshDisplay(Renderer renderer) throws GameException {
             GLES31 cur = StateRegistry.currentGl();
             this.frame.framebuffer().beginFrame();
-            cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(),
-                    this.frame.framebuffer().height().intValue());
+            cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             cur.glClearColor(0, 0, 0, 0);
             cur.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
@@ -156,8 +152,7 @@ public class GLESGameRenderer implements GameRenderer {
         public void renderFrame(Renderer renderer) throws GameException {
             GLES31 cur = StateRegistry.currentGl();
             this.frame.framebuffer().beginFrame();
-            cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(),
-                    this.frame.framebuffer().height().intValue());
+            cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             cur.glClearColor(0, 0, 0, 0);
             cur.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
@@ -198,16 +193,6 @@ public class GLESGameRenderer implements GameRenderer {
             renderer.init(this.mainFramebuffer);
         }
 
-    }
-
-    @Override
-    public void setRenderer(Renderer renderer) {
-        this.renderer.set(renderer);
-    }
-
-    @Override
-    public Renderer renderer() {
-        return this.renderer.get();
     }
 
 }

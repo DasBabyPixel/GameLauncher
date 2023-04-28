@@ -39,6 +39,13 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     protected final Collection<WeakReference<GLESDrawContext>> children = ConcurrentHashMap.newKeySet();
     protected final AtomicBoolean projectionMatrixValid = new AtomicBoolean(false);
     protected final GLESDrawContextFramebufferChangeListener listener;
+    final Vector3f ambientLight = new Vector3f(.1F);
+    final Vector3f lightPosition = new Vector3f(2, 2, 2);
+    final Vector3f lightColor = new Vector3f(1, 1, 1);
+    final Vector3f directionalLightDirection = new Vector3f(0, -1, 0);
+    final DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(this.directionalLightDirection), 1);
+    final float lightIntensity = 10F;
+    final PointLight pointLight = new PointLight(this.lightColor, new Vector3f(this.lightPosition), this.lightIntensity, new PointLight.Attenuation(0, 0, 1));
     // Used temporarily
     private final Matrix4f tempMatrix4f = new Matrix4f();
     private final GLES gles;
@@ -46,16 +53,6 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     private final Vector4f colorMultiplier = new Vector4f();
     private final Vector4f colorAdd = new Vector4f();
     public boolean swapTopBottom = false;
-    float reflectance = 5F;
-    float lightIntensity = 10F;
-    Vector3f ambientLight = new Vector3f(.1F);
-    Vector3f lightPosition = new Vector3f(2, 2, 2);
-    Vector3f lightColor = new Vector3f(1, 1, 1);
-    float specularPower = 200;
-    PointLight pointLight = new PointLight(this.lightColor, new Vector3f(this.lightPosition), this.lightIntensity, new PointLight.Attenuation(0, 0, 1));
-    Vector3f directionalLightDirection = new Vector3f(0, -1, 0);
-    DirectionalLight directionalLight = new DirectionalLight(new Vector3f(1, 1, 1), new Vector3f(this.directionalLightDirection), 1);
-    float lightAngle = 0;
 
     // Used for combined models
     public GLESDrawContext(GLES gles, Framebuffer framebuffer) {

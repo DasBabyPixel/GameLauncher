@@ -9,6 +9,7 @@ import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventPoller;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
+import de.dasbabypixel.annotations.FutureApi;
 import gamelauncher.android.util.keybind.AbstractKeybindEvent;
 import gamelauncher.android.util.keybind.AndroidKeybindManager;
 import gamelauncher.android.util.keybind.AndroidKeyboardKeybindEvent;
@@ -39,8 +40,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         launcher.eventManager().registerListener(this);
     }
 
-    @Override
-    public void handleInput() throws GameException {
+    @Override public void handleInput() throws GameException {
         for (KeyboardKeybindEvent event : keyboardPressed.values()) {
             keybindManager.post(new AndroidKeyboardKeybindEvent(event.keybind(), KeyboardKeybindEvent.Type.HOLD));
         }
@@ -112,9 +112,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         this.ringBuffer.publishEvent((event, sequence, h) -> event.event = h, keybindEvent);
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public boolean onKey(View v, int keyCode, KeyEvent event) {
+    @SuppressWarnings("deprecation") @Override public boolean onKey(View v, int keyCode, KeyEvent event) {
         keybindManager.lastKeyEvent = event;
         Keybind keybind = keyCode == 0 ? null : keybindManager.getKeybind(keyCode | AndroidKeybindManager.BITS_KEY);
         switch (event.getAction()) {
@@ -148,9 +146,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         return true;
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
+    @SuppressLint("ClickableViewAccessibility") @Override public boolean onTouch(View v, MotionEvent event) {
         offer(new MouseHandle(MotionEvent.obtain(event)));
         return true;
     }
@@ -159,8 +155,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         private KeybindEvent event;
 
         private static class Factory implements EventFactory<QueueEntry> {
-            @Override
-            public QueueEntry newInstance() {
+            @Override public QueueEntry newInstance() {
                 return new QueueEntry();
             }
         }
@@ -180,9 +175,9 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
     }
 
     private static class PointerEntry {
-        private int buttonId;
+        private final int buttonId;
         private float x, y;
-        private float pressure;
+        @FutureApi private float pressure;
 
         public PointerEntry(int buttonId, float x, float y, float pressure) {
             this.buttonId = buttonId;

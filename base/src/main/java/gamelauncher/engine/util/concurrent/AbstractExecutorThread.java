@@ -11,12 +11,12 @@ import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
 
 import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 
@@ -26,8 +26,7 @@ import java.util.concurrent.locks.LockSupport;
 public abstract class AbstractExecutorThread extends AbstractGameThread implements ExecutorThread {
 
     private static final Logger logger = Logger.logger(AbstractExecutorThread.class);
-
-    private final Deque<QueueEntry> queue = new ConcurrentLinkedDeque<>();
+    private final Deque<QueueEntry> queue = Collections.newConcurrentDeque();
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
     private final AtomicBoolean work = new AtomicBoolean();
     /**
@@ -57,13 +56,11 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return this.exitFuture();
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         Threads.waitFor(this.exit());
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return getName();
     }
 
@@ -110,8 +107,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         }
     }
 
-    @Override
-    public final void run() {
+    @Override public final void run() {
         try {
             AbstractExecutorThread.logger.debug("Starting " + this.getName());
             this.startExecuting();
@@ -160,8 +156,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return ex;
     }
 
-    @Api
-    protected boolean shouldHandle(QueueEntry entry) {
+    @Api protected boolean shouldHandle(QueueEntry entry) {
         return true;
     }
 
@@ -174,8 +169,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         Threads.unpark((ParkableThread) this);
     }
 
-    @Override
-    public final CompletableFuture<Void> submitLast(GameRunnable runnable) {
+    @Override public final CompletableFuture<Void> submitLast(GameRunnable runnable) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
         if (Thread.currentThread() == this) {
             this.work(runnable, fut);
@@ -186,8 +180,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return fut;
     }
 
-    @Override
-    public final CompletableFuture<Void> submitFirst(GameRunnable runnable) {
+    @Override public final CompletableFuture<Void> submitFirst(GameRunnable runnable) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
         if (Thread.currentThread() == this) {
             this.work(runnable, fut);
@@ -198,8 +191,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return fut;
     }
 
-    @Override
-    public void park() {
+    @Override public void park() {
         if (Thread.currentThread() != this) {
             throw new SecurityException("May not call this from any other thread than self");
         }
@@ -207,8 +199,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         workQueue();
     }
 
-    @Override
-    public void park(long nanos) {
+    @Override public void park(long nanos) {
         if (Thread.currentThread() != this) {
             throw new SecurityException("May not call this from any other thread than self");
         }
@@ -216,13 +207,11 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         workQueue();
     }
 
-    @Override
-    public void unpark() {
+    @Override public void unpark() {
         LockSupport.unpark(this);
     }
 
-    @Override
-    public final void workQueue() {
+    @Override public final void workQueue() {
         QueueEntry e;
         while ((e = this.queue.pollFirst()) != null) {
             if (!this.shouldHandle(e)) {

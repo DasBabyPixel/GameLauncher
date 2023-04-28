@@ -12,6 +12,7 @@ import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.RequiresApi;
 import gamelauncher.android.gl.AndroidGLFactory;
+import gamelauncher.android.gl.AndroidGLLoader;
 import gamelauncher.android.gl.AndroidMemoryManagement;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
 import gamelauncher.android.gui.AndroidGuiManager;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.net.URI;
 
 public class AndroidGameLauncher extends GameLauncher {
+    private final AndroidGLLoader glLoader;
     private final GLESThreadGroup glThreadGroup;
     private final AndroidLauncher activity;
     LauncherGLSurfaceView view;
@@ -45,6 +47,7 @@ public class AndroidGameLauncher extends GameLauncher {
         this.operatingSystem(() -> "Android");
         this.activity = activity;
         this.gameDirectory(activity.getFilesDir().toPath());
+        this.glLoader = new AndroidGLLoader();
         GLES gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
         this.contextProvider(new GLESContextProvider(gles, this));
         try {
@@ -110,6 +113,10 @@ public class AndroidGameLauncher extends GameLauncher {
 
     public EGL10 egl() {
         return egl;
+    }
+
+    public AndroidGLLoader glLoader() {
+        return glLoader;
     }
 
     @Override public boolean keyboardVisible() {

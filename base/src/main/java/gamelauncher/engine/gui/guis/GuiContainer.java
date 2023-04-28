@@ -1,6 +1,6 @@
 package gamelauncher.engine.gui.guis;
 
-import de.dasbabypixel.api.property.InvalidationListener;
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.ParentableAbstractGui;
@@ -9,31 +9,19 @@ import org.joml.Math;
 /**
  * @author DasBabyPixel
  */
+@Api
 public class GuiContainer extends ParentableAbstractGui {
 
-    private final InvalidationListener invalidationListener = p -> {
-        recalculateSize();
-    };
-
-    /**
-     * @param launcher
-     */
     public GuiContainer(GameLauncher launcher) {
         super(launcher);
     }
 
-    /**
-     * @param gui
-     */
-    public void addGui(Gui gui) {
+    @Api public void addGui(Gui gui) {
         this.GUIs.add(gui);
         this.recalculateSize();
     }
 
-    /**
-     * @param gui
-     */
-    public void removeGui(Gui gui) {
+    @Api public void removeGui(Gui gui) {
         this.GUIs.remove(gui);
         this.recalculateSize();
     }

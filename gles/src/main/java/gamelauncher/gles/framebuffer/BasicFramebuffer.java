@@ -26,7 +26,6 @@ public class BasicFramebuffer extends GLESFramebuffer {
         this.colorTexture = gles.textureManager().createTexture(gles.launcher().executorThreadHelper().currentThread());
         Threads.waitFor(this.colorTexture.allocate(this.width().intValue(), this.height().intValue()));
         c.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getTextureId(), 0);
-        System.out.println(this.colorTexture.getTextureId());
         this.depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, this.width().intValue(), this.height().intValue());
         c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this.depthStencilRenderbuffer.getId());
         this.checkComplete();

@@ -2,21 +2,18 @@ package gamelauncher.engine.render;
 
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.Gui;
+import gamelauncher.engine.util.collections.Collections;
 import org.joml.Math;
 
 import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * @author DasBabyPixel
  */
 public abstract class ScissorStack {
 
-    private final Deque<Scissor> stack = new ConcurrentLinkedDeque<>();
+    private final Deque<Scissor> stack = Collections.newConcurrentDeque();
 
-    /**
-     *
-     */
     public ScissorStack() {
     }
 

@@ -1,5 +1,6 @@
 package gamelauncher.engine.gui;
 
+import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
@@ -11,6 +12,7 @@ import gamelauncher.engine.util.keybind.KeybindEvent;
 /**
  * @author DasBabyPixel
  */
+@Api
 public interface Gui {
 
     /**
@@ -24,44 +26,44 @@ public interface Gui {
      * @param mouseY the mouse y position
      * @return true if the mouse is inside the given rectangle
      */
-    static boolean hovering(float x, float y, float width, float height, float mouseX, float mouseY) {
+    @Api static boolean hovering(float x, float y, float width, float height, float mouseX, float mouseY) {
         return mouseX >= x && mouseY >= y && mouseX < x + width && mouseY < y + height;
     }
 
     /**
      * @return the width property of the gui
      */
-    NumberValue widthProperty();
+    @Api NumberValue widthProperty();
 
     /**
      * @return the height property of the gui
      */
-    NumberValue heightProperty();
+    @Api NumberValue heightProperty();
 
     /**
      * @return the x position property of the gui
      */
-    NumberValue xProperty();
+    @Api NumberValue xProperty();
 
     /**
      * @return the y position property of the gui
      */
-    NumberValue yProperty();
+    @Api NumberValue yProperty();
 
-    BooleanValue hovering();
+    @Api BooleanValue hovering();
 
-    NumberValue visibleXProperty();
+    @Api NumberValue visibleXProperty();
 
-    NumberValue visibleYProperty();
+    @Api NumberValue visibleYProperty();
 
-    NumberValue visibleWidthProperty();
+    @Api NumberValue visibleWidthProperty();
 
-    NumberValue visibleHeightProperty();
+    @Api NumberValue visibleHeightProperty();
 
     /**
      * @return the focused property of the gui
      */
-    BooleanValue focusedProperty();
+    @Api BooleanValue focusedProperty();
 
     /**
      * Called when the contents of the window should be initialized
@@ -69,7 +71,7 @@ public interface Gui {
      * @param framebuffer the framebuffer to initialize
      * @throws GameException an exception
      */
-    void init(Framebuffer framebuffer) throws GameException;
+    @Api void init(Framebuffer framebuffer) throws GameException;
 
     /**
      * Called when this {@link Gui} is rendered
@@ -80,7 +82,7 @@ public interface Gui {
      * @param partialTick the partial tick
      * @throws GameException an exception
      */
-    void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException;
+    @Api void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException;
 
     /**
      * Called when the contents of this {@link Gui} should be cleaned up
@@ -88,42 +90,42 @@ public interface Gui {
      * @param framebuffer the framebuffer to clean up
      * @throws GameException an exception
      */
-    void cleanup(Framebuffer framebuffer) throws GameException;
+    @Api void cleanup(Framebuffer framebuffer) throws GameException;
 
     /**
      * Called when this {@link Gui} is closed
      *
      * @throws GameException an exception
      */
-    void onClose() throws GameException;
+    @Api void onClose() throws GameException;
 
     /**
      * Called when this {@link Gui} is opened
      *
      * @throws GameException an exception
      */
-    void onOpen() throws GameException;
+    @Api void onOpen() throws GameException;
 
     /**
      * Called when this {@link Gui} is focused
      *
      * @throws GameException an exception
      */
-    void focus() throws GameException;
+    @Api void focus() throws GameException;
 
     /**
      * Called when this {@link Gui} is unfocused
      *
      * @throws GameException an exception
      */
-    void unfocus() throws GameException;
+    @Api void unfocus() throws GameException;
 
     /**
      * Called when this {@link Gui} is updated in the {@link GameThread}
      *
      * @throws GameException an exception
      */
-    void update() throws GameException;
+    @Api void update() throws GameException;
 
     /**
      * Called when a {@link KeybindEvent} is handled by this {@link Gui}
@@ -131,22 +133,22 @@ public interface Gui {
      * @param entry the KeybindEntry to handle
      * @throws GameException an exception
      */
-    void handle(KeybindEvent entry) throws GameException;
+    @Api void handle(KeybindEvent entry) throws GameException;
 
     /**
      * @return the {@link GameLauncher}
      */
-    GameLauncher launcher();
+    @Api GameLauncher launcher();
 
     /**
      * @return if this {@link Gui} has been initialized
      */
-    boolean initialized();
+    @Api boolean initialized();
 
     /**
      * @return if this gui is focused
      */
-    default boolean focused() {
+    @Api default boolean focused() {
         return focusedProperty().value();
     }
 
@@ -156,14 +158,14 @@ public interface Gui {
      *
      * @return if this {@link Gui} pauses the game
      */
-    default boolean doesPauseGame() {
+    @Api default boolean doesPauseGame() {
         return false;
     }
 
     /**
      * @return the width of this {@link Gui}
      */
-    default float width() {
+    @Api default float width() {
         return widthProperty().floatValue();
     }
 
@@ -172,14 +174,14 @@ public interface Gui {
      *
      * @param width the new width
      */
-    default void width(float width) {
+    @Api default void width(float width) {
         widthProperty().number(width);
     }
 
     /**
      * @return the height of this {@link Gui}
      */
-    default float height() {
+    @Api default float height() {
         return heightProperty().floatValue();
     }
 
@@ -188,14 +190,14 @@ public interface Gui {
      *
      * @param height the new height
      */
-    default void height(float height) {
+    @Api default void height(float height) {
         heightProperty().number(height);
     }
 
     /**
      * @return the x position of this {@link Gui}
      */
-    default float x() {
+    @Api default float x() {
         return xProperty().floatValue();
     }
 
@@ -204,14 +206,14 @@ public interface Gui {
      *
      * @param x the new x position
      */
-    default void x(float x) {
+    @Api default void x(float x) {
         xProperty().number(x);
     }
 
     /**
      * @return the y position of this {@link Gui}
      */
-    default float y() {
+    @Api default float y() {
         return yProperty().floatValue();
     }
 
@@ -220,7 +222,7 @@ public interface Gui {
      *
      * @param y the new y position
      */
-    default void y(float y) {
+    @Api default void y(float y) {
         yProperty().number(y);
     }
 
@@ -231,14 +233,14 @@ public interface Gui {
      * @param mouseY the mouse y position
      * @return true if the mouse is inside this {@link Gui}
      */
-    default boolean hovering(float mouseX, float mouseY) {
+    @Api default boolean hovering(float mouseX, float mouseY) {
         return hovering(visibleXProperty().floatValue(), visibleYProperty().floatValue(), visibleWidthProperty().floatValue(), visibleHeightProperty().floatValue(), mouseX, mouseY);
     }
 
     /**
      * @return if the user may exit this gui
      */
-    default boolean mayExit() {
+    @Api default boolean mayExit() {
         return true;
     }
 
@@ -249,7 +251,7 @@ public interface Gui {
      * @param y the new y position
      * @return this Gui
      */
-    default Gui position(float x, float y) {
+    @Api default Gui position(float x, float y) {
         this.x(x);
         this.y(y);
         return this;
@@ -262,7 +264,7 @@ public interface Gui {
      * @param height the new height
      * @return this Gui
      */
-    default Gui size(float width, float height) {
+    @Api default Gui size(float width, float height) {
         this.width(width);
         this.height(height);
         return this;

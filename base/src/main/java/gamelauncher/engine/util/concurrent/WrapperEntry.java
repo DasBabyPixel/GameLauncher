@@ -19,23 +19,18 @@ public class WrapperEntry {
     /**
      * the stacktrace for this entry
      */
-    public StackTraceElement[] stacktrace;
+    public final StackTraceElement[] stacktrace;
 
     /**
      * the cause of this entry
      */
-    public WrapperEntry cause;
+    public final WrapperEntry cause;
 
     /**
      * the thread for this entry
      */
-    public Thread thread;
+    public final Thread thread;
 
-    /**
-     * @param stacktrace
-     * @param cause
-     * @param thread
-     */
     public WrapperEntry(StackTraceElement[] stacktrace, WrapperEntry cause, Thread thread) {
         this.stacktrace = stacktrace;
         this.cause = cause;
@@ -59,8 +54,7 @@ public class WrapperEntry {
             AbstractExecutorThread aet = (AbstractExecutorThread) Thread.currentThread();
             return aet.currentEntry;
         }
-        WrapperExecutorThreadService.WrapperCallable<?> callable = WrapperExecutorThreadService.WrapperCallable.threadLocal
-                .get();
+        WrapperExecutorThreadService.WrapperCallable<?> callable = WrapperExecutorThreadService.WrapperCallable.threadLocal.get();
         if (callable != null) {
             return callable.entry;
         }
@@ -75,14 +69,12 @@ public class WrapperEntry {
         c.setStackTrace(this.stacktrace);
         if (this.cause != null) {
             Throwable cause = this.cause.calculateCause();
-            if (cause != null)
-                c.initCause(cause);
+            if (cause != null) c.initCause(cause);
         }
         return c;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "WrapperEntry [cause=" + this.cause + ", thread=" + this.thread.getName() + "]";
     }
 

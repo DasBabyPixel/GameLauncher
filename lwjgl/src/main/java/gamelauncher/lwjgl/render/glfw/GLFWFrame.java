@@ -243,7 +243,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         private final NumberValue fullscreenOldW = NumberValue.withValue(0D);
         private final NumberValue fullscreenOldH = NumberValue.withValue(0D);
         private final GLFWGLContext shared;
-        public GLFWFrame frame;
+        public final GLFWFrame frame;
         public long glfwId;
 
         public Creator(GLFWFrame frame, GLFWGLContext shared) {

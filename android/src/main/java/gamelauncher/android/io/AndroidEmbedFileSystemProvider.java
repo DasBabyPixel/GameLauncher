@@ -12,14 +12,13 @@ import gamelauncher.engine.io.embed.DataSupplier;
 import gamelauncher.engine.io.embed.EmbedFileSystemProvider;
 
 public class AndroidEmbedFileSystemProvider extends EmbedFileSystemProvider {
-    public AssetManager assetManager;
+    final AssetManager assetManager;
 
     public AndroidEmbedFileSystemProvider(AssetManager assetManager) {
         this.assetManager = assetManager;
     }
 
-    @Override
-    protected DataSupplier newDataSupplier() {
+    @Override protected DataSupplier newDataSupplier() {
         return new DataSupplier.Fallback(new AndroidDataSupplier(this), super.newDataSupplier());
     }
 }

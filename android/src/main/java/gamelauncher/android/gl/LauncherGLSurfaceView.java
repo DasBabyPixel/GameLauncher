@@ -9,7 +9,6 @@ package gamelauncher.android.gl;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.opengl.EGL14;
 import android.opengl.GLSurfaceView;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
@@ -29,11 +28,13 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
         super(context);
         AndroidInput input = (AndroidInput) launcher.frame().input();
         setEGLContextFactory(new EGLContextFactory() {
+            public static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+
             @Override public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig eglConfig) {
                 launcher.egl(egl);
                 AndroidFrame frame = (AndroidFrame) launcher.frame();
                 frame.context().recreate(egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY), egl.eglGetCurrentSurface(EGL10.EGL_DRAW), egl.eglGetCurrentContext());
-                int[] attrib_list = {EGL14.EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE};
+                int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE};
                 return egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
             }
 
@@ -62,14 +63,14 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
          */
         private static final int EGL_OPENGL_ES2_BIT = 4;
         private static final int[] s_configAttribs2 = {EGL10.EGL_RED_SIZE, 4, EGL10.EGL_GREEN_SIZE, 4, EGL10.EGL_BLUE_SIZE, 4, EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL10.EGL_NONE};
-        private final int[] mValue = new int[1];
         // Subclasses can adjust these values:
-        protected int mRedSize;
-        protected int mGreenSize;
-        protected int mBlueSize;
-        protected int mAlphaSize;
-        protected int mDepthSize;
-        protected int mStencilSize;
+        protected final int mRedSize;
+        protected final int mGreenSize;
+        protected final int mBlueSize;
+        protected final int mAlphaSize;
+        protected final int mDepthSize;
+        protected final int mStencilSize;
+        private final int[] mValue = new int[1];
 
         public ConfigChooser(int r, int g, int b, int a, int depth, int stencil) {
             mRedSize = r;

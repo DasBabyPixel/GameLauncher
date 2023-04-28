@@ -205,9 +205,6 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                 break;
             }
         }
-//        if (found == null)
-//            logger.debug("Using default implementation for " + clazz.getName() + " with possibilities: " + Arrays.stream(clazz.getDeclaredClasses()).map(Class::getSimpleName).collect(Collectors.toList()));
-
         Class<?> defaultCls = implementationClass;
         if (found != null) defaultCls = found;
         if (defaultCls.isInterface() || Modifier.isAbstract(defaultCls.getModifiers())) {

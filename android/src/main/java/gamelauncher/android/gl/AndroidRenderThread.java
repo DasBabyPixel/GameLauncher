@@ -9,43 +9,44 @@ package gamelauncher.android.gl;
 
 import android.os.Build;
 import androidx.annotation.RequiresApi;
+import de.dasbabypixel.annotations.FutureApi;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
+import gamelauncher.engine.util.concurrent.Phaser;
 import gamelauncher.gles.context.GLESStates;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.gles.gl.GLES20;
 
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) public class AndroidRenderThread extends AbstractExecutorThread implements RenderThread, IAndroidRenderThread {
+public class AndroidRenderThread extends AbstractExecutorThread implements RenderThread, IAndroidRenderThread {
     private static final AtomicInteger ids = new AtomicInteger();
     private final AndroidFrame frame;
     private final AtomicBoolean modifying = new AtomicBoolean(false);
     private final Phaser phaser;
     private final Phaser refreshPhaser;
     private final Consumer<Long> nanoSleeper = this::waitForSignalTimeout;
-    volatile boolean cleanupContextOnExit = false;
     private volatile boolean draw = false;
     private volatile boolean drawRefresh = false;
     private volatile boolean refresh = false;
     private ManualQueryFramebuffer fb;
     private FrameRenderer frameRenderer = null;
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) AndroidRenderThread(AndroidFrame frame) {
+    AndroidRenderThread(AndroidFrame frame) {
         super(frame.launcher(), frame.launcher().glThreadGroup());
         this.phaser = new Phaser(1);
         this.refreshPhaser = new Phaser(1);
+
         this.frame = frame;
         this.setName("GLFWFrameRenderThread-" + ids.incrementAndGet());
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void startExecuting() {
+    @Override protected void startExecuting() {
         this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
         this.fb.query();
         this.frame.context().makeCurrent();
@@ -59,7 +60,7 @@ import java.util.function.Consumer;
         states.replace(null);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void stopExecuting() throws GameException {
+    @Override protected void stopExecuting() throws GameException {
         this.fb.cleanup();
         if (this.frameRenderer != null) {
             try {
@@ -69,11 +70,7 @@ import java.util.function.Consumer;
             }
         }
         this.frame.launcher().glThreadGroup().terminated(this);
-        if (this.cleanupContextOnExit) {
-            this.frame.context().cleanup();
-        } else {
-            this.frame.context().destroyCurrent();
-        }
+        this.frame.context().destroyCurrent();
     }
 
     @Override protected void workExecution() {
@@ -99,7 +96,7 @@ import java.util.function.Consumer;
         return super.shouldWaitForSignal() && this.frame.renderMode() != RenderMode.CONTINUOUSLY;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) private void frame(FrameType type, boolean wait) {
+    private void frame(FrameType type, boolean wait) {
         FrameRenderer cfr = this.frame.frameRenderer();
         cfr:
         if (cfr != null) {
@@ -178,7 +175,7 @@ import java.util.function.Consumer;
         this.signal();
     }
 
-    void refreshWait() {
+    @FutureApi void refreshWait() {
         int phase = this.refreshPhaser.getPhase();
         this.refresh();
         this.refreshPhaser.awaitAdvance(phase);
@@ -192,7 +189,7 @@ import java.util.function.Consumer;
         this.signal();
     }
 
-    void scheduleDrawRefreshWait() {
+    @FutureApi void scheduleDrawRefreshWait() {
         int drawPhase = this.phaser.getPhase();
         int refreshPhase = this.refreshPhaser.getPhase();
         this.scheduleDrawRefresh();

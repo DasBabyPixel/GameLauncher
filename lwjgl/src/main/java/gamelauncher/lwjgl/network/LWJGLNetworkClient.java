@@ -35,20 +35,17 @@ public class LWJGLNetworkClient implements NetworkClient {
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
     private final PacketRegistry packetRegistry = new PacketRegistry();
-    private final LWJGLNetworkHandler handler =
-            new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
+    private final LWJGLNetworkHandler handler = new LWJGLNetworkHandler(new PacketEncoder(packetRegistry));
     private final KeyManagment keyManagment;
     private EventLoopGroup bossGroup;
     private EventLoopGroup childGroup;
     private volatile boolean running = false;
-    private volatile boolean connected = false;
 
     public LWJGLNetworkClient(LWJGLGameLauncher launcher) {
         this.keyManagment = new KeyManagment(launcher);
     }
 
-    @Override
-    public void startClient() {
+    @Override public void startClient() {
         try {
             lock.lock();
             if (running) {
@@ -56,25 +53,19 @@ public class LWJGLNetworkClient implements NetworkClient {
             }
             bossGroup = new NioEventLoopGroup();
             childGroup = new NioEventLoopGroup();
-            ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup)
-                    .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer() {
+            ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer() {
 
-                        @Override
-                        protected void initChannel(@NotNull Channel ch) throws Exception {
-                            ChannelPipeline p = ch.pipeline();
-                            SslContext sslContext =
-                                    SslContextBuilder.forServer(keyManagment.privateKey,
-                                            keyManagment.certificate).build();
-                            SSLEngine engine = sslContext.newEngine(ch.alloc());
-                            p.addLast("ssl", new SslHandler(engine));
-                            p.addLast("packet_decoder", new LWJGLNetworkDecoder(handler));
-                            p.addLast("packet_acceptor",
-                                    new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
-                            p.addLast("packet_encoder", new LWJGLNetworkEncoder(handler));
-                        }
+                @Override protected void initChannel(@NotNull Channel ch) throws Exception {
+                    ChannelPipeline p = ch.pipeline();
+                    SslContext sslContext = SslContextBuilder.forServer(keyManagment.privateKey, keyManagment.certificate).build();
+                    SSLEngine engine = sslContext.newEngine(ch.alloc());
+                    p.addLast("ssl", new SslHandler(engine));
+                    p.addLast("packet_decoder", new LWJGLNetworkDecoder(handler));
+                    p.addLast("packet_acceptor", new LWJGLNetworkAcceptor(LWJGLNetworkClient.this));
+                    p.addLast("packet_encoder", new LWJGLNetworkEncoder(handler));
+                }
 
-                    }).option(ChannelOption.SO_KEEPALIVE, true)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+            }).option(ChannelOption.SO_KEEPALIVE, true).childOption(ChannelOption.SO_KEEPALIVE, true);
             Channel ch = b.bind(PORT).syncUninterruptibly().channel();
             ch.closeFuture().addListener(future -> {
 
@@ -85,8 +76,7 @@ public class LWJGLNetworkClient implements NetworkClient {
         }
     }
 
-    @Override
-    public void stopClient() {
+    @Override public void stopClient() {
         try {
             lock.lock();
             running = false;
@@ -97,31 +87,26 @@ public class LWJGLNetworkClient implements NetworkClient {
         }
     }
 
-    @Override
-    public boolean isRunning() {
+    @Override public boolean isRunning() {
         return running;
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 
-    @Override
-    public boolean isConnected() {
+    @Override public boolean isConnected() {
+        boolean connected = false;
         return connected;
     }
 
-    @Override
-    public void connect(NetworkAddress address) {
+    @Override public void connect(NetworkAddress address) {
     }
 
-    @Override
-    public void disconnect() {
+    @Override public void disconnect() {
     }
 
-    @Override
-    public <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler) {
+    @Override public <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler) {
         handlerLock.lock();
         if (!handlers.containsKey(packetTpye)) {
             handlers.put(packetTpye, ConcurrentHashMap.newKeySet());
@@ -130,8 +115,7 @@ public class LWJGLNetworkClient implements NetworkClient {
         handlerLock.unlock();
     }
 
-    @Override
-    public <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler) {
+    @Override public <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler) {
         handlerLock.lock();
         if (handlers.containsKey(packetType)) {
             Collection<HandlerEntry<?>> col = handlers.get(packetType);
@@ -143,8 +127,7 @@ public class LWJGLNetworkClient implements NetworkClient {
         handlerLock.unlock();
     }
 
-    @Override
-    public PacketRegistry getPacketRegistry() {
+    @Override public PacketRegistry getPacketRegistry() {
         return packetRegistry;
     }
 
