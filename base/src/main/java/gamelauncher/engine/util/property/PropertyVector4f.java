@@ -11,11 +11,8 @@ import java.util.Objects;
 public class PropertyVector4f {
 
     public final NumberValue x;
-
     public final NumberValue y;
-
     public final NumberValue z;
-
     public final NumberValue w;
 
     /**
@@ -111,11 +108,13 @@ public class PropertyVector4f {
         return dest;
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         return Objects.hash(this.w, this.x, this.y, this.z);
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null) return false;
         if (this.getClass() != obj.getClass()) return false;

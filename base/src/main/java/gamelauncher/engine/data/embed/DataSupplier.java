@@ -5,7 +5,7 @@
  * is strictly prohibited.
  */
 
-package gamelauncher.engine.io.embed;
+package gamelauncher.engine.data.embed;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,8 +34,7 @@ public interface DataSupplier {
 
         @Override
         public InputStream open(EmbedPath path) {
-            return cl.getResourceAsStream(
-                    path.toAbsolutePath().toString().substring(1));
+            return cl.getResourceAsStream(path.toAbsolutePath().toString().substring(1));
         }
 
         @Override

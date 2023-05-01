@@ -41,7 +41,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
     protected void startExecuting() {
         this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
         this.fb.query();
-        this.frame.context.makeCurrent();
+        this.frame.context.makeCurrent(true);
 
         GLESStates states = new GLESStates();
         states.depth.enabled.value.set(true);

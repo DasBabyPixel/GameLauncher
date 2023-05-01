@@ -8,8 +8,8 @@
 package gamelauncher.android.io;
 
 import android.content.res.AssetFileDescriptor;
-import gamelauncher.engine.io.embed.DataSupplier;
-import gamelauncher.engine.io.embed.EmbedPath;
+import gamelauncher.engine.data.embed.DataSupplier;
+import gamelauncher.engine.data.embed.EmbedPath;
 
 import java.io.IOException;
 import java.io.InputStream;

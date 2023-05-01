@@ -9,6 +9,7 @@ package gamelauncher.android;
 
 import android.opengl.GLSurfaceView;
 import android.os.Build;
+import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.RequiresApi;
 import gamelauncher.android.gl.AndroidGLFactory;
@@ -22,6 +23,7 @@ import gamelauncher.android.util.keybind.AndroidKeybindManager;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.resource.SimpleResourceLoader;
+import gamelauncher.engine.util.DefaultOperatingSystems;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESGameRenderer;
@@ -44,7 +46,7 @@ public class AndroidGameLauncher extends GameLauncher {
     private EGL10 egl;
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
-        this.operatingSystem(() -> "Android");
+        this.operatingSystem(DefaultOperatingSystems.ANDROID);
         this.activity = activity;
         this.gameDirectory(activity.getFilesDir().toPath());
         this.glLoader = new AndroidGLLoader();
@@ -52,7 +54,11 @@ public class AndroidGameLauncher extends GameLauncher {
         this.contextProvider(new GLESContextProvider(gles, this));
         try {
             this.embedFileSystem(new AndroidEmbedFileSystemProvider(activity.getAssets()).newFileSystem((URI) null, null));
+            Log.w("gamelauncher", embedFileSystem().getPath("assets", "languages", "gamelaucher", "en.json").toString());
+            Thread.sleep(1000);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         this.executorThreadHelper(new AndroidExecutorThreadHelper(this));
@@ -68,11 +74,13 @@ public class AndroidGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
-    @Override protected void loadCustomPlugins() {
+    @Override
+    protected void loadCustomPlugins() {
         activity.init(this);
     }
 
-    @Override public void frame(Frame frame) {
+    @Override
+    public void frame(Frame frame) {
         super.frame(frame);
     }
 
@@ -80,7 +88,8 @@ public class AndroidGameLauncher extends GameLauncher {
         return view;
     }
 
-    @Override public AndroidKeybindManager keybindManager() {
+    @Override
+    public AndroidKeybindManager keybindManager() {
         return (AndroidKeybindManager) super.keybindManager();
     }
 
@@ -88,7 +97,9 @@ public class AndroidGameLauncher extends GameLauncher {
         return glThreadGroup;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M) @Override public void keyboardVisible(boolean visible) {
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public void keyboardVisible(boolean visible) {
         Runnable r = () -> {
             InputMethodManager manager = activity.getApplicationContext().getSystemService(InputMethodManager.class);
             this.keyboardVisible = visible;
@@ -119,7 +130,8 @@ public class AndroidGameLauncher extends GameLauncher {
         return glLoader;
     }
 
-    @Override public boolean keyboardVisible() {
+    @Override
+    public boolean keyboardVisible() {
         return keyboardVisible;
     }
 }

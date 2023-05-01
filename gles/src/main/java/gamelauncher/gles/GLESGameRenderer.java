@@ -11,6 +11,7 @@ import gamelauncher.gles.context.GLESDrawContext;
 import gamelauncher.gles.context.GLESStates;
 import gamelauncher.gles.framebuffer.BasicFramebuffer;
 import gamelauncher.gles.gl.GLES20;
+import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.states.StateRegistry;
@@ -99,13 +100,23 @@ public class GLESGameRenderer implements GameRenderer {
             states.blend.enabled.value.set(true);
             states.blend.separate.set(true);
             states.replace(null);
+            GLES31 gl = StateRegistry.currentGl();
+            GLESCompat.VERSION = gl.glGetString(GLES20.GL_VERSION);
+            GLESCompat.SHADING_VERSION = gl.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION);
+            GLESCompat.VERSION_MAJOR = gl.glGetInteger(GLES30.GL_MAJOR_VERSION);
+            GLESCompat.VERSION_MINOR = gl.glGetInteger(GLES30.GL_MINOR_VERSION);
+            GLESCompat.MAX_TEXTURE_SIZE = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_SIZE);
+            GLESCompat.MAX_TEXTURE_IMAGE_UNITS = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_IMAGE_UNITS);
+            GLESCompat.MAX_DRAW_BUFFERS = gl.glGetInteger(GLES30.GL_MAX_DRAW_BUFFERS);
+
+            GLESCompat.printDebugInfos(gles.launcher().logger());
 
             this.mainFramebuffer = new BasicFramebuffer(gles, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
             this.mainScreenItem.scale().x.bind(this.mainFramebuffer.width());
             this.mainScreenItem.scale().y.bind(this.mainFramebuffer.height());
-            this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2));
-            this.mainScreenItem.position().y.bind(this.mainFramebuffer.height().divide(2));
+            this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2D));
+            this.mainScreenItem.position().y.bind(this.mainFramebuffer.height().divide(2D));
 
             this.mainScreenItemModel = this.mainScreenItem.createModel();
 
@@ -144,7 +155,9 @@ public class GLESGameRenderer implements GameRenderer {
             cur.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
             this.contexthud.update(this.camera);
+            Texture2DModel.fake = false;
             this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
+            Texture2DModel.fake = true;
             this.contexthud.program().clearUniforms();
             this.frame.framebuffer().endFrame();
         }
@@ -173,7 +186,9 @@ public class GLESGameRenderer implements GameRenderer {
             this.mainFramebuffer.unbind();
 
             this.contexthud.update(this.camera);
+            Texture2DModel.fake = false;
             this.contexthud.drawModel(this.mainScreenItemModel, 0, 0, 0);
+            Texture2DModel.fake = true;
             this.contexthud.program().clearUniforms();
 
             this.frame.framebuffer().endFrame();

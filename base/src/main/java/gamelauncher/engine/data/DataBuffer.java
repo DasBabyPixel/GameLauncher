@@ -1,22 +1,24 @@
-package gamelauncher.engine.network.packet;
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
 
+package gamelauncher.engine.data;
+
+import com.google.common.base.Charsets;
 import de.dasbabypixel.annotations.Api;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * @author DasBabyPixel
- */
-@Api
-public class PacketBuffer {
+public class DataBuffer {
+    private final ByteMemory memory;
+    private int readerIndex;
+    private int writerIndex;
 
-    private ByteMemory memory;
-    private int readerIndex = 0;
-    private int writerIndex = 0;
-
-    public PacketBuffer(ByteMemory memory) {
+    public DataBuffer(ByteMemory memory) {
         this.memory = memory;
     }
 
@@ -110,21 +112,21 @@ public class PacketBuffer {
     }
 
     @Api public void writeByte(byte value) {
-        memory.setByte(increaseWriterIndex(Byte.BYTES), value);
+        memory.setByte(increaseWriterIndex(DataUtil.BYTES_BYTE), value);
     }
 
     @Api public void writeShort(short value) {
-        memory.setShort(increaseWriterIndex(Short.BYTES), value);
+        memory.setShort(increaseWriterIndex(DataUtil.BYTES_SHORT), value);
     }
 
-    @Api public void writeList(List<? extends BufferObject> list) {
+    @Api public <T extends DataSerializable> void writeList(List<T> list) {
         writeInt(list.size());
-        for (BufferObject object : list) {
+        for (DataSerializable object : list) {
             write(object);
         }
     }
 
-    @Api public <T extends BufferObject> void readList(List<T> list, Supplier<T> instanceCreator) {
+    @Api public <T extends DataSerializable> void readList(List<T> list, Supplier<T> instanceCreator) {
         list.clear();
         int size = readInt();
         for (int i = 0; i < size; i++) {
@@ -135,23 +137,23 @@ public class PacketBuffer {
     }
 
     @Api public void writeInt(int value) {
-        memory.setInt(increaseWriterIndex(Integer.BYTES), value);
+        memory.setInt(increaseWriterIndex(DataUtil.BYTES_INT), value);
     }
 
     @Api public void writeLong(long value) {
-        memory.setLong(increaseWriterIndex(Long.BYTES), value);
+        memory.setLong(increaseWriterIndex(DataUtil.BYTES_LONG), value);
     }
 
     @Api public void writeFloat(float value) {
-        memory.setFloat(increaseWriterIndex(Float.BYTES), value);
+        memory.setFloat(increaseWriterIndex(DataUtil.BYTES_FLOAT), value);
     }
 
     @Api public void writeDouble(double value) {
-        memory.setDouble(increaseWriterIndex(Double.BYTES), value);
+        memory.setDouble(increaseWriterIndex(DataUtil.BYTES_DOUBLE), value);
     }
 
     /**
-     * Writes the given byte array to this {@link PacketBuffer}
+     * Writes the given byte array to this {@link DataBuffer}
      */
     @Api public void writeBytes(byte[] value) {
         writeInt(value.length);
@@ -159,7 +161,7 @@ public class PacketBuffer {
     }
 
     /**
-     * Writes the given byte array to this {@link PacketBuffer} from offset
+     * Writes the given byte array to this {@link DataBuffer} from offset
      * {@code offset} with length {@code length}
      */
     @Api public void writeBytes(byte[] value, int offset, int length) {
@@ -167,17 +169,17 @@ public class PacketBuffer {
     }
 
     /**
-     * Writes a string to this {@link PacketBuffer}
+     * Writes a string to this {@link DataBuffer}
      */
     @Api public void writeString(String string) {
-        byte[] data = string.getBytes(StandardCharsets.UTF_8);
+        byte[] data = string.getBytes(Charsets.UTF_8);
         writeBytes(data);
     }
 
     /**
-     * Writes a {@link BufferObject} at the current {@link #writerIndex()}
+     * Writes a {@link DataSerializable} at the current {@link #writerIndex()}
      */
-    @Api public void write(BufferObject object) {
+    @Api public void write(DataSerializable object) {
         object.write(this);
     }
 
@@ -185,46 +187,46 @@ public class PacketBuffer {
      * @return the byte at the current {@link #readerIndex()}
      */
     @Api public byte readByte() {
-        return memory.getByte(increaseReaderIndex(Byte.BYTES));
+        return memory.getByte(increaseReaderIndex(DataUtil.BYTES_BYTE));
     }
 
     /**
      * @return the short at the current {@link #readerIndex()}
      */
     @Api public short readShort() {
-        return memory.getShort(increaseReaderIndex(Short.BYTES));
+        return memory.getShort(increaseReaderIndex(DataUtil.BYTES_SHORT));
     }
 
     /**
      * @return the int at the current {@link #readerIndex()}
      */
     @Api public int readInt() {
-        return memory.getInt(increaseReaderIndex(Integer.BYTES));
+        return memory.getInt(increaseReaderIndex(DataUtil.BYTES_INT));
     }
 
     /**
      * @return the long at the current {@link #readerIndex()}
      */
     @Api public long readLong() {
-        return memory.getLong(increaseReaderIndex(Long.BYTES));
+        return memory.getLong(increaseReaderIndex(DataUtil.BYTES_LONG));
     }
 
     /**
      * @return the float at the current {@link #readerIndex()}
      */
     @Api public float readFloat() {
-        return memory.getFloat(increaseReaderIndex(Float.BYTES));
+        return memory.getFloat(increaseReaderIndex(DataUtil.BYTES_FLOAT));
     }
 
     /**
      * @return the double at the current {@link #readerIndex()}
      */
     @Api public double readDouble() {
-        return memory.getDouble(increaseReaderIndex(Double.BYTES));
+        return memory.getDouble(increaseReaderIndex(DataUtil.BYTES_DOUBLE));
     }
 
     /**
-     * @return a read byte array from this {@link PacketBuffer}
+     * @return a read byte array from this {@link DataBuffer}
      */
     @Api public byte[] readBytes() {
         int length = readInt();
@@ -234,23 +236,23 @@ public class PacketBuffer {
     }
 
     /**
-     * Reads a string from this {@link PacketBuffer}
+     * Reads a string from this {@link DataBuffer}
      *
      * @return the read string
      */
     @Api public String readString() {
-        return new String(readBytes(), StandardCharsets.UTF_8);
+        return new String(readBytes(), Charsets.UTF_8);
     }
 
     /**
-     * Reads a {@link BufferObject} from the current {@link #readerIndex()}
+     * Reads a {@link DataSerializable} from the current {@link #readerIndex()}
      */
-    @Api public void read(BufferObject object) {
+    @Api public void read(DataSerializable object) {
         object.read(this);
     }
 
     /**
-     * Reads {@code length} bytes from this {@link PacketBuffer} into the specified
+     * Reads {@code length} bytes from this {@link DataBuffer} into the specified
      * byte array at position {@code offset}
      */
     @Api public void readBytes(byte[] value, int offset, int length) {
@@ -260,15 +262,7 @@ public class PacketBuffer {
     /**
      * @return the memory of this buffer
      */
-    @Api public ByteMemory getMemory() {
+    @Api public ByteMemory memory() {
         return memory;
     }
-
-    /**
-     * Sets the memory of this buffer
-     */
-    @Api public void setMemory(ByteMemory memory) {
-        this.memory = memory;
-    }
-
 }

@@ -1,5 +1,6 @@
 package gamelauncher.gles.shader;
 
+import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.render.shader.ProgramObject;
 import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -15,7 +16,6 @@ import org.joml.Vector4f;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author DasBabyPixel
@@ -27,7 +27,7 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
     private final ByteBuffer byteBuffer;
     private final IntBuffer intBuffer;
     private final FloatBuffer floatBuffer;
-    private final AtomicBoolean hasValue = new AtomicBoolean(false);
+    //    private final AtomicBoolean hasValue = new AtomicBoolean(false);
     private final MemoryManagement memory;
 
     public BasicUniform(MemoryManagement memory, int id, Type type) {
@@ -88,42 +88,42 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
     @Override
     public Uniform set(int i) {
         this.intBuffer.put(0, i);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
     @Override
     public Uniform set(float f1) {
         this.floatBuffer.put(0, f1);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
     @Override
     public Uniform set(float f1, float f2) {
         this.floatBuffer.put(0, f1).put(1, f2);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
     @Override
     public Uniform set(float f1, float f2, float f3) {
         this.floatBuffer.put(0, f1).put(1, f2).put(2, f3);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
     @Override
     public Uniform set(float f1, float f2, float f3, float f4) {
         this.floatBuffer.put(0, f1).put(1, f2).put(2, f3).put(3, f4);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
     @Override
     public Uniform set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
         this.floatBuffer.put(0, m00).put(1, m01).put(2, m02).put(3, m03).put(4, m10).put(5, m11).put(6, m12).put(7, m13).put(8, m20).put(9, m21).put(10, m22).put(11, m23).put(12, m30).put(13, m31).put(14, m32).put(15, m33);
-        this.hasValue.set(true);
+//        this.hasValue.set(true);
         return this;
     }
 
@@ -155,12 +155,17 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
     @Override
     public Uniform clear() {
         this.byteBuffer.clear();
-        this.hasValue.set(false);
+//        this.hasValue.set(false);
         return this;
     }
 
+    @Override
+    public boolean empty() {
+        return false;
+    }
+
     public enum Type {
-        INT1("int", Integer.BYTES), FLOAT1("float", Float.BYTES), FLOAT2("vec2", 2 * Float.BYTES), FLOAT3("vec3", 3 * Float.BYTES), FLOAT4("vec4", 4 * Float.BYTES), MAT4("mat4", 4 * 4 * Float.BYTES), SAMPLER2D("sampler2D", Integer.BYTES);
+        INT1("int", DataUtil.BYTES_INT), FLOAT1("float", DataUtil.BYTES_FLOAT), FLOAT2("vec2", 2 * DataUtil.BYTES_FLOAT), FLOAT3("vec3", 3 * DataUtil.BYTES_FLOAT), FLOAT4("vec4", 4 * DataUtil.BYTES_FLOAT), MAT4("mat4", 4 * 4 * DataUtil.BYTES_FLOAT), SAMPLER2D("sampler2D", DataUtil.BYTES_INT);
 
         private final String glName;
         private final int size;

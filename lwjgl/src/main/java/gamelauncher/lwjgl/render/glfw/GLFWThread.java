@@ -4,19 +4,19 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.concurrent.AbstractExecutorThread;
 import gamelauncher.engine.util.logging.Logger;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.system.APIUtil;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GLFWThread extends AbstractExecutorThread {
 
     private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
-
     private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
-
     private final Logger logger = Logger.logger();
-
     private final GLFWMonitorManager monitorManager = new GLFWMonitorManager();
 
     public GLFWThread(GameLauncher launcher) {
@@ -29,6 +29,13 @@ public class GLFWThread extends AbstractExecutorThread {
         if (!GLFW.glfwInit()) {
             throw new ExceptionInInitializerError("Couldn't initialize GLFW");
         }
+
+        final Map<Integer, String> ERROR_CODES = APIUtil.apiClassTokens((field, value) -> 0x10000 < value && value < 0x20000, null, GLFW.class);
+        GLFW.glfwSetErrorCallback((errorcode, descriptionp) -> {
+            String description = GLFWErrorCallback.getDescription(descriptionp);
+            String error = ERROR_CODES.get(errorcode);
+            logger.errorf("GLFW Error: %s(%s)\nDescription: %s", error, Integer.toHexString(errorcode), description);
+        });
         this.monitorManager.init();
     }
 

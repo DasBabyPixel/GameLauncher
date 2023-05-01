@@ -1,29 +1,27 @@
 package gamelauncher.engine.network.packet.packets;
 
+import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
-import gamelauncher.engine.network.packet.PacketBuffer;
 
 public class PacketIdPacket extends Packet {
 
-	public int id;
+    public int id;
 
-	public PacketIdPacket() {
-		super("packet_id");
-	}
+    public PacketIdPacket() {
+        super("packet_id");
+    }
 
-	public PacketIdPacket(int id) {
-		this();
-		this.id = id;
-	}
+    public PacketIdPacket(int id) {
+        this();
+        this.id = id;
+    }
 
-	@Override
-	protected void write0(PacketBuffer buffer) {
-		buffer.writeInt(id);
-	}
+    @Override protected void write0(DataBuffer buffer) {
+        buffer.writeInt(id);
+    }
 
-	@Override
-	protected void read0(PacketBuffer buffer) {
-		id = buffer.readInt();
-	}
+    @Override protected void read0(DataBuffer buffer) {
+        id = buffer.readInt();
+    }
 
 }

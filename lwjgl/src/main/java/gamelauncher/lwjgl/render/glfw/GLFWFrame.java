@@ -28,7 +28,9 @@ import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
 import java8.util.concurrent.CompletableFuture;
+import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -73,6 +75,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.manualFramebuffer = new ManualQueryFramebuffer(this.framebuffer);
         this.input = new LWJGLInput(this);
         this.context = new GLFWGLContext(new CopyOnWriteArraySet<>());
+        this.context.owner = renderThread;
         Threads.waitFor(this.launcher.getGLFWThread().submit(() -> this.context.create(this, null)));
         this.renderThread.start();
         this.created = true;
@@ -92,6 +95,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.manualFramebuffer = new ManualQueryFramebuffer(this.framebuffer);
         this.input = new LWJGLInput(this);
         this.context = context;
+        this.context.owner = renderThread;
         this.created = true;
     }
 
@@ -229,21 +233,21 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
     static class Creator implements Runnable {
 
-        public final NumberValue width = NumberValue.withValue(0D);
-        public final NumberValue height = NumberValue.withValue(0D);
-        public final NumberValue fbwidth = NumberValue.withValue(0D);
-        public final NumberValue fbheight = NumberValue.withValue(0D);
+        public final NumberValue width = NumberValue.withValue(0);
+        public final NumberValue height = NumberValue.withValue(0);
+        public final NumberValue fbwidth = NumberValue.withValue(0);
+        public final NumberValue fbheight = NumberValue.withValue(0);
         public final NumberValue scaleX = NumberValue.withValue(0F);
         public final NumberValue scaleY = NumberValue.withValue(0F);
-        public final NumberValue xpos = NumberValue.withValue(0D);
-        public final NumberValue ypos = NumberValue.withValue(0D);
+        public final NumberValue xpos = NumberValue.withValue(0);
+        public final NumberValue ypos = NumberValue.withValue(0);
         public final Property<Monitor> monitor = Property.empty();
-        private final NumberValue fullscreenOldX = NumberValue.withValue(0D);
-        private final NumberValue fullscreenOldY = NumberValue.withValue(0D);
-        private final NumberValue fullscreenOldW = NumberValue.withValue(0D);
-        private final NumberValue fullscreenOldH = NumberValue.withValue(0D);
-        private final GLFWGLContext shared;
         public final GLFWFrame frame;
+        private final NumberValue fullscreenOldX = NumberValue.withValue(0);
+        private final NumberValue fullscreenOldY = NumberValue.withValue(0);
+        private final NumberValue fullscreenOldW = NumberValue.withValue(0);
+        private final NumberValue fullscreenOldH = NumberValue.withValue(0);
+        private final GLFWGLContext shared;
         public long glfwId;
 
         public Creator(GLFWFrame frame, GLFWGLContext shared) {
@@ -264,6 +268,13 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().getMonitor(glfwGetPrimaryMonitor());
 
             this.glfwId = GLFW.glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, GameLauncher.NAME, 0, shared == null ? 0 : shared.glfwId);
+            if (glfwId == 0L) {
+                PointerBuffer buf = MemoryUtil.memAllocPointer(1);
+                glfwGetError(buf);
+                String error = buf.getStringUTF8();
+                if (shared != null) System.out.println(shared.sharedContexts);
+                throw new RuntimeException("Error creating window: " + error);
+            }
             GLFW.glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW.GLFW_DONT_CARE, GLFW.GLFW_DONT_CARE);
             glfwSetWindowPos(glfwId, primaryMonitor.x() + primaryMonitor.width() / 4, primaryMonitor.y() + primaryMonitor.height() / 4);
             int[] a0 = new int[1];
@@ -408,11 +419,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             GLFW.glfwSetWindowRefreshCallback(this.glfwId, wid -> this.frame.renderThread.refreshWait());
             GLFW.glfwSetFramebufferSizeCallback(this.glfwId, (wid, width, height) -> {
                 GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
-                GLFWFrameRenderThread rt = this.frame.renderThread;
                 this.fbwidth.number(width);
                 this.fbheight.number(height);
                 if (this.frame.renderMode() != RenderMode.MANUAL) {
-                    rt.scheduleDrawWait();
+                    this.frame.renderThread.scheduleDrawWait();
                 }
             });
         }

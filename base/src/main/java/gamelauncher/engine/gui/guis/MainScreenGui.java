@@ -7,12 +7,11 @@
 
 package gamelauncher.engine.gui.guis;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.game.Game;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.keybind.MouseButtonKeybindEvent;
 import gamelauncher.engine.util.text.Component;
 
 /**
@@ -22,30 +21,11 @@ import gamelauncher.engine.util.text.Component;
  */
 public interface MainScreenGui extends Gui {
 
+    @Api
     class Simple extends ParentableAbstractGui implements MainScreenGui {
 
         public Simple(GameLauncher launcher) throws GameException {
             super(launcher);
-
-//            GuiContainer container = new GuiContainer(launcher);
-//            NumberValue spacing = NumberValue.withValue(5);
-//            NumberValue currentY = null;
-//            GameGui ogui = null;
-//
-//            for (Game game : launcher.gameRegistry().games().stream().sorted().collect(Collectors.toList())) {
-//                GameGui gui = new GameGui(game);
-//                if (currentY == null) {
-//                    currentY = container.yProperty();
-//                } else {
-//                    currentY = ogui.yProperty().add(ogui.heightProperty()).add(spacing);
-//                }
-//                gui.yProperty().bind(currentY);
-//                gui.xProperty().bind(container.xProperty());
-//                gui.height(80);
-//                gui.width(600);
-//                container.addGui(gui);
-//                ogui = gui;
-//            }
 
             ColorGui colorGui = launcher.guiManager().createGui(ColorGui.class);
             colorGui.xProperty().bind(xProperty());
@@ -64,40 +44,12 @@ public interface MainScreenGui extends Gui {
             textureGui.yProperty().bind(yProperty());
             GUIs.add(textureGui);
 
-//            ScrollGui scrollGui = launcher.guiManager().createGui(ScrollGui.class);
-//            scrollGui.gui().setValue(container);
-//            scrollGui.xProperty().bind(xProperty());
-//            scrollGui.yProperty().bind(yProperty());
-//            scrollGui.widthProperty().bind(widthProperty());
-//            scrollGui.heightProperty().bind(heightProperty());
-//
-//            GUIs.add(scrollGui);
-
-        }
-
-        private class GameGui extends ParentableAbstractGui {
-
-            public GameGui(Game game) throws GameException {
-                super(Simple.this.launcher());
-                ButtonGui buttonGui = new ButtonGui(launcher()) {
-
-                    @Override protected void buttonPressed(MouseButtonKeybindEvent e) {
-                        try {
-                            game.launch(this.framebuffer);
-                        } catch (GameException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-
-                };
-                buttonGui.text().value(Component.text(game.key().key()));
-
-                buttonGui.xProperty().bind(this.xProperty());
-                buttonGui.yProperty().bind(this.yProperty());
-                buttonGui.widthProperty().bind(this.widthProperty());
-                buttonGui.heightProperty().bind(this.heightProperty());
-                this.GUIs.add(buttonGui);
-            }
+            ButtonGui button = launcher.guiManager().createGui(ButtonGui.class);
+            button.text().value(Component.text("test"));
+            button.xProperty().bind(xProperty());
+            button.yProperty().bind(yProperty());
+            button.widthProperty().bind(widthProperty());
+            button.heightProperty().bind(heightProperty().divide(2));
 
         }
     }

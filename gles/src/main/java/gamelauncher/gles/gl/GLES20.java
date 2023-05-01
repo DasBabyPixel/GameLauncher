@@ -13,6 +13,176 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 public interface GLES20 {
+
+    /**
+     * Accepted by the {@code name} parameter of GetString.
+     */
+    @Api int GL_SHADING_LANGUAGE_VERSION = 0x8B8C;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetInteger.
+     */
+    @Api int GL_CURRENT_PROGRAM = 0x8B8D;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetShaderiv.
+     */
+    @Api int GL_SHADER_TYPE = 0x8B4F, GL_DELETE_STATUS = 0x8B80, GL_COMPILE_STATUS = 0x8B81, GL_LINK_STATUS = 0x8B82, GL_VALIDATE_STATUS = 0x8B83, GL_INFO_LOG_LENGTH = 0x8B84, GL_ATTACHED_SHADERS = 0x8B85, GL_ACTIVE_UNIFORMS = 0x8B86, GL_ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87, GL_ACTIVE_ATTRIBUTES = 0x8B89, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH = 0x8B8A, GL_SHADER_SOURCE_LENGTH = 0x8B88;
+
+    /**
+     * Returned by the {@code type} parameter of GetActiveUniform.
+     */
+    @Api int GL_FLOAT_VEC2 = 0x8B50, GL_FLOAT_VEC3 = 0x8B51, GL_FLOAT_VEC4 = 0x8B52, GL_INT_VEC2 = 0x8B53, GL_INT_VEC3 = 0x8B54, GL_INT_VEC4 = 0x8B55, GL_BOOL = 0x8B56, GL_BOOL_VEC2 = 0x8B57, GL_BOOL_VEC3 = 0x8B58, GL_BOOL_VEC4 = 0x8B59, GL_FLOAT_MAT2 = 0x8B5A, GL_FLOAT_MAT3 = 0x8B5B, GL_FLOAT_MAT4 = 0x8B5C, GL_SAMPLER_2D = 0x8B5E, GL_SAMPLER_CUBE = 0x8B60;
+
+    /**
+     * Accepted by the {@code type} argument of CreateShader and returned by the {@code params} parameter of GetShaderiv.
+     */
+    @Api int GL_VERTEX_SHADER = 0x8B31;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_MAX_VERTEX_ATTRIBS = 0x8869, GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872, GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS = 0x8B4C, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetVertexAttrib{dfi}v.
+     */
+    @Api int GL_VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622, GL_VERTEX_ATTRIB_ARRAY_SIZE = 0x8623, GL_VERTEX_ATTRIB_ARRAY_STRIDE = 0x8624, GL_VERTEX_ATTRIB_ARRAY_TYPE = 0x8625, GL_VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A, GL_CURRENT_VERTEX_ATTRIB = 0x8626;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetVertexAttribPointerv.
+     */
+    @Api int GL_VERTEX_ATTRIB_ARRAY_POINTER = 0x8645;
+
+    /**
+     * Accepted by the {@code type} argument of CreateShader and returned by the {@code params} parameter of GetShaderiv.
+     */
+    @Api int GL_FRAGMENT_SHADER = 0x8B30;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_BLEND_EQUATION = 0x8009, GL_BLEND_EQUATION_RGB = 0x8009, GL_BLEND_EQUATION_ALPHA = 0x883D;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetIntegerv.
+     */
+    @Api int GL_STENCIL_BACK_FUNC = 0x8800, GL_STENCIL_BACK_FAIL = 0x8801, GL_STENCIL_BACK_PASS_DEPTH_FAIL = 0x8802, GL_STENCIL_BACK_PASS_DEPTH_PASS = 0x8803, GL_STENCIL_BACK_REF = 0x8CA3, GL_STENCIL_BACK_VALUE_MASK = 0x8CA4, GL_STENCIL_BACK_WRITEMASK = 0x8CA5;
+
+    /**
+     * Accepted by the {@code target} parameters of BindBuffer, BufferData, BufferSubData, MapBuffer, UnmapBuffer, GetBufferSubData,
+     * GetBufferParameteriv, and GetBufferPointerv.
+     */
+    @Api int GL_ARRAY_BUFFER = 0x8892, GL_ELEMENT_ARRAY_BUFFER = 0x8893;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_ARRAY_BUFFER_BINDING = 0x8894, GL_ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetVertexAttribiv.
+     */
+    @Api int GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
+
+
+    /**
+     * Accepted by the {@code usage} parameter of BufferData.
+     */
+    @Api int GL_STREAM_DRAW = 0x88E0, GL_STATIC_DRAW = 0x88E4, GL_DYNAMIC_DRAW = 0x88E8;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBufferParameteriv.
+     */
+    @Api int GL_BUFFER_SIZE = 0x8764, GL_BUFFER_USAGE = 0x8765;
+
+    /**
+     * Accepted by the {@code target} parameter of Hint, and by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_GENERATE_MIPMAP_HINT = 0x8192;
+
+
+
+
+    /**
+     * Accepted by the {@code sfactor} and {@code dfactor} parameters of BlendFunc.
+     */
+    @Api  int GL_CONSTANT_COLOR = 0x8001, GL_ONE_MINUS_CONSTANT_COLOR = 0x8002, GL_CONSTANT_ALPHA = 0x8003, GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
+
+    /**
+     * Accepted by the {@code mode} parameter of BlendEquation.
+     */
+    @Api  int GL_FUNC_ADD = 0x8006;
+
+    /**
+     * Accepted by the {@code mode} parameter of BlendEquation.
+     */
+    @Api  int GL_FUNC_SUBTRACT = 0x800A, GL_FUNC_REVERSE_SUBTRACT = 0x800B;
+
+    /**
+     * Accepted by the {@code internalFormat} parameter of TexImage1D, TexImage2D, CopyTexImage1D and CopyTexImage2D.
+     */
+    @Api  int GL_DEPTH_COMPONENT16 = 0x81A5;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api  int GL_BLEND_DST_RGB = 0x80C8, GL_BLEND_SRC_RGB = 0x80C9, GL_BLEND_DST_ALPHA = 0x80CA, GL_BLEND_SRC_ALPHA = 0x80CB;
+
+    /**
+     * Accepted by the {@code sfail}, {@code dpfail}, and {@code dppass} parameter of StencilOp.
+     */
+    @Api int GL_INCR_WRAP = 0x8507, GL_DECR_WRAP = 0x8508;
+
+
+
+
+
+    /**
+     * Accepted by the {@code param} parameter of TexParameteri and TexParameterf, and by the {@code params} parameter of TexParameteriv and TexParameterfv,
+     * when their {@code pname} parameter is TEXTURE_WRAP_S, TEXTURE_WRAP_T, or TEXTURE_WRAP_R.
+     */
+    @Api int GL_MIRRORED_REPEAT = 0x8370;
+
+    /**
+     * Accepted by the {@code value} parameter of GetIntegerv, GetBooleanv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_NUM_COMPRESSED_TEXTURE_FORMATS = 0x86A2, GL_COMPRESSED_TEXTURE_FORMATS = 0x86A3;
+
+    /**
+     * When the {@code pname} parameter of TexGendv, TexGenfv, and TexGeniv is TEXTURE_GEN_MODE, then the array {@code params} may also contain NORMAL_MAP
+     * or REFLECTION_MAP. Accepted by the {@code cap} parameter of Enable, Disable, IsEnabled, and by the {@code pname} parameter of GetBooleanv,
+     * GetIntegerv, GetFloatv, and GetDoublev, and by the {@code target} parameter of BindTexture, GetTexParameterfv, GetTexParameteriv, TexParameterf,
+     * TexParameteri, TexParameterfv, and TexParameteriv.
+     */
+    @Api int GL_TEXTURE_CUBE_MAP = 0x8513;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and GetDoublev.
+     */
+    @Api int GL_TEXTURE_BINDING_CUBE_MAP = 0x8514;
+
+    /**
+     * Accepted by the {@code target} parameter of GetTexImage, GetTexLevelParameteriv, GetTexLevelParameterfv, TexImage2D, CopyTexImage2D, TexSubImage2D, and
+     * CopySubTexImage2D.
+     */
+    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515, GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516, GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518, GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetDoublev, GetIntegerv, and GetFloatv.
+     */
+    @Api int GL_MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
+
+
+
+
+
+
+
+
+
+
+
     @Api int GL_ACTIVE_TEXTURE = 0x84E0;
     @Api int GL_DEPTH_BUFFER_BIT = 0x00000100;
     @Api int GL_STENCIL_BUFFER_BIT = 0x00000400;
@@ -37,31 +207,7 @@ public interface GLES20 {
     @Api int GL_DST_COLOR = 0x0306;
     @Api int GL_ONE_MINUS_DST_COLOR = 0x0307;
     @Api int GL_SRC_ALPHA_SATURATE = 0x0308;
-    @Api int GL_FUNC_ADD = 0x8006;
-    @Api int GL_BLEND_EQUATION = 0x8009;
-    @Api int GL_BLEND_EQUATION_RGB = 0x8009;   /* same as BLEND_EQUATION */
-    @Api int GL_BLEND_EQUATION_ALPHA = 0x883D;
-    @Api int GL_FUNC_SUBTRACT = 0x800A;
-    @Api int GL_FUNC_REVERSE_SUBTRACT = 0x800B;
-    @Api int GL_BLEND_DST_RGB = 0x80C8;
-    @Api int GL_BLEND_SRC_RGB = 0x80C9;
-    @Api int GL_BLEND_DST_ALPHA = 0x80CA;
-    @Api int GL_BLEND_SRC_ALPHA = 0x80CB;
-    @Api int GL_CONSTANT_COLOR = 0x8001;
-    @Api int GL_ONE_MINUS_CONSTANT_COLOR = 0x8002;
-    @Api int GL_CONSTANT_ALPHA = 0x8003;
-    @Api int GL_ONE_MINUS_CONSTANT_ALPHA = 0x8004;
     @Api int GL_BLEND_COLOR = 0x8005;
-    @Api int GL_ARRAY_BUFFER = 0x8892;
-    @Api int GL_ELEMENT_ARRAY_BUFFER = 0x8893;
-    @Api int GL_ARRAY_BUFFER_BINDING = 0x8894;
-    @Api int GL_ELEMENT_ARRAY_BUFFER_BINDING = 0x8895;
-    @Api int GL_STREAM_DRAW = 0x88E0;
-    @Api int GL_STATIC_DRAW = 0x88E4;
-    @Api int GL_DYNAMIC_DRAW = 0x88E8;
-    @Api int GL_BUFFER_SIZE = 0x8764;
-    @Api int GL_BUFFER_USAGE = 0x8765;
-    @Api int GL_CURRENT_VERTEX_ATTRIB = 0x8626;
     @Api int GL_FRONT = 0x0404;
     @Api int GL_BACK = 0x0405;
     @Api int GL_FRONT_AND_BACK = 0x0408;
@@ -99,13 +245,6 @@ public interface GLES20 {
     @Api int GL_STENCIL_REF = 0x0B97;
     @Api int GL_STENCIL_VALUE_MASK = 0x0B93;
     @Api int GL_STENCIL_WRITEMASK = 0x0B98;
-    @Api int GL_STENCIL_BACK_FUNC = 0x8800;
-    @Api int GL_STENCIL_BACK_FAIL = 0x8801;
-    @Api int GL_STENCIL_BACK_PASS_DEPTH_FAIL = 0x8802;
-    @Api int GL_STENCIL_BACK_PASS_DEPTH_PASS = 0x8803;
-    @Api int GL_STENCIL_BACK_REF = 0x8CA3;
-    @Api int GL_STENCIL_BACK_VALUE_MASK = 0x8CA4;
-    @Api int GL_STENCIL_BACK_WRITEMASK = 0x8CA5;
     @Api int GL_VIEWPORT = 0x0BA2;
     @Api int GL_SCISSOR_BOX = 0x0C10;
     @Api int GL_COLOR_CLEAR_VALUE = 0x0C22;
@@ -128,12 +267,9 @@ public interface GLES20 {
     @Api int GL_SAMPLES = 0x80A9;
     @Api int GL_SAMPLE_COVERAGE_VALUE = 0x80AA;
     @Api int GL_SAMPLE_COVERAGE_INVERT = 0x80AB;
-    @Api int GL_NUM_COMPRESSED_TEXTURE_FORMATS = 0x86A2;
-    @Api int GL_COMPRESSED_TEXTURE_FORMATS = 0x86A3;
     @Api int GL_DONT_CARE = 0x1100;
     @Api int GL_FASTEST = 0x1101;
     @Api int GL_NICEST = 0x1102;
-    @Api int GL_GENERATE_MIPMAP_HINT = 0x8192;
     @Api int GL_BYTE = 0x1400;
     @Api int GL_UNSIGNED_BYTE = 0x1401;
     @Api int GL_SHORT = 0x1402;
@@ -151,26 +287,9 @@ public interface GLES20 {
     @Api int GL_UNSIGNED_SHORT_4_4_4_4 = 0x8033;
     @Api int GL_UNSIGNED_SHORT_5_5_5_1 = 0x8034;
     @Api int GL_UNSIGNED_SHORT_5_6_5 = 0x8363;
-    @Api int GL_FRAGMENT_SHADER = 0x8B30;
-    @Api int GL_VERTEX_SHADER = 0x8B31;
-    @Api int GL_MAX_VERTEX_ATTRIBS = 0x8869;
     @Api int GL_MAX_VERTEX_UNIFORM_VECTORS = 0x8DFB;
     @Api int GL_MAX_VARYING_VECTORS = 0x8DFC;
-    @Api int GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
-    @Api int GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS = 0x8B4C;
-    @Api int GL_MAX_TEXTURE_IMAGE_UNITS = 0x8872;
     @Api int GL_MAX_FRAGMENT_UNIFORM_VECTORS = 0x8DFD;
-    @Api int GL_SHADER_TYPE = 0x8B4F;
-    @Api int GL_DELETE_STATUS = 0x8B80;
-    @Api int GL_LINK_STATUS = 0x8B82;
-    @Api int GL_VALIDATE_STATUS = 0x8B83;
-    @Api int GL_ATTACHED_SHADERS = 0x8B85;
-    @Api int GL_ACTIVE_UNIFORMS = 0x8B86;
-    @Api int GL_ACTIVE_UNIFORM_MAX_LENGTH = 0x8B87;
-    @Api int GL_ACTIVE_ATTRIBUTES = 0x8B89;
-    @Api int GL_ACTIVE_ATTRIBUTE_MAX_LENGTH = 0x8B8A;
-    @Api int GL_SHADING_LANGUAGE_VERSION = 0x8B8C;
-    @Api int GL_CURRENT_PROGRAM = 0x8B8D;
     @Api int GL_NEVER = 0x0200;
     @Api int GL_LESS = 0x0201;
     @Api int GL_EQUAL = 0x0202;
@@ -184,8 +303,6 @@ public interface GLES20 {
     @Api int GL_INCR = 0x1E02;
     @Api int GL_DECR = 0x1E03;
     @Api int GL_INVERT = 0x150A;
-    @Api int GL_INCR_WRAP = 0x8507;
-    @Api int GL_DECR_WRAP = 0x8508;
     @Api int GL_VENDOR = 0x1F00;
     @Api int GL_RENDERER = 0x1F01;
     @Api int GL_VERSION = 0x1F02;
@@ -201,15 +318,6 @@ public interface GLES20 {
     @Api int GL_TEXTURE_WRAP_S = 0x2802;
     @Api int GL_TEXTURE_WRAP_T = 0x2803;
     @Api int GL_TEXTURE = 0x1702;
-    @Api int GL_TEXTURE_CUBE_MAP = 0x8513;
-    @Api int GL_TEXTURE_BINDING_CUBE_MAP = 0x8514;
-    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_X = 0x8515;
-    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_X = 0x8516;
-    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_Y = 0x8517;
-    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = 0x8518;
-    @Api int GL_TEXTURE_CUBE_MAP_POSITIVE_Z = 0x8519;
-    @Api int GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = 0x851A;
-    @Api int GL_MAX_CUBE_MAP_TEXTURE_SIZE = 0x851C;
     @Api int GL_TEXTURE0 = 0x84C0;
     @Api int GL_TEXTURE1 = 0x84C1;
     @Api int GL_TEXTURE2 = 0x84C2;
@@ -244,34 +352,8 @@ public interface GLES20 {
     @Api int GL_TEXTURE31 = 0x84DF;
     @Api int GL_REPEAT = 0x2901;
     @Api int GL_CLAMP_TO_EDGE = 0x812F;
-    @Api int GL_MIRRORED_REPEAT = 0x8370;
-    @Api int GL_FLOAT_VEC2 = 0x8B50;
-    @Api int GL_FLOAT_VEC3 = 0x8B51;
-    @Api int GL_FLOAT_VEC4 = 0x8B52;
-    @Api int GL_INT_VEC2 = 0x8B53;
-    @Api int GL_INT_VEC3 = 0x8B54;
-    @Api int GL_INT_VEC4 = 0x8B55;
-    @Api int GL_BOOL = 0x8B56;
-    @Api int GL_BOOL_VEC2 = 0x8B57;
-    @Api int GL_BOOL_VEC3 = 0x8B58;
-    @Api int GL_BOOL_VEC4 = 0x8B59;
-    @Api int GL_FLOAT_MAT2 = 0x8B5A;
-    @Api int GL_FLOAT_MAT3 = 0x8B5B;
-    @Api int GL_FLOAT_MAT4 = 0x8B5C;
-    @Api int GL_SAMPLER_2D = 0x8B5E;
-    @Api int GL_SAMPLER_CUBE = 0x8B60;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_ENABLED = 0x8622;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_SIZE = 0x8623;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_STRIDE = 0x8624;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_TYPE = 0x8625;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_NORMALIZED = 0x886A;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_POINTER = 0x8645;
-    @Api int GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
     @Api int GL_IMPLEMENTATION_COLOR_READ_TYPE = 0x8B9A;
     @Api int GL_IMPLEMENTATION_COLOR_READ_FORMAT = 0x8B9B;
-    @Api int GL_COMPILE_STATUS = 0x8B81;
-    @Api int GL_INFO_LOG_LENGTH = 0x8B84;
-    @Api int GL_SHADER_SOURCE_LENGTH = 0x8B88;
     @Api int GL_SHADER_COMPILER = 0x8DFA;
     @Api int GL_SHADER_BINARY_FORMATS = 0x8DF8;
     @Api int GL_NUM_SHADER_BINARY_FORMATS = 0x8DF9;
@@ -286,11 +368,6 @@ public interface GLES20 {
     @Api int GL_RGBA4 = 0x8056;
     @Api int GL_RGB5_A1 = 0x8057;
     @Api int GL_RGB565 = 0x8D62;
-    @Api int GL_DEPTH_COMPONENT16 = 0x81A5;
-    // GL_STENCIL_INDEX does not appear in gl2.h or gl2ext.h, and there is no
-    // token with value 0x1901.
-    //
-    @Deprecated @Api int GL_STENCIL_INDEX = 0x1901;
     @Api int GL_STENCIL_INDEX8 = 0x8D48;
     @Api int GL_RENDERBUFFER_WIDTH = 0x8D42;
     @Api int GL_RENDERBUFFER_HEIGHT = 0x8D43;
@@ -319,6 +396,171 @@ public interface GLES20 {
     @Api int GL_MAX_RENDERBUFFER_SIZE = 0x84E8;
     @Api int GL_INVALID_FRAMEBUFFER_OPERATION = 0x0506;
 
+    // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Accepted by the {@code cap} parameter of Enable, Disable, and IsEnabled, and by the {@code pname} parameter of GetBooleanv, GetIntegerv, GetFloatv, and
+     * GetDoublev.
+     */
+    public static final int GL_SAMPLE_ALPHA_TO_COVERAGE = 0x809E, GL_SAMPLE_COVERAGE = 0x80A0;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetDoublev, GetIntegerv, and GetFloatv.
+     */
+    public static final int GL_SAMPLE_BUFFERS = 0x80A8, GL_SAMPLES = 0x80A9, GL_SAMPLE_COVERAGE_VALUE = 0x80AA, GL_SAMPLE_COVERAGE_INVERT = 0x80AB;
+
+    /**
+     * Accepted by the {@code texture} parameter of ActiveTexture and MultiTexCoord.
+     */
+    public static final int GL_TEXTURE0 = 0x84C0, GL_TEXTURE1 = 0x84C1, GL_TEXTURE2 = 0x84C2, GL_TEXTURE3 = 0x84C3, GL_TEXTURE4 = 0x84C4, GL_TEXTURE5 = 0x84C5, GL_TEXTURE6 = 0x84C6, GL_TEXTURE7 = 0x84C7, GL_TEXTURE8 = 0x84C8, GL_TEXTURE9 = 0x84C9, GL_TEXTURE10 = 0x84CA, GL_TEXTURE11 = 0x84CB, GL_TEXTURE12 = 0x84CC, GL_TEXTURE13 = 0x84CD, GL_TEXTURE14 = 0x84CE, GL_TEXTURE15 = 0x84CF, GL_TEXTURE16 = 0x84D0, GL_TEXTURE17 = 0x84D1, GL_TEXTURE18 = 0x84D2, GL_TEXTURE19 = 0x84D3, GL_TEXTURE20 = 0x84D4, GL_TEXTURE21 = 0x84D5, GL_TEXTURE22 = 0x84D6, GL_TEXTURE23 = 0x84D7, GL_TEXTURE24 = 0x84D8, GL_TEXTURE25 = 0x84D9, GL_TEXTURE26 = 0x84DA, GL_TEXTURE27 = 0x84DB, GL_TEXTURE28 = 0x84DC, GL_TEXTURE29 = 0x84DD, GL_TEXTURE30 = 0x84DE, GL_TEXTURE31 = 0x84DF;
+
+    /**
+     * Accepted by the {@code pname} parameter of GetBooleanv, GetDoublev, GetIntegerv, and GetFloatv.
+     */
+    public static final int GL_ACTIVE_TEXTURE = 0x84E0,
+
+    /**
+     * Aliases for smooth points and lines.
+     */
+    public static final int GL_ALIASED_POINT_SIZE_RANGE = 0x846D, GL_ALIASED_LINE_WIDTH_RANGE = 0x846E,
+
+    /**
+     * Accepted by the {@code type} parameter of DrawPixels, ReadPixels, TexImage1D, TexImage2D, GetTexImage, TexImage3D, TexSubImage1D, TexSubImage2D,
+     * TexSubImage3D, GetHistogram, GetMinmax, ConvolutionFilter1D, ConvolutionFilter2D, ConvolutionFilter3D, GetConvolutionFilter, SeparableFilter2D,
+     * SeparableFilter3D, GetSeparableFilter, ColorTable, GetColorTable, TexImage4D, and TexSubImage4D.
+     */
+    public static final int GL_UNSIGNED_SHORT_5_6_5 = 0x8363, GL_UNSIGNED_SHORT_4_4_4_4 = 0x8033, GL_UNSIGNED_SHORT_5_5_5_1 = 0x8034,
+
+    /**
+     * Accepted by the {@code param} parameter of TexParameteri and TexParameterf, and by the {@code params} parameter of TexParameteriv and TexParameterfv,
+     * when their {@code pname} parameter is TEXTURE_WRAP_S, TEXTURE_WRAP_T, or TEXTURE_WRAP_R.
+     */
+    public static final int GL_CLAMP_TO_EDGE = 0x812F;
+
+    /**
+     * AlphaFunction
+     */
+    public static final int GL_NEVER = 0x200, GL_LESS = 0x201, GL_EQUAL = 0x202, GL_LEQUAL = 0x203, GL_GREATER = 0x204, GL_NOTEQUAL = 0x205, GL_GEQUAL = 0x206, GL_ALWAYS = 0x207;
+
+    /**
+     * AttribMask
+     */
+    public static final int GL_DEPTH_BUFFER_BIT = 0x100, GL_STENCIL_BUFFER_BIT = 0x400, GL_COLOR_BUFFER_BIT = 0x4000,
+
+    /**
+     * BeginMode
+     */
+    public static final int GL_POINTS = 0x0, GL_LINES = 0x1, GL_LINE_LOOP = 0x2, GL_LINE_STRIP = 0x3, GL_TRIANGLES = 0x4, GL_TRIANGLE_STRIP = 0x5, GL_TRIANGLE_FAN = 0x6,
+
+    /**
+     * BlendingFactorDest
+     */
+    public static final int GL_ZERO = 0, GL_ONE = 1, GL_SRC_COLOR = 0x300, GL_ONE_MINUS_SRC_COLOR = 0x301, GL_SRC_ALPHA = 0x302, GL_ONE_MINUS_SRC_ALPHA = 0x303, GL_DST_ALPHA = 0x304, GL_ONE_MINUS_DST_ALPHA = 0x305;
+
+    /**
+     * BlendingFactorSrc
+     */
+    public static final int GL_DST_COLOR = 0x306, GL_ONE_MINUS_DST_COLOR = 0x307, GL_SRC_ALPHA_SATURATE = 0x308;
+
+    /**
+     * Boolean
+     */
+    public static final int GL_TRUE = 1, GL_FALSE = 0;
+
+    /**
+     * DataType
+     */
+    public static final int GL_BYTE = 0x1400, GL_UNSIGNED_BYTE = 0x1401, GL_SHORT = 0x1402, GL_UNSIGNED_SHORT = 0x1403, GL_INT = 0x1404, GL_UNSIGNED_INT = 0x1405, GL_FLOAT = 0x1406,
+
+    /**
+     * DrawBufferMode
+     */
+    public static final int GL_NONE = 0, GL_FRONT = 0x404, GL_BACK = 0x405, GL_FRONT_AND_BACK = 0x408,
+
+    /**
+     * ErrorCode
+     */
+    public static final int GL_NO_ERROR = 0, GL_INVALID_ENUM = 0x500, GL_INVALID_VALUE = 0x501, GL_INVALID_OPERATION = 0x502, GL_OUT_OF_MEMORY = 0x505;
+
+    /**
+     * FrontFaceDirection
+     */
+    public static final int GL_CW = 0x900, GL_CCW = 0x901;
+
+    /**
+     * GetTarget
+     */
+    public static final int GL_LINE_WIDTH = 0xB21, GL_CULL_FACE = 0xB44, GL_CULL_FACE_MODE = 0xB45, GL_FRONT_FACE = 0xB46, GL_DEPTH_RANGE = 0xB70, GL_DEPTH_TEST = 0xB71, GL_DEPTH_WRITEMASK = 0xB72, GL_DEPTH_CLEAR_VALUE = 0xB73, GL_DEPTH_FUNC = 0xB74, GL_STENCIL_TEST = 0xB90, GL_STENCIL_CLEAR_VALUE = 0xB91, GL_STENCIL_FUNC = 0xB92, GL_STENCIL_VALUE_MASK = 0xB93, GL_STENCIL_FAIL = 0xB94, GL_STENCIL_PASS_DEPTH_FAIL = 0xB95, GL_STENCIL_PASS_DEPTH_PASS = 0xB96, GL_STENCIL_REF = 0xB97, GL_STENCIL_WRITEMASK = 0xB98, GL_VIEWPORT = 0xBA2, GL_DITHER = 0xBD0, GL_BLEND = 0xBE2, GL_SCISSOR_BOX = 0xC10, GL_SCISSOR_TEST = 0xC11, GL_COLOR_CLEAR_VALUE = 0xC22, GL_COLOR_WRITEMASK = 0xC23, GL_UNPACK_ALIGNMENT = 0xCF5, GL_PACK_ALIGNMENT = 0xD05, GL_MAX_TEXTURE_SIZE = 0xD33, GL_MAX_VIEWPORT_DIMS = 0xD3A, GL_SUBPIXEL_BITS = 0xD50, GL_RED_BITS = 0xD52, GL_GREEN_BITS = 0xD53, GL_BLUE_BITS = 0xD54, GL_ALPHA_BITS = 0xD55, GL_DEPTH_BITS = 0xD56, GL_STENCIL_BITS = 0xD57, GL_TEXTURE_2D = 0xDE1,
+
+    /**
+     * HintMode
+     */
+    public static final int GL_DONT_CARE = 0x1100, GL_FASTEST = 0x1101, GL_NICEST = 0x1102;
+
+    /**
+     * LogicOp
+     */
+    public static final int GL_INVERT = 0x150A,
+
+    /**
+     * MatrixMode
+     */
+    public static final int GL_TEXTURE = 0x1702;
+
+    /**
+     * PixelFormat
+     */
+    public static final int GL_DEPTH_COMPONENT = 0x1902, GL_ALPHA = 0x1906, GL_RGB = 0x1907, GL_RGBA = 0x1908, GL_LUMINANCE = 0x1909, GL_LUMINANCE_ALPHA = 0x190A;
+
+    /**
+     * StencilOp
+     */
+    public static final int GL_KEEP = 0x1E00, GL_REPLACE = 0x1E01, GL_INCR = 0x1E02, GL_DECR = 0x1E03;
+
+    /**
+     * StringName
+     */
+    public static final int GL_VENDOR = 0x1F00, GL_RENDERER = 0x1F01, GL_VERSION = 0x1F02, GL_EXTENSIONS = 0x1F03;
+
+    /**
+     * TextureMagFilter
+     */
+    public static final int GL_NEAREST = 0x2600, GL_LINEAR = 0x2601;
+
+    /**
+     * TextureMinFilter
+     */
+    public static final int GL_NEAREST_MIPMAP_NEAREST = 0x2700, GL_LINEAR_MIPMAP_NEAREST = 0x2701, GL_NEAREST_MIPMAP_LINEAR = 0x2702, GL_LINEAR_MIPMAP_LINEAR = 0x2703;
+
+    /**
+     * TextureParameterName
+     */
+    public static final int GL_TEXTURE_MAG_FILTER = 0x2800, GL_TEXTURE_MIN_FILTER = 0x2801, GL_TEXTURE_WRAP_S = 0x2802, GL_TEXTURE_WRAP_T = 0x2803;
+
+    /**
+     * TextureWrapMode
+     */
+    public static final int GL_REPEAT = 0x2901;
+
+    /**
+     * polygon_offset
+     */
+    public static final int GL_POLYGON_OFFSET_FACTOR = 0x8038, GL_POLYGON_OFFSET_UNITS = 0x2A00, GL_POLYGON_OFFSET_FILL = 0x8037;
+
+    /**
+     * texture
+     */
+    public static final int GL_RGBA4 = 0x8056, GL_RGB5_A1 = 0x8057,
+
+    /**
+     * texture_object
+     */
+    public static final int GL_TEXTURE_BINDING_2D = 0x8069;
+
+    /**
+     * <a href="http://docs.gl/es3/glActiveTexture">...</a>
+     * <a target="_blank" href="http://docs.gl/es3/glActiveTexture">Reference Page</a>
+     */
     @Api void glActiveTexture(int texture);
 
     @Api void glAttachShader(int program, int shader);

@@ -1,0 +1,4 @@
+{
+  "gamelauncher:starting": "GameLauncher starting...",
+  "gamelauncher:os": "OS: %s"
+}

@@ -37,12 +37,14 @@ public interface ScrollGui extends Gui {
      */
     Property<Gui> gui();
 
+    @Api
     class LWJGL extends Simple {
         public LWJGL(GameLauncher launcher) throws GameException {
             super(launcher);
         }
 
-        @Override public boolean mayScroll(MouseButtonKeybindEvent event) {
+        @Override
+        public boolean mayScroll(MouseButtonKeybindEvent event) {
             return event.buttonId() == 0;
         }
     }
@@ -134,7 +136,8 @@ public interface ScrollGui extends Gui {
             this.GUIs.add(horizontalScrollbarGui);
         }
 
-        @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
+        @Override
+        protected boolean doHandle(KeybindEvent entry) throws GameException {
             if (entry instanceof ScrollKeybindEvent) {
                 ScrollKeybindEvent s = (ScrollKeybindEvent) entry;
                 float mulx = this.displayWidth.floatValue() / 10;
@@ -147,9 +150,6 @@ public interface ScrollGui extends Gui {
                 return false;
             }
             return super.doHandle(entry);
-        }
-
-        @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
         }
 
         @Override
@@ -175,7 +175,8 @@ public interface ScrollGui extends Gui {
         /**
          * @return the gui inside this scrollgui
          */
-        @Override public Property<Gui> gui() {
+        @Override
+        public Property<Gui> gui() {
             return this.gui;
         }
 
@@ -247,15 +248,10 @@ public interface ScrollGui extends Gui {
         public static class Scrollbar {
 
             private final Type type;
-
             private final GradualProgress progress = new GradualProgress();
-
             private final NumberValue max = NumberValue.withValue(0F);
-
             private final NumberValue thickness = NumberValue.withValue(17);
-
             private final BooleanValue visible = BooleanValue.trueValue();
-
             private final NumberValue display = this.progress.curProgress.max(0).min(this.max);
 
             public Scrollbar(Type type) {
@@ -289,6 +285,7 @@ public interface ScrollGui extends Gui {
             /**
              * @return the thickness property
              */
+            @Api
             public NumberValue thickness() {
                 return this.thickness;
             }
@@ -296,6 +293,7 @@ public interface ScrollGui extends Gui {
             /**
              * @return the max property
              */
+            @Api
             public NumberValue max() {
                 return this.max;
             }
@@ -303,6 +301,7 @@ public interface ScrollGui extends Gui {
             /**
              * @return the visible property
              */
+            @Api
             public BooleanValue visible() {
                 return this.visible;
             }
@@ -319,11 +318,7 @@ public interface ScrollGui extends Gui {
              */
             public enum Type {
 
-                HORIZONTAL {
-
-                }, VERTICAL {
-
-                }
+                HORIZONTAL, VERTICAL
             }
         }
 
@@ -445,7 +440,8 @@ public interface ScrollGui extends Gui {
                 this.redraw();
             }
 
-            @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
+            @Override
+            protected boolean doHandle(KeybindEvent entry) throws GameException {
                 if (entry instanceof MouseMoveKeybindEvent) {
                     MouseMoveKeybindEvent mm = (MouseMoveKeybindEvent) entry;
                     if (Gui.hovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(), this.scrollbarWidth.floatValue(), this.scrollbarHeight.floatValue(), mm.mouseX(), mm.mouseY())) {
@@ -483,14 +479,16 @@ public interface ScrollGui extends Gui {
                 return super.doHandle(entry);
             }
 
-            @Override protected void doUpdate() throws GameException {
+            @Api
+            @Override
+            protected void doUpdate() throws GameException {
                 if (this.curScrollbarColor.calculateCurrent() | this.curBackgroundColor.calculateCurrent() | this.scrollbar.progress.calculateCurrent()) {
                     this.redraw();
                 }
             }
 
             @Override
-            protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+            protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) {
                 this.curScrollbarColor.calculateCurrent();
                 this.curBackgroundColor.calculateCurrent();
                 this.scrollbar.progress.calculateCurrent();
@@ -507,7 +505,8 @@ public interface ScrollGui extends Gui {
             /**
              * @return the scrollbar for this gui
              */
-            @Api public Scrollbar scrollbar() {
+            @Api
+            public Scrollbar scrollbar() {
                 return this.scrollbar;
             }
 

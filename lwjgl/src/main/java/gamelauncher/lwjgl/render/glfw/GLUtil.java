@@ -1,6 +1,7 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.states.ContextLocal;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
@@ -20,6 +21,7 @@ import static org.lwjgl.opengles.GLES32.*;
 public final class GLUtil {
 
     private static final int GL_CONTEXT_FLAGS = 0x821E;
+    private static final Logger logger = Logger.logger();
 
     static volatile ContextLocal<Boolean> skip = null;
 
@@ -32,24 +34,15 @@ public final class GLUtil {
 
     /**
      * Detects the best debug output functionality to use and creates a callback that prints
-     * information to {@link APIUtil#DEBUG_STREAM}. The callback function is returned as a
-     * {@link Callback}, that should be {@link Callback#free freed} when no longer needed.
-     *
-     * @return the generated callback function
-     */
-    @Api @Nullable public static Callback setupDebugMessageCallback() {
-        return GLUtil.setupDebugMessageCallback(APIUtil.DEBUG_STREAM);
-    }
-
-    /**
-     * Detects the best debug output functionality to use and creates a callback that prints
      * information to the specified {@link PrintStream}. The callback function is returned as a
      * {@link Callback}, that should be {@link Callback#free freed} when no longer needed.
      *
      * @param stream the output {@link PrintStream}
      * @return the generated callback function
      */
-    @Api @Nullable public static Callback setupDebugMessageCallback(PrintStream stream) {
+    @Api
+    @Nullable
+    public static Callback setupDebugMessageCallback(PrintStream stream) {
         GLESCapabilities caps = GLES.getCapabilities();
 
         if (caps.GLES32) {
@@ -72,7 +65,7 @@ public final class GLUtil {
                 GLUtil.printDetail(stream, "Type", GLUtil.getDebugType(type));
                 GLUtil.printDetail(stream, "Severity", GLUtil.getDebugSeverity(severity));
                 GLUtil.printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
-                Thread.dumpStack();
+                new Exception().printStackTrace(stream);
             });
             GLES32.glDebugMessageCallback(proc, MemoryUtil.NULL);
             if ((GLES20.glGetInteger(GLUtil.GL_CONTEXT_FLAGS) & GLES32.GL_CONTEXT_FLAG_DEBUG_BIT) == 0) {

@@ -1,0 +1,26 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+tasks {
+    jar {
+        manifest {
+            attributes('Automatic-Module-Name': 'gamelauncher.netty')
+        }
+    }
+}
+
+dependencies {
+    api parent.project('api')
+    api libs.netty.common
+    api libs.netty.buffer
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}

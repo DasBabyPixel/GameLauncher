@@ -2,7 +2,6 @@ package gamelauncher.engine.util;
 
 import gamelauncher.engine.plugin.Plugin;
 
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -11,61 +10,62 @@ import java.util.Objects;
  */
 public class Key {
 
-	private final Plugin plugin;
-	private final String key;
+    private final Plugin plugin;
+    private final String key;
 
-	/**
-	 * @param plugin the plugin
-	 * @param key    the key
-	 */
-	public Key(Plugin plugin, String key) {
-		this.plugin = plugin;
-		this.key = key;
-	}
+    /**
+     * @param plugin the plugin
+     * @param key    the key
+     */
+    public Key(Plugin plugin, String key) {
+        this.plugin = plugin;
+        this.key = key;
+    }
 
-	public Key(String key) {
-		this(null, key);
-	}
+    public Key(String key) {
+        this(null, key);
+    }
 
-	public Path toPath(Path root) {
-		Path path = root;
-		if (plugin != null)
-			path = path.resolve(plugin.name());
-		path = path.resolve(key);
-		return path;
-	}
+    @SuppressWarnings("NewApi")
+    public Path toPath(Path root) {
+        Path path = root;
+        if (plugin != null)
+            path = path.resolve(plugin.name());
+        path = path.resolve(key);
+        return path;
+    }
 
-	/**
-	 * @return the key
-	 */
-	public String key() {
-		return this.key;
-	}
+    /**
+     * @return the key
+     */
+    public String key() {
+        return this.key;
+    }
 
-	/**
-	 * @return the plugin
-	 */
-	public Plugin plugin() {
-		return this.plugin;
-	}
+    /**
+     * @return the plugin
+     */
+    public Plugin plugin() {
+        return this.plugin;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (this.getClass() != obj.getClass())
-			return false;
-		Key other = (Key) obj;
-		return Objects.equals(this.key, other.key) && Objects.equals(this.plugin, other.plugin);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (this.getClass() != obj.getClass())
+            return false;
+        Key other = (Key) obj;
+        return Objects.equals(this.key, other.key) && Objects.equals(this.plugin, other.plugin);
+    }
 
-	@Override
-	public String toString() {
-		if (plugin == null)
-			return this.key;
-		return String.format("%s:%s", this.plugin.name(), this.key);
-	}
+    @Override
+    public String toString() {
+        if (plugin == null)
+            return "gamelauncher:" + this.key;
+        return String.format("%s:%s", this.plugin.name(), this.key);
+    }
 
 }

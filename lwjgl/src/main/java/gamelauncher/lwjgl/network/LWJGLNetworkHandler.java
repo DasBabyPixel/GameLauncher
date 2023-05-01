@@ -1,29 +1,28 @@
 package gamelauncher.lwjgl.network;
 
-import gamelauncher.engine.network.packet.PacketBuffer;
+import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.PacketEncoder;
+import gamelauncher.netty.ByteBufMemory;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 class LWJGLNetworkHandler {
 
-	final ThreadLocal<PacketBuffer> buffer = ThreadLocal.withInitial(() -> new PacketBuffer(null));
+    // TODO: Check if this is a valid way for ByteBufs. Releasing etc.
+    final ThreadLocal<ByteBufMemory> memory = ThreadLocal.withInitial(() -> new ByteBufMemory(Unpooled.buffer()));
+    final PacketEncoder encoder;
 
-	final ThreadLocal<ByteBufMemory> memory = ThreadLocal.withInitial(() -> new ByteBufMemory(null));
+    public LWJGLNetworkHandler(PacketEncoder encoder) {
+        this.encoder = encoder;
+    }
 
-	final PacketEncoder encoder;
-
-	public LWJGLNetworkHandler(PacketEncoder encoder) {
-		this.encoder = encoder;
-	}
-
-	PacketBuffer prepareBuffer(ByteBuf buf) {
-		ByteBufMemory memory = this.memory.get();
-		memory.buf = buf;
-		PacketBuffer pbuf = buffer.get();
-		pbuf.setMemory(memory);
-		pbuf.writerIndex(memory.buf.writerIndex());
-		pbuf.readerIndex(memory.buf.readerIndex());
-		return pbuf;
-	}
+    DataBuffer prepareBuffer(ByteBuf buf) {
+        ByteBufMemory memory = this.memory.get();
+        memory.buf = buf;
+        DataBuffer pbuf = new DataBuffer(memory);
+        pbuf.writerIndex(memory.buf.writerIndex());
+        pbuf.readerIndex(memory.buf.readerIndex());
+        return pbuf;
+    }
 
 }

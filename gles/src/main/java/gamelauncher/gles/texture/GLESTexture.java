@@ -8,6 +8,7 @@
 package gamelauncher.gles.texture;
 
 import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
@@ -32,7 +33,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static gamelauncher.gles.gl.GLES20.*;
-import static gamelauncher.gles.gl.GLES30.*;
+import static gamelauncher.gles.gl.GLES30.GL_DRAW_FRAMEBUFFER;
+import static gamelauncher.gles.gl.GLES30.GL_READ_FRAMEBUFFER;
 
 public class GLESTexture extends AbstractGameResource implements Texture {
 
@@ -121,8 +123,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
             GLES30 cur = StateRegistry.currentGl();
 
             cur.glBindTexture(GL_TEXTURE_2D, nid);
-            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
             cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), width, height, 0, format.gl(), GL_UNSIGNED_BYTE, null);
             cur.glBindTexture(GL_TEXTURE_2D, 0);
@@ -168,15 +170,16 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         GLES20 cur = StateRegistry.currentGl();
         cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
         cur.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), cwidth, cheight, 0, format.gl(), GL_UNSIGNED_BYTE, null);
         cur.glBindTexture(GL_TEXTURE_2D, 0);
         lock.writeLock().unlock();
         profiler.end();
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override
+    public void cleanup0() throws GameException {
         Threads.waitFor(owner.submit(() -> {
             lock.writeLock().lock();
             int id = textureId.getAndSet(0);
@@ -187,7 +190,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         }));
     }
 
-    @Override public CompletableFuture<Void> allocate(int width, int height) {
+    @Override
+    public CompletableFuture<Void> allocate(int width, int height) {
         this.width.number(width);
         this.height.number(height);
         return owner.submit(() -> {
@@ -198,7 +202,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         });
     }
 
-    @Override public CompletableFuture<Void> resize(int width, int height) {
+    @Override
+    public CompletableFuture<Void> resize(int width, int height) {
         this.width.number(width);
         this.height.number(height);
         return owner.submit(() -> {
@@ -211,19 +216,23 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         });
     }
 
-    @Override public NumberValue width() {
+    @Override
+    public NumberValue width() {
         return width;
     }
 
-    @Override public NumberValue height() {
+    @Override
+    public NumberValue height() {
         return height;
     }
 
-    @Override public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
+    @Override
+    public CompletableFuture<Void> uploadAsync(ResourceStream stream) {
         return uploadSubAsync(stream, 0, 0);
     }
 
-    @Override public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
+    @Override
+    public CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
         service.submit(() -> {
             profiler.begin("render", "upload_texture_worker");
@@ -238,14 +247,14 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                 if (isRaw(data)) {
                     //noinspection ResultOfMethodCallIgnored
                     bin.skip(SIGNATURE_RAW.length);
-                    ByteBuffer tbbuf = memoryManagement.alloc(2 * Integer.BYTES);
-                    tbbuf.put(data, SIGNATURE_RAW.length, 2 * Integer.BYTES);
+                    ByteBuffer tbbuf = memoryManagement.alloc(2 * DataUtil.BYTES_INT);
+                    tbbuf.put(data, SIGNATURE_RAW.length, 2 * DataUtil.BYTES_INT);
                     tbbuf.flip();
                     width = tbbuf.getInt();
                     height = tbbuf.getInt();
                     memoryManagement.free(tbbuf);
                     buff = memoryManagement.allocDirect(width * height * format.get().size());
-                    buff.put(data, SIGNATURE_RAW.length + 2 * Integer.BYTES, data.length - SIGNATURE_RAW.length - 2 * Integer.BYTES);
+                    buff.put(data, SIGNATURE_RAW.length + 2 * DataUtil.BYTES_INT, data.length - SIGNATURE_RAW.length - 2 * DataUtil.BYTES_INT);
                     buff.flip();
                 } else {
                     PNGDecoder dec = new PNGDecoder(bin);
@@ -295,7 +304,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return fut;
     }
 
-    @SuppressWarnings("deprecation") @Override
+    @SuppressWarnings("deprecation")
+    @Override
     public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
         if (!(other instanceof GLESTexture)) {
             ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
@@ -326,12 +336,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
 
     private int createTexture() {
         return StateRegistry.currentGl().glGenTextures();
-    }
-
-    public void internalFormat(GLESTextureFormat format) {
-        lock.writeLock().lock();
-        this.format.set(format);
-        lock.writeLock().unlock();
     }
 
     public int getTextureId() {
@@ -430,7 +434,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
 //                    abuf.set(buf1);
 //                });
 //                Threads.waitFor(fut2);
-//                decoder.decode(abuf.get(), w * Integer.BYTES,
+//                decoder.decode(abuf.get(), w * DataUtil.BYTES_INT,
 //                        PNGDecoder.Format.RGBA);
 //                stream.cleanup();
 //                abuf.get().flip();
