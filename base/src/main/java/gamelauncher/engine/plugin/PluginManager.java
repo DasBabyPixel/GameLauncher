@@ -9,7 +9,7 @@ package gamelauncher.engine.plugin;
 
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.io.Files;
+import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 
@@ -46,8 +46,7 @@ public class PluginManager {
     /**
      * Loads all the plugins in a folder
      */
-    @Api
-    public void loadPlugins(Path folder) throws GameException {
+    @Api public void loadPlugins(Path folder) throws GameException {
         logger.debugf("Loading plugin files in folder %s", folder.toAbsolutePath().normalize().toString());
         DirectoryStream<Path> stream = Files.newDirectoryStream(folder);
         for (Path path : stream) {
@@ -67,8 +66,7 @@ public class PluginManager {
      *
      * @param plugins the plugins to load
      */
-    @Api
-    public void loadPlugins(Collection<Path> plugins) throws GameException {
+    @Api public void loadPlugins(Collection<Path> plugins) throws GameException {
         for (Path path : plugins) {
             loadPlugin(path);
         }
@@ -80,8 +78,7 @@ public class PluginManager {
      * @param plugin the plugin to load
      * @throws GameException when some error happens
      */
-    @Api
-    public void loadPlugin(Path plugin) throws GameException {
+    @Api public void loadPlugin(Path plugin) throws GameException {
         logger.debugf("Loading plugins in %s", plugin.toAbsolutePath().normalize().toString());
         try {
             PluginClassLoader pcl = new PluginClassLoader(Thread.currentThread().getContextClassLoader(), this, plugin.toUri().toURL());
@@ -149,8 +146,7 @@ public class PluginManager {
     /**
      * Used to load a plugin that alraedy has an instance.
      */
-    @Api
-    public void loadPlugin(Plugin plugin) {
+    @Api public void loadPlugin(Plugin plugin) {
         PluginInfo info = new PluginInfo(plugin.name());
         try {
             info.lock.lock();
@@ -172,8 +168,7 @@ public class PluginManager {
      *
      * @throws GameException an exception
      */
-    @Api
-    public void unloadPlugins() throws GameException {
+    @Api public void unloadPlugins() throws GameException {
         for (Plugin plugin : this.infos.values().stream().map(i -> i.plugin.get()).collect(Collectors.toList())) {
             unloadPlugin(plugin);
         }
@@ -184,8 +179,7 @@ public class PluginManager {
      *
      * @param plugin the plugin to unload
      */
-    @Api
-    public void unloadPlugin(Plugin plugin) throws GameException {
+    @Api public void unloadPlugin(Plugin plugin) throws GameException {
         PluginInfo info = this.infos.get(plugin.name());
         if (info == null) throw new IllegalArgumentException("Plugin not found!");
         PluginClassLoader pcl = info.loader.get();

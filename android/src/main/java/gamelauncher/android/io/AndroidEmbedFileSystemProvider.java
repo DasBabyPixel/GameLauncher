@@ -8,8 +8,8 @@
 package gamelauncher.android.io;
 
 import android.content.res.AssetManager;
-import gamelauncher.engine.io.embed.DataSupplier;
-import gamelauncher.engine.io.embed.EmbedFileSystemProvider;
+import gamelauncher.engine.data.embed.DataSupplier;
+import gamelauncher.engine.data.embed.EmbedFileSystemProvider;
 
 public class AndroidEmbedFileSystemProvider extends EmbedFileSystemProvider {
     final AssetManager assetManager;

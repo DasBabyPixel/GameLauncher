@@ -3,8 +3,10 @@ package gamelauncher.engine.util.logging;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.concurrent.AbstractQueueSubmissionThread;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.i18n.Message;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 import java8.util.concurrent.CompletableFuture;
 
@@ -15,7 +17,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,8 +79,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         }
     }
 
-    private void log(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread,
-                     Logger logger, Formatted f) {
+    private void log(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger, Formatted f) {
         Object[] data = new Object[f.getObjects().length];
         LogColor resetTo = level.textColor();
         LogColor[] logColors = new LogColor[data.length];
@@ -106,8 +106,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             } else if (data[i] instanceof Collection<?>) {
                 Collection<?> c = (Collection<?>) data[i];
                 StringBuilder sb = new StringBuilder();
-                sb.append(c.getClass().getName()).append("<?> (Size: ").append(c.size())
-                        .append(")");
+                sb.append(c.getClass().getName()).append("<?> (Size: ").append(c.size()).append(")");
                 for (Object o : c) {
                     sb.append("\n - ").append(o);
                 }
@@ -115,8 +114,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             } else if (data[i].getClass().isArray()) {
                 Object[] a = (Object[]) data[i];
                 StringBuilder sb = new StringBuilder();
-                sb.append(a.getClass().getComponentType().getName()).append('[').append(a.length)
-                        .append(']');
+                sb.append(a.getClass().getComponentType().getName()).append('[').append(a.length).append(']');
                 for (int j = 0; j < a.length; j++) {
                     sb.append("\n - ").append(j).append(": ").append(a[j]);
                 }
@@ -131,6 +129,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                 String r = String.format("%%lcr%n");
                 logColorReplacements[i] = r;
                 data[i] = r;
+            } else if (data[i] instanceof Message) {
+                data[i] = launcher().languageManager().selectedLanguage().translate((Message) data[i]);
+            } else if (data[i] instanceof Key) {
+                data[i] = launcher().languageManager().selectedLanguage().translate((Key) data[i]);
             }
         }
         String print = String.format(f.getFormat(), data);
@@ -150,8 +152,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                     continue w1;
                 }
                 if (lines[i].contains(logColorReplacements[lci])) {
-                    lines[i] = lines[i].replace(logColorReplacements[lci],
-                            this.ansi(logColors[lci]));
+                    lines[i] = lines[i].replace(logColorReplacements[lci], this.ansi(logColors[lci]));
                     lastColor = logColors[lci];
                     lci++;
                     continue;
@@ -168,14 +169,18 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         if (message == null) {
             message = "null";
         }
-        if (message instanceof Formatted) {
+        if (message instanceof LogMessage) {
+            LogMessage m = (LogMessage) message;
+            String format = launcher().languageManager().selectedLanguage().translate(m.key(), m.args());
+            Formatted f = new Formatted(format, m.args());
+            log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
+        } else if (message instanceof Formatted) {
             Formatted f = (Formatted) message;
             this.log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
         } else {
 //			this.logString(LogLevel.ERROR, entry.time, entry.caller, entry.thread, entry.logger,
 //					"Unsupported logging method. Please upgrade");
-            this.logString(entry.level, entry.time, entry.caller, entry.thread, entry.logger,
-                    Objects.toString(message));
+            this.logString(entry.level, entry.time, entry.caller, entry.thread, entry.logger, message.toString());
         }
     }
 
@@ -203,20 +208,18 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         return ansi(C100) + "[" + ansi(color) + "%s" + ansi(C100) + "]" + ansi.reset() + " ";
     }
 
-    private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller,
-                           Thread thread, Logger logger, String string) {
+    private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger, String string) {
         this.setSystemLevel(level);
         for (String object : this.lines(string)) {
             this.printTime(time);
             if (caller == null) {
-                this.printLoggerName(logger);
+                if (logger != null) this.printLoggerName(logger);
                 this.printThread(thread);
                 this.printLevel(level);
             } else {
                 this.printLevel(level);
                 this.printThread(thread);
-                this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(),
-                        caller.getLineNumber());
+                this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
             }
             this.out.printf(ansi.formatln(), object);
         }
@@ -244,13 +247,11 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             this(logger, thread, object, level, null);
         }
 
-        public LogEntry(Logger logger, Thread thread, T object, LogLevel level,
-                        StackTraceElement caller) {
+        public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller) {
             this(logger, thread, object, level, caller, LocalDateTime.now());
         }
 
-        public LogEntry(Logger logger, Thread thread, T object, LogLevel level,
-                        StackTraceElement caller, TemporalAccessor time) {
+        public LogEntry(Logger logger, Thread thread, T object, LogLevel level, StackTraceElement caller, TemporalAccessor time) {
             this.logger = logger;
             this.thread = thread;
             this.object = object;
@@ -260,13 +261,11 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         }
 
         public <V> LogEntry<V> withObject(V object) {
-            return new LogEntry<>(this.logger, this.thread, object, this.level, this.caller,
-                    this.time);
+            return new LogEntry<>(this.logger, this.thread, object, this.level, this.caller, this.time);
         }
 
         public LogEntry<T> withLevel(LogLevel level) {
-            return new LogEntry<>(this.logger, this.thread, this.object, level, this.caller,
-                    this.time);
+            return new LogEntry<>(this.logger, this.thread, this.object, level, this.caller, this.time);
         }
 
     }

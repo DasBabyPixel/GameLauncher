@@ -8,8 +8,8 @@ import static gamelauncher.gles.gl.GLES20.GL_RENDERBUFFER;
 public class Renderbuffer extends AbstractGameResource {
 
     private final int id;
-    private int width, height;
     private final int format;
+    private int width, height;
 
     public Renderbuffer(int format, int width, int height) {
         this.format = format;
@@ -28,8 +28,7 @@ public class Renderbuffer extends AbstractGameResource {
         unbind();
     }
 
-    @Override
-    public void cleanup0() {
+    @Override public void cleanup0() {
         StateRegistry.currentGl().glDeleteRenderbuffers(1, new int[]{id}, 0);
     }
 

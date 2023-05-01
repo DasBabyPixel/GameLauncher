@@ -6,6 +6,7 @@ build
 .idea/**/modules
 .idea/.name
 .idea/GameLauncher.iml
+.idea/modules.xml
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -26,4 +27,7 @@ build
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
+
 /run/
+
+local.properties

@@ -1,27 +1,17 @@
 package gamelauncher.engine.util.i18n;
 
-import gamelauncher.engine.plugin.Plugin;
+import gamelauncher.engine.util.Key;
 
 public class SimpleMessage implements Message {
 
-	private final Plugin plugin;
-	private final String key;
+    private final Key key;
 
-	public SimpleMessage(Plugin plugin, String key) {
-		this.plugin = plugin;
-		this.key = key;
-	}
+    public SimpleMessage(Key key) {
+        this.key = key;
+    }
 
-	public String key() {
-		return key;
-	}
-
-	public Plugin plugin() {
-		return plugin;
-	}
-
-	@Override
-	public String prefixModifier() {
-		return plugin.name() + "_";
-	}
+    @Override
+    public Key key() {
+        return key;
+    }
 }

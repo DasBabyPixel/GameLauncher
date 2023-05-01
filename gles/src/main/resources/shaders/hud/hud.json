@@ -1,17 +1,24 @@
 {
-  "vertexShader": "vertex.glsl",
-  "fragmentShader": "fragment.glsl",
+  "version": "default",
+  "parent": null,
+  "vertexShader": "vertex",
+  "fragmentShader": "fragment",
   "uniforms": {
     "modelMatrix": "mat4",
     "projectionMatrix": "mat4",
     "texture_sampler": "sampler2D",
     "color": "vec4",
     "textureAddColor": "vec4",
-    "hasTexture": "int"
+    "hasTexture": "int",
+    "id": "vec4"
   },
   "structs": [
   ],
-  "Custom versions would belong here, the default version is without suffix and should be compatible with everything": "",
+  "Custom versions belong here, the default version is without suffix and should be compatible with GLES 2.0. See https://en.wikipedia.org/wiki/OpenGL_Shading_Language#Versions": "",
   "versions": [
+    {
+      "version": "3.0",
+      "parent": "default"
+    }
   ]
 }

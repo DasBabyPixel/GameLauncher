@@ -96,7 +96,6 @@ public class Threads extends AbstractGameResource {
     public static <T> T waitFor(CompletableFuture<T> future) throws GameException {
         if (future.isDone()) return future.getNow(null);
         Thread thread = Thread.currentThread();
-        final ExecutorThread et = thread instanceof ExecutorThread ? (ExecutorThread) thread : null;
         AtomicReference<T> ref = new AtomicReference<>();
         AtomicReference<Throwable> ex = new AtomicReference<>(null);
         future.exceptionally(th -> {

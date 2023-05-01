@@ -1,4 +1,4 @@
-package gamelauncher.engine.io.embed;
+package gamelauncher.engine.data.embed;
 
 import java.io.IOException;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -18,19 +18,43 @@ public class EmbedFileAttributeView implements BasicFileAttributeView {
         this.isZipView = isZipView;
     }
 
-    @Override
-    public String name() {
+    @SuppressWarnings("unchecked")
+    static <V extends FileAttributeView> V get(final EmbedPath zipPath, final Class<V> clazz) {
+        if (clazz == null) {
+            throw new NullPointerException();
+        }
+        if (clazz == BasicFileAttributeView.class) {
+            return (V) new EmbedFileAttributeView(zipPath, false);
+        }
+        if (clazz == EmbedFileAttributeView.class) {
+            return (V) new EmbedFileAttributeView(zipPath, true);
+        }
+        return null;
+    }
+
+    static EmbedFileAttributeView get(final EmbedPath zipPath, final String s) {
+        if (s == null) {
+            throw new NullPointerException();
+        }
+        if (s.equals("basic")) {
+            return new EmbedFileAttributeView(zipPath, false);
+        }
+        if (s.equals("embed")) {
+            return new EmbedFileAttributeView(zipPath, true);
+        }
+        return null;
+    }
+
+    @Override public String name() {
         return this.isZipView ? "embed" : "basic";
     }
 
-    @Override
-    public EmbedFileAttributes readAttributes() throws IOException {
+    @Override public EmbedFileAttributes readAttributes() throws IOException {
         return this.path.getFileSystem().getAttributes(path);
     }
 
     @Override
-    public void setTimes(final FileTime fileTime, final FileTime fileTime2, final FileTime fileTime3)
-            throws IOException {
+    public void setTimes(final FileTime fileTime, final FileTime fileTime2, final FileTime fileTime3) throws IOException {
         throw new UnsupportedOperationException();
 //		this.path.setTimes(fileTime, fileTime2, fileTime3);
     }
@@ -105,43 +129,8 @@ public class EmbedFileAttributeView implements BasicFileAttributeView {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    static <V extends FileAttributeView> V get(final EmbedPath zipPath, final Class<V> clazz) {
-        if (clazz == null) {
-            throw new NullPointerException();
-        }
-        if (clazz == BasicFileAttributeView.class) {
-            return (V) new EmbedFileAttributeView(zipPath, false);
-        }
-        if (clazz == EmbedFileAttributeView.class) {
-            return (V) new EmbedFileAttributeView(zipPath, true);
-        }
-        return null;
-    }
-
-    static EmbedFileAttributeView get(final EmbedPath zipPath, final String s) {
-        if (s == null) {
-            throw new NullPointerException();
-        }
-        if (s.equals("basic")) {
-            return new EmbedFileAttributeView(zipPath, false);
-        }
-        if (s.equals("embed")) {
-            return new EmbedFileAttributeView(zipPath, true);
-        }
-        return null;
-    }
-
     private enum AttrID {
-        size,
-        creationTime,
-        lastAccessTime,
-        lastModifiedTime,
-        isDirectory,
-        isRegularFile,
-        isSymbolicLink,
-        isOther,
-        fileKey,
+        size, creationTime, lastAccessTime, lastModifiedTime, isDirectory, isRegularFile, isSymbolicLink, isOther, fileKey,
     }
 
 }

@@ -34,6 +34,7 @@ tasks {
 dependencies {
     api parent.project('api')
     api parent.project('gles')
+    api parent.project('netty')
     api libs.netty.buffer
     api libs.netty.codec
     api libs.netty.common

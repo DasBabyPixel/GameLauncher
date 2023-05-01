@@ -8,22 +8,19 @@ import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.texture.GLESTexture;
+import org.joml.Vector4f;
 
+import java.awt.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 public class Texture2DModel extends AbstractGameResource implements Model {
-
+    public static boolean fake = true;
     private final int vao;
-
     private final int posbuffer;
-
     private final int texbuffer;
-
     private final int idxbuffer;
-
     private final int vertexCount;
-
     private final GLESTexture texture;
 
     public Texture2DModel(GLESTexture texture) {
@@ -82,10 +79,16 @@ public class Texture2DModel extends AbstractGameResource implements Model {
         GLES30 c = StateRegistry.currentGl();
         program.uapplyLighting.set(0);
         program.uhasTexture.set(1);
+        if (fake) {
+//            program.uhasTexture.set(0);
+            Color color = new Color(program.getLauncher().modelIdRegistry().id(this), true);
+            program.uid.set(new Vector4f(color.getRed() / 255F, color.getBlue() / 255F, color.getGreen() / 255F, color.getAlpha() / 255F));
+        } else {
+            program.uid.set(new Vector4f(0, 0, 0, 0));
+        }
         c.glActiveTexture(GLES20.GL_TEXTURE0);
         c.glBindTexture(GLES20.GL_TEXTURE_2D, this.texture.getTextureId());
         c.glBindVertexArray(this.vao);
-
         program.uploadUniforms();
         c.glEnableVertexAttribArray(0);
         c.glEnableVertexAttribArray(1);

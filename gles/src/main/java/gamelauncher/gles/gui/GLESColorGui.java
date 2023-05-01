@@ -7,6 +7,9 @@
 
 package gamelauncher.gles.gui;
 
+import de.dasbabypixel.api.property.AbstractNumberHolder;
+import de.dasbabypixel.api.property.ChangeListener;
+import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ColorGui;
@@ -15,7 +18,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.mesh.Mesh;
-import gamelauncher.gles.mesh.PlaneMesh;
+import gamelauncher.gles.mesh.RectMesh;
 import gamelauncher.gles.model.MeshModel;
 import org.joml.Vector4f;
 
@@ -35,24 +38,30 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         this.color.w.addListener((NumberValue v) -> this.redraw());
     }
 
-    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override
+    protected void doCleanup(Framebuffer framebuffer) throws GameException {
         this.launcher().contextProvider().freeContext(this.context, ContextProvider.ContextType.HUD);
         this.model.cleanup();
     }
 
-    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
+    @Override
+    protected void doInit(Framebuffer framebuffer) throws GameException {
         this.context = this.launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
 
-        Mesh mesh = new PlaneMesh(gles);
+        Mesh mesh = new RectMesh(gles);
         Mesh.Material mat = mesh.material();
         mat.ambientColour = mat.diffuseColour = mat.specularColour = new Vector4f(1, 0, 0, 1);
         MeshModel model = new MeshModel(mesh);
         GameItem item = new GameItem(model);
-        item.position().x.bind(this.xProperty().add(this.widthProperty().divide(2D)));
-        item.position().y.bind(this.yProperty().add(this.heightProperty().divide(2D)));
+//        item.position().x.bind(this.xProperty().add(this.widthProperty().divide(2D)));
+//        item.position().y.bind(this.yProperty().add(this.heightProperty().divide(2D)));
+        item.position().x.bind(xProperty());
+        item.position().y.bind(yProperty());
         item.scale().x.bind(this.widthProperty());
         item.scale().y.bind(this.heightProperty());
         this.model = item.createModel();
+        item.position().x.addListener((ChangeListener<AbstractNumberHolder>) (value, oldNumber, newNumber) -> System.out.println(newNumber));
+        item.position().x.addListener((InvalidationListener) property -> System.out.println("invalidated"));
 
         item.color().x.bind(this.color.x);
         item.color().y.bind(this.color.y);
@@ -68,7 +77,8 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         return super.doRender(framebuffer, mouseX, mouseY, partialTick);
     }
 
-    @Override public PropertyVector4f color() {
+    @Override
+    public PropertyVector4f color() {
         return this.color;
     }
 

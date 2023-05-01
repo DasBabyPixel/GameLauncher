@@ -9,8 +9,12 @@ import gamelauncher.gles.texture.GLESTexture;
 import java8.util.concurrent.CompletableFuture;
 
 import static gamelauncher.gles.gl.GLES20.*;
-import static gamelauncher.gles.gl.GLES30.*;
+import static gamelauncher.gles.gl.GLES30.GL_DEPTH24_STENCIL8;
+import static gamelauncher.gles.gl.GLES30.GL_DEPTH_STENCIL_ATTACHMENT;
 
+/**
+ * An extension of the {@link GLESFramebuffer} for the {@link gamelauncher.gles.GLESGameRenderer}
+ */
 public class BasicFramebuffer extends GLESFramebuffer {
 
     private final GLESTexture colorTexture;

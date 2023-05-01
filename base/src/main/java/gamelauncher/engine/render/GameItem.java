@@ -1,5 +1,6 @@
 package gamelauncher.engine.render;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.render.model.ColorAddModel;
 import gamelauncher.engine.render.model.ColorMultiplierModel;
 import gamelauncher.engine.render.model.Model;
@@ -91,7 +92,8 @@ public class GameItem extends AbstractGameResource {
         return model;
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override
+    public void cleanup0() throws GameException {
         model.cleanup();
     }
 
@@ -119,28 +121,35 @@ public class GameItem extends AbstractGameResource {
          *
          */
         public final GameItem gameItem;
+        private final Vector4f addColor = new Vector4f();
+        private final Vector4f color = new Vector4f();
 
         private GameItemModel(GameItem gameItem) {
             this.gameItem = gameItem;
         }
 
-        @Override public void cleanup0() throws GameException {
+        @Override
+        public void cleanup0() throws GameException {
             gameItem.cleanup();
         }
 
-        @Override public void render(ShaderProgram program) throws GameException {
+        @Override
+        public void render(ShaderProgram program) throws GameException {
             gameItem.model.render(program);
         }
 
-        @Override public Vector4f getAddColor() {
-            return gameItem.addColor().toVector4f();
+        @Override
+        public Vector4f getAddColor() {
+            return gameItem.addColor().toVector4f(addColor);
         }
 
-        @Override public Vector4f getColor() {
-            return gameItem.color().toVector4f();
+        @Override
+        public Vector4f getColor() {
+            return gameItem.color().toVector4f(color);
         }
 
-        public GameItem getGameItem() {
+        @Api
+        public GameItem gameItem() {
             return gameItem;
         }
 

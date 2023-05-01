@@ -10,6 +10,7 @@ package gamelauncher.lwjgl.render.font.bitmap;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberInvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
+import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.font.Font;
@@ -22,6 +23,7 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
 import gamelauncher.engine.util.text.serializer.PlainTextComponentSerializer;
 import gamelauncher.gles.font.bitmap.*;
@@ -45,19 +47,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
-
+    private static final Logger logger = Logger.logger();
     private final GLFWFrame frame;
     private final DynamicSizeTextureAtlas textureAtlas;
 
     public LWJGLGlyphProvider(LWJGLGameLauncher launcher) throws GameException {
         this.frame = launcher.frame().newFrame();
-        this.textureAtlas = new DynamicSizeTextureAtlas(launcher.gles(), launcher, this.frame.newFrame().renderThread());
+        this.textureAtlas = new DynamicSizeTextureAtlas(launcher.gles(), launcher, this.frame.renderThread());
     }
 
-    @Override public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
+    @Override
+    public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
         Key fkey = text.style().font();
         if (fkey == null) fkey = new Key("fonts/calibri.ttf");
-        Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().embedFileSystem().getPath("a").getParent())));
+        Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().embedFileSystem().getPath("assets"))));
         STBTTFontinfo finfo = STBTTFontinfo.malloc();
         if (!STBTruetype.stbtt_InitFont(finfo, font.data())) {
             font.cleanup();
@@ -174,7 +177,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             STBTruetype.stbtt_MakeCodepointBitmap(finfo, output, gdata.width, gdata.height, gdata.width + 2, scale, scale, ch);
 
             // Setup for usage by LWJGLTexture
-            ByteBuffer buf = memoryManagement.calloc(Integer.BYTES * output.capacity() + Integer.BYTES * 2 + GLESTexture.SIGNATURE_RAW.length);
+            ByteBuffer buf = memoryManagement.calloc(DataUtil.BYTES_INT * output.capacity() + DataUtil.BYTES_INT * 2 + GLESTexture.SIGNATURE_RAW.length);
             buf.put(GLESTexture.SIGNATURE_RAW);
             buf.putInt(gdata.width + 2);
             buf.putInt(gdata.height + 2);
@@ -197,7 +200,10 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             GlyphEntry e = new GlyphEntry(gdata, gindex, pixelHeight, key, buf);
 
             DynamicSizeTextureAtlas.AddFuture af = this.textureAtlas.addGlyph(id, e);
-            af.glFuture().thenRun(() -> memoryManagement.free(e.buffer));
+            af.glFuture().thenRun(() -> memoryManagement.free(e.buffer)).exceptionally(ex -> {
+                logger.error(ex);
+                return null;
+            });
             if (!af.suc()) {
                 throw new GameException("Could not add glyph to texture atlas");
             }
@@ -209,7 +215,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 //        });
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override
+    public void cleanup0() throws GameException {
         this.textureAtlas.cleanup();
         this.frame.cleanup();
     }
@@ -242,7 +249,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             tb.addListener(invalidationListener);
         }
 
-        @Override public void render(ShaderProgram program) throws GameException {
+        @Override
+        public void render(ShaderProgram program) throws GameException {
             if (invalid.booleanValue()) {
                 invalid.value(false);
                 if (texture2DModel != null) {
@@ -253,7 +261,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             texture2DModel.render(program);
         }
 
-        @Override protected void cleanup0() throws GameException {
+        @Override
+        protected void cleanup0() throws GameException {
             Threads.waitFor(releaseGlyphKey(e.entry.key));
             if (texture2DModel != null) texture2DModel.cleanup();
         }

@@ -48,8 +48,7 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
         model = item.createModel();
     }
 
-    @Override
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         context.update(camera);
         context.drawModel(model);
         context.program().clearUniforms();

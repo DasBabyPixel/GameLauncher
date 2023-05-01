@@ -1,18 +1,12 @@
 package gamelauncher.engine.util.i18n;
 
+import gamelauncher.engine.util.Key;
+
 public interface Message {
 
-	/**
-	 * @return the key of this message to resolve the translation
-	 */
-	String key();
-
-	/**
-	 * @return the prefix modifier of this message. This will be put before the {@link #key()} to
-	 * resolve the final key
-	 */
-	default String prefixModifier() {
-		return "";
-	}
+    /**
+     * @return the key of this message to resolve the translation
+     */
+    Key key();
 
 }

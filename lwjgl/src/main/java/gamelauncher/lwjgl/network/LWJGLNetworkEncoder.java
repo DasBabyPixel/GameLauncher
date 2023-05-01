@@ -1,7 +1,8 @@
 package gamelauncher.lwjgl.network;
 
+import gamelauncher.engine.data.DataBuffer;
+import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.network.packet.Packet;
-import gamelauncher.engine.network.packet.PacketBuffer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -11,23 +12,20 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class LWJGLNetworkEncoder extends MessageToByteEncoder<Packet> {
 
-	private final LWJGLNetworkHandler handler;
+    private final LWJGLNetworkHandler handler;
 
-	/**
-	 * @param handler
-	 */
-	public LWJGLNetworkEncoder(LWJGLNetworkHandler handler) {
-		this.handler = handler;
-	}
+    public LWJGLNetworkEncoder(LWJGLNetworkHandler handler) {
+        this.handler = handler;
+    }
 
-	@Override
-	protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) throws Exception {
-		PacketBuffer buf = handler.prepareBuffer(out);
-		int index = buf.increaseWriterIndex(Integer.BYTES);
-		int packetIndex = buf.writerIndex();
-		handler.encoder.write(buf, msg);
-		int packetSize = buf.writerIndex() - packetIndex;
-		buf.getMemory().setInt(index, packetSize);
-	}
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) throws Exception {
+        DataBuffer buf = handler.prepareBuffer(out);
+        int index = buf.increaseWriterIndex(DataUtil.BYTES_INT);
+        int packetIndex = buf.writerIndex();
+        handler.encoder.write(buf, msg);
+        int packetSize = buf.writerIndex() - packetIndex;
+        buf.memory().setInt(index, packetSize);
+    }
 
 }

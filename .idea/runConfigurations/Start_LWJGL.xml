@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application">
+  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" singleton="false">
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="gamelauncher.lwjgl.main" />
     <selectedOptions>
@@ -13,6 +13,8 @@
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
-    <method v="2" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
   </configuration>
 </component>

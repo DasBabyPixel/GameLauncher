@@ -1,9 +1,10 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
+    <option name="RIGHT_MARGIN" value="1000" />
     <option name="ENABLE_SECOND_REFORMAT" value="true" />
     <JavaCodeStyleSettings>
       <option name="DO_NOT_WRAP_AFTER_SINGLE_ANNOTATION" value="true" />
-      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="1" />
+      <option name="DO_NOT_WRAP_AFTER_SINGLE_ANNOTATION_IN_PARAMETER" value="true" />
     </JavaCodeStyleSettings>
     <JetCodeStyleSettings>
       <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
@@ -14,7 +15,9 @@
       <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
       <option name="KEEP_BLANK_LINES_BETWEEN_PACKAGE_DECLARATION_AND_HEADER" value="1" />
       <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="1" />
-      <option name="METHOD_ANNOTATION_WRAP" value="5" />
+      <option name="ALIGN_MULTILINE_ASSIGNMENT" value="true" />
+      <option name="PLACE_ASSIGNMENT_SIGN_ON_NEXT_LINE" value="true" />
+      <option name="METHOD_ANNOTATION_WRAP" value="1" />
     </codeStyleSettings>
     <codeStyleSettings language="kotlin">
       <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />

@@ -19,19 +19,23 @@ import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.lwjgl.render.LWJGLGLES;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengles.GLES;
+import org.lwjgl.system.Callback;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GLFWGLContext extends AbstractGameResource implements GLContext {
 
     private static final Logger logger = Logger.logger();
-
+    private static final AtomicInteger newId = new AtomicInteger(0);
     private static final LogLevel level = new LogLevel("GL", 10, new LogColor(0, 255, 255));
     final Collection<GLFWGLContext> sharedContexts;
+    private final int id;
     volatile long glfwId;
     GLFWFrame parent;
-    private ExecutorThread owner = null;
-    private boolean owned = false;
+    ExecutorThread owner = null;
+    private Callback errorCallback = null;
+    private boolean owned = true;
     private GLFWFrame frame;
     private GLES32 gl;
 
@@ -39,10 +43,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         super();
         this.sharedContexts = sharedContexts;
         this.sharedContexts.add(this);
-    }
-
-    public long getGLFWId() {
-        return this.glfwId;
+        id = newId.incrementAndGet();
     }
 
     GLFWFrame.Creator create(GLFWFrame frame, GLFWGLContext shared) {
@@ -72,7 +73,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
     }
 
     synchronized void beginCreationShared() throws GameException {
-        if (this.owned) {
+        if (owned) {
             Threads.waitFor(this.owner.submit(() -> {
                 StateRegistry.currentContext(null);
                 GLFW.glfwMakeContextCurrent(0L);
@@ -82,7 +83,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
     }
 
     synchronized void endCreationShared() throws GameException {
-        if (this.owned) {
+        if (owned) {
             Threads.waitFor(this.owner.submit(() -> {
                 StateRegistry.currentContext(this);
                 GLFW.glfwMakeContextCurrent(glfwId);
@@ -91,6 +92,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
     }
 
+    @Override
     public synchronized void destroyCurrent() {
         if (this.owned) {
             StateRegistry.currentContext(null);
@@ -98,6 +100,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             GLES.setCapabilities(null);
             this.owned = false;
             this.owner = null;
+            errorCallback.free();
         }
     }
 
@@ -108,21 +111,25 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
 
     @Override
     public GLFWGLContext createSharedContext() throws GameException {
-        GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
-        ctx.parent = frame;
-        frame.contexts.add(ctx);
-        for (GLFWGLContext c : ctx.sharedContexts) {
-            c.beginCreationShared();
+        synchronized (sharedContexts) {
+            GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
+            ctx.parent = frame;
+            frame.contexts.add(ctx);
+            for (GLFWGLContext c : ctx.sharedContexts) {
+                if (c == ctx) continue;
+                c.beginCreationShared();
+            }
+            Threads.waitFor(frame.launcher().getGLFWThread().submit(() -> {
+                GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
+                ctx.create(f2, this);
+                f2.renderThread.start();
+            }));
+            for (GLFWGLContext c : ctx.sharedContexts) {
+                if (c == ctx) continue;
+                c.endCreationShared();
+            }
+            return ctx;
         }
-        Threads.waitFor(frame.launcher().getGLFWThread().submit(() -> {
-            GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
-            ctx.create(f2, this);
-            f2.renderThread.start();
-        }));
-        for (GLFWGLContext c : ctx.sharedContexts) {
-            c.endCreationShared();
-        }
-        return ctx;
     }
 
     @Override
@@ -140,7 +147,6 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         return gl;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public GLES32 gl32() {
         return gl;
@@ -148,15 +154,23 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
 
     @Override
     public synchronized void makeCurrent() {
-        if (!this.owned) {
+        makeCurrent(false);
+    }
+
+    void makeCurrent(boolean force) {
+        if (!this.owned || force) {
             this.owned = true;
             this.owner = (ExecutorThread) Thread.currentThread();
             StateRegistry.currentContext(this);
             GLFW.glfwMakeContextCurrent(glfwId);
             GLES.createCapabilities();
-            //noinspection deprecation
             gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
-            GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level));
+            errorCallback = GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level, Logger.LoggerFlags.DONT_PRINT_SOURCE));
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("GLFWGLContext{id=%s}", id);
     }
 }

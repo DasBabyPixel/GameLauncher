@@ -1,7 +1,7 @@
 package gamelauncher.gles.modelloader;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.io.Files;
+import gamelauncher.engine.data.Files;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.resource.Resource;
@@ -52,14 +52,11 @@ public class GLESModelLoader implements ModelLoader {
         }
     }
 
-    @Override
-    public Model loadModel(Resource resource) throws GameException {
+    @Override public Model loadModel(Resource resource) throws GameException {
         ResourceStream stream = resource.newResourceStream();
         String hash = hash(stream.readAllBytes());
         stream.cleanup();
-        Path file = modelDirectory.resolve(
-                        stream.getPath().getParent().toAbsolutePath().toString().substring(1))
-                .resolve(stream.getPath().getFileName() + ".bin");
+        Path file = modelDirectory.resolve(stream.getPath().getParent().toAbsolutePath().toString().substring(1)).resolve(stream.getPath().getFileName() + ".bin");
         boolean hasSavedFile = false;
         if (Files.exists(file)) {
             stream = new ResourceStream(null, false, Files.newInputStream(file), null);
@@ -83,19 +80,16 @@ public class GLESModelLoader implements ModelLoader {
         ModelSubLoader loader = loaders.get(type);
         stream = resource.newResourceStream();
         byte[] bytes = loader.convertModel(stream);
-        if (!stream.cleanedUp())
-            stream.cleanup();
+        if (!stream.cleanedUp()) stream.cleanup();
         if (!Files.exists(file)) {
             Files.createFile(file);
         }
-        stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes),
-                Files.newOutputStream(file));
+        stream = new ResourceStream(file, false, new ByteArrayInputStream(bytes), Files.newOutputStream(file));
         saveConvertedModel(hash, bytes, stream);
         return loadConvertedModel(stream);
     }
 
-    private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream)
-            throws GameException {
+    private void saveConvertedModel(String hash, byte[] bytes, ResourceStream stream) throws GameException {
         stream.writeInt(this.version.length());
         stream.writeUTF8(this.version);
         stream.writeInt(hash.length());
@@ -119,8 +113,7 @@ public class GLESModelLoader implements ModelLoader {
             for (MaterialList.Material mat : materialList.materials) {
                 byte[] tex = mat.diffuseColor.texture;
                 if (tex != null) {
-                    ResourceStream st =
-                            new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
+                    ResourceStream st = new ResourceStream(null, false, new ByteArrayInputStream(tex), null);
                     GLESTexture lt = gles.textureManager().createTexture();
                     lt.uploadAsync(st).thenRun(launcher.guiManager()::redrawAll);
                     lm.texture = lt;

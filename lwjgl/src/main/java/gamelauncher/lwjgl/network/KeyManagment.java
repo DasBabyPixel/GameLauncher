@@ -1,6 +1,6 @@
 package gamelauncher.lwjgl.network;
 
-import gamelauncher.engine.io.Files;
+import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -21,72 +21,71 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 class KeyManagment {
 
-	private final ReentrantLock lock = new ReentrantLock(true);
+    private final ReentrantLock lock = new ReentrantLock(true);
 
-	private final LWJGLGameLauncher launcher;
+    private final LWJGLGameLauncher launcher;
 
-	PrivateKey privateKey;
+    PrivateKey privateKey;
 
-	X509Certificate certificate;
+    X509Certificate certificate;
 
-	public KeyManagment(LWJGLGameLauncher launcher) {
-		this.launcher = launcher;
-	}
+    public KeyManagment(LWJGLGameLauncher launcher) {
+        this.launcher = launcher;
+    }
 
-	public void load() {
-		try {
-			lock.lock();
-			try {
-				loadFromFile();
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-			if (this.privateKey == null || this.certificate == null) {
-				generateNew();
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
+    public void load() {
+        try {
+            lock.lock();
+            try {
+                loadFromFile();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            if (this.privateKey == null || this.certificate == null) {
+                generateNew();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	private void generateNew() {
-		try {
-			SelfSignedCertificate ssc = new SelfSignedCertificate();
-			privateKey = ssc.key();
-			certificate = ssc.cert();
-			X509EncodedKeySpec x509 = new X509EncodedKeySpec(certificate.getEncoded());
-			PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+    private void generateNew() {
+        try {
+            SelfSignedCertificate ssc = new SelfSignedCertificate();
+            privateKey = ssc.key();
+            certificate = ssc.cert();
+            X509EncodedKeySpec x509 = new X509EncodedKeySpec(certificate.getEncoded());
+            PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(privateKey.getEncoded());
 
-			Path directory = launcher.dataDirectory().resolve("ssl");
-			Files.createDirectories(directory);
-			Path pkey = directory.resolve("key");
-			Path pcert = directory.resolve("cert");
+            Path directory = launcher.dataDirectory().resolve("ssl");
+            Files.createDirectories(directory);
+            Path pkey = directory.resolve("key");
+            Path pcert = directory.resolve("cert");
 
-			Files.write(pkey, pkcs8.getEncoded());
-			Files.write(pcert, x509.getEncoded());
+            Files.write(pkey, pkcs8.getEncoded());
+            Files.write(pcert, x509.getEncoded());
 
-		} catch (CertificateException | GameException ex) {
-			ex.printStackTrace();
-		}
-	}
+        } catch (CertificateException | GameException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-	private void loadFromFile() throws Exception {
-		Path directory = launcher.dataDirectory().resolve("ssl");
-		Files.createDirectories(directory);
-		Path pkey = directory.resolve("key");
-		Path pcert = directory.resolve("cert");
-		if (!Files.exists(pkey) || !Files.exists(pcert)) {
-			return;
-		}
-		KeyFactory keyfac = KeyFactory.getInstance("RSA");
-		CertificateFactory certfac = CertificateFactory.getInstance("X.509");
-		PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(Files.readAllBytes(pkey));
-		PrivateKey privateKey = keyfac.generatePrivate(pkcs8);
-		X509Certificate cert = (X509Certificate) certfac.generateCertificate(
-				new ByteArrayInputStream(Files.readAllBytes(pcert)));
-		this.certificate = cert;
-		this.privateKey = privateKey;
+    private void loadFromFile() throws Exception {
+        Path directory = launcher.dataDirectory().resolve("ssl");
+        Files.createDirectories(directory);
+        Path pkey = directory.resolve("key");
+        Path pcert = directory.resolve("cert");
+        if (!Files.exists(pkey) || !Files.exists(pcert)) {
+            return;
+        }
+        KeyFactory keyfac = KeyFactory.getInstance("RSA");
+        CertificateFactory certfac = CertificateFactory.getInstance("X.509");
+        PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(Files.readAllBytes(pkey));
+        PrivateKey privateKey = keyfac.generatePrivate(pkcs8);
+        X509Certificate cert = (X509Certificate) certfac.generateCertificate(new ByteArrayInputStream(Files.readAllBytes(pcert)));
+        this.certificate = cert;
+        this.privateKey = privateKey;
 
-	}
+    }
 
 }

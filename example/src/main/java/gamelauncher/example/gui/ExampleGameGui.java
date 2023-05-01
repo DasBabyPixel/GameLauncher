@@ -4,20 +4,15 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.keybind.MouseButtonKeybindEvent;
 import gamelauncher.engine.util.text.Component;
 
 public class ExampleGameGui extends ParentableAbstractGui {
 
     public ExampleGameGui(GameLauncher launcher) throws GameException {
         super(launcher);
-        ButtonGui button = new ButtonGui(launcher) {
+        ButtonGui button = launcher().guiManager().createGui(ButtonGui.class);
+        button.onButtonPressed(event -> System.out.println("gaayyyy"));
 
-            @Override protected void buttonPressed(MouseButtonKeybindEvent e) {
-                System.out.println("gayyy");
-            }
-
-        };
         button.widthProperty().bind(this.widthProperty());
         button.heightProperty().bind(this.heightProperty());
         button.xProperty().bind(this.xProperty());
