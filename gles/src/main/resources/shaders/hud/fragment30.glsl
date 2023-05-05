@@ -15,7 +15,7 @@ uniform lowp vec4 Id;
 void main() {
     vec4 fc;
     if (HasTexture == 1) {
-        fc = texture(Texture, outTexCoord.xy);
+        fc = texture(Texture, outTexCoord.xy) + TextureAddColor;
         if (fc.w == float(0)) {
             discard;
         }

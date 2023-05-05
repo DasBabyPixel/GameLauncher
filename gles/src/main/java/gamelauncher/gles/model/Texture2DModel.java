@@ -20,7 +20,7 @@ public class Texture2DModel extends MeshModel implements Model {
     }
 
     public Texture2DModel(GLESTexture texture, float textureLeft, float textureTop, float textureRight, float textureBottom) {
-        super(new Mesh(texture.gles(), new float[]{-0.5F, -0.5F, 0F, -0.5F, 0.5F, 0F, 0.5F, 0.5F, 0F, 0.5F, -0.5F, 0F}, new float[]{textureLeft, textureBottom, textureLeft, textureTop, textureRight, textureTop, textureRight, textureBottom}, new int[]{0, 2, 1, 0, 3, 2}, GLES20.GL_TRIANGLES, false));
+        super(new Mesh(texture.gles(), new float[]{-0.5F, -0.5F, 0F, -0.5F, 0.5F, 0F, 0.5F, 0.5F, 0F, 0.5F, -0.5F, 0F}, new float[]{textureLeft, 1 - textureBottom, textureLeft, 1 - textureTop, textureRight, 1 - textureTop, textureRight, 1 - textureBottom}, new int[]{0, 2, 1, 0, 3, 2}, GLES20.GL_TRIANGLES, false));
         mesh.material().texture = texture;
         this.texture = texture;
 //        this.texture = texture;

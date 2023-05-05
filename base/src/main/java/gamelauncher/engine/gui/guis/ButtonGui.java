@@ -28,11 +28,9 @@ public interface ButtonGui extends Gui {
     /**
      * @return the text property
      */
-    @Api
-    Property<Component> text();
+    @Api Property<Component> text();
 
-    @Api
-    BooleanValue pressing();
+    @Api BooleanValue pressing();
 
     @Api
     class Simple extends ParentableAbstractGui implements ButtonGui {
@@ -41,6 +39,7 @@ public interface ButtonGui extends Gui {
         private final InterpolatedColor textColor;
         private final InterpolatedColor backgroundColor;
         private final BooleanValue pressing = BooleanValue.falseValue();
+        private final TextGui tg;
         private volatile @Nullable GameConsumer<MouseButtonKeybindEvent> buttonPressed = null;
 
         public Simple(GameLauncher launcher) throws GameException {
@@ -59,6 +58,7 @@ public interface ButtonGui extends Gui {
             this.GUIs.add(colorGui);
 
             TextGui textGui = launcher.guiManager().createGui(TextGui.class);
+            tg = textGui;
             textGui.text().value(Component.text(getClass().getSimpleName()));
             textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2)).subtract(textGui.widthProperty().divide(2)));
             textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2)).subtract(textGui.heightProperty().divide(2)));
@@ -67,10 +67,10 @@ public interface ButtonGui extends Gui {
             Runnable recalc = () -> {
                 if (this.hovering().booleanValue() || this.pressing.booleanValue()) {
                     textColor.setDesired(new PropertyVector4f(0.7F, 0.7F, 0.7F, 1F), TimeUnit.MILLISECONDS.toNanos(50));
-                    backgroundColor.setDesired(new PropertyVector4f(0.1F, 0, 0, 0.8F), TimeUnit.MICROSECONDS.toNanos(150));
+                    backgroundColor.setDesired(new PropertyVector4f(0.1F, 0.1F, 0.1F, 0.9F), TimeUnit.MILLISECONDS.toNanos(150));
                 } else {
                     textColor.setDesired(new PropertyVector4f(1F, 1F, 1F, 1F), TimeUnit.MILLISECONDS.toNanos(150));
-                    backgroundColor.setDesired(new PropertyVector4f(0F, 0, 0, 0.8F), TimeUnit.MICROSECONDS.toNanos(250));
+                    backgroundColor.setDesired(new PropertyVector4f(0F, 0, 0, 0.8F), TimeUnit.MILLISECONDS.toNanos(250));
                 }
             };
             this.pressing.addListener(p -> recalc.run());
@@ -80,8 +80,7 @@ public interface ButtonGui extends Gui {
             this.GUIs.add(textGui);
         }
 
-        @Override
-        protected boolean doHandle(KeybindEvent entry) throws GameException {
+        @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
             if (entry instanceof MouseButtonKeybindEvent) {
                 MouseButtonKeybindEvent mb = (MouseButtonKeybindEvent) entry;
                 if (mb.type() == Type.RELEASE) {
@@ -101,25 +100,21 @@ public interface ButtonGui extends Gui {
             return super.doHandle(entry);
         }
 
-        @Override
-        protected void doUpdate() {
-            if (textColor.calculateCurrent() || backgroundColor.calculateCurrent()) {
+        @Override protected void doUpdate() {
+            if (textColor.calculateCurrent() | backgroundColor.calculateCurrent()) {
                 redraw();
             }
         }
 
-        @Override
-        public void onButtonPressed(@Nullable GameConsumer<MouseButtonKeybindEvent> consumer) {
+        @Override public void onButtonPressed(@Nullable GameConsumer<MouseButtonKeybindEvent> consumer) {
             buttonPressed = consumer;
         }
 
-        @Override
-        public Property<Component> text() {
+        @Override public Property<Component> text() {
             return this.text;
         }
 
-        @Override
-        public BooleanValue pressing() {
+        @Override public BooleanValue pressing() {
             return pressing;
         }
 

@@ -23,6 +23,14 @@ public class InterpolatedColor {
         return curcolor;
     }
 
+    public PropertyVector4f desiredColor() {
+        return desiredColor;
+    }
+
+    public PropertyVector4f lastColor() {
+        return lastColor;
+    }
+
     /**
      * @return if the color changed
      */

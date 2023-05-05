@@ -61,25 +61,21 @@ public interface TextGui extends Gui {
             this.color.w.addListener((NumberValue p) -> this.redraw());
         }
 
-        @Override
-        protected void doCleanup(Framebuffer framebuffer) throws GameException {
+        @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
             if (this.itemModel != null) this.itemModel.cleanup();
             this.launcher().contextProvider().freeContext(this.hud, ContextType.HUD);
         }
 
-        @Override
-        protected void doInit(Framebuffer framebuffer) throws GameException {
+        @Override protected void doInit(Framebuffer framebuffer) throws GameException {
             this.hud = this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
         }
 
-        @Override
-        protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+        @Override protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
             this.ensureModel();
             super.preRender(framebuffer, mouseX, mouseY, partialTick);
         }
 
-        @Override
-        protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+        @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
             if (itemModel != null) {
                 this.hud.update(this.camera);
                 this.hud.drawModel(this.itemModel, Math.round(this.x()), Math.round(this.y() + this.baselineYOffset.floatValue()), 0);
@@ -88,24 +84,21 @@ public interface TextGui extends Gui {
             return true;
         }
 
-        @Override
-        protected String additionalToStringData() {
+        @Override protected String additionalToStringData() {
             return "text=" + text.value();
         }
 
         /**
          * @return text
          */
-        @Override
-        public Property<Component> text() {
+        @Override public Property<Component> text() {
             return this.text;
         }
 
         /**
          * @return the color property vector
          */
-        @Override
-        public PropertyVector4f color() {
+        @Override public PropertyVector4f color() {
             return this.color;
         }
 
@@ -123,6 +116,7 @@ public interface TextGui extends Gui {
                     item.color().w.bind(this.color.w);
                     this.itemModel = item.createModel();
                     this.cwidth = this.model.width();
+                    cwidthprop.intValue();
                 }
 
                 if (oldModel != null) {

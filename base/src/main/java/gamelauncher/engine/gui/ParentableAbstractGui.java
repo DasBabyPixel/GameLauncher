@@ -107,57 +107,45 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Api
-    protected boolean doHandle(KeybindEvent entry) throws GameException {
+    @Api protected boolean doHandle(KeybindEvent entry) throws GameException {
         return true;
     }
 
-    @Api
-    protected void postDoHandle(KeybindEvent entry) throws GameException {
+    @Api protected void postDoHandle(KeybindEvent entry) throws GameException {
     }
 
-    @Api
-    protected void doUpdate() throws GameException {
+    @Api protected void doUpdate() throws GameException {
     }
 
-    @Api
-    protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Api protected void doCleanup(Framebuffer framebuffer) throws GameException {
     }
 
-    @Api
-    protected void doInit(Framebuffer framebuffer) throws GameException {
+    @Api protected void doInit(Framebuffer framebuffer) throws GameException {
     }
 
-    @Api
-    protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Api
-    protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Api
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         return true;
     }
 
-    @Api
-    protected void redraw() {
+    @Api protected void redraw() {
         if (this.framebuffer != null) this.framebuffer.scheduleRedraw();
     }
 
-    @Override
-    public BooleanValue hovering() {
+    @Override public BooleanValue hovering() {
         return this.hovering;
     }
 
-    @Override
-    public boolean initialized() {
+    @Override public boolean initialized() {
         return this.initialized.get();
     }
 
-    @Override
-    public final void init(Framebuffer framebuffer) throws GameException {
+    @Override public final void init(Framebuffer framebuffer) throws GameException {
         if (this.initialized.compareAndSet(false, true)) {
             this.framebuffer = framebuffer;
             this.doInit(framebuffer);
@@ -166,8 +154,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Override
-    public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         ScissorStack scissor = framebuffer.scissorStack();
         scissor.pushScissor(this);
         try {
@@ -186,8 +173,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Override
-    public final void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public final void cleanup(Framebuffer framebuffer) throws GameException {
         if (this.initialized.compareAndSet(true, false)) {
             for (Gui gui : GUIs) {
                 gui.cleanup(framebuffer);
@@ -198,8 +184,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Override
-    public void unfocus() throws GameException {
+    @Override public void unfocus() throws GameException {
         super.unfocus();
         Gui focusedGui = this.focusedGui.get();
         if (focusedGui != null) {
@@ -207,16 +192,14 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Override
-    public final void update() throws GameException {
+    @Override public final void update() throws GameException {
         this.doUpdate();
         for (Gui gui : GUIs) {
             gui.update();
         }
     }
 
-    @Override
-    public final void handle(KeybindEvent event) throws GameException {
+    @Override public final void handle(KeybindEvent event) throws GameException {
         callKeybindHandlers(event);
         if (this.doHandle(event)) {
             if (event instanceof KeyboardKeybindEvent) {
@@ -277,8 +260,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         String additional = additionalToStringData();
         return String.format(Locale.getDefault(), "%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f%s]", this.getClass().getSimpleName(), this.x(), this.y(), this.width(), this.height(), additional == null ? "" : " " + additional);
     }
