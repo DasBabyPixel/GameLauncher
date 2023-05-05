@@ -58,23 +58,19 @@ public abstract class ContextProvider {
          * 2D Projection HUD Context
          */
         HUD {
-            @Override
-            protected void load(GameLauncher launcher, DrawContext context) throws GameException {
-                context.program(launcher.shaderLoader().loadShader(launcher,
-                        launcher.embedFileSystem().getPath("shaders", "hud", "hud.json")));
+            @Override protected void load(GameLauncher launcher, DrawContext context) throws GameException {
+                context.program(launcher.shaderLoader().loadShader(launcher.embedFileSystem().getPath("shaders", "hud", "hud.json")));
                 context.projection(new Transformations.Projection.Projection2D());
             }
 
-            @Override
-            protected void cleanup(DrawContext context) throws GameException {
+            @Override protected void cleanup(DrawContext context) throws GameException {
                 context.program().cleanup();
             }
 
         },
         ;
 
-        protected abstract void load(GameLauncher launcher, DrawContext context)
-                throws GameException;
+        protected abstract void load(GameLauncher launcher, DrawContext context) throws GameException;
 
         protected abstract void cleanup(DrawContext context) throws GameException;
 

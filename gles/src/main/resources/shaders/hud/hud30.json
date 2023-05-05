@@ -1,0 +1,91 @@
+[
+  {
+    "capabilities": [
+      "render",
+      "id"
+    ],
+    "targets": [
+      "gamelauncher:gles:main",
+      "gamelauncher:gles:id"
+    ],
+    "vertexShader": "vertex30",
+    "fragmentShader": "fragment30",
+    "uniforms": [
+      {
+        "name": "HasTexture",
+        "type": "int",
+        "values": [
+          0
+        ]
+      },
+      {
+        "name": "ModelMat",
+        "type": "mat4",
+        "values": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "ProjectionMat",
+        "type": "mat4",
+        "values": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "Texture",
+        "type": "sampler2D",
+        "values": [
+          0
+        ]
+      },
+      {
+        "name": "ColorMultiplier",
+        "type": "vec4",
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "name": "Id",
+        "type": "vec4",
+        "values": [
+          0
+        ]
+      }
+    ]
+  }
+]

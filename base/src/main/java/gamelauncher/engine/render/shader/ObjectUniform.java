@@ -23,17 +23,14 @@ public class ObjectUniform extends AbstractGameResource implements Uniform {
         this.name = name;
     }
 
-    @Override
-    public boolean cleanedUp() {
+    @Override public boolean cleanedUp() {
         return true;
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
     }
 
-    @Override
-    public Uniform upload() {
+    @Override public Uniform upload() {
         ProgramObject object = this.value.get();
         if (object == null) {
             return this;
@@ -42,69 +39,60 @@ public class ObjectUniform extends AbstractGameResource implements Uniform {
         return this;
     }
 
-    @Override
-    public Uniform set(ProgramObject object) {
+    @Override public Uniform set(ProgramObject object) {
         this.value.set(object);
         return this;
     }
 
-    @Override
-    public Uniform set(int i) {
+    @Override public Uniform set(int i) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(float f1) {
+    @Override public Uniform set(boolean b) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(float f1, float f2) {
+    @Override public Uniform set(float f1) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(float f1, float f2, float f3) {
+    @Override public Uniform set(float f1, float f2) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(float f1, float f2, float f3, float f4) {
+    @Override public Uniform set(float f1, float f2, float f3) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
+    @Override public Uniform set(float f1, float f2, float f3, float f4) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(Matrix4f m) {
+    @Override public Uniform set(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(Vector2f vec) {
+    @Override public Uniform set(Matrix4f m) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(Vector3f vec) {
+    @Override public Uniform set(Vector2f vec) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Uniform set(Vector4f vec) {
+    @Override public Uniform set(Vector3f vec) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public boolean empty() {
+    @Override public Uniform set(Vector4f vec) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override public boolean empty() {
         return false;
     }
 
-    @Override
-    public Uniform clear() {
+    @Override public Uniform clear() {
         this.value.set(null);
         return this;
     }

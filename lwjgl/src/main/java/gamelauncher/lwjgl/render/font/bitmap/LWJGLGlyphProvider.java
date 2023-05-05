@@ -27,7 +27,7 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
 import gamelauncher.engine.util.text.serializer.PlainTextComponentSerializer;
 import gamelauncher.gles.font.bitmap.*;
-import gamelauncher.gles.model.LWJGLCombinedModelsModel;
+import gamelauncher.gles.model.GLESCombinedModelsModel;
 import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.gles.util.MemoryManagement;
@@ -56,8 +56,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
         this.textureAtlas = new DynamicSizeTextureAtlas(launcher.gles(), launcher, this.frame.renderThread());
     }
 
-    @Override
-    public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
+    @Override public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
         Key fkey = text.style().font();
         if (fkey == null) fkey = new Key("fonts/calibri.ttf");
         Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().embedFileSystem().getPath("assets"))));
@@ -132,7 +131,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             }
         }
 
-        CombinedModelsModel cmodel = new LWJGLCombinedModelsModel(meshes.toArray(new Model[0]));
+        CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
         GameItem gi = new GameItem(cmodel);
         gi.addColor(1, 1, 1, 0);
         GameItemModel gim = gi.createModel();
@@ -215,8 +214,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 //        });
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         this.textureAtlas.cleanup();
         this.frame.cleanup();
     }
@@ -249,8 +247,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             tb.addListener(invalidationListener);
         }
 
-        @Override
-        public void render(ShaderProgram program) throws GameException {
+        @Override public void render(ShaderProgram program) throws GameException {
             if (invalid.booleanValue()) {
                 invalid.value(false);
                 if (texture2DModel != null) {
@@ -261,8 +258,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             texture2DModel.render(program);
         }
 
-        @Override
-        protected void cleanup0() throws GameException {
+        @Override protected void cleanup0() throws GameException {
             Threads.waitFor(releaseGlyphKey(e.entry.key));
             if (texture2DModel != null) texture2DModel.cleanup();
         }

@@ -14,7 +14,8 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.*;
 import java.util.Arrays;
 
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 
 public class LWJGLGLES implements gamelauncher.gles.gl.GLES32 {
 
@@ -965,7 +966,7 @@ public class LWJGLGLES implements gamelauncher.gles.gl.GLES32 {
     }
 
     @Override public void glDrawBuffers(int n, int[] bufs, int offset) {
-        throw new LazyException();
+        GLES32.glDrawBuffers(Arrays.copyOfRange(bufs, offset, offset + n));
     }
 
     @Override public void glDrawBuffers(int n, IntBuffer bufs) {

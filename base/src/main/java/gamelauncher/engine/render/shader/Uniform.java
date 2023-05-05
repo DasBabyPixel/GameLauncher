@@ -24,6 +24,8 @@ public interface Uniform extends GameResource {
      */
     Uniform set(int i);
 
+    Uniform set(boolean b);
+
     /**
      * @param f1
      * @return this

@@ -13,7 +13,7 @@ generateRunDirectory
 
 allprojects {
     group = 'de.dasbabypixel.gamelauncher'
-    version = '0.0.1-SNAPSHOT'
+    version = '0.0.2-SNAPSHOT'
     pluginManager.withPlugin('java') {
         javadoc.options.addStringOption('Xdoclint:none', '-quiet')
         java.toolchain.languageVersion = JavaLanguageVersion.of(11)

@@ -45,7 +45,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
             keybindManager.post(new AndroidKeyboardKeybindEvent(event.keybind(), KeyboardKeybindEvent.Type.HOLD));
         }
         for (Map.Entry<Integer, PointerEntry> entry : mousePressed.entrySet()) {
-            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.getKeybind(entry.getKey()), entry.getValue().buttonId, entry.getValue().x, entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
+            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.keybind(entry.getKey()), entry.getValue().buttonId, entry.getValue().x, entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
         }
         try {
             poller.poll((queueEvent, sequence, endOfBatch) -> {
@@ -61,7 +61,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                         float x = e.getX(index);
                         float y = e.getY(index);
 //                    System.out.println(id + "   " + e);
-                        Keybind keybind = keybindManager.getKeybind(keybindId);
+                        Keybind keybind = keybindManager.keybind(keybindId);
                         if (action == MotionEvent.ACTION_MOVE) {
                             for (index = 0; index < e.getPointerCount(); index++) {
                                 id = e.getPointerId(index);
@@ -73,7 +73,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                                 pressure = e.getPressure(index);
                                 //noinspection DataFlowIssue
                                 if (entry.x == x && entry.y == y) continue;
-                                keybind = keybindManager.getKeybind(keybindId);
+                                keybind = keybindManager.keybind(keybindId);
                                 keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, entry.y, x, y));
                                 entry.x = x;
                                 entry.y = y;
@@ -114,7 +114,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
 
     @SuppressWarnings("deprecation") @Override public boolean onKey(View v, int keyCode, KeyEvent event) {
         keybindManager.lastKeyEvent = event;
-        Keybind keybind = keyCode == 0 ? null : keybindManager.getKeybind(keyCode | AndroidKeybindManager.BITS_KEY);
+        Keybind keybind = keyCode == 0 ? null : keybindManager.keybind(keyCode | AndroidKeybindManager.BITS_KEY);
         switch (event.getAction()) {
             case KeyEvent.ACTION_DOWN:
                 offer(new AndroidKeyboardKeybindEvent(keybind, KeyboardKeybindEvent.Type.PRESS));
@@ -127,7 +127,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                     hasDeadChar = true;
                 } else if (c != 0) {
                     for (char ch : Character.toChars(c)) {
-                        offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.getKeybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
+                        offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.keybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
                     }
                     break;
                 }
@@ -137,7 +137,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
             case KeyEvent.ACTION_MULTIPLE:
                 String s = event.getCharacters();
                 for (char ch : s.toCharArray()) {
-                    offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.getKeybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
+                    offer(new AndroidKeyboardKeybindEvent.Character(keybindManager.keybind(ch | AndroidKeybindManager.BITS_CHARACTER), KeyboardKeybindEvent.Type.CHARACTER, ch));
                 }
                 break;
             default:

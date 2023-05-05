@@ -5,7 +5,7 @@ import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.annotation.ThreadDependant;
 import gamelauncher.gles.gl.GLContext;
-import gamelauncher.gles.gl.GLES31;
+import gamelauncher.gles.gl.GLES32;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Set;
@@ -22,8 +22,7 @@ public class StateRegistry {
         StateRegistry.contexts.add(context);
     }
 
-    @ThreadDependant
-    public static void removeContext(GLContext context) throws GameException {
+    @ThreadDependant public static void removeContext(GLContext context) throws GameException {
         ContextDependant cd = context(context);
         if (cd != null) cd.cleanup();
         StateRegistry.contexts.remove(context);
@@ -34,7 +33,7 @@ public class StateRegistry {
         return context.storedValue(CONTEXT, () -> new ContextDependant(context));
     }
 
-    public static GLES31 currentGl() {
+    public static GLES32 currentGl() {
         return currentContext().gl();
     }
 
@@ -46,8 +45,7 @@ public class StateRegistry {
         return context(currentContext.get());
     }
 
-    @ApiStatus.Internal
-    public static void currentContext(GLContext context) {
+    @ApiStatus.Internal public static void currentContext(GLContext context) {
         currentContext.set(context);
     }
 

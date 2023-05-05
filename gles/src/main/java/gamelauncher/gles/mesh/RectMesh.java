@@ -1,13 +1,11 @@
 package gamelauncher.gles.mesh;
 
-import de.dasbabypixel.annotations.Api;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 
 /**
  * @author DasBabyPixel
  */
-@Api
 public class RectMesh extends Mesh {
 
     public RectMesh(GLES gles) {
@@ -30,13 +28,7 @@ public class RectMesh extends Mesh {
         }, new int[] {
                 0, 3, 2,
                 0, 2, 1,
-        }, GLES20.GL_TRIANGLES);
+        }, GLES20.GL_TRIANGLES,false);
         // @formatter:on
     }
-
-    @Override
-    public boolean applyLighting() {
-        return false;
-    }
-
 }

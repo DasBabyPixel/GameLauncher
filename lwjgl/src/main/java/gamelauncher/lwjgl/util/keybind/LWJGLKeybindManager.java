@@ -11,7 +11,7 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.glfwGetKeyName;
 
 /**
  * @author DasBabyPixel
@@ -46,21 +46,18 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
         this.launcher = launcher;
     }
 
-    @Override
-    public Keybind getKeybind(int keybind) {
+    @Override public Keybind keybind(int keybind) {
         loadName(keybind);
         loadKeybind(keybind);
         return keybinds.get(keybind);
     }
 
-    @Override
-    public void post(KeybindEvent event) {
+    @Override public void post(KeybindEvent event) {
         launcher.eventManager().post(new KeybindEntryEvent(event));
         event.keybind().handle(event);
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         for (Keybind k : keybinds.values()) {
             k.cleanup();
         }
@@ -79,8 +76,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
         if (!names.containsKey(id)) {
             if (id >= KEYBOARD_ADD && id < SCROLL) {
                 String n1 = glfwGetKeyName(id - KEYBOARD_ADD, 0);
-                if (n1 == null)
-                    n1 = Integer.toString(id);
+                if (n1 == null) n1 = Integer.toString(id);
                 names.put(id, n1);
             } else if (id == SCROLL) {
                 names.put(id, "MouseWheel");

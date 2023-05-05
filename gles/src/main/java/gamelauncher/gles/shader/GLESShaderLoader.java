@@ -1,8 +1,6 @@
 package gamelauncher.gles.shader;
 
 import com.google.gson.*;
-import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.data.Files;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;
@@ -12,12 +10,10 @@ import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.gl.GLES30;
-import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.shader.struct.Custom;
 import gamelauncher.gles.shader.struct.Struct;
-import gamelauncher.gles.states.StateRegistry;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -27,11 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author DasBabyPixel
  */
 public class GLESShaderLoader implements ShaderLoader {
-
     /**
      * The gson for shaderPrograms
      */
     public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Logger logger = Logger.logger();
     private final Map<Resource, GLESShaderProgram> programs = new ConcurrentHashMap<>();
     private final GLES gles;
 
@@ -40,39 +36,42 @@ public class GLESShaderLoader implements ShaderLoader {
     }
 
     private static void loadUniforms(GLESShaderProgram p, ShaderConfiguration.UniformMap uniforms, Collection<Struct> structs) throws GameException {
-        loadUniform(p, structs, uniforms, "material", u -> p.umaterial = u);
-        loadUniform(p, structs, uniforms, "modelMatrix", u -> p.umodelMatrix = u);
-        loadUniform(p, structs, uniforms, "color", u -> p.ucolor = u);
-        loadUniform(p, structs, uniforms, "modelViewMatrix", u -> p.umodelViewMatrix = u);
-        loadUniform(p, structs, uniforms, "viewMatrix", u -> p.uviewMatrix = u);
-        loadUniform(p, structs, uniforms, "projectionMatrix", u -> p.uprojectionMatrix = u);
-        loadUniform(p, structs, uniforms, "camera_pos", u -> p.ucamera_pos = u);
-        loadUniform(p, structs, uniforms, "ambientLight", u -> p.uambientLight = u);
-        loadUniform(p, structs, uniforms, "texture_sampler", u -> p.utexture_sampler = u);
-        loadUniform(p, structs, uniforms, "specularPower", u -> p.uspecularPower = u);
-        loadUniform(p, structs, uniforms, "pointLight", u -> p.upointLight = u);
-        loadUniform(p, structs, uniforms, "directionalLight", u -> p.udirectionalLight = u);
-        loadUniform(p, structs, uniforms, "textureAddColor", u -> p.utextureAddColor = u);
-        loadUniform(p, structs, uniforms, "applyLighting", u -> p.uapplyLighting = u);
-        loadUniform(p, structs, uniforms, "hasTexture", u -> p.uhasTexture = u);
-        loadUniform(p, structs, uniforms, "id", u -> p.uid = u);
+        loadUniform(p, structs, uniforms, "Material", u -> p.uMaterial = u);
+        loadUniform(p, structs, uniforms, "ModelMat", u -> p.uModelMat = u);
+        loadUniform(p, structs, uniforms, "ColorMultiplier", u -> p.uColorMultiplier = u);
+        loadUniform(p, structs, uniforms, "ModelViewMat", u -> p.uModelViewMat = u);
+        loadUniform(p, structs, uniforms, "ViewMat", u -> p.uViewMat = u);
+        loadUniform(p, structs, uniforms, "ProjectionMat", u -> p.uProjectionMat = u);
+        loadUniform(p, structs, uniforms, "CameraPosition", u -> p.uCameraPosition = u);
+//        loadUniform(p, structs, uniforms, "ambientLight", u -> p.uambientLight = u);
+        loadUniform(p, structs, uniforms, "Texture", u -> p.uTexture = u);
+//        loadUniform(p, structs, uniforms, "specularPower", u -> p.uspecularPower = u);
+//        loadUniform(p, structs, uniforms, "pointLight", u -> p.upointLight = u);
+//        loadUniform(p, structs, uniforms, "directionalLight", u -> p.udirectionalLight = u);
+        loadUniform(p, structs, uniforms, "TextureAddColor", u -> p.uTextureAddColor = u);
+        loadUniform(p, structs, uniforms, "ApplyLighting", u -> p.uApplyLighting = u);
+        loadUniform(p, structs, uniforms, "HasTexture", u -> p.uHasTexture = u);
+        loadUniform(p, structs, uniforms, "Id", u -> p.uId = u);
     }
 
-    private static Uniform loadUniform(GLESShaderProgram program, String uniform, Struct struct) {
+    private static Uniform loadUniform(GLESShaderProgram program, ShaderConfiguration.Uniform uniform, Struct struct, float[] defaultValues) {
         Uniform u = struct.createUniform(program, uniform);
-        program.uniformMap.put(uniform, u);
+        if (u == null) return null;
+        program.uniformMap.put(uniform.name(), u);
         if (struct instanceof Custom) {
-            Custom c = (Custom) struct;
-            for (Map.Entry<String, Struct> variable : c.getVariables().entrySet()) {
-                loadUniform(program, uniform + "." + variable.getKey(), variable.getValue());
-            }
+            throw new UnsupportedOperationException();
+//            Custom c = (Custom) struct;
+//            for (Map.Entry<String, Struct> variable : c.getVariables().entrySet()) {
+//                loadUniform(program, uniform.name() + "." + variable.getKey(), variable.getValue(), defaultValues);
+//            }
         }
         return u;
     }
 
     private static void loadUniform(GLESShaderProgram program, Collection<Struct> structs, ShaderConfiguration.UniformMap uniforms, String uniform, GameConsumer<Uniform> successConsumer) throws GameException {
         if (!uniforms.typeByUniform().containsKey(uniform)) return;
-        Uniform u = loadUniform(program, uniform, GLESShaderLoader.getStruct(structs, uniforms.typeByUniform().get(uniform)));
+        Uniform u = loadUniform(program, uniforms.typeByUniform().get(uniform), GLESShaderLoader.getStruct(structs, uniforms.typeByUniform().get(uniform).type()), uniforms.typeByUniform().get(uniform).values());
+        if (u == null) return;
         program.uploadUniforms.add(u);
         successConsumer.accept(u);
     }
@@ -94,76 +93,17 @@ public class GLESShaderLoader implements ShaderLoader {
         return structs;
     }
 
-    private static Struct getStruct(Collection<Struct> structs, String name) throws GameException {
+    private static Struct getStruct(Collection<Struct> structs, String type) throws GameException {
         for (Struct struct : structs) {
-            if (struct.name().equals(name)) {
+            if (struct.name().equals(type)) {
                 return struct;
             }
         }
-        throw new GameException("Struct not found: " + name);
+        throw new GameException("Struct not found: " + type);
     }
 
-    private static ShaderConfiguration selectBestConfiguration(Collection<ShaderConfiguration> configurations) {
-        GLES31 gl = StateRegistry.currentGl();
-        int major = gl.glGetInteger(GLES30.GL_MAJOR_VERSION);
-        int minor = gl.glGetInteger(GLES30.GL_MINOR_VERSION);
-
-        int bestMajor = -1, bestMinor = -1;
-        ShaderConfiguration bestConfiguration = null;
-        for (ShaderConfiguration configuration : configurations) {
-            String v = configuration.version();
-            if (v.equals(ShaderConfiguration.DEFAULT_VERSION)) v = "2.0";
-            String[] a = v.split("\\.");
-            int curMajor = Integer.parseInt(a[0]);
-            int curMinor = Integer.parseInt(a[1]);
-            if (curMajor > major) continue;
-            if (curMajor == major && curMinor > minor) continue;
-            if (curMajor < bestMajor) continue;
-            if (curMajor == bestMajor && curMinor < bestMinor) continue;
-            bestMajor = curMajor;
-            bestMinor = curMinor;
-            bestConfiguration = configuration;
-        }
-        return bestConfiguration;
-    }
-
-    private static void loadConfigurations(Map<ShaderConfigurationTemplate, ShaderConfiguration> configurations, ShaderConfigurationTemplate template) {
-        if (template == null) return;
-        if (configurations.containsKey(template)) return;
-        loadConfigurations(configurations, template.parent());
-        ShaderConfiguration parent = template.parent() == null ? null : configurations.get(template.parent());
-        String version = template.version();
-        String vertexShader = template.json().has("vertexShader") ? template.json().get("vertexShader").getAsString() : parent != null ? parent.vertexShader() : null;
-        String fragmentShader = template.json().has("fragmentShader") ? template.json().get("fragmentShader").getAsString() : parent != null ? parent.fragmentShader() : null;
-        ShaderConfiguration.Structs structs = new ShaderConfiguration.Structs(new ArrayList<>());
-        if (template.json().has("structs")) {
-            for (JsonElement element : template.json().get("structs").getAsJsonArray()) {
-                JsonObject so = element.getAsJsonObject();
-                List<ShaderConfiguration.StructVariable> variables = new ArrayList<>();
-                if (so.has("variables")) {
-                    for (JsonElement element2 : so.get("variables").getAsJsonArray()) {
-                        variables.add(new ShaderConfiguration.StructVariable(element2.getAsJsonObject().get("name").getAsString(), element2.getAsJsonObject().get("type").getAsString()));
-                    }
-                }
-                structs.structs().add(new ShaderConfiguration.StructConfiguration(so.get("name").getAsString(), new ShaderConfiguration.StructVariables(variables)));
-            }
-        }
-        if (parent != null) structs.structs().addAll(parent.structs().structs());
-        ShaderConfiguration.UniformMap uniforms = new ShaderConfiguration.UniformMap(new HashMap<>());
-        if (template.json().has("uniforms")) {
-            JsonObject o = template.json().get("uniforms").getAsJsonObject();
-            for (String key : o.keySet()) {
-                uniforms.typeByUniform().put(key, o.get(key).getAsString());
-            }
-        }
-        if (parent != null) uniforms.typeByUniform().putAll(parent.uniforms().typeByUniform());
-        configurations.put(template, new ShaderConfiguration(version, vertexShader, fragmentShader, uniforms, structs));
-    }
-
-    @SuppressWarnings("NewApi")
-    @Override
-    public ShaderProgram loadShader(GameLauncher launcher, Path path) throws GameException {
-        ResourceLoader loader = launcher.resourceLoader();
+    @SuppressWarnings("NewApi") @Override public ShaderProgram loadShader(Path path) throws GameException {
+        ResourceLoader loader = gles.launcher().resourceLoader();
         Resource resource = loader.resource(path);
         if (this.programs.containsKey(resource)) {
             GLESShaderProgram program = this.programs.get(resource);
@@ -177,42 +117,19 @@ public class GLESShaderLoader implements ShaderLoader {
             Path parentFile = path.getParent();
             root = GLESShaderLoader.gson.fromJson(rootutf8, JsonObject.class);
 
-            Map<String, ShaderConfigurationTemplate> templates = new HashMap<>();
-            if (root.has("versions")) {
-                for (JsonElement element : root.get("versions").getAsJsonArray()) {
-                    JsonObject json = element.getAsJsonObject();
-                    if (!json.has("version")) throw new GameException("Shader Info File " + path + " has invalid version qualifiers for shaders");
-                    String version = json.get("version").getAsString();
-                    String parent = json.has("parent") ? json.get("parent").getAsString() : null;
-                    templates.put(version, new ShaderConfigurationTemplate(version, parent, json));
-                }
-            }
-            if (!templates.containsKey(ShaderConfiguration.DEFAULT_VERSION)) {
-                templates.put(ShaderConfiguration.DEFAULT_VERSION, new ShaderConfigurationTemplate(ShaderConfiguration.DEFAULT_VERSION, null, root));
-            }
-            for (ShaderConfigurationTemplate template : templates.values()) {
-                if (template.parentVersion() == null) continue;
-                template.parent = templates.get(template.parentVersion());
-            }
-            Map<ShaderConfigurationTemplate, ShaderConfiguration> configurations = new HashMap<>();
-            for (ShaderConfigurationTemplate template : templates.values()) {
-                loadConfigurations(configurations, template);
-            }
+            String[] versions = root.keySet().toArray(new String[0]);
+            int newestIdx = newestVersion(versions);
+            String newestVersion = versions[newestIdx];
+            ShaderConfiguration[] configurations = loadConfigurations(parentFile.resolve(root.get(newestVersion).getAsString() + ".json"));
+            ShaderConfiguration configuration = configurations[0];
 
-            ShaderConfiguration best = selectBestConfiguration(configurations.values());
-            if (best == null) throw new GameException("Unable to find shader configuration for " + path);
-
-            String vspathstr = best.vertexShader();
-            String fspathstr = best.fragmentShader();
-            Path vspath = parentFile.resolve(vspathstr + best.version().replace(".", "") + ".glsl");
-            if (!Files.exists(vspath)) vspath = parentFile.resolve(vspathstr + ".glsl");
-            Path fspath = parentFile.resolve(fspathstr + best.version().replace(".", "") + ".glsl");
-            if (!Files.exists(fspath)) fspath = parentFile.resolve(fspathstr + ".glsl");
+            Path vspath = parentFile.resolve(configuration.vertexShader() + ".glsl");
+            Path fspath = parentFile.resolve(configuration.fragmentShader() + ".glsl");
 
             String vscode = loader.resource(vspath).newResourceStream().readUTF8FullyClose();
             String fscode = loader.resource(fspath).newResourceStream().readUTF8FullyClose();
 
-            GLESShaderProgram program = new GLESShaderProgram(gles, launcher, path);
+            GLESShaderProgram program = new GLESShaderProgram(gles, path);
             this.programs.put(resource, program);
             program.cleanupFuture().thenRun(() -> this.programs.remove(resource));
             program.createVertexShader(vscode);
@@ -221,40 +138,55 @@ public class GLESShaderLoader implements ShaderLoader {
             program.deleteVertexShader();
             program.deleteFragmentShader();
             Collection<Struct> structs;
-            structs = loadStructs(best.structs());
-            loadUniforms(program, best.uniforms(), structs);
+            structs = loadStructs(configuration.structs());
+            loadUniforms(program, configuration.uniforms(), structs);
             return program;
         } catch (JsonSyntaxException ex) {
             throw new GameException("Invalid Json File", ex);
         }
     }
 
-    private static class ShaderConfigurationTemplate {
-        private final String version;
-        private final String parentVersion;
-        private final JsonObject json;
-        private ShaderConfigurationTemplate parent;
-
-        public ShaderConfigurationTemplate(String version, String parent, JsonObject json) {
-            this.version = version;
-            this.parentVersion = parent;
-            this.json = json;
+    private ShaderConfiguration[] loadConfigurations(Path path) throws GameException {
+        JsonArray array = gson.fromJson(gles.launcher().resourceLoader().resource(path).newResourceStream().readUTF8FullyClose(), JsonArray.class);
+        int idx = 0;
+        ShaderConfiguration[] configurations = new ShaderConfiguration[array.size()];
+        for (JsonElement e1 : array) {
+            JsonObject json = e1.getAsJsonObject();
+            JsonArray acapabilities = json.getAsJsonArray("capabilities");
+            String[] capabilities = new String[acapabilities.size()];
+            int i = 0;
+            for (JsonElement e2 : acapabilities) capabilities[i++] = e2.getAsString();
+            JsonArray atargets = json.getAsJsonArray("targets");
+            String[] targets = new String[atargets.size()];
+            i = 0;
+            for (JsonElement e2 : atargets) targets[i++] = e2.getAsString();
+            String vertexShader = json.get("vertexShader").getAsString();
+            String fragmentShader = json.get("fragmentShader").getAsString();
+            ShaderConfiguration.UniformMap uniforms = new ShaderConfiguration.UniformMap(new HashMap<>());
+            for (JsonElement e2 : json.get("uniforms").getAsJsonArray()) {
+                JsonObject json2 = e2.getAsJsonObject();
+                String name = json2.get("name").getAsString();
+                String type = json2.get("type").getAsString();
+                JsonArray avalues = json2.get("values").getAsJsonArray();
+                float[] values = new float[avalues.size()];
+                i = 0;
+                for (JsonElement e3 : avalues) values[i++] = e3.getAsJsonPrimitive().getAsFloat();
+                uniforms.typeByUniform().put(name, new ShaderConfiguration.Uniform(name, type, values));
+            }
+            ShaderConfiguration.Structs structs = new ShaderConfiguration.Structs(new ArrayList<>());
+            ShaderConfiguration configuration = new ShaderConfiguration(vertexShader, fragmentShader, capabilities, targets, uniforms, structs);
+            configurations[idx++] = configuration;
         }
+        return configurations;
+    }
 
-        public ShaderConfigurationTemplate parent() {
-            return parent;
+    private int newestVersion(String... versions) {
+        int newestIdx = -1;
+        String newest = null;
+        for (int i = 0; i < versions.length; i++) {
+            if (newest == null) newest = versions[newestIdx = i];
+            else if (versions[i].compareTo(newest) > 0) newest = versions[newestIdx = i];
         }
-
-        public String version() {
-            return version;
-        }
-
-        public String parentVersion() {
-            return parentVersion;
-        }
-
-        public JsonObject json() {
-            return json;
-        }
+        return newestIdx;
     }
 }

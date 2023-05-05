@@ -56,8 +56,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         return creator;
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         sharedContexts.remove(this);
         if (parent != null) parent.contexts.remove(this);
         if (this.owned) {
@@ -92,25 +91,22 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
     }
 
-    @Override
-    public synchronized void destroyCurrent() {
+    @Override public synchronized void destroyCurrent() {
         if (this.owned) {
             StateRegistry.currentContext(null);
             GLFW.glfwMakeContextCurrent(0L);
             GLES.setCapabilities(null);
             this.owned = false;
             this.owner = null;
-            errorCallback.free();
+            if (errorCallback != null) errorCallback.free();
         }
     }
 
-    @Override
-    public GLFWFrame frame() {
+    @Override public GLFWFrame frame() {
         return frame;
     }
 
-    @Override
-    public GLFWGLContext createSharedContext() throws GameException {
+    @Override public GLFWGLContext createSharedContext() throws GameException {
         synchronized (sharedContexts) {
             GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
             ctx.parent = frame;
@@ -132,28 +128,23 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
     }
 
-    @Override
-    public GLES20 gl20() {
+    @Override public GLES20 gl20() {
         return gl;
     }
 
-    @Override
-    public GLES30 gl30() {
+    @Override public GLES30 gl30() {
         return gl;
     }
 
-    @Override
-    public GLES31 gl31() {
+    @Override public GLES31 gl31() {
         return gl;
     }
 
-    @Override
-    public GLES32 gl32() {
+    @Override public GLES32 gl32() {
         return gl;
     }
 
-    @Override
-    public synchronized void makeCurrent() {
+    @Override public synchronized void makeCurrent() {
         makeCurrent(false);
     }
 
@@ -169,8 +160,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return String.format("GLFWGLContext{id=%s}", id);
     }
 }

@@ -21,11 +21,11 @@ import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent.Type;
 import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.GLESGameRenderer;
 import gamelauncher.gles.GLESThreadGroup;
 import gamelauncher.gles.context.GLESContextProvider;
 import gamelauncher.gles.font.bitmap.BasicFontFactory;
 import gamelauncher.gles.modelloader.GLESModelLoader;
+import gamelauncher.gles.render.GLESGameRenderer;
 import gamelauncher.gles.shader.GLESShaderLoader;
 import gamelauncher.gles.texture.GLESTextureManager;
 import gamelauncher.gles.util.MemoryManagement;
@@ -40,7 +40,6 @@ import gamelauncher.lwjgl.util.LWJGLAnsiProvider;
 import gamelauncher.lwjgl.util.LWJGLExecutorThreadHelper;
 import gamelauncher.lwjgl.util.LWJGLMemoryManagement;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
-import gamelauncher.lwjgl.util.profiler.GLSectionHandler;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Configuration;
@@ -74,8 +73,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
-    @EventHandler
-    public void handle(LauncherInitializedEvent event) {
+    @EventHandler public void handle(LauncherInitializedEvent event) {
         try {
             Threads.waitFor(this.mainFrame.showWindow());
         } catch (GameException ex) {
@@ -83,21 +81,16 @@ public class LWJGLGameLauncher extends GameLauncher {
         }
     }
 
-    @Override
-    public AnsiProvider ansi() {
+    @Override public AnsiProvider ansi() {
         return new LWJGLAnsiProvider();
     }
 
-    @Api
-    @Override
-    protected void tick0() throws GameException {
+    @Api @Override protected void tick0() throws GameException {
     }
 
-    @Override
-    protected void start0() throws GameException {
+    @Override protected void start0() throws GameException {
         GLUtil.clinit(this);
 
-        this.profiler().addHandler("render", new GLSectionHandler());
         this.glfwThread = new GLFWThread(this);
         this.glfwThread.start();
         Configuration.OPENGL_EXPLICIT_INIT.set(true);
@@ -109,7 +102,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         this.mainFrame = new GLFWFrame(this);
         this.frame(this.mainFrame);
         this.mainFrame.framebuffer().renderThread().submit(() -> this.glyphProvider(new LWJGLGlyphProvider(this)));
-        this.mainFrame.renderMode(RenderMode.CONTINUOUSLY);
+        this.mainFrame.renderMode(RenderMode.ON_UPDATE);
         this.mainFrame.closeCallback().value(frame -> {
             this.mainFrame.hideWindow();
             try {
@@ -121,7 +114,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         this.eventManager().registerListener(this);
 
-        Keybind keybind = keybindManager().getKeybind(GLFW.GLFW_KEY_F11);
+        Keybind keybind = keybindManager().keybind(GLFW.GLFW_KEY_F11);
         keybind.addHandler(entry -> {
             if (entry instanceof KeyboardKeybindEvent) {
                 KeyboardKeybindEvent e = (KeyboardKeybindEvent) entry;
@@ -130,8 +123,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         });
     }
 
-    @Override
-    protected void stop0() throws GameException {
+    @Override protected void stop0() throws GameException {
 
         this.glyphProvider().cleanup();
         this.textureManager().cleanup();
@@ -140,18 +132,15 @@ public class LWJGLGameLauncher extends GameLauncher {
         Threads.waitFor(this.glfwThread.exit());
     }
 
-    @Override
-    protected void registerSettingInsertions() {
+    @Override protected void registerSettingInsertions() {
         new MouseSensivityInsertion().register(this);
     }
 
-    @Override
-    public GLESTextureManager textureManager() {
+    @Override public GLESTextureManager textureManager() {
         return (GLESTextureManager) super.textureManager();
     }
 
-    @Override
-    public LWJGLGuiManager guiManager() {
+    @Override public LWJGLGuiManager guiManager() {
         return (LWJGLGuiManager) super.guiManager();
     }
 
@@ -159,8 +148,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         return memoryManagement;
     }
 
-    @Override
-    public GLFWFrame frame() {
+    @Override public GLFWFrame frame() {
         return (GLFWFrame) super.frame();
     }
 

@@ -7,9 +7,6 @@ uniform int hasTexture;
 uniform sampler2D texture_sampler;
 uniform vec4 color;
 uniform vec4 textureAddColor;
-uniform int idIndex;
-uniform lowp vec4 id;
-uniform lowp int idIndex;
 
 void main() {
     vec4 fc;
@@ -23,5 +20,5 @@ void main() {
     }
 
     gl_FragData[0] = color * (textureAddColor + fc);
-    if (idIndex!=-1) gl_FragData[gl_MaxDrawBuffers-1] = id;
+    if (idTarget!=-1) gl_FragData[gl_MaxDrawBuffers-1] = id;
 }

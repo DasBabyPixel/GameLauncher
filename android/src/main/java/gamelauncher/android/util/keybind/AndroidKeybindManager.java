@@ -33,14 +33,12 @@ public class AndroidKeybindManager extends AbstractGameResource implements Keybi
         this.launcher = launcher;
     }
 
-    @Override
-    public void post(KeybindEvent event) {
+    @Override public void post(KeybindEvent event) {
         launcher.eventManager().post(new KeybindEntryEvent(event));
         event.keybind().handle(event);
     }
 
-    @Override
-    public Keybind getKeybind(int keybind) {
+    @Override public Keybind keybind(int keybind) {
         return keybinds.computeIfAbsent(keybind, k -> {
             String display = "?";
             if ((k & BITS_KEY) == BITS_KEY) {
@@ -56,8 +54,7 @@ public class AndroidKeybindManager extends AbstractGameResource implements Keybi
         });
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         for (Keybind keybind : keybinds.values()) {
             keybind.cleanup();
         }

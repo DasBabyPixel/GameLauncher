@@ -12,7 +12,7 @@ public interface KeybindManager extends GameResource {
      * @param keybind the keybind id
      * @return the created {@link Keybind}
      */
-    Keybind getKeybind(int keybind);
+    Keybind keybind(int keybind);
 
     void post(KeybindEvent event) throws GameException;
 

@@ -7,9 +7,9 @@ import org.joml.Vector4f;
  */
 public interface ColorMultiplierModel extends Model {
 
-	/**
-	 * @return the color multiplier
-	 */
-	Vector4f getColor();
-	
+    /**
+     * @return the color multiplier
+     */
+    Vector4f getColor();
+
 }

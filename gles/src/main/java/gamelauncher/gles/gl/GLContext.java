@@ -34,6 +34,6 @@ public interface GLContext extends GameResource {
 
     @Api GLES31 gl31();
 
-    @Api @Deprecated GLES32 gl32();
+    @Api GLES32 gl32();
 
 }

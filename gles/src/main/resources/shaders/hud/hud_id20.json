@@ -1,0 +1,63 @@
+[
+  {
+    "version": "2.0",
+    "capabilities": [
+      "id"
+    ],
+    "vertexShader": "vertex_id20",
+    "fragmentShader": "fragment_id20",
+    "uniforms": [
+      {
+        "name": "ModelMat",
+        "type": "mat4",
+        "values": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "ProjectionMat",
+        "type": "mat4",
+        "values": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "name": "Id",
+        "type": "int",
+        "values:": [
+          0
+        ]
+      }
+    ]
+  }
+]

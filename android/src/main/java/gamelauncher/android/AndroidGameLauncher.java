@@ -26,11 +26,11 @@ import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.DefaultOperatingSystems;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.GLESGameRenderer;
 import gamelauncher.gles.GLESThreadGroup;
 import gamelauncher.gles.context.GLESContextProvider;
 import gamelauncher.gles.font.bitmap.BasicFontFactory;
 import gamelauncher.gles.modelloader.GLESModelLoader;
+import gamelauncher.gles.render.GLESGameRenderer;
 import gamelauncher.gles.shader.GLESShaderLoader;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -74,13 +74,11 @@ public class AndroidGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
-    @Override
-    protected void loadCustomPlugins() {
+    @Override protected void loadCustomPlugins() {
         activity.init(this);
     }
 
-    @Override
-    public void frame(Frame frame) {
+    @Override public void frame(Frame frame) {
         super.frame(frame);
     }
 
@@ -88,8 +86,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return view;
     }
 
-    @Override
-    public AndroidKeybindManager keybindManager() {
+    @Override public AndroidKeybindManager keybindManager() {
         return (AndroidKeybindManager) super.keybindManager();
     }
 
@@ -97,9 +94,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return glThreadGroup;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    @Override
-    public void keyboardVisible(boolean visible) {
+    @RequiresApi(api = Build.VERSION_CODES.M) @Override public void keyboardVisible(boolean visible) {
         Runnable r = () -> {
             InputMethodManager manager = activity.getApplicationContext().getSystemService(InputMethodManager.class);
             this.keyboardVisible = visible;
@@ -130,8 +125,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return glLoader;
     }
 
-    @Override
-    public boolean keyboardVisible() {
+    @Override public boolean keyboardVisible() {
         return keyboardVisible;
     }
 }

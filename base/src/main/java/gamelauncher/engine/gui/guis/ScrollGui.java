@@ -43,8 +43,7 @@ public interface ScrollGui extends Gui {
             super(launcher);
         }
 
-        @Override
-        public boolean mayScroll(MouseButtonKeybindEvent event) {
+        @Override public boolean mayScroll(MouseButtonKeybindEvent event) {
             return event.buttonId() == 0;
         }
     }
@@ -136,8 +135,7 @@ public interface ScrollGui extends Gui {
             this.GUIs.add(horizontalScrollbarGui);
         }
 
-        @Override
-        protected boolean doHandle(KeybindEvent entry) throws GameException {
+        @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
             if (entry instanceof ScrollKeybindEvent) {
                 ScrollKeybindEvent s = (ScrollKeybindEvent) entry;
                 float mulx = this.displayWidth.floatValue() / 10;
@@ -152,8 +150,7 @@ public interface ScrollGui extends Gui {
             return super.doHandle(entry);
         }
 
-        @Override
-        protected final boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+        @Override protected final boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
             ScissorStack scissor = framebuffer.scissorStack();
             final Gui cgui = this.gui.value();
             if (cgui != null) {
@@ -175,8 +172,7 @@ public interface ScrollGui extends Gui {
         /**
          * @return the gui inside this scrollgui
          */
-        @Override
-        public Property<Gui> gui() {
+        @Override public Property<Gui> gui() {
             return this.gui;
         }
 
@@ -285,31 +281,28 @@ public interface ScrollGui extends Gui {
             /**
              * @return the thickness property
              */
-            @Api
-            public NumberValue thickness() {
+            @Api public NumberValue thickness() {
                 return this.thickness;
             }
 
             /**
              * @return the max property
              */
-            @Api
-            public NumberValue max() {
+            @Api public NumberValue max() {
                 return this.max;
             }
 
             /**
              * @return the visible property
              */
-            @Api
-            public BooleanValue visible() {
+            @Api public BooleanValue visible() {
                 return this.visible;
             }
 
             /**
              * @return the type
              */
-            public Type getType() {
+            public Type type() {
                 return this.type;
             }
 
@@ -440,8 +433,7 @@ public interface ScrollGui extends Gui {
                 this.redraw();
             }
 
-            @Override
-            protected boolean doHandle(KeybindEvent entry) throws GameException {
+            @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
                 if (entry instanceof MouseMoveKeybindEvent) {
                     MouseMoveKeybindEvent mm = (MouseMoveKeybindEvent) entry;
                     if (Gui.hovering(this.scrollbarX.floatValue(), this.scrollbarY.floatValue(), this.scrollbarWidth.floatValue(), this.scrollbarHeight.floatValue(), mm.mouseX(), mm.mouseY())) {
@@ -479,23 +471,19 @@ public interface ScrollGui extends Gui {
                 return super.doHandle(entry);
             }
 
-            @Api
-            @Override
-            protected void doUpdate() throws GameException {
+            @Api @Override protected void doUpdate() throws GameException {
                 if (this.curScrollbarColor.calculateCurrent() | this.curBackgroundColor.calculateCurrent() | this.scrollbar.progress.calculateCurrent()) {
                     this.redraw();
                 }
             }
 
-            @Override
-            protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) {
+            @Override protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) {
                 this.curScrollbarColor.calculateCurrent();
                 this.curBackgroundColor.calculateCurrent();
                 this.scrollbar.progress.calculateCurrent();
             }
 
-            @Override
-            protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+            @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
                 if (!this.scrollbar.visible.booleanValue()) {
                     return false;
                 }
@@ -505,8 +493,7 @@ public interface ScrollGui extends Gui {
             /**
              * @return the scrollbar for this gui
              */
-            @Api
-            public Scrollbar scrollbar() {
+            @Api public Scrollbar scrollbar() {
                 return this.scrollbar;
             }
 

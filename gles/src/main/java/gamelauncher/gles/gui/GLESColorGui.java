@@ -7,9 +7,6 @@
 
 package gamelauncher.gles.gui;
 
-import de.dasbabypixel.api.property.AbstractNumberHolder;
-import de.dasbabypixel.api.property.ChangeListener;
-import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ColorGui;
@@ -38,14 +35,12 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         this.color.w.addListener((NumberValue v) -> this.redraw());
     }
 
-    @Override
-    protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
         this.launcher().contextProvider().freeContext(this.context, ContextProvider.ContextType.HUD);
         this.model.cleanup();
     }
 
-    @Override
-    protected void doInit(Framebuffer framebuffer) throws GameException {
+    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
         this.context = this.launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
 
         Mesh mesh = new RectMesh(gles);
@@ -60,8 +55,6 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         item.scale().x.bind(this.widthProperty());
         item.scale().y.bind(this.heightProperty());
         this.model = item.createModel();
-        item.position().x.addListener((ChangeListener<AbstractNumberHolder>) (value, oldNumber, newNumber) -> System.out.println(newNumber));
-        item.position().x.addListener((InvalidationListener) property -> System.out.println("invalidated"));
 
         item.color().x.bind(this.color.x);
         item.color().y.bind(this.color.y);
@@ -69,16 +62,15 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         item.color().w.bind(this.color.w);
     }
 
-    @Override
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         this.context.update(EmptyCamera.instance());
+        launcher().profiler().check();
         this.context.drawModel(this.model);
         this.context.program().clearUniforms();
         return super.doRender(framebuffer, mouseX, mouseY, partialTick);
     }
 
-    @Override
-    public PropertyVector4f color() {
+    @Override public PropertyVector4f color() {
         return this.color;
     }
 

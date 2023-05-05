@@ -89,7 +89,7 @@ public class LWJGLInput implements Input {
 
     private void mouseEvent(InputType inputType, int mouseButton, float omx, float omy, float mx, float my) throws GameException {
         if (inputType == InputType.SCROLL) {
-            keybindManager.post(new LWJGLScrollKeybindEvent(keybindManager.getKeybind(LWJGLKeybindManager.SCROLL), mx, my));
+            keybindManager.post(new LWJGLScrollKeybindEvent(keybindManager.keybind(LWJGLKeybindManager.SCROLL), mx, my));
         } else {
             if (inputType == InputType.MOVE) {
                 for (Entry e : this.mousePressed) {
@@ -97,7 +97,7 @@ public class LWJGLInput implements Input {
                     e.my = my;
                 }
             }
-            Keybind keybind = keybindManager.getKeybind(LWJGLKeybindManager.MOUSE_ADD + mouseButton);
+            Keybind keybind = keybindManager.keybind(LWJGLKeybindManager.MOUSE_ADD + mouseButton);
             KeybindEvent event;
             switch (inputType) {
                 case HELD:
@@ -121,7 +121,7 @@ public class LWJGLInput implements Input {
 
     private void keyEvent(InputType inputType, int key, int scancode, char c) throws GameException {
         int id = key == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode : LWJGLKeybindManager.KEYBOARD_ADD + key;
-        Keybind keybind = keybindManager.getKeybind(id);
+        Keybind keybind = keybindManager.keybind(id);
         KeybindEvent event;
         switch (inputType) {
             case HELD:

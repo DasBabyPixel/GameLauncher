@@ -19,18 +19,16 @@ public class Key {
      */
     public Key(Plugin plugin, String key) {
         this.plugin = plugin;
-        this.key = key;
+        this.key = plugin == null && key.startsWith("gamelauncher:") ? key.substring("gamelauncher:".length()) : key;
     }
 
     public Key(String key) {
         this(null, key);
     }
 
-    @SuppressWarnings("NewApi")
-    public Path toPath(Path root) {
+    @SuppressWarnings("NewApi") public Path toPath(Path root) {
         Path path = root;
-        if (plugin != null)
-            path = path.resolve(plugin.name());
+        if (plugin != null) path = path.resolve(plugin.name());
         path = path.resolve(key);
         return path;
     }
@@ -49,23 +47,16 @@ public class Key {
         return this.plugin;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (this.getClass() != obj.getClass())
-            return false;
+    @Override public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (this.getClass() != obj.getClass()) return false;
         Key other = (Key) obj;
         return Objects.equals(this.key, other.key) && Objects.equals(this.plugin, other.plugin);
     }
 
-    @Override
-    public String toString() {
-        if (plugin == null)
-            return "gamelauncher:" + this.key;
+    @Override public String toString() {
+        if (plugin == null) return "gamelauncher:" + this.key;
         return String.format("%s:%s", this.plugin.name(), this.key);
     }
-
 }

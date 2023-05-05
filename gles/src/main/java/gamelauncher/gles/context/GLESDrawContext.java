@@ -82,13 +82,11 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         this.projection = projection;
     }
 
-    @Override
-    public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz) throws GameException {
+    @Override public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz) throws GameException {
         this.drawModel(model, x, y, z, rx, ry, rz, 1, 1, 1);
     }
 
-    @Override
-    public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz) throws GameException {
+    @Override public void drawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz) throws GameException {
         this.modelMatrix.identity();
         this.setupColors(this.colorMultiplier, this.colorAdd);
         this.pDrawModel(model, x, y, z, rx, ry, rz, sx, sy, sz, this.colorMultiplier, this.colorAdd);
@@ -138,24 +136,24 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         this.loadViewMatrix(camera);
         ShaderProgram shaderProgram = this.shaderProgram.get();
         shaderProgram.bind();
-        shaderProgram.uviewMatrix.set(this.viewMatrix);
-        shaderProgram.uprojectionMatrix.set(this.projectionMatrix);
-        shaderProgram.ucamera_pos.set(camera.x(), camera.y(), camera.z());
-        shaderProgram.uambientLight.set(this.ambientLight);
+        shaderProgram.uViewMat.set(this.viewMatrix);
+        shaderProgram.uProjectionMat.set(this.projectionMatrix);
+        shaderProgram.uCameraPosition.set(camera.x(), camera.y(), camera.z());
+//        shaderProgram.uambientLight.set(this.ambientLight);
 
-        shaderProgram.utexture_sampler.set(0);
+        shaderProgram.uTexture.set(0);
 
         float pow = (float) (Math.sin(System.currentTimeMillis() / 1000D) + 1) * 200;
-        shaderProgram.uspecularPower.set(pow);
+//        shaderProgram.uspecularPower.set(pow);
 
         Vector3f lightPos = this.pointLight.position;
         lightPos.set(this.lightPosition);
         lightPos.mulPosition(this.viewMatrix);
-        shaderProgram.upointLight.set(this.pointLight);
+//        shaderProgram.upointLight.set(this.pointLight);
 
         this.directionalLight.direction.set(this.directionalLightDirection);
         this.directionalLight.direction.mulDirection(this.viewMatrix);
-        shaderProgram.udirectionalLight.set(this.directionalLight);
+//        shaderProgram.udirectionalLight.set(this.directionalLight);
     }
 
     @Override public GLESDrawContext duplicate() {
@@ -245,13 +243,13 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     private void drawMesh(Model model, Vector4f colorMultiplier, Vector4f colorAdd) throws GameException {
         ShaderProgram shaderProgram = this.shaderProgram.get();
         shaderProgram.bind();
-        shaderProgram.umodelMatrix.set(this.modelMatrix);
+        shaderProgram.uModelMat.set(this.modelMatrix);
         if (shaderProgram.hasUniform("modelViewMatrix")) {
             this.viewMatrix.mul(this.modelMatrix, this.tempMatrix4f);
-            shaderProgram.umodelViewMatrix.set(this.tempMatrix4f);
+            shaderProgram.uModelViewMat.set(this.tempMatrix4f);
         }
-        shaderProgram.ucolor.set(colorMultiplier);
-        shaderProgram.utextureAddColor.set(colorAdd);
+        shaderProgram.uColorMultiplier.set(colorMultiplier);
+        shaderProgram.uTextureAddColor.set(colorAdd);
         model.render(shaderProgram);
     }
 

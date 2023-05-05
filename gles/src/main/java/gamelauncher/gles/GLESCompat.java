@@ -21,5 +21,6 @@ public class GLESCompat {
     public static void printDebugInfos(Logger logger) {
         logger.debugf("OpenGL: %s%nGLSL: %s%nOpenGL Version: %s.%s", VERSION, SHADING_VERSION, VERSION_MAJOR, VERSION_MINOR);
         logger.debugf("MAX_TEXTURE_SIZE: %s", MAX_TEXTURE_SIZE);
+        logger.debugf("MAX_DRAW_BUFFERS: %s", MAX_DRAW_BUFFERS);
     }
 }

@@ -1,6 +1,5 @@
 package gamelauncher.gles.shader;
 
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;
 import gamelauncher.engine.util.GameException;
@@ -11,8 +10,6 @@ import gamelauncher.gles.states.StateRegistry;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-;
-
 public class GLESShaderProgram extends ShaderProgram {
 
     private final int programId;
@@ -22,8 +19,8 @@ public class GLESShaderProgram extends ShaderProgram {
     private int fragmentShaderId;
     private final GLES gles;
 
-    public GLESShaderProgram(GLES gles, GameLauncher launcher, Path path) throws GameException {
-        super(launcher);
+    public GLESShaderProgram(GLES gles, Path path) throws GameException {
+        super(gles.launcher());
         this.gles = gles;
         this.path = path;
         this.programId = StateRegistry.currentGl().glCreateProgram();
@@ -97,35 +94,30 @@ public class GLESShaderProgram extends ShaderProgram {
             c.glValidateProgram(this.programId);
             c.glGetProgramiv(programId, GLES20.GL_VALIDATE_STATUS, a, 0);
             if (a[0] == 0) {
-                this.launcher.logger()
-                        .warnf("Warning validating Shader code: %s", c.glGetProgramInfoLog(this.programId));
+                this.launcher.logger().warnf("Warning validating Shader code: %s", c.glGetProgramInfoLog(this.programId));
             }
         }
     }
 
-    @Override
-    public void bind() {
+    @Override public void bind() {
         StateRegistry.currentGl().glUseProgram(this.programId);
     }
 
-    @Override
-    public void unbind() {
+    @Override public void unbind() {
         StateRegistry.currentGl().glUseProgram(0);
     }
 
-    @Override
-    public boolean cleanedUp() {
+    @Override public boolean cleanedUp() {
         return this.refCount.get() == 0;
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         if (this.refCount.decrementAndGet() == 0) {
             this.unbind();
             if (this.programId != 0) {
                 StateRegistry.currentGl().glDeleteProgram(this.programId);
             }
-            for(Uniform uniform : uniformMap.values()) {
+            for (Uniform uniform : uniformMap.values()) {
                 uniform.cleanup();
             }
         }

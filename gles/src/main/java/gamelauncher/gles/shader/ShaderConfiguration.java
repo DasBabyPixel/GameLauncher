@@ -11,23 +11,28 @@ import java.util.List;
 import java.util.Map;
 
 public class ShaderConfiguration {
-    public static final String DEFAULT_VERSION = "default";
-    private final String version;
     private final String vertexShader;
     private final String fragmentShader;
+    private final String[] capabilities;
+    private final String[] targets;
     private final UniformMap uniforms;
     private final Structs structs;
 
-    public ShaderConfiguration(String version, String vertexShader, String fragmentShader, UniformMap uniforms, Structs structs) {
-        this.version = version;
+    public ShaderConfiguration(String vertexShader, String fragmentShader, String[] capabilities, String[] targets, UniformMap uniforms, Structs structs) {
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
+        this.capabilities = capabilities;
+        this.targets = targets;
         this.uniforms = uniforms;
         this.structs = structs;
     }
 
-    public String version() {
-        return version;
+    public String[] targets() {
+        return targets;
+    }
+
+    public String[] capabilities() {
+        return capabilities;
     }
 
     public String vertexShader() {
@@ -47,14 +52,38 @@ public class ShaderConfiguration {
     }
 
     public static class UniformMap {
-        private final Map<String, String> typeByUniform;
+        private final Map<String, Uniform> typeByUniform;
 
-        public UniformMap(Map<String, String> typeByUniform) {
+        public UniformMap(Map<String, Uniform> typeByUniform) {
             this.typeByUniform = typeByUniform;
         }
 
-        public Map<String, String> typeByUniform() {
+        public Map<String, Uniform> typeByUniform() {
             return typeByUniform;
+        }
+    }
+
+    public static class Uniform {
+        private final String name;
+        private final String type;
+        private final float[] values;
+
+        public Uniform(String name, String type, float[] values) {
+            this.name = name;
+            this.type = type;
+            this.values = values;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public String type() {
+            return type;
+        }
+
+        public float[] values() {
+            return values;
         }
     }
 

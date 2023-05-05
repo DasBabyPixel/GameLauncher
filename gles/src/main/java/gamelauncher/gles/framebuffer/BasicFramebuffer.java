@@ -4,6 +4,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
+import gamelauncher.gles.render.GLESGameRenderer;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.texture.GLESTexture;
 import java8.util.concurrent.CompletableFuture;
@@ -13,7 +14,7 @@ import static gamelauncher.gles.gl.GLES30.GL_DEPTH24_STENCIL8;
 import static gamelauncher.gles.gl.GLES30.GL_DEPTH_STENCIL_ATTACHMENT;
 
 /**
- * An extension of the {@link GLESFramebuffer} for the {@link gamelauncher.gles.GLESGameRenderer}
+ * An extension of the {@link GLESFramebuffer} for the {@link GLESGameRenderer}
  */
 public class BasicFramebuffer extends GLESFramebuffer {
 

@@ -1,24 +1,4 @@
 {
-  "version": "default",
-  "parent": null,
-  "vertexShader": "vertex",
-  "fragmentShader": "fragment",
-  "uniforms": {
-    "modelMatrix": "mat4",
-    "projectionMatrix": "mat4",
-    "texture_sampler": "sampler2D",
-    "color": "vec4",
-    "textureAddColor": "vec4",
-    "hasTexture": "int",
-    "id": "vec4"
-  },
-  "structs": [
-  ],
-  "Custom versions belong here, the default version is without suffix and should be compatible with GLES 2.0. See https://en.wikipedia.org/wiki/OpenGL_Shading_Language#Versions": "",
-  "versions": [
-    {
-      "version": "3.0",
-      "parent": "default"
-    }
-  ]
+  "2.0": "hud20",
+  "3.0": "hud30"
 }
