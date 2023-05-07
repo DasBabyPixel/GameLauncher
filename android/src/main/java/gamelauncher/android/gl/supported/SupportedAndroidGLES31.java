@@ -14,7 +14,8 @@ import androidx.annotation.RequiresApi;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP) public class SupportedAndroidGLES31 extends SupportedAndroidGLES30 implements gamelauncher.gles.gl.GLES31 {
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+public class SupportedAndroidGLES31 extends SupportedAndroidGLES30 implements gamelauncher.gles.gl.GLES31 {
 
     @Override public void glDispatchCompute(int num_groups_x, int num_groups_y, int num_groups_z) {
         GLES31.glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);

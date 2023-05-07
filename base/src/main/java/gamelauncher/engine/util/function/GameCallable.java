@@ -33,8 +33,7 @@ public interface GameCallable<T> {
             this.callable = callable;
         }
 
-        @Override
-        public void run() throws GameException {
+        @Override public void run() throws GameException {
             try {
                 T t = callable.call();
                 future.complete(t);

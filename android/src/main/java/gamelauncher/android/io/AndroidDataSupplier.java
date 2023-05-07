@@ -21,20 +21,17 @@ public class AndroidDataSupplier implements DataSupplier {
         this.provider = provider;
     }
 
-    @Override
-    public InputStream open(EmbedPath path) throws IOException {
+    @Override public InputStream open(EmbedPath path) throws IOException {
         return provider.assetManager.open(path.toAbsolutePath().toString().substring(1));
     }
 
-    @Override
-    public long size(EmbedPath path) throws IOException {
+    @Override public long size(EmbedPath path) throws IOException {
         try (AssetFileDescriptor fileDescriptor = provider.assetManager.openFd(path.toAbsolutePath().toString().substring(1))) {
             return fileDescriptor.getLength();
         }
     }
 
-    @Override
-    public boolean directory(EmbedPath path) throws IOException {
+    @Override public boolean directory(EmbedPath path) throws IOException {
         return provider.assetManager.list(path.toAbsolutePath().toString().substring(1)).length > 0;
     }
 }

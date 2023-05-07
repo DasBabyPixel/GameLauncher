@@ -5,6 +5,6 @@ import gamelauncher.engine.util.GameException;
 
 public interface ModelSubLoader {
 
-	byte[] convertModel(ResourceStream in) throws GameException;
+    byte[] convertModel(ResourceStream in) throws GameException;
 
 }

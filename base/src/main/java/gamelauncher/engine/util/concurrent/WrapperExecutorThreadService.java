@@ -36,41 +36,34 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
         waiter.start();
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return service.toString();
     }
 
-    @Override
-    public CompletableFuture<Void> submit(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submit(GameRunnable runnable) {
         return submit(runnable.toCallable());
     }
 
-    @Override
-    public <T> CompletableFuture<T> submit(GameCallable<T> callable) {
+    @Override public <T> CompletableFuture<T> submit(GameCallable<T> callable) {
         WrapperCallable<T> w = new WrapperCallable<>(callable, WrapperEntry.newEntry());
         service.submit(w);
         return w.fut;
     }
 
-    @Override
-    public Executor executor() {
+    @Override public Executor executor() {
         return service;
     }
 
-    @Override
-    public CompletableFuture<Void> exit() {
+    @Override public CompletableFuture<Void> exit() {
         service.shutdown();
         return exitFuture;
     }
 
-    @Override
-    public CompletableFuture<Void> exitFuture() {
+    @Override public CompletableFuture<Void> exitFuture() {
         return exitFuture;
     }
 
-    @Override
-    public Collection<GameRunnable> exitNow() {
+    @Override public Collection<GameRunnable> exitNow() {
         Collection<Runnable> col = service.shutdownNow();
         Collection<GameRunnable> c2 = new ArrayList<>();
         for (Runnable runnable : col) {
@@ -79,33 +72,27 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
         return c2;
     }
 
-    @Override
-    public void workQueue() {
+    @Override public void workQueue() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void park() {
+    @Override public void park() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void unpark() {
+    @Override public void unpark() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void park(long nanos) {
+    @Override public void park(long nanos) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public CompletableFuture<Void> submitLast(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submitLast(GameRunnable runnable) {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
         throw new UnsupportedOperationException();
     }
 
@@ -124,8 +111,7 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
             this.entry = entry;
         }
 
-        @Override
-        public void run() {
+        @Override public void run() {
             try {
                 if (threadLocal.get() != null) {
                     throw new IllegalStateException("Shouldn't happen");
@@ -146,8 +132,7 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
             GameException ex = new GameException("Exception in ExecutorService");
             if (entry != null) {
                 Throwable t = entry.calculateCause();
-                if (t != null)
-                    ex.addSuppressed(t);
+                if (t != null) ex.addSuppressed(t);
             }
             return ex;
         }
@@ -161,8 +146,7 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
             setDaemon(true);
         }
 
-        @Override
-        public void run() {
+        @Override public void run() {
             while (!service.isShutdown()) {
                 try {
                     //noinspection ResultOfMethodCallIgnored

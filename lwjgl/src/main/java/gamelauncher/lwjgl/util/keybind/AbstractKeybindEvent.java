@@ -15,18 +15,15 @@ public abstract class AbstractKeybindEvent implements KeybindEvent {
         this.keybind = keybind;
     }
 
-    @Override
-    public Keybind keybind() {
+    @Override public Keybind keybind() {
         return keybind;
     }
 
-    @Override
-    public boolean consumed() {
+    @Override public boolean consumed() {
         return consumed;
     }
 
-    @Override
-    public void consume() {
+    @Override public void consume() {
         if (consumed) throw new IllegalStateException("Already consumed!");
         consumed = true;
     }

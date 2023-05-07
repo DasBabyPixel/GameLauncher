@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
@@ -22,10 +23,12 @@ import java.util.Map;
 public class Language {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
     private final Locale locale;
+    private final GameLauncher launcher;
     private final Map<String, String> map = new HashMap<>();
     private final Language[] fallbacks;
 
-    Language(Locale locale, Language... fallbacks) {
+    Language(GameLauncher launcher, Locale locale, Language... fallbacks) {
+        this.launcher = launcher;
         this.locale = locale;
         this.fallbacks = fallbacks;
     }
@@ -39,7 +42,7 @@ public class Language {
     }
 
     @Api public void load(Key key) throws GameException {
-        load(key.toPath(key.plugin().launcher().assets()));
+        load(key.toPath(launcher.assets()));
     }
 
     @Api public void load(Path path, Charset charset) throws GameException {

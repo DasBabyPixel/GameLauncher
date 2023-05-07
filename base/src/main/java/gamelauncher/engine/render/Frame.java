@@ -18,93 +18,78 @@ public interface Frame extends GameResource {
     /**
      * @return the input for this {@link Frame}
      */
-    @Api
-    Input input();
+    @Api Input input();
 
     /**
      * @return the frameCloseFuture
      */
-    @Api
-    CompletableFuture<Frame> frameCloseFuture();
+    @Api CompletableFuture<Frame> frameCloseFuture();
 
     /**
      * @return the underlying {@link Framebuffer}
      */
-    @Api
-    Framebuffer framebuffer();
+    @Api Framebuffer framebuffer();
 
     /**
      * @return the {@link RenderMode} for this {@link Frame}
      */
-    @Api
-    RenderMode renderMode();
+    @Api RenderMode renderMode();
 
     /**
      * Sets the {@link RenderMode} for this {@link Frame}
      *
      * @param renderMode the {@link RenderMode}
      */
-    @Api
-    void renderMode(RenderMode renderMode);
+    @Api void renderMode(RenderMode renderMode);
 
     /**
      * Sets the {@link FrameRenderer} for this {@link Frame}
      *
      * @param renderer the {@link FrameRenderer}
      */
-    @Api
-    void frameRenderer(FrameRenderer renderer);
+    @Api void frameRenderer(FrameRenderer renderer);
 
     /**
      * @return the fullscreen property. Modify this to set fullscreen
      */
-    @Api
-    BooleanValue fullscreen();
+    @Api BooleanValue fullscreen();
 
     /**
      * @return the {@link FrameRenderer} for this {@link Frame}
      */
-    @Api
-    FrameRenderer frameRenderer();
+    @Api FrameRenderer frameRenderer();
 
-    @Api
-    ExecutorThread renderThread();
+    @Api ExecutorThread renderThread();
 
     /**
      * @return a new frame that shares resources with this {@link Frame}
      * @throws GameException an exception
      */
-    @Api
-    Frame newFrame() throws GameException;
+    @Api Frame newFrame() throws GameException;
 
     /**
      * @return the {@link FrameCounter} for this {@link Frame}
      */
-    @Api
-    FrameCounter frameCounter();
+    @Api FrameCounter frameCounter();
 
     /**
      * Schedules a draw
      */
-    @Api
-    void scheduleDraw();
+    @Api void scheduleDraw();
 
     /**
      * Waits for the next frame
      */
-    @Api
-    void waitForFrame();
+    @Api void waitForFrame();
 
     /**
      * Schedules a draw and waits for the next frame
      */
-    @Api
-    void scheduleDrawWaitForFrame();
+    @Api void scheduleDrawWaitForFrame();
 
     /**
      * @return the launcher
      */
-    @Api
-    GameLauncher launcher();
+    @Api GameLauncher launcher();
 
 }

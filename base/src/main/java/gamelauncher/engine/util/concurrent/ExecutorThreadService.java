@@ -16,22 +16,18 @@ public interface ExecutorThreadService extends ExecutorThread {
     /**
      * @return the exitfuture
      */
-    @Api
-    CompletableFuture<Void> exit();
+    @Api CompletableFuture<Void> exit();
 
     /**
      * @return the cancelled runnables
      */
-    @Api
-    Collection<GameRunnable> exitNow();
+    @Api Collection<GameRunnable> exitNow();
 
-    @Api
-    Executor executor();
+    @Api Executor executor();
 
     /**
      * @return the exitfuture
      */
-    @Api
-    CompletableFuture<Void> exitFuture();
+    @Api CompletableFuture<Void> exitFuture();
 
 }

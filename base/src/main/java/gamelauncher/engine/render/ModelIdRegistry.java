@@ -34,8 +34,7 @@ public class ModelIdRegistry extends AbstractGameResource {
         new CleanerThread();
     }
 
-    @Api
-    public int id(Model model) {
+    @Api public int id(Model model) {
         synchronized (lock) {
             int id = model.storedValue(idKey, random::nextInt);
             if (!i2o.containsKey(id)) {
@@ -47,8 +46,7 @@ public class ModelIdRegistry extends AbstractGameResource {
         }
     }
 
-    @Api
-    public Model findModel(int id) {
+    @Api public Model findModel(int id) {
         synchronized (lock) {
             WeakReference<Model> ref = i2o.get(id);
             if (ref == null) return null;
@@ -61,8 +59,7 @@ public class ModelIdRegistry extends AbstractGameResource {
         }
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
     }
 
     private class CleanerThread extends Thread {
@@ -74,9 +71,7 @@ public class ModelIdRegistry extends AbstractGameResource {
             start();
         }
 
-        @SuppressWarnings("InfiniteLoopStatement")
-        @Override
-        public void run() {
+        @SuppressWarnings("InfiniteLoopStatement") @Override public void run() {
             while (true) {
                 try {
                     Reference<? extends Model> ref = referenceQueue.remove();

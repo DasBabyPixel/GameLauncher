@@ -40,9 +40,7 @@ public final class GLUtil {
      * @param stream the output {@link PrintStream}
      * @return the generated callback function
      */
-    @Api
-    @Nullable
-    public static Callback setupDebugMessageCallback(PrintStream stream) {
+    @Api @Nullable public static Callback setupDebugMessageCallback(PrintStream stream) {
         GLESCapabilities caps = GLES.getCapabilities();
 
         if (caps.GLES32) {

@@ -18,8 +18,7 @@ public class LWJGLNetworkEncoder extends MessageToByteEncoder<Packet> {
         this.handler = handler;
     }
 
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) throws Exception {
+    @Override protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) throws Exception {
         DataBuffer buf = handler.prepareBuffer(out);
         int index = buf.increaseWriterIndex(DataUtil.BYTES_INT);
         int packetIndex = buf.writerIndex();

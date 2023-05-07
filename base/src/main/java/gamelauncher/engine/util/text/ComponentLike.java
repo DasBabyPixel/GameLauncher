@@ -4,6 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface ComponentLike {
 
-	@NotNull Component asComponent();
+    @NotNull Component asComponent();
 
 }

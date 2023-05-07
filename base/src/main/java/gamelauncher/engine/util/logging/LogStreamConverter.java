@@ -19,8 +19,7 @@ class LogStreamConverter extends OutputStream {
         this.charset = charset;
     }
 
-    @Override
-    public void write(int b) throws IOException {
+    @Override public void write(int b) throws IOException {
         try {
             lock.lock();
             boolean newLine = b == '\n';

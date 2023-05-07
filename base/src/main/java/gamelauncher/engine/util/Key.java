@@ -1,6 +1,8 @@
 package gamelauncher.engine.util;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -10,27 +12,39 @@ import java.util.Objects;
  */
 public class Key {
 
-    private final Plugin plugin;
+    private final String namespace;
     private final String key;
+
+    public Key(@NotNull String namespace, @NotNull String key) {
+        this.namespace = namespace;
+        this.key = key;
+    }
 
     /**
      * @param plugin the plugin
      * @param key    the key
      */
-    public Key(Plugin plugin, String key) {
-        this.plugin = plugin;
-        this.key = plugin == null && key.startsWith("gamelauncher:") ? key.substring("gamelauncher:".length()) : key;
+    public Key(@NotNull Plugin plugin, @NotNull String key) {
+        this.namespace = plugin.name();
+        this.key = key;
     }
 
     public Key(String key) {
-        this(null, key);
+        this("gamelauncher", key);
     }
 
     @SuppressWarnings("NewApi") public Path toPath(Path root) {
         Path path = root;
-        if (plugin != null) path = path.resolve(plugin.name());
+        path = path.resolve(namespace);
         path = path.resolve(key);
         return path;
+    }
+
+    /**
+     * Returns a new Key with {@link #namespace()} and the given <b>{@code key}</b> as values
+     */
+    @Api public Key withKey(String key) {
+        return new Key(namespace, key);
     }
 
     /**
@@ -43,8 +57,8 @@ public class Key {
     /**
      * @return the plugin
      */
-    public Plugin plugin() {
-        return this.plugin;
+    public String namespace() {
+        return this.namespace;
     }
 
     @Override public boolean equals(Object obj) {
@@ -52,11 +66,10 @@ public class Key {
         if (obj == null) return false;
         if (this.getClass() != obj.getClass()) return false;
         Key other = (Key) obj;
-        return Objects.equals(this.key, other.key) && Objects.equals(this.plugin, other.plugin);
+        return Objects.equals(this.key, other.key) && Objects.equals(this.namespace, other.namespace);
     }
 
     @Override public String toString() {
-        if (plugin == null) return "gamelauncher:" + this.key;
-        return String.format("%s:%s", this.plugin.name(), this.key);
+        return String.format("%s:%s", this.namespace, this.key);
     }
 }

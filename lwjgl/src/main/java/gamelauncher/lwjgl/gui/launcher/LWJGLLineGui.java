@@ -121,8 +121,7 @@ public class LWJGLLineGui extends ParentableAbstractGui implements LineGui {
         fromX.invalidate();
     }
 
-    @Override
-    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
         context.update(EmptyCamera.instance());
         context.drawModel(lineModel);
         if (arrowModel != null) {

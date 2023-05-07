@@ -20,10 +20,8 @@ public final class GuiConstructorTemplates {
     private static final CopyOnWriteArraySet<GuiConstructorTemplate> defaults = new CopyOnWriteArraySet<>();
     private static GameLauncher launcher;
 
-    @Api
-    public static final GuiConstructorTemplate LAUNCHER = new GuiConstructorTemplate(GameLauncher.class) {
-        @Override
-        public Object[] arguments() {
+    @Api public static final GuiConstructorTemplate LAUNCHER = new GuiConstructorTemplate(GameLauncher.class) {
+        @Override public Object[] arguments() {
             return new Object[]{launcher};
         }
     };
@@ -32,13 +30,11 @@ public final class GuiConstructorTemplates {
         addDefault(LAUNCHER);
     }
 
-    @ApiStatus.Internal
-    public static void init(GameLauncher launcher) {
+    @ApiStatus.Internal public static void init(GameLauncher launcher) {
         GuiConstructorTemplates.launcher = launcher;
     }
 
-    @Api
-    public static Set<GuiConstructorTemplate> defaults() {
+    @Api public static Set<GuiConstructorTemplate> defaults() {
         return defaults;
     }
 

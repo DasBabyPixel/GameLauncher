@@ -11,10 +11,10 @@ import java8.util.concurrent.CompletableFuture;
  */
 public interface Texture extends GameResource {
 
-	//	/**
-	//	 * @return a {@link BufferedImage} for this {@link Texture}
-	//	 */
-	//	CompletableFuture<BufferedImage> getBufferedImage();
+    //	/**
+    //	 * @return a {@link BufferedImage} for this {@link Texture}
+    //	 */
+    //	CompletableFuture<BufferedImage> getBufferedImage();
 
     /**
      * @param width  the width of the new texture
@@ -42,13 +42,13 @@ public interface Texture extends GameResource {
      */
     NumberValue height();
 
-	//	/**
-	//	 * @param image the image to upload
-	//	 * @return a future for this task
-	//	 * @throws GameException an exception on error
-	//	 */
-	//	@Deprecated
-	//	CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException;
+    //	/**
+    //	 * @param image the image to upload
+    //	 * @return a future for this task
+    //	 * @throws GameException an exception on error
+    //	 */
+    //	@Deprecated
+    //	CompletableFuture<Void> uploadAsync(BufferedImage image) throws GameException;
 
     /**
      * @param stream the stream to upload from
@@ -64,8 +64,7 @@ public interface Texture extends GameResource {
      * @return a future for this task
      * @throws GameException an exception on error
      */
-    CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y)
-            throws GameException;
+    CompletableFuture<Void> uploadSubAsync(ResourceStream stream, int x, int y) throws GameException;
 
     /**
      * Copies the contents of this texture to another
@@ -80,7 +79,6 @@ public interface Texture extends GameResource {
      * @return a new future
      * @throws GameException
      */
-    CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width,
-                                   int height) throws GameException;
+    CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException;
 
 }

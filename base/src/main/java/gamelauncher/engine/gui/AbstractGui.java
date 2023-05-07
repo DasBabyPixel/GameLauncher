@@ -38,54 +38,43 @@ public abstract class AbstractGui implements Gui {
         this.launcher = launcher;
     }
 
-    @Override
-    public NumberValue widthProperty() {
+    @Override public NumberValue widthProperty() {
         return w;
     }
 
-    @Override
-    public NumberValue heightProperty() {
+    @Override public NumberValue heightProperty() {
         return h;
     }
 
-    @Override
-    public NumberValue xProperty() {
+    @Override public NumberValue xProperty() {
         return x;
     }
 
-    @Override
-    public NumberValue yProperty() {
+    @Override public NumberValue yProperty() {
         return y;
     }
 
-    @Override
-    public NumberValue visibleXProperty() {
+    @Override public NumberValue visibleXProperty() {
         return visibleX;
     }
 
-    @Override
-    public NumberValue visibleYProperty() {
+    @Override public NumberValue visibleYProperty() {
         return visibleY;
     }
 
-    @Override
-    public NumberValue visibleWidthProperty() {
+    @Override public NumberValue visibleWidthProperty() {
         return visibleW;
     }
 
-    @Override
-    public NumberValue visibleHeightProperty() {
+    @Override public NumberValue visibleHeightProperty() {
         return visibleH;
     }
 
-    @Override
-    public BooleanValue focusedProperty() {
+    @Override public BooleanValue focusedProperty() {
         return focused;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
+    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
         keybindHandlers.compute(clazz, (aClass, consumers) -> {
             if (consumers == null) consumers = new CopyOnWriteArrayList<>();
             consumers.add((Consumer<KeybindEvent>) eventConsumer);
@@ -94,8 +83,7 @@ public abstract class AbstractGui implements Gui {
         });
     }
 
-    @Override
-    public <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
+    @Override public <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
         keybindHandlers.computeIfPresent(clazz, (aClass, consumers) -> {
             consumers.remove(eventConsumer);
             if (consumers.isEmpty()) {
@@ -106,9 +94,7 @@ public abstract class AbstractGui implements Gui {
         });
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends KeybindEvent> Collection<Consumer<? super T>> keybindHandlers(Class<T> clazz) {
+    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> Collection<Consumer<? super T>> keybindHandlers(Class<T> clazz) {
         Collection<Consumer<? super T>> col = new ArrayList<>();
         for (Map.Entry<Class<?>, List<Consumer<KeybindEvent>>> entry : keybindHandlers.entrySet()) {
             if (entry.getKey().isAssignableFrom(clazz)) {
@@ -132,56 +118,42 @@ public abstract class AbstractGui implements Gui {
         }
     }
 
-    @Override
-    public void init(Framebuffer framebuffer) throws GameException {
+    @Override public void init(Framebuffer framebuffer) throws GameException {
     }
 
-    @Override
-    public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Override
-    public void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
     }
 
-    @Api
-    @Override
-    public void onClose() throws GameException {
+    @Api @Override public void onClose() throws GameException {
     }
 
-    @Api
-    @Override
-    public void onOpen() throws GameException {
+    @Api @Override public void onOpen() throws GameException {
     }
 
-    @Api
-    @Override
-    public void focus() throws GameException {
+    @Api @Override public void focus() throws GameException {
         focused.value(true);
     }
 
-    @Override
-    public void unfocus() throws GameException {
+    @Override public void unfocus() throws GameException {
         focused.value(false);
     }
 
-    @Override
-    public void update() throws GameException {
+    @Override public void update() throws GameException {
 
     }
 
-    @Override
-    public void handle(KeybindEvent entry) throws GameException {
+    @Override public void handle(KeybindEvent entry) throws GameException {
 
     }
 
-    @Override
-    public GameLauncher launcher() {
+    @Override public GameLauncher launcher() {
         return launcher;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         String cname = getClass().getSimpleName();
         return String.format("%s[x=%s,y=%s,w=%s,h=%s]", cname, x.intValue(), y.intValue(), w.intValue(), h.intValue());
     }

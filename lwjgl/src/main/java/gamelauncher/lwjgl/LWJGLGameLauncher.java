@@ -20,6 +20,7 @@ import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent.Type;
 import gamelauncher.engine.util.logging.AnsiProvider;
+import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESThreadGroup;
 import gamelauncher.gles.context.GLESContextProvider;
@@ -56,21 +57,32 @@ public class LWJGLGameLauncher extends GameLauncher {
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() throws GameException {
-        this.operatingSystem(DefaultOperatingSystems.LWJGL);
-        this.memoryManagement = new LWJGLMemoryManagement();
-        this.gles = new GLES(this, this.memoryManagement, new LWJGLGLFactory(this));
-        this.executorThreadHelper(new LWJGLExecutorThreadHelper());
-        this.contextProvider(new GLESContextProvider(gles, this));
-        this.keybindManager(new LWJGLKeybindManager(this));
-        this.resourceLoader(new SimpleResourceLoader(this));
-        this.shaderLoader(new GLESShaderLoader(gles));
-        this.gameRenderer(new GLESGameRenderer(gles));
-        this.modelLoader(new GLESModelLoader(gles, this));
-        this.guiManager(new LWJGLGuiManager(this));
-        this.fontFactory(new BasicFontFactory(gles, this));
-        this.textureManager(gles.textureManager());
-        gles.init();
-        this.glThreadGroup = new GLESThreadGroup();
+        try {
+            this.operatingSystem(DefaultOperatingSystems.LWJGL);
+            this.memoryManagement = new LWJGLMemoryManagement();
+            this.gles = new GLES(this, this.memoryManagement, new LWJGLGLFactory(this));
+            this.executorThreadHelper(new LWJGLExecutorThreadHelper());
+            this.contextProvider(new GLESContextProvider(gles, this));
+            this.keybindManager(new LWJGLKeybindManager(this));
+            this.resourceLoader(new SimpleResourceLoader(this));
+            this.shaderLoader(new GLESShaderLoader(gles));
+            this.gameRenderer(new GLESGameRenderer(gles));
+            this.modelLoader(new GLESModelLoader(gles, this));
+            this.guiManager(new LWJGLGuiManager(this));
+            this.fontFactory(new BasicFontFactory(gles, this));
+            this.textureManager(gles.textureManager());
+            gles.init();
+            this.glThreadGroup = new GLESThreadGroup();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            try {
+                Logger.asyncLogStream().cleanup();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+            System.exit(-1);
+            throw new RuntimeException();
+        }
     }
 
     @EventHandler public void handle(LauncherInitializedEvent event) {

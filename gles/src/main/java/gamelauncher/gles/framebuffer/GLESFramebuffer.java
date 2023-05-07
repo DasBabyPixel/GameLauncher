@@ -42,24 +42,20 @@ public class GLESFramebuffer extends AbstractFramebuffer {
         if (!this.isComplete()) {
             try {
                 this.bind();
-                throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(
-                        StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER)));
+                throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER)));
             } finally {
                 this.unbind();
             }
         }
     }
 
-    @Override
-    public void beginFrame() {
+    @Override public void beginFrame() {
     }
 
-    @Override
-    public void endFrame() {
+    @Override public void endFrame() {
     }
 
-    @Override
-    protected void cleanup0() throws GameException {
+    @Override protected void cleanup0() throws GameException {
         super.cleanup0();
         StateRegistry.currentGl().glDeleteFramebuffers(1, new int[]{this.id}, 0);
     }

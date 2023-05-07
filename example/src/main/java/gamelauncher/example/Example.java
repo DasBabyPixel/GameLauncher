@@ -8,18 +8,16 @@ import gamelauncher.engine.util.Key;
 @GamePlugin
 public class Example extends Plugin {
 
-	public Example() {
-		super("example");
-	}
+    public Example() {
+        super("example");
+    }
 
-	@Override
-	public void onEnable() throws GameException {
-		this.launcher().gameRegistry().register(new ExampleGame(this));
-	}
+    @Override public void onEnable() throws GameException {
+        this.launcher().gameRegistry().register(new ExampleGame(this));
+    }
 
-	@Override
-	public void onDisable() {
-		this.launcher().gameRegistry().unregister(new Key(this, "example"));
-	}
+    @Override public void onDisable() {
+        this.launcher().gameRegistry().unregister(new Key(this, "example"));
+    }
 
 }

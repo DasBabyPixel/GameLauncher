@@ -95,17 +95,14 @@ public class EventManager {
 
             for (Method method : methods) {
                 EventHandler handler = method.getAnnotation(EventHandler.class);
-                if (handler == null)
-                    continue;
+                if (handler == null) continue;
                 if (method.getParameterTypes().length != 1) {
-                    logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
-                            + " - More than 1 Parameters!");
+                    logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName() + " - More than 1 Parameters!");
                     continue;
                 }
                 Class<?> param = method.getParameterTypes()[0];
                 if (!Event.class.isAssignableFrom(param)) {
-                    logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName()
-                            + " - Param " + param.getName() + " is not of type Event!");
+                    logger.error("Invalid EventHandler: " + clazz.getName() + "#" + method.getName() + " - Param " + param.getName() + " is not of type Event!");
                     continue;
                 }
                 nodes.add(new MethodNode(listener, method, param, handler.priority()));
@@ -137,21 +134,17 @@ public class EventManager {
             this.method.setAccessible(true);
         }
 
-        @Override
-        public int priority() {
+        @Override public int priority() {
             return priority;
         }
 
-        @Override
-        public void invoke(Event event) {
+        @Override public void invoke(Event event) {
             profiler.begin("event", event.getClass().getSimpleName());
             if (param.isInstance(event)) {
                 try {
                     method.invoke(owner, event);
                 } catch (Throwable ex) {
-                    EventException e =
-                            new EventException("Exception in Event: " + ex.getLocalizedMessage(),
-                                    ex);
+                    EventException e = new EventException("Exception in Event: " + ex.getLocalizedMessage(), ex);
                     logger.error(e);
                 }
             }

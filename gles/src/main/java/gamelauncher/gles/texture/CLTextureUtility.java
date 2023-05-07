@@ -25,8 +25,7 @@ public class CLTextureUtility extends AbstractGameResource {
         return new TUContextLocal(gles);
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         this.framebuffer1.cleanup();
         this.framebuffer2.cleanup();
     }
@@ -38,8 +37,7 @@ public class CLTextureUtility extends AbstractGameResource {
             this.gles = gles;
         }
 
-        @Override
-        protected void valueRemoved(CLTextureUtility value) {
+        @Override protected void valueRemoved(CLTextureUtility value) {
             try {
                 value.cleanup();
             } catch (GameException ex) {
@@ -47,8 +45,7 @@ public class CLTextureUtility extends AbstractGameResource {
             }
         }
 
-        @Override
-        protected CLTextureUtility initialValue() {
+        @Override protected CLTextureUtility initialValue() {
             return new CLTextureUtility(gles.launcher().frame());
         }
     }

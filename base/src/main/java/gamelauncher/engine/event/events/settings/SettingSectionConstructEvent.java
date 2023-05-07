@@ -5,23 +5,22 @@ import gamelauncher.engine.settings.AbstractSettingSection.SettingSectionConstru
 
 /**
  * @author DasBabyPixel
- *
  */
 public class SettingSectionConstructEvent extends Event {
 
-	private final SettingSectionConstructor constructor;
+    private final SettingSectionConstructor constructor;
 
-	/**
-	 * @param constructor the settings-constructor
-	 */
-	public SettingSectionConstructEvent(SettingSectionConstructor constructor) {
-		this.constructor = constructor;
-	}
+    /**
+     * @param constructor the settings-constructor
+     */
+    public SettingSectionConstructEvent(SettingSectionConstructor constructor) {
+        this.constructor = constructor;
+    }
 
-	/**
-	 * @return the {@link SettingSectionConstructor}
-	 */
-	public SettingSectionConstructor constructor() {
-		return constructor;
-	}
+    /**
+     * @return the {@link SettingSectionConstructor}
+     */
+    public SettingSectionConstructor constructor() {
+        return constructor;
+    }
 }

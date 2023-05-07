@@ -37,8 +37,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
         this.setName("GLFWFrameRenderThread-" + GLFWFrameRenderThread.ids.incrementAndGet());
     }
 
-    @Override
-    protected void startExecuting() {
+    @Override protected void startExecuting() {
         this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
         this.fb.query();
         this.frame.context.makeCurrent(true);
@@ -52,8 +51,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
         states.replace(null);
     }
 
-    @Override
-    protected void stopExecuting() throws GameException {
+    @Override protected void stopExecuting() throws GameException {
         this.fb.cleanup();
         if (this.frameRenderer != null) {
             try {
@@ -70,8 +68,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
         }
     }
 
-    @Override
-    protected void workExecution() {
+    @Override protected void workExecution() {
         this.frame.manualFramebuffer.query();
         if (this.draw || this.frame.renderMode() == RenderMode.CONTINUOUSLY) {
             this.lock();
@@ -90,8 +87,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
         }
     }
 
-    @Override
-    protected boolean shouldWaitForSignal() {
+    @Override protected boolean shouldWaitForSignal() {
         return super.shouldWaitForSignal() && this.frame.renderMode() != RenderMode.CONTINUOUSLY;
     }
 
@@ -196,13 +192,11 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
         this.refreshPhaser.awaitAdvance(refreshPhase);
     }
 
-    @Override
-    public GLFWFrame frame() {
+    @Override public GLFWFrame frame() {
         return this.frame;
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return getName();
     }
 

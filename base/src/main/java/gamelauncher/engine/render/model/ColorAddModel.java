@@ -7,9 +7,9 @@ import org.joml.Vector4f;
  */
 public interface ColorAddModel {
 
-	/**
-	 * @return the color to add
-	 */
-	Vector4f getAddColor();
-	
+    /**
+     * @return the color to add
+     */
+    Vector4f getAddColor();
+
 }

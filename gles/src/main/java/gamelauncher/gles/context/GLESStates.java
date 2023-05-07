@@ -23,9 +23,7 @@ public class GLESStates {
         if (current.blend.enabled.value.get() != blend.enabled.value.get()) {
             blend.enabled.apply();
         }
-        if (current.blend.srcrgb.get() != blend.srcrgb.get() || current.blend.dstrgb.get() != blend.dstrgb.get()
-                || current.blend.srcalpha.get() != blend.srcalpha.get()
-                || current.blend.dstalpha.get() != blend.dstalpha.get()) {
+        if (current.blend.srcrgb.get() != blend.srcrgb.get() || current.blend.dstrgb.get() != blend.dstrgb.get() || current.blend.srcalpha.get() != blend.srcalpha.get() || current.blend.dstalpha.get() != blend.dstalpha.get()) {
             blend.applyValues();
         }
         if (current.depth.enabled.value.get() != depth.enabled.value.get()) {

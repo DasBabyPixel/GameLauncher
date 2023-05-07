@@ -54,7 +54,7 @@ public class GLES {
     }
 
     @Api public void init() {
-        launcher.guiManager().registerGuiCreator(TextureGui.class, GLESTextureGui.class);
-        launcher.guiManager().registerGuiCreator(ColorGui.class, GLESColorGui.class);
+        launcher.guiManager().registerGuiCreator(null, TextureGui.class, GLESTextureGui.class);
+        launcher.guiManager().registerGuiCreator(null, ColorGui.class, GLESColorGui.class);
     }
 }

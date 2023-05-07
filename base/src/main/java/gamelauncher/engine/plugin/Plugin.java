@@ -31,15 +31,13 @@ public abstract class Plugin {
     /**
      * @param name the plugins name (identity)
      */
-    @Api
-    public Plugin(String name) {
+    @Api public Plugin(String name) {
         this.logger = Logger.logger(this.getClass());
         this.name = name;
         this.displayName = new SimpleMessage(new Key(this, name));
     }
 
-    @Api
-    public Message displayName() {
+    @Api public Message displayName() {
         return displayName;
     }
 
@@ -48,8 +46,7 @@ public abstract class Plugin {
      *
      * @throws GameException an exception
      */
-    @Api
-    public void onEnable() throws GameException {
+    @Api public void onEnable() throws GameException {
     }
 
     /**
@@ -57,8 +54,7 @@ public abstract class Plugin {
      *
      * @throws GameException an exception
      */
-    @Api
-    public void onDisable() throws GameException {
+    @Api public void onDisable() throws GameException {
     }
 
     /**
@@ -66,42 +62,36 @@ public abstract class Plugin {
      *
      * @param launcher sets the launcher
      */
-    @ApiStatus.Internal
-    public void launcher(GameLauncher launcher) {
+    @ApiStatus.Internal public void launcher(GameLauncher launcher) {
         this.launcher = launcher;
     }
 
     /**
      * @return the {@link GameLauncher}
      */
-    @Api
-    public GameLauncher launcher() {
+    @Api public GameLauncher launcher() {
         return this.launcher;
     }
 
     /**
      * @return the {@link Logger} of this plugin
      */
-    @Api
-    public Logger logger() {
+    @Api public Logger logger() {
         return this.logger;
     }
 
     /**
      * @return the name of this plugin
      */
-    @Api
-    public String name() {
+    @Api public String name() {
         return this.name;
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return Objects.hash(this.name);
     }
 
-    @Override
-    public boolean equals(Object obj) {
+    @Override public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null) return false;
         if (this.getClass() != obj.getClass()) return false;

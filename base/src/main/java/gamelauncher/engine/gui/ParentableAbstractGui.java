@@ -31,8 +31,8 @@ public abstract class ParentableAbstractGui extends AbstractGui {
     public final Deque<Gui> GUIs = Collections.newConcurrentDeque();
     private final AtomicReference<Gui> focusedGui = new AtomicReference<>(null);
     private final AtomicBoolean initialized = new AtomicBoolean();
-    private final NumberValue lastMouseX = NumberValue.withValue(0D);
-    private final NumberValue lastMouseY = NumberValue.withValue(0D);
+    private final NumberValue lastMouseX = NumberValue.withValue(Float.NEGATIVE_INFINITY);
+    private final NumberValue lastMouseY = NumberValue.withValue(Float.NEGATIVE_INFINITY);
     private final BooleanValue hovering = BooleanValue.falseValue().mapToBoolean(unused -> hovering(lastMouseX.floatValue(), lastMouseY.floatValue()));
     private final String className = this.getClass().getName();
     private final Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();

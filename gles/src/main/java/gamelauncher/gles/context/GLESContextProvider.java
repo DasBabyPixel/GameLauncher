@@ -14,8 +14,7 @@ public class GLESContextProvider extends ContextProvider {
         this.gles = gles;
     }
 
-    @Override
-    public DrawContext createContext(Framebuffer framebuffer) {
+    @Override public DrawContext createContext(Framebuffer framebuffer) {
         return new GLESDrawContext(gles, framebuffer);
     }
 }

@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 final class ComponentFlattenerImpl implements ComponentFlattener {
     static final ComponentFlattener TEXT_ONLY = new BuilderImpl().mapper(TextComponent.class, TextComponent::content).build();
@@ -32,8 +32,7 @@ final class ComponentFlattenerImpl implements ComponentFlattener {
         this.unknownHandler = unknownHandler;
     }
 
-    @Override
-    public void flatten(final @NotNull Component input, final @NotNull FlattenerListener listener) {
+    @Override public void flatten(final @NotNull Component input, final @NotNull FlattenerListener listener) {
         this.flatten0(input, listener, 0);
     }
 
@@ -64,8 +63,7 @@ final class ComponentFlattenerImpl implements ComponentFlattener {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Component> @Nullable Handler flattener(final T test) {
+    @SuppressWarnings("unchecked") private <T extends Component> @Nullable Handler flattener(final T test) {
         final Handler flattener = this.propagatedFlatteners.computeIfAbsent(test.getClass(), key -> {
             // direct flatteners (just return strings)
             final @Nullable Function<Component, String> value = (Function<Component, String>) this.flatteners.get(key);
@@ -79,8 +77,7 @@ final class ComponentFlattenerImpl implements ComponentFlattener {
 
             // complex flatteners (these provide extra components)
             final @Nullable BiConsumer<Component, Consumer<Component>> complexValue = (BiConsumer<Component, Consumer<Component>>) this.complexFlatteners.get(key);
-            if (complexValue != null)
-                return (component, listener, depth) -> complexValue.accept(component, c -> this.flatten0(c, listener, depth));
+            if (complexValue != null) return (component, listener, depth) -> complexValue.accept(component, c -> this.flatten0(c, listener, depth));
 
             for (final Map.Entry<Class<?>, BiConsumer<?, Consumer<Component>>> entry : this.complexFlatteners.entrySet()) {
                 if (entry.getKey().isAssignableFrom(key)) {
@@ -137,16 +134,14 @@ final class ComponentFlattenerImpl implements ComponentFlattener {
             return new ComponentFlattenerImpl(this.flatteners, this.complexFlatteners, this.unknownHandler);
         }
 
-        @Override
-        public <T extends Component> ComponentFlattener.@NotNull Builder mapper(final @NotNull Class<T> type, final @NotNull Function<T, String> converter) {
+        @Override public <T extends Component> ComponentFlattener.@NotNull Builder mapper(final @NotNull Class<T> type, final @NotNull Function<T, String> converter) {
             this.validateNoneInHierarchy(requireNonNull(type, "type"));
             this.flatteners.put(type, requireNonNull(converter, "converter"));
             this.complexFlatteners.remove(type);
             return this;
         }
 
-        @Override
-        public <T extends Component> ComponentFlattener.@NotNull Builder complexMapper(final @NotNull Class<T> type, final @NotNull BiConsumer<T, Consumer<Component>> converter) {
+        @Override public <T extends Component> ComponentFlattener.@NotNull Builder complexMapper(final @NotNull Class<T> type, final @NotNull BiConsumer<T, Consumer<Component>> converter) {
             this.validateNoneInHierarchy(requireNonNull(type, "type"));
             this.complexFlatteners.put(type, requireNonNull(converter, "converter"));
             this.flatteners.remove(type);
@@ -163,8 +158,7 @@ final class ComponentFlattenerImpl implements ComponentFlattener {
             }
         }
 
-        @Override
-        public ComponentFlattener.@NotNull Builder unknownMapper(final @Nullable Function<Component, String> converter) {
+        @Override public ComponentFlattener.@NotNull Builder unknownMapper(final @Nullable Function<Component, String> converter) {
             this.unknownHandler = converter;
             return this;
         }

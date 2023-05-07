@@ -28,35 +28,24 @@ public class AndroidMouse {
             this.mouseY = mouseY;
         }
 
-        @Override
-        public float mouseX() {
+        @Override public float mouseX() {
             return mouseX;
         }
 
-        @Override
-        public float mouseY() {
+        @Override public float mouseY() {
             return mouseY;
         }
 
-        @Override
-        public float oldMouseX() {
+        @Override public float oldMouseX() {
             return oldMouseX;
         }
 
-        @Override
-        public float oldMouseY() {
+        @Override public float oldMouseY() {
             return oldMouseY;
         }
 
-        @Override
-        public @NotNull String toString() {
-            return "MoveEvent{" +
-                    "oldMouseX=" + oldMouseX +
-                    ", oldMouseY=" + oldMouseY +
-                    ", mouseX=" + mouseX +
-                    ", mouseY=" + mouseY +
-                    ", keybind=" + keybind().name() +
-                    '}';
+        @Override public @NotNull String toString() {
+            return "MoveEvent{" + "oldMouseX=" + oldMouseX + ", oldMouseY=" + oldMouseY + ", mouseX=" + mouseX + ", mouseY=" + mouseY + ", keybind=" + keybind().name() + '}';
         }
     }
 
@@ -74,39 +63,28 @@ public class AndroidMouse {
             this.type = type;
         }
 
-        @Override
-        public int buttonId() {
+        @Override public int buttonId() {
             return buttonId;
         }
 
-        @Override
-        public float mouseX() {
+        @Override public float mouseX() {
             return mouseX;
         }
 
-        @Override
-        public float mouseY() {
+        @Override public float mouseY() {
             return mouseY;
         }
 
-        @Override
-        public Type type() {
+        @Override public Type type() {
             return type;
         }
 
-        @Override
-        public MouseButtonKeybindEvent withType(Type type) {
+        @Override public MouseButtonKeybindEvent withType(Type type) {
             return new ButtonEvent(keybind(), buttonId, mouseX, mouseY, type);
         }
 
-        @Override
-        public @NotNull String toString() {
-            return "ButtonEvent{" +
-                    "mouseX=" + mouseX +
-                    ", mouseY=" + mouseY +
-                    ", type=" + type +
-                    ", keybind=" + keybind().name() +
-                    '}';
+        @Override public @NotNull String toString() {
+            return "ButtonEvent{" + "mouseX=" + mouseX + ", mouseY=" + mouseY + ", type=" + type + ", keybind=" + keybind().name() + '}';
         }
     }
 

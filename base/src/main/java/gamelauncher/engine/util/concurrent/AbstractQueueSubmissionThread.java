@@ -1,66 +1,71 @@
 package gamelauncher.engine.util.concurrent;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventPoller;
+import com.lmax.disruptor.RingBuffer;
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 import java8.util.concurrent.CompletableFuture;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author DasBabyPixel
  */
 public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
-    private static final Logger logger = Logger.logger();
-    protected final Deque<QueueEntry<T>> queue = new LinkedBlockingDeque<>();
+    protected final RingBuffer<QueueEntry<T>> queue;
+    protected final EventPoller<QueueEntry<T>> poller;
+    private final Logger logger = Logger.logger(getClass());
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
     private final AtomicBoolean work = new AtomicBoolean(false);
     protected volatile boolean exit = false;
 
-    /**
-     *
-     */
-    public AbstractQueueSubmissionThread(GameLauncher launcher) {
+    @Api public AbstractQueueSubmissionThread(GameLauncher launcher) {
         super(launcher);
+        this.queue = RingBuffer.createMultiProducer(QueueEntry::new, 1024, new BlockingWaitStrategy());
+        this.poller = queue.newPoller();
+        queue.addGatingSequences(poller.getSequence());
     }
 
     /**
      * @return the exitfuture
      */
-    public CompletableFuture<Void> exitFuture() {
+    @Api public CompletableFuture<Void> exitFuture() {
         return this.exitFuture;
     }
 
     /**
      * @return the exitfuture
      */
-    public CompletableFuture<Void> exit() {
+    @Api public CompletableFuture<Void> exit() {
         this.exit = true;
         this.signal();
         return this.exitFuture();
     }
 
-    protected void startExecuting() {
+    @Api protected void startExecuting() {
         logger.debug("Starting " + getName() + " [" + getClass().getSimpleName() + "]");
     }
 
-    protected void stopExecuting() {
+    @Api protected void stopExecuting() {
     }
 
-    protected void workExecution() {
+    @Api protected void workExecution() {
     }
 
-    protected void loop() {
+    @Api protected void loop() {
         this.waitForSignal();
         this.workQueue();
         this.workExecution();
     }
 
-    protected void waitForSignal() {
+    @Api protected void waitForSignal() {
         if (this.exit) return;
         while (!this.work.compareAndSet(true, false)) {
             Threads.park();
@@ -82,37 +87,34 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
         this.exitFuture.complete(null);
     }
 
-    protected abstract void handleElement(T element) throws GameException;
+    @Api protected abstract void handleElement(T element) throws GameException;
 
     /**
-     * Works off all the elements in the queue
+     * Handles all the elements in the queue
      */
-    public final void workQueue() {
-        QueueEntry<T> e;
-        while ((e = this.queue.pollFirst()) != null) {
-            if (!this.shouldHandle(e)) {
-                this.queue.offerFirst(e);
-                return;
-            }
-            try {
-                this.handleElement(e.val);
-                e.fut.complete(null);
-            } catch (Throwable ex) {
-                e.fut.completeExceptionally(ex);
-                ex.printStackTrace();
-            }
+    @Api public final void workQueue() {
+        try {
+            EventPoller.PollState s = poller.poll((event, sequence, endOfBatch) -> {
+                try {
+                    this.handleElement(event.val);
+                    event.fut.complete(null);
+                } catch (Throwable t) {
+                    event.fut.completeExceptionally(t);
+                    OutputStream out = Logger.system.computeOutputStream(Output.ERR);
+                    t.printStackTrace(new PrintStream(out, true));
+                }
+                return true;
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace(new PrintStream(Logger.system.computeOutputStream(Output.ERR), true));
         }
     }
 
-    protected boolean shouldHandle(QueueEntry<T> entry) {
+    @Api protected boolean shouldWaitForSignal() {
         return true;
     }
 
-    protected boolean shouldWaitForSignal() {
-        return true;
-    }
-
-    protected void signal() {
+    @Api protected void signal() {
         if (this.work.compareAndSet(false, true)) {
             Threads.unpark(this);
         }
@@ -120,48 +122,28 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 
     /**
      * @param element the element
-     * @return a new future for the submitted element
-     */
-    public final CompletableFuture<Void> submitLast(T element) {
-        CompletableFuture<Void> fut = new CompletableFuture<>();
-        this.queue.offerLast(new QueueEntry<>(fut, element));
-        this.signal();
-        return fut;
-    }
-
-    /**
-     * @param element the element
-     * @return a new future for the submitted element
-     */
-    public final CompletableFuture<Void> submitFirst(T element) {
-        CompletableFuture<Void> fut = new CompletableFuture<>();
-        this.queue.offerFirst(new QueueEntry<T>(fut, element));
-        this.signal();
-        return fut;
-    }
-
-    /**
-     * @param element the element
      * @return a new future from the submitted element
      */
-    public final CompletableFuture<Void> submit(T element) {
-        return this.submitLast(element);
+    @Api public final CompletableFuture<Void> submit(T element) {
+        CompletableFuture<Void> fut = new CompletableFuture<>();
+        this.queue.publishEvent((event, sequence, arg0, arg1) -> {
+            event.fut = arg1;
+            event.val = arg0;
+        }, element, fut);
+        signal();
+        return fut;
     }
 
-    protected static class QueueEntry<T> {
-        private final CompletableFuture<Void> fut;
-        private final T val;
+    @Api
+    private static class QueueEntry<T> {
+        private CompletableFuture<Void> fut;
+        private T val;
 
-        public QueueEntry(CompletableFuture<Void> fut, T val) {
-            this.fut = fut;
-            this.val = val;
-        }
-
-        public CompletableFuture<Void> fut() {
+        @Api public CompletableFuture<Void> fut() {
             return fut;
         }
 
-        public T val() {
+        @Api public T val() {
             return val;
         }
     }

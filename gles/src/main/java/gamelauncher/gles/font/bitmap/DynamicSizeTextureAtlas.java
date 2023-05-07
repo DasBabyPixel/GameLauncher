@@ -72,8 +72,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         tw += tx;
         th += ty;
         //      overflow || intersect
-        return ((rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty
-                || th > ry));
+        return ((rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty || th > ry));
     }
 
     public AtlasEntry getGlyph(int id) {
@@ -126,8 +125,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                 return new AddFuture(true, CompletableFuture.completedFuture(null));
             }
 
-            AtlasEntry e = new AtlasEntry(null, entry,
-                    new Vector4i(0, 0, entry.data.width, entry.data.height));
+            AtlasEntry e = new AtlasEntry(null, entry, new Vector4i(0, 0, entry.data.width, entry.data.height));
             AddFuture af = null;
             for (GLESTexture texture : byTexture.keySet()) {
                 e.texture = texture;
@@ -154,8 +152,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         try {
             //			Thread.dumpStack();
             lock.writeLock().lock();
-            Vector4i textureBounds =
-                    new Vector4i(0, 0, e.texture.width().intValue(), e.texture.height().intValue());
+            Vector4i textureBounds = new Vector4i(0, 0, e.texture.width().intValue(), e.texture.height().intValue());
             Vector4i currentBounds = textureBounds;
             boolean glyphTooLarge = false;
             while (true) {
@@ -175,18 +172,13 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
             }
             if (glyphTooLarge) {
                 if (byTexture.get(e.texture).isEmpty()) {
-                    logger.warnf(
-                            "Glyph too large: ID: %s, CodePoint: %s, Scale: %s, Width: %s, Height: %s",
-                            glyphId, e.entry.key.codepoint, e.entry.key.scale, e.bounds.z,
-                            e.bounds.w);
+                    logger.warnf("Glyph too large: ID: %s, CodePoint: %s, Scale: %s, Width: %s, Height: %s", glyphId, e.entry.key.codepoint, e.entry.key.scale, e.bounds.z, e.bounds.w);
                 } else {
                     logger.warnf("Texture not empty???");
                     return new AddFuture(false, CompletableFuture.completedFuture(null));
                 }
             }
-            ResourceStream stream =
-                    new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer),
-                            null);
+            ResourceStream stream = new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer), null);
             CompletableFuture<Void> glf = new CompletableFuture<>();
             last = last.thenRunAsync(() -> {
                 e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> {
@@ -237,9 +229,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         rect = new Vector4i(rect.x, rect.y, rect.z + 2, rect.w + 2);
         rect.y = 0;
         boolean found = false;
-        Collection<Vector4i> check = byTexture.get(entry.texture).stream().map(e -> e.bounds)
-                .map(r -> new Vector4i(r.x - 1, r.y - 1, r.z + 2, r.w + 2))
-                .collect(Collectors.toSet());
+        Collection<Vector4i> check = byTexture.get(entry.texture).stream().map(e -> e.bounds).map(r -> new Vector4i(r.x - 1, r.y - 1, r.z + 2, r.w + 2)).collect(Collectors.toSet());
         Collection<Vector4i> remove = new HashSet<>();
         yl:
         for (; rect.y < bounds.w - rect.w; rect.y++) {
@@ -271,8 +261,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         return found;
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         Threads.waitFor(owner.submit(() -> {
             lock.writeLock().lock();
             for (GLESTexture texture : byTexture.keySet()) {

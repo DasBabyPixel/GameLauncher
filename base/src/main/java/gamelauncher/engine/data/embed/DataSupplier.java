@@ -32,21 +32,18 @@ public interface DataSupplier {
             this.cl = cl;
         }
 
-        @Override
-        public InputStream open(EmbedPath path) {
+        @Override public InputStream open(EmbedPath path) {
             return cl.getResourceAsStream(path.toAbsolutePath().toString().substring(1));
         }
 
-        @Override
-        public long size(EmbedPath path) throws IOException {
+        @Override public long size(EmbedPath path) throws IOException {
             URL url = cl.getResource(path.toAbsolutePath().toString().substring(1));
             if (url == null) throw new FileNotFoundException();
             URLConnection con = url.openConnection();
             return con.getContentLengthLong();
         }
 
-        @Override
-        public boolean directory(EmbedPath path) {
+        @Override public boolean directory(EmbedPath path) {
             String p = path.toString();
             if (!p.endsWith("/")) {
                 p = p + "/";
@@ -76,8 +73,7 @@ public interface DataSupplier {
             this.fallback = fallback;
         }
 
-        @Override
-        public InputStream open(EmbedPath path) throws IOException {
+        @Override public InputStream open(EmbedPath path) throws IOException {
             try {
                 return main.open(path);
             } catch (IOException e) {
@@ -90,8 +86,7 @@ public interface DataSupplier {
             }
         }
 
-        @Override
-        public long size(EmbedPath path) throws IOException {
+        @Override public long size(EmbedPath path) throws IOException {
             try {
                 return main.size(path);
             } catch (IOException e) {
@@ -104,8 +99,7 @@ public interface DataSupplier {
             }
         }
 
-        @Override
-        public boolean directory(EmbedPath path) throws IOException {
+        @Override public boolean directory(EmbedPath path) throws IOException {
             try {
                 return main.directory(path);
             } catch (IOException e) {

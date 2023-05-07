@@ -11,6 +11,13 @@ public class Color {
 
     public final float r, g, b, a;
 
+    public Color(int rgba) {
+        this.r = (rgba >> 16) & 0xFF;
+        this.g = (rgba >> 8) & 0xFF;
+        this.b = (rgba) & 0xFF;
+        this.a = (rgba >> 24) & 0xFF;
+    }
+
     /**
      * @param r
      * @param g
@@ -84,6 +91,10 @@ public class Color {
 
     public int iblue() {
         return this.toInt(this.b);
+    }
+
+    public int ialpha() {
+        return this.toInt(this.a);
     }
 
     private int toInt(float f) {

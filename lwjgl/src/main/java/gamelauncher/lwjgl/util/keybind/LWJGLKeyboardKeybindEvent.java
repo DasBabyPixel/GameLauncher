@@ -15,8 +15,7 @@ public class LWJGLKeyboardKeybindEvent extends AbstractKeybindEvent implements K
         this.type = type;
     }
 
-    @Override
-    public Type type() {
+    @Override public Type type() {
         return type;
     }
 
@@ -29,8 +28,7 @@ public class LWJGLKeyboardKeybindEvent extends AbstractKeybindEvent implements K
             this.character = character;
         }
 
-        @Override
-        public char character() {
+        @Override public char character() {
             return character;
         }
     }

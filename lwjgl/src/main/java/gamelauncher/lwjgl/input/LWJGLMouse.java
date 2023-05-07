@@ -32,9 +32,7 @@ public class LWJGLMouse {
      */
     public CompletableFuture<Void> grabbed(boolean grab) {
         if (this.grabbed.compareAndSet(!grab, grab)) {
-            return this.frame.launcher().getGLFWThread()
-                    .submit(() -> GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(),
-                            GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode()));
+            return this.frame.launcher().getGLFWThread().submit(() -> GLFW.glfwSetInputMode(LWJGLMouse.this.frame.getGLFWId(), GLFW.GLFW_CURSOR, LWJGLMouse.this.getCursorMode()));
         }
         return CompletableFuture.completedFuture(null);
     }

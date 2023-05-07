@@ -4,17 +4,13 @@ import java.nio.ByteBuffer;
 
 public class GlyphEntry {
 
-	public final GlyphData data;
-	public final int glyphIndex;
-	public final int pixelHeight;
-	public final GlyphKey key;
-	public final ByteBuffer buffer;
+    public final GlyphData data;
+    public final GlyphKey key;
+    public final ByteBuffer buffer;
 
-	public GlyphEntry(GlyphData data, int glyphIndex, int pixelHeight, GlyphKey key, ByteBuffer buffer) {
-		this.data = data;
-		this.glyphIndex = glyphIndex;
-		this.pixelHeight = pixelHeight;
-		this.key = key;
-		this.buffer = buffer;
-	}
+    public GlyphEntry(GlyphData data, GlyphKey key, ByteBuffer buffer) {
+        this.data = data;
+        this.key = key;
+        this.buffer = buffer;
+    }
 }

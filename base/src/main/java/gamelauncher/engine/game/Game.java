@@ -21,12 +21,12 @@ public abstract class Game implements Comparable<Game> {
     private final Key key;
 
     public Game(Plugin plugin, String name) {
-        this(new Key(plugin, name));
+        this(plugin.launcher(), new Key(plugin, name));
     }
 
-    public Game(Key key) {
+    public Game(GameLauncher launcher, Key key) {
+        this.launcher = launcher;
         this.key = key;
-        this.launcher = key.plugin().launcher();
         this.directory = this.key.toPath(launcher.dataDirectory());
         try {
             Files.createDirectories(directory);

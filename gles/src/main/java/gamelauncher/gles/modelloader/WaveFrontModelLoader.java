@@ -19,7 +19,7 @@ import java.util.Objects;
 public class WaveFrontModelLoader implements ModelSubLoader {
 
     private final GameLauncher launcher;
-	//	private final Random random = new Random();
+    //	private final Random random = new Random();
 
     public WaveFrontModelLoader(GameLauncher launcher) {
         this.launcher = launcher;

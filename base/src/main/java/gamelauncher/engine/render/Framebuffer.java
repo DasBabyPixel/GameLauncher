@@ -8,39 +8,39 @@ import gamelauncher.engine.resource.GameResource;
  */
 public interface Framebuffer extends GameResource {
 
-	/**
-	 * Called before every frame
-	 */
-	void beginFrame();
-	
-	/**
-	 * Called after every frame
-	 */
-	void endFrame();
-	
-	/**
-	 * @return the width property
-	 */
-	NumberValue width();
-	
-	/**
-	 * @return the height property
-	 */
-	NumberValue height();
+    /**
+     * Called before every frame
+     */
+    void beginFrame();
 
-	/**
-	 * @return the rendering thread for this {@link Framebuffer}
-	 */
-	RenderThread renderThread();
-	
-	/**
-	 * @return the scissorStack
-	 */
-	ScissorStack scissorStack();
-	
-	/**
-	 * 
-	 */
-	void scheduleRedraw();
-	
+    /**
+     * Called after every frame
+     */
+    void endFrame();
+
+    /**
+     * @return the width property
+     */
+    NumberValue width();
+
+    /**
+     * @return the height property
+     */
+    NumberValue height();
+
+    /**
+     * @return the rendering thread for this {@link Framebuffer}
+     */
+    RenderThread renderThread();
+
+    /**
+     * @return the scissorStack
+     */
+    ScissorStack scissorStack();
+
+    /**
+     *
+     */
+    void scheduleRedraw();
+
 }

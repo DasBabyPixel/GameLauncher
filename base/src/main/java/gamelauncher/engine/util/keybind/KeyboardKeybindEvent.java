@@ -20,7 +20,6 @@ public interface KeyboardKeybindEvent extends KeybindEvent {
     }
 
     interface CharacterKeybindEvent extends KeyboardKeybindEvent {
-        @Api
-        char character();
+        @Api char character();
     }
 }

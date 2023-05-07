@@ -1,6 +1,7 @@
 package gamelauncher.gles.texture;
 
-import static gamelauncher.gles.gl.GLES20.*;
+import static gamelauncher.gles.gl.GLES20.GL_ALPHA;
+import static gamelauncher.gles.gl.GLES20.GL_RGBA;
 
 /**
  * @author DasBabyPixel

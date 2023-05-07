@@ -16,18 +16,15 @@ public interface AnsiProvider {
 
     class Unsupported implements AnsiProvider {
 
-        @Override
-        public String ansi(LogColor color) {
+        @Override public String ansi(LogColor color) {
             return "";
         }
 
-        @Override
-        public String formatln() {
+        @Override public String formatln() {
             return "%s%n";
         }
 
-        @Override
-        public String reset() {
+        @Override public String reset() {
             return "";
         }
     }

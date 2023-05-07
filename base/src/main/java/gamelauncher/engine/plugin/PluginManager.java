@@ -137,8 +137,7 @@ public class PluginManager {
                 }
                 info.lock.unlock();
             }
-        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException |
-                 IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException ex) {
             throw new GameException(ex);
         }
     }

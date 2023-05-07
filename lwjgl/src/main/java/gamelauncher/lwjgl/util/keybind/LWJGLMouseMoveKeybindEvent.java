@@ -36,4 +36,8 @@ public class LWJGLMouseMoveKeybindEvent extends AbstractKeybindEvent implements 
     @Override public float mouseY() {
         return mouseY;
     }
+
+    public LWJGLMouseMoveKeybindEvent withPosition(float x, float y) {
+        return new LWJGLMouseMoveKeybindEvent(keybind(), oldMouseX, oldMouseY, x, y);
+    }
 }

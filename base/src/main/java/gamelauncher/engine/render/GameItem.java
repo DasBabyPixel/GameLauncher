@@ -92,8 +92,7 @@ public class GameItem extends AbstractGameResource {
         return model;
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         model.cleanup();
     }
 
@@ -128,28 +127,23 @@ public class GameItem extends AbstractGameResource {
             this.gameItem = gameItem;
         }
 
-        @Override
-        public void cleanup0() throws GameException {
+        @Override public void cleanup0() throws GameException {
             gameItem.cleanup();
         }
 
-        @Override
-        public void render(ShaderProgram program) throws GameException {
+        @Override public void render(ShaderProgram program) throws GameException {
             gameItem.model.render(program);
         }
 
-        @Override
-        public Vector4f getAddColor() {
+        @Override public Vector4f getAddColor() {
             return gameItem.addColor().toVector4f(addColor);
         }
 
-        @Override
-        public Vector4f getColor() {
+        @Override public Vector4f getColor() {
             return gameItem.color().toVector4f(color);
         }
 
-        @Api
-        public GameItem gameItem() {
+        @Api public GameItem gameItem() {
             return gameItem;
         }
 

@@ -18,16 +18,13 @@ public class GLESGuiConstructorTemplates {
 
     private static GLES gles;
 
-    @Api
-    public static final GuiConstructorTemplate GLES = new GuiConstructorTemplate(gamelauncher.gles.GLES.class) {
-        @Override
-        public Object[] arguments() {
+    @Api public static final GuiConstructorTemplate GLES = new GuiConstructorTemplate(gamelauncher.gles.GLES.class) {
+        @Override public Object[] arguments() {
             return new Object[]{gles};
         }
     };
 
-    @ApiStatus.Internal
-    public static void init(GLES gles) {
+    @ApiStatus.Internal public static void init(GLES gles) {
         GLESGuiConstructorTemplates.gles = gles;
         GuiConstructorTemplates.addDefault(GLES);
     }

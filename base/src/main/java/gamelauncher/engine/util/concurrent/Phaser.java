@@ -550,8 +550,7 @@ public class Phaser {
         if (root != this) {
             int phase, p;
             // CAS to root phase with current parties, tripping unarrived
-            while ((phase = (int) (root.STATE.get() >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) && !STATE.compareAndSet(s, s = (((long) phase << PHASE_SHIFT) | ((phase < 0) ? (s & COUNTS_MASK) : (((p = (int) s >>> PARTIES_SHIFT) == 0) ? EMPTY : ((s & PARTIES_MASK) | p))))))
-                s = STATE.get();
+            while ((phase = (int) (root.STATE.get() >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) && !STATE.compareAndSet(s, s = (((long) phase << PHASE_SHIFT) | ((phase < 0) ? (s & COUNTS_MASK) : (((p = (int) s >>> PARTIES_SHIFT) == 0) ? EMPTY : ((s & PARTIES_MASK) | p)))))) s = STATE.get();
         }
         return s;
     }
@@ -1008,8 +1007,7 @@ public class Phaser {
         if (node != null) {
             if (node.thread != null) node.thread = null;       // avoid need for unpark()
             if (node.wasInterrupted && !node.interruptible) Thread.currentThread().interrupt();
-            if (p == phase && (p = (int) (STATE.get() >>> PHASE_SHIFT)) == phase)
-                return abortWait(phase); // possibly clean up on abort
+            if (p == phase && (p = (int) (STATE.get() >>> PHASE_SHIFT)) == phase) return abortWait(phase); // possibly clean up on abort
         }
         releaseWaiters(phase);
         return p;

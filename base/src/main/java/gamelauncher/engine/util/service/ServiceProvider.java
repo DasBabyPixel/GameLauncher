@@ -12,7 +12,8 @@ import de.dasbabypixel.annotations.Api;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Api public class ServiceProvider {
+@Api
+public class ServiceProvider {
 
     private final Map<Class<?>, Object> services = new ConcurrentHashMap<>();
 

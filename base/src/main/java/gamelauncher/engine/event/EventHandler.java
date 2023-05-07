@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EventHandler {
 
-	/**
-	 * @return the priority of the eventHandler
-	 */
-	int priority() default 0;
+    /**
+     * @return the priority of the eventHandler
+     */
+    int priority() default 0;
 
 }

@@ -10,8 +10,7 @@ public class SimpleMessage implements Message {
         this.key = key;
     }
 
-    @Override
-    public Key key() {
+    @Override public Key key() {
         return key;
     }
 }

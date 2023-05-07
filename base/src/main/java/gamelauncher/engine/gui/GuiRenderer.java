@@ -33,8 +33,7 @@ public class GuiRenderer extends Renderer {
         return launcher;
     }
 
-    @Override
-    public void render(Framebuffer framebuffer) throws GameException {
+    @Override public void render(Framebuffer framebuffer) throws GameException {
         profiler.begin("render", "render_window");
         Gui gui = launcher.guiManager().currentGui(framebuffer);
         Listener l = listeners.get(framebuffer);
@@ -45,16 +44,14 @@ public class GuiRenderer extends Renderer {
         profiler.end();
     }
 
-    @Override
-    public void init(Framebuffer framebuffer) throws GameException {
+    @Override public void init(Framebuffer framebuffer) throws GameException {
         profiler.begin("render", "init_window");
         listeners.put(framebuffer, new Listener());
         launcher.eventManager().registerListener(listeners.get(framebuffer));
         profiler.end();
     }
 
-    @Override
-    public void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
         profiler.begin("render", "cleanup_window");
         Listener l = listeners.remove(framebuffer);
         launcher.eventManager().unregisterListener(l);
@@ -67,8 +64,7 @@ public class GuiRenderer extends Renderer {
 
         private float my;
 
-        @EventHandler
-        public void handle(KeybindEntryEvent event) {
+        @EventHandler public void handle(KeybindEntryEvent event) {
             KeybindEvent e = event.entry();
             if (e instanceof MouseMoveKeybindEvent) {
                 MouseMoveKeybindEvent m = (MouseMoveKeybindEvent) e;

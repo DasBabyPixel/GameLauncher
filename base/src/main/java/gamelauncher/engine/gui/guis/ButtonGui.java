@@ -47,7 +47,9 @@ public interface ButtonGui extends Gui {
             this.width(100);
             this.height(50);
             this.textColor = new InterpolatedColor();
+            this.textColor.set(new PropertyVector4f(1F, 1F, 1F, 1F));
             this.backgroundColor = new InterpolatedColor();
+            this.backgroundColor.set(new PropertyVector4f(0F, 0, 0, 0.8F));
 
             ColorGui colorGui = launcher.guiManager().createGui(ColorGui.class);
             colorGui.xProperty().bind(this.xProperty());

@@ -17,6 +17,6 @@ public class AndroidGuiManager extends SimpleGuiManager {
 
     public AndroidGuiManager(AndroidGameLauncher launcher, GLES gles) {
         super(launcher);
-        this.registerGuiCreator(LineGui.class, () -> new AndroidLineGui(launcher, gles));
+        this.registerGuiCreator(null, LineGui.class, () -> new AndroidLineGui(launcher, gles));
     }
 }

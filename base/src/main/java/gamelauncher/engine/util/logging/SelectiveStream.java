@@ -14,17 +14,12 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class SelectiveStream extends OutputStream {
 
-    private final Set<Entry> entries =
-            Collections.synchronizedSet(new TreeSet<>());
-
+    private final Set<Entry> entries = Collections.synchronizedSet(new TreeSet<>());
     private final AtomicReference<Output> output = new AtomicReference<>(null);
-
     private final AtomicBoolean outputChanged = new AtomicBoolean(false);
-
     private final AtomicReference<Entry> currentEntry = new AtomicReference<>(null);
 
-    @Override
-    public void write(int b) throws IOException {
+    @Override public void write(int b) throws IOException {
         this.computeOutputStream();
         this.currentEntry.get().out.write(b);
     }
@@ -94,8 +89,7 @@ public class SelectiveStream extends OutputStream {
             this.output = output;
         }
 
-        @Override
-        public int compareTo(Entry o) {
+        @Override public int compareTo(Entry o) {
             return Integer.compare(this.output.weight, o.output.weight);
         }
 

@@ -26,40 +26,33 @@ public class LWJGLKeybind extends AbstractGameResource implements Keybind {
         this.manager = manager;
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return name;
     }
 
-    @Override
-    public int uniqueId() {
+    @Override public int uniqueId() {
         return id;
     }
 
-    @Override
-    public void handle(KeybindEvent entry) {
+    @Override public void handle(KeybindEvent entry) {
         for (KeybindHandler handler : handlers) {
             handler.handle(entry);
         }
     }
 
-    @Override
-    public void addHandler(KeybindHandler handler) {
+    @Override public void addHandler(KeybindHandler handler) {
         handlers.add(handler);
     }
 
-    @Override
-    public void removeHandler(KeybindHandler handler) {
+    @Override public void removeHandler(KeybindHandler handler) {
         handlers.remove(handler);
     }
 
-    @Override
-    public KeybindManager manager() {
+    @Override public KeybindManager manager() {
         return manager;
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         handlers.clear();
     }
 }

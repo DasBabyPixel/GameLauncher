@@ -5,49 +5,49 @@ import org.jetbrains.annotations.NotNull;
 
 public interface Style {
 
-	static Style.Builder style() {
-		return new StyleBuilderImpl();
-	}
+    static Style.Builder style() {
+        return new StyleBuilderImpl();
+    }
 
-	static Style empty() {
-		return StyleImpl.EMPTY;
-	}
+    static Style empty() {
+        return StyleImpl.EMPTY;
+    }
 
-	DecorationMap decorations();
+    DecorationMap decorations();
 
-	Style decoration(TextDecoration decoration);
+    Style decoration(TextDecoration decoration);
 
-	Style decoration(TextDecoration... decorations);
+    Style decoration(TextDecoration... decorations);
 
-	Style decoration(TextDecoration decoration, TextDecoration.State state);
+    Style decoration(TextDecoration decoration, TextDecoration.State state);
 
-	boolean hasDecoration(TextDecoration decoration);
+    boolean hasDecoration(TextDecoration decoration);
 
-	TextDecoration.State decorationState(TextDecoration decoration);
+    TextDecoration.State decorationState(TextDecoration decoration);
 
-	Key font();
+    Key font();
 
-	Style font(Key font);
+    Style font(Key font);
 
-	TextColor color();
+    TextColor color();
 
-	Style color(TextColor color);
+    Style color(TextColor color);
 
-	boolean isEmpty();
+    boolean isEmpty();
 
-	interface Builder {
+    interface Builder {
 
-		Builder decoration(TextDecoration decoration);
+        Builder decoration(TextDecoration decoration);
 
-		Builder decoration(TextDecoration... decorations);
+        Builder decoration(TextDecoration... decorations);
 
-		Builder decoration(TextDecoration decoration, TextDecoration.State state);
+        Builder decoration(TextDecoration decoration, TextDecoration.State state);
 
-		Builder font(@NotNull Key font);
+        Builder font(@NotNull Key font);
 
-		Builder color(TextColor color);
+        Builder color(TextColor color);
 
-		Style build();
-	}
+        Style build();
+    }
 
 }

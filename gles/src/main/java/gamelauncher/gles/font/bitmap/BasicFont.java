@@ -46,21 +46,18 @@ public class BasicFont extends AbstractGameResource implements Font {
         });
     }
 
-    @Override
-    public ByteBuffer data() throws GameException {
+    @Override public ByteBuffer data() throws GameException {
         if (!this.done) {
             Threads.waitFor(this.future);
         }
         return this.data;
     }
 
-    @Override
-    public boolean cleanedUp() {
+    @Override public boolean cleanedUp() {
         return this.refcount.get() == 0;
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         try {
             this.lock.lock();
             if (this.refcount.decrementAndGet() <= 0) {

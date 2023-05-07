@@ -19,16 +19,12 @@ public class AndroidKeyboardKeybindEvent extends AbstractKeybindEvent implements
         this.type = type;
     }
 
-    @Override
-    public Type type() {
+    @Override public Type type() {
         return type;
     }
 
-    @Override
-    public @NotNull String toString() {
-        return "AndroidKeyboardKeybindEvent{" +
-                "type=" + type + ", keybind=" + keybind().name() +
-                "}";
+    @Override public @NotNull String toString() {
+        return "AndroidKeyboardKeybindEvent{" + "type=" + type + ", keybind=" + keybind().name() + "}";
     }
 
     public static class Character extends AndroidKeyboardKeybindEvent implements CharacterKeybindEvent {
@@ -39,16 +35,12 @@ public class AndroidKeyboardKeybindEvent extends AbstractKeybindEvent implements
             this.character = character;
         }
 
-        @Override
-        public char character() {
+        @Override public char character() {
             return character;
         }
 
-        @Override
-        public @NotNull String toString() {
-            return "Character{" +
-                    "character='" + character +
-                    "'} " + super.toString();
+        @Override public @NotNull String toString() {
+            return "Character{" + "character='" + character + "'} " + super.toString();
         }
     }
 }

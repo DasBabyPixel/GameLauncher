@@ -23,12 +23,10 @@ public class Labyrinth extends Plugin {
         this.gkey = new Key(this, "labyrinthgame");
     }
 
-    @Override
-    public void onEnable() throws GameException {
-        this.launcher().gameRegistry().register(new Game(this.gkey) {
+    @Override public void onEnable() throws GameException {
+        this.launcher().gameRegistry().register(new Game(launcher(), this.gkey) {
 
-            @Override
-            protected void launch0(Framebuffer framebuffer) throws GameException {
+            @Override protected void launch0(Framebuffer framebuffer) throws GameException {
                 this.launcher().guiManager().openGui(framebuffer, new ParentableAbstractGui(this.launcher()) {
 
                     {
@@ -57,22 +55,18 @@ public class Labyrinth extends Plugin {
                 });
             }
 
-            @Api
-            @Override
-            protected void close0() throws GameException {
+            @Api @Override protected void close0() throws GameException {
             }
 
         });
         launcher().gameRegistry().register(new Game(this, "g1") {
-            @Override
-            protected void launch0(Framebuffer framebuffer) throws GameException {
+            @Override protected void launch0(Framebuffer framebuffer) throws GameException {
                 launcher().guiManager().openGui(framebuffer, new ParentableAbstractGui(launcher()) {
 
                     private Model model;
                     private DrawContext context;
 
-                    @Override
-                    protected void doInit(Framebuffer framebuffer) throws GameException {
+                    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
                         context = launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
                         model = launcher().modelLoader().loadModel(launcher().resourceLoader().resource(launcher().embedFileSystem().getPath("cube.obj")));
                         GameItem item = new GameItem(model);
@@ -85,63 +79,46 @@ public class Labyrinth extends Plugin {
                         model = item.createModel();
                     }
 
-                    @Override
-                    protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+                    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
                         context.update(EmptyCamera.instance());
                         context.drawModel(model);
                         return true;
                     }
 
-                    @Override
-                    protected void doCleanup(Framebuffer framebuffer) throws GameException {
+                    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
                         launcher().contextProvider().freeContext(context, ContextProvider.ContextType.HUD);
                         model.cleanup();
                     }
                 });
             }
 
-            @Api
-            @Override
-            protected void close0() throws GameException {
+            @Api @Override protected void close0() throws GameException {
             }
         });
         launcher().gameRegistry().register(new Game(this, "g2") {
-            @Api
-            @Override
-            protected void launch0(Framebuffer framebuffer) throws GameException {
+            @Api @Override protected void launch0(Framebuffer framebuffer) throws GameException {
             }
 
-            @Api
-            @Override
-            protected void close0() throws GameException {
+            @Api @Override protected void close0() throws GameException {
             }
         });
         launcher().gameRegistry().register(new Game(this, "g3") {
-            @Api
-            @Override
-            protected void launch0(Framebuffer framebuffer) throws GameException {
+            @Api @Override protected void launch0(Framebuffer framebuffer) throws GameException {
             }
 
-            @Api
-            @Override
-            protected void close0() throws GameException {
+            @Api @Override protected void close0() throws GameException {
             }
         });
         launcher().gameRegistry().register(new Game(this, "g4") {
-            @Api
-            @Override
-            protected void launch0(Framebuffer framebuffer) throws GameException {
+            @Api @Override protected void launch0(Framebuffer framebuffer) throws GameException {
             }
 
-            @Api
-            @Override
-            protected void close0() throws GameException {
+            @Api @Override protected void close0() throws GameException {
             }
         });
     }
 
-    @Override
-    public void onDisable() {
+    @Override public void onDisable() {
         this.launcher().gameRegistry().unregister(this.gkey);
     }
 

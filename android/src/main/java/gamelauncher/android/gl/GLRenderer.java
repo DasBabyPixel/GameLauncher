@@ -30,8 +30,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
         this.frame = (AndroidFrame) launcher.frame();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Thread thread = Thread.currentThread();
         executor = new ThreadSpecificExecutor() {
             @Override public Thread thread() {
@@ -44,6 +43,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             }
         };
         StateRegistry.currentContext(frame.context());
+        System.out.println(StateRegistry.currentGl() + "sasadlhjkasdöfl");
         logger.info("OpenGL: " + GLES20.glGetString(GLES20.GL_VERSION));
         logger.info("GLSL: " + GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION));
         logger.info("Extensions: " + GLES20.glGetString(GLES20.GL_EXTENSIONS));

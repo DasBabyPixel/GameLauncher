@@ -28,7 +28,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
     private EGLDisplay display;
     private EGLSurface surface;
     private EGLContext context;
-    private GLES31 gl;
+    private GLES32 gl;
 
     public AndroidGLContext(AndroidGameLauncher launcher, Collection<AndroidGLContext> sharedContexts) {
         this.launcher = launcher;
@@ -36,7 +36,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         this.sharedContexts.add(this);
     }
 
-    public AndroidGLContext(Collection<AndroidGLContext> sharedContexts, AndroidGameLauncher launcher, AndroidFrame frame, EGLDisplay display, EGLSurface surface, EGLContext context, GLES31 gl) {
+    public AndroidGLContext(Collection<AndroidGLContext> sharedContexts, AndroidGameLauncher launcher, AndroidFrame frame, EGLDisplay display, EGLSurface surface, EGLContext context, GLES32 gl) {
         this.sharedContexts = sharedContexts;
         this.sharedContexts.add(this);
         this.launcher = launcher;
@@ -120,7 +120,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         return gl;
     }
 
-    @Override @Deprecated public GLES32 gl32() {
-        return null;
+    @Override public GLES32 gl32() {
+        return gl;
     }
 }

@@ -28,33 +28,27 @@ public class AndroidNativeRenderThread implements IAndroidRenderThread {
         this.executor = executor;
     }
 
-    @Override
-    public void scheduleDraw() {
+    @Override public void scheduleDraw() {
         frame.launcher().view().requestRender();
     }
 
-    @Override
-    public void waitForFrame() {
+    @Override public void waitForFrame() {
         frame.launcher().view().requestRender();
     }
 
-    @Override
-    public void scheduleDrawWaitForFrame() {
+    @Override public void scheduleDrawWaitForFrame() {
         frame.launcher().view().requestRender();
     }
 
-    @Override
-    public AndroidFrame frame() {
+    @Override public AndroidFrame frame() {
         return frame;
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return "UI-Thread";
     }
 
-    @Override
-    public CompletableFuture<Void> submitLast(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submitLast(GameRunnable runnable) {
         if (executor.isCurrentThread()) {
             try {
                 runnable.run();
@@ -80,29 +74,24 @@ public class AndroidNativeRenderThread implements IAndroidRenderThread {
         return fut;
     }
 
-    @Override
-    public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
         // We cant do this lol, so we just submit as last
         return submitLast(runnable);
     }
 
-    @Override
-    public void park() {
+    @Override public void park() {
         // We do not park... We will get an Application Not Responding message!
     }
 
-    @Override
-    public void park(long nanos) {
+    @Override public void park(long nanos) {
         // We do not park... We will get an Application Not Responding message!
     }
 
-    @Override
-    public void unpark() {
+    @Override public void unpark() {
         // We do not park... We will get an Application Not Responding message!
     }
 
-    @Override
-    public void workQueue() {
+    @Override public void workQueue() {
         // Nothing to do here
     }
 }

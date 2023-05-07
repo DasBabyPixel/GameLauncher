@@ -23,8 +23,7 @@ import javax.microedition.khronos.egl.EGLDisplay;
 public class LauncherGLSurfaceView extends GLSurfaceView {
     private static final Logger logger = Logger.logger();
 
-    @SuppressLint("ClickableViewAccessibility")
-    public LauncherGLSurfaceView(AndroidGameLauncher launcher, Context context) {
+    @SuppressLint("ClickableViewAccessibility") public LauncherGLSurfaceView(AndroidGameLauncher launcher, Context context) {
         super(context);
         AndroidInput input = (AndroidInput) launcher.frame().input();
         setEGLContextFactory(new EGLContextFactory() {

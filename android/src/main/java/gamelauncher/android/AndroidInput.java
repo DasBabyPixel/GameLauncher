@@ -37,6 +37,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         this.keybindManager = launcher.keybindManager();
         this.ringBuffer = RingBuffer.createMultiProducer(new QueueEntry.Factory(), 1024, new SleepingWaitStrategy());
         this.poller = this.ringBuffer.newPoller();
+        ringBuffer.addGatingSequences(poller.getSequence());
         launcher.eventManager().registerListener(this);
     }
 

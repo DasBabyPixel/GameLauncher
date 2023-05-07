@@ -7,1238 +7,1032 @@ public interface GLES32 extends GLES31 {
     /**
      * GL_CONTEXT_FLAG_DEBUG_BIT {@value}
      */
-    @Api
-    int GL_CONTEXT_FLAG_DEBUG_BIT = 0x00000002;
+    @Api int GL_CONTEXT_FLAG_DEBUG_BIT = 0x00000002;
 
     /**
      * GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT {@value}
      */
-    @Api
-    int GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT = 0x00000004;
+    @Api int GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT = 0x00000004;
 
     /**
      * GL_GEOMETRY_SHADER_BIT {@value}
      */
-    @Api
-    int GL_GEOMETRY_SHADER_BIT = 0x00000004;
+    @Api int GL_GEOMETRY_SHADER_BIT = 0x00000004;
 
     /**
      * GL_TESS_CONTROL_SHADER_BIT {@value}
      */
-    @Api
-    int GL_TESS_CONTROL_SHADER_BIT = 0x00000008;
+    @Api int GL_TESS_CONTROL_SHADER_BIT = 0x00000008;
 
     /**
      * GL_TESS_EVALUATION_SHADER_BIT {@value}
      */
-    @Api
-    int GL_TESS_EVALUATION_SHADER_BIT = 0x00000010;
+    @Api int GL_TESS_EVALUATION_SHADER_BIT = 0x00000010;
 
     /**
      * GL_QUADS {@value}
      */
-    @Api
-    int GL_QUADS = 0x0007;
+    @Api int GL_QUADS = 0x0007;
 
     /**
      * GL_LINES_ADJACENCY {@value}
      */
-    @Api
-    int GL_LINES_ADJACENCY = 0x000A;
+    @Api int GL_LINES_ADJACENCY = 0x000A;
 
     /**
      * GL_LINE_STRIP_ADJACENCY {@value}
      */
-    @Api
-    int GL_LINE_STRIP_ADJACENCY = 0x000B;
+    @Api int GL_LINE_STRIP_ADJACENCY = 0x000B;
 
     /**
      * GL_TRIANGLES_ADJACENCY {@value}
      */
-    @Api
-    int GL_TRIANGLES_ADJACENCY = 0x000C;
+    @Api int GL_TRIANGLES_ADJACENCY = 0x000C;
 
     /**
      * GL_TRIANGLE_STRIP_ADJACENCY {@value}
      */
-    @Api
-    int GL_TRIANGLE_STRIP_ADJACENCY = 0x000D;
+    @Api int GL_TRIANGLE_STRIP_ADJACENCY = 0x000D;
 
     /**
      * GL_PATCHES {@value}
      */
-    @Api
-    int GL_PATCHES = 0x000E;
+    @Api int GL_PATCHES = 0x000E;
 
     /**
      * GL_STACK_OVERFLOW {@value}
      */
-    @Api
-    int GL_STACK_OVERFLOW = 0x0503;
+    @Api int GL_STACK_OVERFLOW = 0x0503;
 
     /**
      * GL_STACK_UNDERFLOW {@value}
      */
-    @Api
-    int GL_STACK_UNDERFLOW = 0x0504;
+    @Api int GL_STACK_UNDERFLOW = 0x0504;
 
     /**
      * GL_CONTEXT_LOST {@value}
      */
-    @Api
-    int GL_CONTEXT_LOST = 0x0507;
+    @Api int GL_CONTEXT_LOST = 0x0507;
 
     /**
      * GL_TEXTURE_BORDER_COLOR {@value}
      */
-    @Api
-    int GL_TEXTURE_BORDER_COLOR = 0x1004;
+    @Api int GL_TEXTURE_BORDER_COLOR = 0x1004;
 
     /**
      * GL_VERTEX_ARRAY {@value}
      */
-    @Api
-    int GL_VERTEX_ARRAY = 0x8074;
+    @Api int GL_VERTEX_ARRAY = 0x8074;
 
     /**
      * GL_CLAMP_TO_BORDER {@value}
      */
-    @Api
-    int GL_CLAMP_TO_BORDER = 0x812D;
+    @Api int GL_CLAMP_TO_BORDER = 0x812D;
 
     /**
      * GL_CONTEXT_FLAGS {@value}
      */
-    @Api
-    int GL_CONTEXT_FLAGS = 0x821E;
+    @Api int GL_CONTEXT_FLAGS = 0x821E;
 
     /**
      * GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED {@value}
      */
-    @Api
-    int GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED = 0x8221;
+    @Api int GL_PRIMITIVE_RESTART_FOR_PATCHES_SUPPORTED = 0x8221;
 
     /**
      * GL_DEBUG_OUTPUT_SYNCHRONOUS {@value}
      */
-    @Api
-    int GL_DEBUG_OUTPUT_SYNCHRONOUS = 0x8242;
+    @Api int GL_DEBUG_OUTPUT_SYNCHRONOUS = 0x8242;
 
     /**
      * GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH {@value}
      */
-    @Api
-    int GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH = 0x8243;
+    @Api int GL_DEBUG_NEXT_LOGGED_MESSAGE_LENGTH = 0x8243;
 
     /**
      * GL_DEBUG_CALLBACK_FUNCTION {@value}
      */
-    @Api
-    int GL_DEBUG_CALLBACK_FUNCTION = 0x8244;
+    @Api int GL_DEBUG_CALLBACK_FUNCTION = 0x8244;
 
     /**
      * GL_DEBUG_CALLBACK_USER_PARAM {@value}
      */
-    @Api
-    int GL_DEBUG_CALLBACK_USER_PARAM = 0x8245;
+    @Api int GL_DEBUG_CALLBACK_USER_PARAM = 0x8245;
 
     /**
      * GL_DEBUG_SOURCE_API {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_API = 0x8246;
+    @Api int GL_DEBUG_SOURCE_API = 0x8246;
 
     /**
      * GL_DEBUG_SOURCE_WINDOW_SYSTEM {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_WINDOW_SYSTEM = 0x8247;
+    @Api int GL_DEBUG_SOURCE_WINDOW_SYSTEM = 0x8247;
 
     /**
      * GL_DEBUG_SOURCE_SHADER_COMPILER {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_SHADER_COMPILER = 0x8248;
+    @Api int GL_DEBUG_SOURCE_SHADER_COMPILER = 0x8248;
 
     /**
      * GL_DEBUG_SOURCE_THIRD_PARTY {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_THIRD_PARTY = 0x8249;
+    @Api int GL_DEBUG_SOURCE_THIRD_PARTY = 0x8249;
 
     /**
      * GL_DEBUG_SOURCE_APPLICATION {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_APPLICATION = 0x824A;
+    @Api int GL_DEBUG_SOURCE_APPLICATION = 0x824A;
 
     /**
      * GL_DEBUG_SOURCE_OTHER {@value}
      */
-    @Api
-    int GL_DEBUG_SOURCE_OTHER = 0x824B;
+    @Api int GL_DEBUG_SOURCE_OTHER = 0x824B;
 
     /**
      * GL_DEBUG_TYPE_ERROR {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_ERROR = 0x824C;
+    @Api int GL_DEBUG_TYPE_ERROR = 0x824C;
 
     /**
      * GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR = 0x824D;
+    @Api int GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR = 0x824D;
 
     /**
      * GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR = 0x824E;
+    @Api int GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR = 0x824E;
 
     /**
      * GL_DEBUG_TYPE_PORTABILITY {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_PORTABILITY = 0x824F;
+    @Api int GL_DEBUG_TYPE_PORTABILITY = 0x824F;
 
     /**
      * GL_DEBUG_TYPE_PERFORMANCE {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_PERFORMANCE = 0x8250;
+    @Api int GL_DEBUG_TYPE_PERFORMANCE = 0x8250;
 
     /**
      * GL_DEBUG_TYPE_OTHER {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_OTHER = 0x8251;
+    @Api int GL_DEBUG_TYPE_OTHER = 0x8251;
 
     /**
      * GL_LOSE_CONTEXT_ON_RESET {@value}
      */
-    @Api
-    int GL_LOSE_CONTEXT_ON_RESET = 0x8252;
+    @Api int GL_LOSE_CONTEXT_ON_RESET = 0x8252;
 
     /**
      * GL_GUILTY_CONTEXT_RESET {@value}
      */
-    @Api
-    int GL_GUILTY_CONTEXT_RESET = 0x8253;
+    @Api int GL_GUILTY_CONTEXT_RESET = 0x8253;
 
     /**
      * GL_INNOCENT_CONTEXT_RESET {@value}
      */
-    @Api
-    int GL_INNOCENT_CONTEXT_RESET = 0x8254;
+    @Api int GL_INNOCENT_CONTEXT_RESET = 0x8254;
 
     /**
      * GL_UNKNOWN_CONTEXT_RESET {@value}
      */
-    @Api
-    int GL_UNKNOWN_CONTEXT_RESET = 0x8255;
+    @Api int GL_UNKNOWN_CONTEXT_RESET = 0x8255;
 
     /**
      * GL_RESET_NOTIFICATION_STRATEGY {@value}
      */
-    @Api
-    int GL_RESET_NOTIFICATION_STRATEGY = 0x8256;
+    @Api int GL_RESET_NOTIFICATION_STRATEGY = 0x8256;
 
     /**
      * GL_LAYER_PROVOKING_VERTEX {@value}
      */
-    @Api
-    int GL_LAYER_PROVOKING_VERTEX = 0x825E;
+    @Api int GL_LAYER_PROVOKING_VERTEX = 0x825E;
 
     /**
      * GL_UNDEFINED_VERTEX {@value}
      */
-    @Api
-    int GL_UNDEFINED_VERTEX = 0x8260;
+    @Api int GL_UNDEFINED_VERTEX = 0x8260;
 
     /**
      * GL_NO_RESET_NOTIFICATION {@value}
      */
-    @Api
-    int GL_NO_RESET_NOTIFICATION = 0x8261;
+    @Api int GL_NO_RESET_NOTIFICATION = 0x8261;
 
     /**
      * GL_DEBUG_TYPE_MARKER {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_MARKER = 0x8268;
+    @Api int GL_DEBUG_TYPE_MARKER = 0x8268;
 
     /**
      * GL_DEBUG_TYPE_PUSH_GROUP {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_PUSH_GROUP = 0x8269;
+    @Api int GL_DEBUG_TYPE_PUSH_GROUP = 0x8269;
 
     /**
      * GL_DEBUG_TYPE_POP_GROUP {@value}
      */
-    @Api
-    int GL_DEBUG_TYPE_POP_GROUP = 0x826A;
+    @Api int GL_DEBUG_TYPE_POP_GROUP = 0x826A;
 
     /**
      * GL_DEBUG_SEVERITY_NOTIFICATION {@value}
      */
-    @Api
-    int GL_DEBUG_SEVERITY_NOTIFICATION = 0x826B;
+    @Api int GL_DEBUG_SEVERITY_NOTIFICATION = 0x826B;
 
     /**
      * GL_MAX_DEBUG_GROUP_STACK_DEPTH {@value}
      */
-    @Api
-    int GL_MAX_DEBUG_GROUP_STACK_DEPTH = 0x826C;
+    @Api int GL_MAX_DEBUG_GROUP_STACK_DEPTH = 0x826C;
 
     /**
      * GL_DEBUG_GROUP_STACK_DEPTH {@value}
      */
-    @Api
-    int GL_DEBUG_GROUP_STACK_DEPTH = 0x826D;
+    @Api int GL_DEBUG_GROUP_STACK_DEPTH = 0x826D;
 
     /**
      * GL_BUFFER {@value}
      */
-    @Api
-    int GL_BUFFER = 0x82E0;
+    @Api int GL_BUFFER = 0x82E0;
 
     /**
      * GL_SHADER {@value}
      */
-    @Api
-    int GL_SHADER = 0x82E1;
+    @Api int GL_SHADER = 0x82E1;
 
     /**
      * GL_PROGRAM {@value}
      */
-    @Api
-    int GL_PROGRAM = 0x82E2;
+    @Api int GL_PROGRAM = 0x82E2;
 
     /**
      * GL_QUERY {@value}
      */
-    @Api
-    int GL_QUERY = 0x82E3;
+    @Api int GL_QUERY = 0x82E3;
 
     /**
      * GL_PROGRAM_PIPELINE {@value}
      */
-    @Api
-    int GL_PROGRAM_PIPELINE = 0x82E4;
+    @Api int GL_PROGRAM_PIPELINE = 0x82E4;
 
     /**
      * GL_SAMPLER {@value}
      */
-    @Api
-    int GL_SAMPLER = 0x82E6;
+    @Api int GL_SAMPLER = 0x82E6;
 
     /**
      * GL_MAX_LABEL_LENGTH {@value}
      */
-    @Api
-    int GL_MAX_LABEL_LENGTH = 0x82E8;
+    @Api int GL_MAX_LABEL_LENGTH = 0x82E8;
 
     /**
      * GL_MAX_TESS_CONTROL_INPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_INPUT_COMPONENTS = 0x886C;
+    @Api int GL_MAX_TESS_CONTROL_INPUT_COMPONENTS = 0x886C;
 
     /**
      * GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS = 0x886D;
+    @Api int GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS = 0x886D;
 
     /**
      * GL_GEOMETRY_SHADER_INVOCATIONS {@value}
      */
-    @Api
-    int GL_GEOMETRY_SHADER_INVOCATIONS = 0x887F;
+    @Api int GL_GEOMETRY_SHADER_INVOCATIONS = 0x887F;
 
     /**
      * GL_GEOMETRY_VERTICES_OUT {@value}
      */
-    @Api
-    int GL_GEOMETRY_VERTICES_OUT = 0x8916;
+    @Api int GL_GEOMETRY_VERTICES_OUT = 0x8916;
 
     /**
      * GL_GEOMETRY_INPUT_TYPE {@value}
      */
-    @Api
-    int GL_GEOMETRY_INPUT_TYPE = 0x8917;
+    @Api int GL_GEOMETRY_INPUT_TYPE = 0x8917;
 
     /**
      * GL_GEOMETRY_OUTPUT_TYPE {@value}
      */
-    @Api
-    int GL_GEOMETRY_OUTPUT_TYPE = 0x8918;
+    @Api int GL_GEOMETRY_OUTPUT_TYPE = 0x8918;
 
     /**
      * GL_MAX_GEOMETRY_UNIFORM_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_UNIFORM_BLOCKS = 0x8A2C;
+    @Api int GL_MAX_GEOMETRY_UNIFORM_BLOCKS = 0x8A2C;
 
     /**
      * GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS = 0x8A32;
+    @Api int GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS = 0x8A32;
 
     /**
      * GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS = 0x8C29;
+    @Api int GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS = 0x8C29;
 
     /**
      * GL_TEXTURE_BUFFER {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER = 0x8C2A;
+    @Api int GL_TEXTURE_BUFFER = 0x8C2A;
 
     /**
      * GL_TEXTURE_BUFFER_BINDING {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER_BINDING = 0x8C2A;
+    @Api int GL_TEXTURE_BUFFER_BINDING = 0x8C2A;
 
     /**
      * GL_MAX_TEXTURE_BUFFER_SIZE {@value}
      */
-    @Api
-    int GL_MAX_TEXTURE_BUFFER_SIZE = 0x8C2B;
+    @Api int GL_MAX_TEXTURE_BUFFER_SIZE = 0x8C2B;
 
     /**
      * GL_TEXTURE_BINDING_BUFFER {@value}
      */
-    @Api
-    int GL_TEXTURE_BINDING_BUFFER = 0x8C2C;
+    @Api int GL_TEXTURE_BINDING_BUFFER = 0x8C2C;
 
     /**
      * GL_TEXTURE_BUFFER_DATA_STORE_BINDING {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER_DATA_STORE_BINDING = 0x8C2D;
+    @Api int GL_TEXTURE_BUFFER_DATA_STORE_BINDING = 0x8C2D;
 
     /**
      * GL_SAMPLE_SHADING {@value}
      */
-    @Api
-    int GL_SAMPLE_SHADING = 0x8C36;
+    @Api int GL_SAMPLE_SHADING = 0x8C36;
 
     /**
      * GL_MIN_SAMPLE_SHADING_VALUE {@value}
      */
-    @Api
-    int GL_MIN_SAMPLE_SHADING_VALUE = 0x8C37;
+    @Api int GL_MIN_SAMPLE_SHADING_VALUE = 0x8C37;
 
     /**
      * GL_PRIMITIVES_GENERATED {@value}
      */
-    @Api
-    int GL_PRIMITIVES_GENERATED = 0x8C87;
+    @Api int GL_PRIMITIVES_GENERATED = 0x8C87;
 
     /**
      * GL_FRAMEBUFFER_ATTACHMENT_LAYERED {@value}
      */
-    @Api
-    int GL_FRAMEBUFFER_ATTACHMENT_LAYERED = 0x8DA7;
+    @Api int GL_FRAMEBUFFER_ATTACHMENT_LAYERED = 0x8DA7;
 
     /**
      * GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS {@value}
      */
-    @Api
-    int GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS = 0x8DA8;
+    @Api int GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS = 0x8DA8;
 
     /**
      * GL_SAMPLER_BUFFER {@value}
      */
-    @Api
-    int GL_SAMPLER_BUFFER = 0x8DC2;
+    @Api int GL_SAMPLER_BUFFER = 0x8DC2;
 
     /**
      * GL_INT_SAMPLER_BUFFER {@value}
      */
-    @Api
-    int GL_INT_SAMPLER_BUFFER = 0x8DD0;
+    @Api int GL_INT_SAMPLER_BUFFER = 0x8DD0;
 
     /**
      * GL_UNSIGNED_INT_SAMPLER_BUFFER {@value}
      */
-    @Api
-    int GL_UNSIGNED_INT_SAMPLER_BUFFER = 0x8DD8;
+    @Api int GL_UNSIGNED_INT_SAMPLER_BUFFER = 0x8DD8;
 
     /**
      * GL_GEOMETRY_SHADER {@value}
      */
-    @Api
-    int GL_GEOMETRY_SHADER = 0x8DD9;
+    @Api int GL_GEOMETRY_SHADER = 0x8DD9;
 
     /**
      * GL_MAX_GEOMETRY_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_UNIFORM_COMPONENTS = 0x8DDF;
+    @Api int GL_MAX_GEOMETRY_UNIFORM_COMPONENTS = 0x8DDF;
 
     /**
      * GL_MAX_GEOMETRY_OUTPUT_VERTICES {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_OUTPUT_VERTICES = 0x8DE0;
+    @Api int GL_MAX_GEOMETRY_OUTPUT_VERTICES = 0x8DE0;
 
     /**
      * GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS = 0x8DE1;
+    @Api int GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS = 0x8DE1;
 
     /**
      * GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E1E;
+    @Api int GL_MAX_COMBINED_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E1E;
 
     /**
      * GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E1F;
+    @Api int GL_MAX_COMBINED_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E1F;
 
     /**
      * GL_FIRST_VERTEX_CONVENTION {@value}
      */
-    @Api
-    int GL_FIRST_VERTEX_CONVENTION = 0x8E4D;
+    @Api int GL_FIRST_VERTEX_CONVENTION = 0x8E4D;
 
     /**
      * GL_LAST_VERTEX_CONVENTION {@value}
      */
-    @Api
-    int GL_LAST_VERTEX_CONVENTION = 0x8E4E;
+    @Api int GL_LAST_VERTEX_CONVENTION = 0x8E4E;
 
     /**
      * GL_MAX_GEOMETRY_SHADER_INVOCATIONS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_SHADER_INVOCATIONS = 0x8E5A;
+    @Api int GL_MAX_GEOMETRY_SHADER_INVOCATIONS = 0x8E5A;
 
     /**
      * GL_MIN_FRAGMENT_INTERPOLATION_OFFSET {@value}
      */
-    @Api
-    int GL_MIN_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5B;
+    @Api int GL_MIN_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5B;
 
     /**
      * GL_MAX_FRAGMENT_INTERPOLATION_OFFSET {@value}
      */
-    @Api
-    int GL_MAX_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5C;
+    @Api int GL_MAX_FRAGMENT_INTERPOLATION_OFFSET = 0x8E5C;
 
     /**
      * GL_FRAGMENT_INTERPOLATION_OFFSET_BITS {@value}
      */
-    @Api
-    int GL_FRAGMENT_INTERPOLATION_OFFSET_BITS = 0x8E5D;
+    @Api int GL_FRAGMENT_INTERPOLATION_OFFSET_BITS = 0x8E5D;
 
     /**
      * GL_PATCH_VERTICES {@value}
      */
-    @Api
-    int GL_PATCH_VERTICES = 0x8E72;
+    @Api int GL_PATCH_VERTICES = 0x8E72;
 
     /**
      * GL_TESS_CONTROL_OUTPUT_VERTICES {@value}
      */
-    @Api
-    int GL_TESS_CONTROL_OUTPUT_VERTICES = 0x8E75;
+    @Api int GL_TESS_CONTROL_OUTPUT_VERTICES = 0x8E75;
 
     /**
      * GL_TESS_GEN_MODE {@value}
      */
-    @Api
-    int GL_TESS_GEN_MODE = 0x8E76;
+    @Api int GL_TESS_GEN_MODE = 0x8E76;
 
     /**
      * GL_TESS_GEN_SPACING {@value}
      */
-    @Api
-    int GL_TESS_GEN_SPACING = 0x8E77;
+    @Api int GL_TESS_GEN_SPACING = 0x8E77;
 
     /**
      * GL_TESS_GEN_VERTEX_ORDER {@value}
      */
-    @Api
-    int GL_TESS_GEN_VERTEX_ORDER = 0x8E78;
+    @Api int GL_TESS_GEN_VERTEX_ORDER = 0x8E78;
 
     /**
      * GL_TESS_GEN_POINT_MODE {@value}
      */
-    @Api
-    int GL_TESS_GEN_POINT_MODE = 0x8E79;
+    @Api int GL_TESS_GEN_POINT_MODE = 0x8E79;
 
     /**
      * GL_ISOLINES {@value}
      */
-    @Api
-    int GL_ISOLINES = 0x8E7A;
+    @Api int GL_ISOLINES = 0x8E7A;
 
     /**
      * GL_FRACTIONAL_ODD {@value}
      */
-    @Api
-    int GL_FRACTIONAL_ODD = 0x8E7B;
+    @Api int GL_FRACTIONAL_ODD = 0x8E7B;
 
     /**
      * GL_FRACTIONAL_EVEN {@value}
      */
-    @Api
-    int GL_FRACTIONAL_EVEN = 0x8E7C;
+    @Api int GL_FRACTIONAL_EVEN = 0x8E7C;
 
     /**
      * GL_MAX_PATCH_VERTICES {@value}
      */
-    @Api
-    int GL_MAX_PATCH_VERTICES = 0x8E7D;
+    @Api int GL_MAX_PATCH_VERTICES = 0x8E7D;
 
     /**
      * GL_MAX_TESS_GEN_LEVEL {@value}
      */
-    @Api
-    int GL_MAX_TESS_GEN_LEVEL = 0x8E7E;
+    @Api int GL_MAX_TESS_GEN_LEVEL = 0x8E7E;
 
     /**
      * GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E7F;
+    @Api int GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS = 0x8E7F;
 
     /**
      * GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E80;
+    @Api int GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS = 0x8E80;
 
     /**
      * GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS = 0x8E81;
+    @Api int GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS = 0x8E81;
 
     /**
      * GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS = 0x8E82;
+    @Api int GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS = 0x8E82;
 
     /**
      * GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS = 0x8E83;
+    @Api int GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS = 0x8E83;
 
     /**
      * GL_MAX_TESS_PATCH_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_PATCH_COMPONENTS = 0x8E84;
+    @Api int GL_MAX_TESS_PATCH_COMPONENTS = 0x8E84;
 
     /**
      * GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS = 0x8E85;
+    @Api int GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS = 0x8E85;
 
     /**
      * GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS = 0x8E86;
+    @Api int GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS = 0x8E86;
 
     /**
      * GL_TESS_EVALUATION_SHADER {@value}
      */
-    @Api
-    int GL_TESS_EVALUATION_SHADER = 0x8E87;
+    @Api int GL_TESS_EVALUATION_SHADER = 0x8E87;
 
     /**
      * GL_TESS_CONTROL_SHADER {@value}
      */
-    @Api
-    int GL_TESS_CONTROL_SHADER = 0x8E88;
+    @Api int GL_TESS_CONTROL_SHADER = 0x8E88;
 
     /**
      * GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS = 0x8E89;
+    @Api int GL_MAX_TESS_CONTROL_UNIFORM_BLOCKS = 0x8E89;
 
     /**
      * GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS = 0x8E8A;
+    @Api int GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS = 0x8E8A;
 
     /**
      * GL_TEXTURE_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_TEXTURE_CUBE_MAP_ARRAY = 0x9009;
+    @Api int GL_TEXTURE_CUBE_MAP_ARRAY = 0x9009;
 
     /**
      * GL_TEXTURE_BINDING_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_TEXTURE_BINDING_CUBE_MAP_ARRAY = 0x900A;
+    @Api int GL_TEXTURE_BINDING_CUBE_MAP_ARRAY = 0x900A;
 
     /**
      * GL_SAMPLER_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_SAMPLER_CUBE_MAP_ARRAY = 0x900C;
+    @Api int GL_SAMPLER_CUBE_MAP_ARRAY = 0x900C;
 
     /**
      * GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW {@value}
      */
-    @Api
-    int GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW = 0x900D;
+    @Api int GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW = 0x900D;
 
     /**
      * GL_INT_SAMPLER_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900E;
+    @Api int GL_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900E;
 
     /**
      * GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900F;
+    @Api int GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY = 0x900F;
 
     /**
      * GL_IMAGE_BUFFER {@value}
      */
-    @Api
-    int GL_IMAGE_BUFFER = 0x9051;
+    @Api int GL_IMAGE_BUFFER = 0x9051;
 
     /**
      * GL_IMAGE_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_IMAGE_CUBE_MAP_ARRAY = 0x9054;
+    @Api int GL_IMAGE_CUBE_MAP_ARRAY = 0x9054;
 
     /**
      * GL_INT_IMAGE_BUFFER {@value}
      */
-    @Api
-    int GL_INT_IMAGE_BUFFER = 0x905C;
+    @Api int GL_INT_IMAGE_BUFFER = 0x905C;
 
     /**
      * GL_INT_IMAGE_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_INT_IMAGE_CUBE_MAP_ARRAY = 0x905F;
+    @Api int GL_INT_IMAGE_CUBE_MAP_ARRAY = 0x905F;
 
     /**
      * GL_UNSIGNED_INT_IMAGE_BUFFER {@value}
      */
-    @Api
-    int GL_UNSIGNED_INT_IMAGE_BUFFER = 0x9067;
+    @Api int GL_UNSIGNED_INT_IMAGE_BUFFER = 0x9067;
 
     /**
      * GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY {@value}
      */
-    @Api
-    int GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY = 0x906A;
+    @Api int GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY = 0x906A;
 
     /**
      * GL_MAX_TESS_CONTROL_IMAGE_UNIFORMS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_IMAGE_UNIFORMS = 0x90CB;
+    @Api int GL_MAX_TESS_CONTROL_IMAGE_UNIFORMS = 0x90CB;
 
     /**
      * GL_MAX_TESS_EVALUATION_IMAGE_UNIFORMS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_IMAGE_UNIFORMS = 0x90CC;
+    @Api int GL_MAX_TESS_EVALUATION_IMAGE_UNIFORMS = 0x90CC;
 
     /**
      * GL_MAX_GEOMETRY_IMAGE_UNIFORMS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_IMAGE_UNIFORMS = 0x90CD;
+    @Api int GL_MAX_GEOMETRY_IMAGE_UNIFORMS = 0x90CD;
 
     /**
      * GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS = 0x90D7;
+    @Api int GL_MAX_GEOMETRY_SHADER_STORAGE_BLOCKS = 0x90D7;
 
     /**
      * GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS = 0x90D8;
+    @Api int GL_MAX_TESS_CONTROL_SHADER_STORAGE_BLOCKS = 0x90D8;
 
     /**
      * GL_MAX_TESS_EVALUATION_SHADER_STORAGE_BLOCKS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_SHADER_STORAGE_BLOCKS = 0x90D9;
+    @Api int GL_MAX_TESS_EVALUATION_SHADER_STORAGE_BLOCKS = 0x90D9;
 
     /**
      * GL_TEXTURE_2D_MULTISAMPLE_ARRAY {@value}
      */
-    @Api
-    int GL_TEXTURE_2D_MULTISAMPLE_ARRAY = 0x9102;
+    @Api int GL_TEXTURE_2D_MULTISAMPLE_ARRAY = 0x9102;
 
     /**
      * GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY {@value}
      */
-    @Api
-    int GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY = 0x9105;
+    @Api int GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY = 0x9105;
 
     /**
      * GL_SAMPLER_2D_MULTISAMPLE_ARRAY {@value}
      */
-    @Api
-    int GL_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910B;
+    @Api int GL_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910B;
 
     /**
      * GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY {@value}
      */
-    @Api
-    int GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910C;
+    @Api int GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910C;
 
     /**
      * GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY {@value}
      */
-    @Api
-    int GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910D;
+    @Api int GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = 0x910D;
 
     /**
      * GL_MAX_GEOMETRY_INPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_INPUT_COMPONENTS = 0x9123;
+    @Api int GL_MAX_GEOMETRY_INPUT_COMPONENTS = 0x9123;
 
     /**
      * GL_MAX_GEOMETRY_OUTPUT_COMPONENTS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_OUTPUT_COMPONENTS = 0x9124;
+    @Api int GL_MAX_GEOMETRY_OUTPUT_COMPONENTS = 0x9124;
 
     /**
      * GL_MAX_DEBUG_MESSAGE_LENGTH {@value}
      */
-    @Api
-    int GL_MAX_DEBUG_MESSAGE_LENGTH = 0x9143;
+    @Api int GL_MAX_DEBUG_MESSAGE_LENGTH = 0x9143;
 
     /**
      * GL_MAX_DEBUG_LOGGED_MESSAGES {@value}
      */
-    @Api
-    int GL_MAX_DEBUG_LOGGED_MESSAGES = 0x9144;
+    @Api int GL_MAX_DEBUG_LOGGED_MESSAGES = 0x9144;
 
     /**
      * GL_DEBUG_LOGGED_MESSAGES {@value}
      */
-    @Api
-    int GL_DEBUG_LOGGED_MESSAGES = 0x9145;
+    @Api int GL_DEBUG_LOGGED_MESSAGES = 0x9145;
 
     /**
      * GL_DEBUG_SEVERITY_HIGH {@value}
      */
-    @Api
-    int GL_DEBUG_SEVERITY_HIGH = 0x9146;
+    @Api int GL_DEBUG_SEVERITY_HIGH = 0x9146;
 
     /**
      * GL_DEBUG_SEVERITY_MEDIUM {@value}
      */
-    @Api
-    int GL_DEBUG_SEVERITY_MEDIUM = 0x9147;
+    @Api int GL_DEBUG_SEVERITY_MEDIUM = 0x9147;
 
     /**
      * GL_DEBUG_SEVERITY_LOW {@value}
      */
-    @Api
-    int GL_DEBUG_SEVERITY_LOW = 0x9148;
+    @Api int GL_DEBUG_SEVERITY_LOW = 0x9148;
 
     /**
      * GL_TEXTURE_BUFFER_OFFSET {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER_OFFSET = 0x919D;
+    @Api int GL_TEXTURE_BUFFER_OFFSET = 0x919D;
 
     /**
      * GL_TEXTURE_BUFFER_SIZE {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER_SIZE = 0x919E;
+    @Api int GL_TEXTURE_BUFFER_SIZE = 0x919E;
 
     /**
      * GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT {@value}
      */
-    @Api
-    int GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT = 0x919F;
+    @Api int GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT = 0x919F;
 
     /**
      * GL_MULTIPLY {@value}
      */
-    @Api
-    int GL_MULTIPLY = 0x9294;
+    @Api int GL_MULTIPLY = 0x9294;
 
     /**
      * GL_SCREEN {@value}
      */
-    @Api
-    int GL_SCREEN = 0x9295;
+    @Api int GL_SCREEN = 0x9295;
 
     /**
      * GL_OVERLAY {@value}
      */
-    @Api
-    int GL_OVERLAY = 0x9296;
+    @Api int GL_OVERLAY = 0x9296;
 
     /**
      * GL_DARKEN {@value}
      */
-    @Api
-    int GL_DARKEN = 0x9297;
+    @Api int GL_DARKEN = 0x9297;
 
     /**
      * GL_LIGHTEN {@value}
      */
-    @Api
-    int GL_LIGHTEN = 0x9298;
+    @Api int GL_LIGHTEN = 0x9298;
 
     /**
      * GL_COLORDODGE {@value}
      */
-    @Api
-    int GL_COLORDODGE = 0x9299;
+    @Api int GL_COLORDODGE = 0x9299;
 
     /**
      * GL_COLORBURN {@value}
      */
-    @Api
-    int GL_COLORBURN = 0x929A;
+    @Api int GL_COLORBURN = 0x929A;
 
     /**
      * GL_HARDLIGHT {@value}
      */
-    @Api
-    int GL_HARDLIGHT = 0x929B;
+    @Api int GL_HARDLIGHT = 0x929B;
 
     /**
      * GL_SOFTLIGHT {@value}
      */
-    @Api
-    int GL_SOFTLIGHT = 0x929C;
+    @Api int GL_SOFTLIGHT = 0x929C;
 
     /**
      * GL_DIFFERENCE {@value}
      */
-    @Api
-    int GL_DIFFERENCE = 0x929E;
+    @Api int GL_DIFFERENCE = 0x929E;
 
     /**
      * GL_EXCLUSION {@value}
      */
-    @Api
-    int GL_EXCLUSION = 0x92A0;
+    @Api int GL_EXCLUSION = 0x92A0;
 
     /**
      * GL_HSL_HUE {@value}
      */
-    @Api
-    int GL_HSL_HUE = 0x92AD;
+    @Api int GL_HSL_HUE = 0x92AD;
 
     /**
      * GL_HSL_SATURATION {@value}
      */
-    @Api
-    int GL_HSL_SATURATION = 0x92AE;
+    @Api int GL_HSL_SATURATION = 0x92AE;
 
     /**
      * GL_HSL_COLOR {@value}
      */
-    @Api
-    int GL_HSL_COLOR = 0x92AF;
+    @Api int GL_HSL_COLOR = 0x92AF;
 
     /**
      * GL_HSL_LUMINOSITY {@value}
      */
-    @Api
-    int GL_HSL_LUMINOSITY = 0x92B0;
+    @Api int GL_HSL_LUMINOSITY = 0x92B0;
 
     /**
      * GL_PRIMITIVE_BOUNDING_BOX {@value}
      */
-    @Api
-    int GL_PRIMITIVE_BOUNDING_BOX = 0x92BE;
+    @Api int GL_PRIMITIVE_BOUNDING_BOX = 0x92BE;
 
     /**
      * GL_MAX_TESS_CONTROL_ATOMIC_COUNTER_BUFFERS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_ATOMIC_COUNTER_BUFFERS = 0x92CD;
+    @Api int GL_MAX_TESS_CONTROL_ATOMIC_COUNTER_BUFFERS = 0x92CD;
 
     /**
      * GL_MAX_TESS_EVALUATION_ATOMIC_COUNTER_BUFFERS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_ATOMIC_COUNTER_BUFFERS = 0x92CE;
+    @Api int GL_MAX_TESS_EVALUATION_ATOMIC_COUNTER_BUFFERS = 0x92CE;
 
     /**
      * GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS = 0x92CF;
+    @Api int GL_MAX_GEOMETRY_ATOMIC_COUNTER_BUFFERS = 0x92CF;
 
     /**
      * GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS {@value}
      */
-    @Api
-    int GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS = 0x92D3;
+    @Api int GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS = 0x92D3;
 
     /**
      * GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS {@value}
      */
-    @Api
-    int GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS = 0x92D4;
+    @Api int GL_MAX_TESS_EVALUATION_ATOMIC_COUNTERS = 0x92D4;
 
     /**
      * GL_MAX_GEOMETRY_ATOMIC_COUNTERS {@value}
      */
-    @Api
-    int GL_MAX_GEOMETRY_ATOMIC_COUNTERS = 0x92D5;
+    @Api int GL_MAX_GEOMETRY_ATOMIC_COUNTERS = 0x92D5;
 
     /**
      * GL_DEBUG_OUTPUT {@value}
      */
-    @Api
-    int GL_DEBUG_OUTPUT = 0x92E0;
+    @Api int GL_DEBUG_OUTPUT = 0x92E0;
 
     /**
      * GL_IS_PER_PATCH {@value}
      */
-    @Api
-    int GL_IS_PER_PATCH = 0x92E7;
+    @Api int GL_IS_PER_PATCH = 0x92E7;
 
     /**
      * GL_REFERENCED_BY_TESS_CONTROL_SHADER {@value}
      */
-    @Api
-    int GL_REFERENCED_BY_TESS_CONTROL_SHADER = 0x9307;
+    @Api int GL_REFERENCED_BY_TESS_CONTROL_SHADER = 0x9307;
 
     /**
      * GL_REFERENCED_BY_TESS_EVALUATION_SHADER {@value}
      */
-    @Api
-    int GL_REFERENCED_BY_TESS_EVALUATION_SHADER = 0x9308;
+    @Api int GL_REFERENCED_BY_TESS_EVALUATION_SHADER = 0x9308;
 
     /**
      * GL_REFERENCED_BY_GEOMETRY_SHADER {@value}
      */
-    @Api
-    int GL_REFERENCED_BY_GEOMETRY_SHADER = 0x9309;
+    @Api int GL_REFERENCED_BY_GEOMETRY_SHADER = 0x9309;
 
     /**
      * GL_FRAMEBUFFER_DEFAULT_LAYERS {@value}
      */
-    @Api
-    int GL_FRAMEBUFFER_DEFAULT_LAYERS = 0x9312;
+    @Api int GL_FRAMEBUFFER_DEFAULT_LAYERS = 0x9312;
 
     /**
      * GL_MAX_FRAMEBUFFER_LAYERS {@value}
      */
-    @Api
-    int GL_MAX_FRAMEBUFFER_LAYERS = 0x9317;
+    @Api int GL_MAX_FRAMEBUFFER_LAYERS = 0x9317;
 
     /**
      * GL_MULTISAMPLE_LINE_WIDTH_RANGE {@value}
      */
-    @Api
-    int GL_MULTISAMPLE_LINE_WIDTH_RANGE = 0x9381;
+    @Api int GL_MULTISAMPLE_LINE_WIDTH_RANGE = 0x9381;
 
     /**
      * GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY {@value}
      */
-    @Api
-    int GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY = 0x9382;
+    @Api int GL_MULTISAMPLE_LINE_WIDTH_GRANULARITY = 0x9382;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_4x4 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_4x4 = 0x93B0;
+    @Api int GL_COMPRESSED_RGBA_ASTC_4x4 = 0x93B0;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_5x4 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_5x4 = 0x93B1;
+    @Api int GL_COMPRESSED_RGBA_ASTC_5x4 = 0x93B1;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_5x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_5x5 = 0x93B2;
+    @Api int GL_COMPRESSED_RGBA_ASTC_5x5 = 0x93B2;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_6x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_6x5 = 0x93B3;
+    @Api int GL_COMPRESSED_RGBA_ASTC_6x5 = 0x93B3;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_6x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_6x6 = 0x93B4;
+    @Api int GL_COMPRESSED_RGBA_ASTC_6x6 = 0x93B4;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_8x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_8x5 = 0x93B5;
+    @Api int GL_COMPRESSED_RGBA_ASTC_8x5 = 0x93B5;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_8x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_8x6 = 0x93B6;
+    @Api int GL_COMPRESSED_RGBA_ASTC_8x6 = 0x93B6;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_8x8 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_8x8 = 0x93B7;
+    @Api int GL_COMPRESSED_RGBA_ASTC_8x8 = 0x93B7;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_10x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_10x5 = 0x93B8;
+    @Api int GL_COMPRESSED_RGBA_ASTC_10x5 = 0x93B8;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_10x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_10x6 = 0x93B9;
+    @Api int GL_COMPRESSED_RGBA_ASTC_10x6 = 0x93B9;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_10x8 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_10x8 = 0x93BA;
+    @Api int GL_COMPRESSED_RGBA_ASTC_10x8 = 0x93BA;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_10x10 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_10x10 = 0x93BB;
+    @Api int GL_COMPRESSED_RGBA_ASTC_10x10 = 0x93BB;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_12x10 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_12x10 = 0x93BC;
+    @Api int GL_COMPRESSED_RGBA_ASTC_12x10 = 0x93BC;
 
     /**
      * GL_COMPRESSED_RGBA_ASTC_12x12 {@value}
      */
-    @Api
-    int GL_COMPRESSED_RGBA_ASTC_12x12 = 0x93BD;
+    @Api int GL_COMPRESSED_RGBA_ASTC_12x12 = 0x93BD;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4 = 0x93D0;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4 = 0x93D0;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4 = 0x93D1;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4 = 0x93D1;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5 = 0x93D2;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5 = 0x93D2;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5 = 0x93D3;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5 = 0x93D3;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6 = 0x93D4;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6 = 0x93D4;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5 = 0x93D5;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5 = 0x93D5;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6 = 0x93D6;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6 = 0x93D6;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8 = 0x93D7;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8 = 0x93D7;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5 = 0x93D8;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5 = 0x93D8;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6 = 0x93D9;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6 = 0x93D9;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8 = 0x93DA;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8 = 0x93DA;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10 = 0x93DB;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10 = 0x93DB;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10 = 0x93DC;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10 = 0x93DC;
 
     /**
      * GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12 {@value}
      */
-    @Api
-    int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12 = 0x93DD;
+    @Api int GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12 = 0x93DD;
 
     /**
      * glBlendBarrier
@@ -1318,8 +1112,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glBlendBarrier();
+    @Api void glBlendBarrier();
 
     /**
      * glCopyImageSubData
@@ -1712,8 +1505,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glCopyImageSubData(int srcName, int srcTarget, int srcLevel, int srcX, int srcY, int srcZ, int dstName, int dstTarget, int dstLevel, int dstX, int dstY, int dstZ, int srcWidth, int srcHeight, int srcDepth);
+    @Api void glCopyImageSubData(int srcName, int srcTarget, int srcLevel, int srcX, int srcY, int srcZ, int dstName, int dstTarget, int dstLevel, int dstX, int dstY, int dstZ, int srcWidth, int srcHeight, int srcDepth);
 
     /**
      * glDebugMessageControl
@@ -1862,8 +1654,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDebugMessageControl(int source, int type, int severity, int count, int[] ids, int offset, boolean enabled);
+    @Api void glDebugMessageControl(int source, int type, int severity, int count, int[] ids, int offset, boolean enabled);
 
     /**
      * glDebugMessageControl
@@ -2012,8 +1803,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDebugMessageControl(int source, int type, int severity, int count, java.nio.IntBuffer ids, boolean enabled);
+    @Api void glDebugMessageControl(int source, int type, int severity, int count, java.nio.IntBuffer ids, boolean enabled);
 
     /**
      * glDebugMessageInsert
@@ -2156,8 +1946,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDebugMessageInsert(int source, int type, int id, int severity, int length, String buf);
+    @Api void glDebugMessageInsert(int source, int type, int id, int severity, int length, String buf);
 
     /**
      * glDebugMessageCallback
@@ -2267,8 +2056,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDebugMessageCallback(DebugProc callback);
+    @Api void glDebugMessageCallback(DebugProc callback);
 
     /**
      * glGetDebugMessageLog
@@ -2436,8 +2224,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset);
+    @Api int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset);
 
     /**
      * glGetDebugMessageLog
@@ -2605,8 +2392,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    int glGetDebugMessageLog(int count, java.nio.IntBuffer sources, java.nio.IntBuffer types, java.nio.IntBuffer ids, java.nio.IntBuffer severities, java.nio.IntBuffer lengths, java.nio.ByteBuffer messageLog);
+    @Api int glGetDebugMessageLog(int count, java.nio.IntBuffer sources, java.nio.IntBuffer types, java.nio.IntBuffer ids, java.nio.IntBuffer severities, java.nio.IntBuffer lengths, java.nio.ByteBuffer messageLog);
 
     /**
      * glGetDebugMessageLog
@@ -2774,8 +2560,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    String[] glGetDebugMessageLog(int count, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset);
+    @Api String[] glGetDebugMessageLog(int count, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset);
 
     /**
      * glGetDebugMessageLog
@@ -2943,8 +2728,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    String[] glGetDebugMessageLog(int count, java.nio.IntBuffer sources, java.nio.IntBuffer types, java.nio.IntBuffer ids, java.nio.IntBuffer severities);
+    @Api String[] glGetDebugMessageLog(int count, java.nio.IntBuffer sources, java.nio.IntBuffer types, java.nio.IntBuffer ids, java.nio.IntBuffer severities);
 
     /**
      * glPushDebugGroup
@@ -3068,8 +2852,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glPushDebugGroup(int source, int id, int length, String message);
+    @Api void glPushDebugGroup(int source, int id, int length, String message);
 
     /**
      * glPopDebugGroup
@@ -3153,8 +2936,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glPopDebugGroup();
+    @Api void glPopDebugGroup();
 
     /**
      * glObjectLabel
@@ -3280,8 +3062,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glObjectLabel(int identifier, int name, int length, String label);
+    @Api void glObjectLabel(int identifier, int name, int length, String label);
 
     /**
      * glGetObjectLabel
@@ -3417,8 +3198,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    String glGetObjectLabel(int identifier, int name);
+    @Api String glGetObjectLabel(int identifier, int name);
 
     /**
      * glObjectPtrLabel
@@ -3534,8 +3314,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glObjectPtrLabel(long ptr, String label);
+    @Api void glObjectPtrLabel(long ptr, String label);
 
     /**
      * glGetObjectPtrLabel
@@ -3662,8 +3441,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    String glGetObjectPtrLabel(long ptr);
+    @Api String glGetObjectPtrLabel(long ptr);
 
     /**
      * glGetPointerv
@@ -3778,8 +3556,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    long glGetPointerv(int pname);
+    @Api long glGetPointerv(int pname);
 
     /**
      * glEnablei
@@ -4047,8 +3824,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glEnablei(int target, int index);
+    @Api void glEnablei(int target, int index);
 
     /**
      * glDisablei
@@ -4316,8 +4092,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDisablei(int target, int index);
+    @Api void glDisablei(int target, int index);
 
     /**
      * glBlendEquationi
@@ -8219,8 +7994,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glBlendEquationi(int buf, int mode);
+    @Api void glBlendEquationi(int buf, int mode);
 
     /**
      * glBlendEquationSeparatei
@@ -9541,8 +9315,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glBlendEquationSeparatei(int buf, int modeRGB, int modeAlpha);
+    @Api void glBlendEquationSeparatei(int buf, int modeRGB, int modeAlpha);
 
     /**
      * glBlendFunci
@@ -11297,8 +11070,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glBlendFunci(int buf, int src, int dst);
+    @Api void glBlendFunci(int buf, int src, int dst);
 
     /**
      * glBlendFuncSeparatei
@@ -13056,8 +12828,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glBlendFuncSeparatei(int buf, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
+    @Api void glBlendFuncSeparatei(int buf, int srcRGB, int dstRGB, int srcAlpha, int dstAlpha);
 
     /**
      * glColorMaski
@@ -13207,8 +12978,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glColorMaski(int index, boolean r, boolean g, boolean b, boolean a);
+    @Api void glColorMaski(int index, boolean r, boolean g, boolean b, boolean a);
 
     /**
      * glIsEnabledi
@@ -13405,8 +13175,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    boolean glIsEnabledi(int target, int index);
+    @Api boolean glIsEnabledi(int target, int index);
 
     /**
      * glDrawElementsBaseVertex
@@ -13537,8 +13306,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDrawElementsBaseVertex(int mode, int count, int type, java.nio.Buffer indices, int basevertex);
+    @Api void glDrawElementsBaseVertex(int mode, int count, int type, java.nio.Buffer indices, int basevertex);
 
     /**
      * glDrawRangeElementsBaseVertex
@@ -13688,8 +13456,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDrawRangeElementsBaseVertex(int mode, int start, int end, int count, int type, java.nio.Buffer indices, int basevertex);
+    @Api void glDrawRangeElementsBaseVertex(int mode, int start, int end, int count, int type, java.nio.Buffer indices, int basevertex);
 
     /**
      * glDrawElementsInstancedBaseVertex
@@ -13829,8 +13596,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDrawElementsInstancedBaseVertex(int mode, int count, int type, java.nio.Buffer indices, int instanceCount, int basevertex);
+    @Api void glDrawElementsInstancedBaseVertex(int mode, int count, int type, java.nio.Buffer indices, int instanceCount, int basevertex);
 
     /**
      * glDrawElementsInstancedBaseVertex
@@ -13970,8 +13736,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glDrawElementsInstancedBaseVertex(int mode, int count, int type, int indicesOffset, int instanceCount, int basevertex);
+    @Api void glDrawElementsInstancedBaseVertex(int mode, int count, int type, int indicesOffset, int instanceCount, int basevertex);
 
     /**
      * glFramebufferTexture
@@ -14103,8 +13868,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glFramebufferTexture(int target, int attachment, int texture, int level);
+    @Api void glFramebufferTexture(int target, int attachment, int texture, int level);
 
     /**
      * glPrimitiveBoundingBox
@@ -14278,8 +14042,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glPrimitiveBoundingBox(float minX, float minY, float minZ, float minW, float maxX, float maxY, float maxZ, float maxW);
+    @Api void glPrimitiveBoundingBox(float minX, float minY, float minZ, float minW, float maxX, float maxY, float maxZ, float maxW);
 
     /**
      * glGetGraphicsResetStatus
@@ -14400,8 +14163,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    int glGetGraphicsResetStatus();
+    @Api int glGetGraphicsResetStatus();
 
     /**
      * glReadnPixels
@@ -15093,8 +14855,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glReadnPixels(int x, int y, int width, int height, int format, int type, int bufSize, java.nio.Buffer data);
+    @Api void glReadnPixels(int x, int y, int width, int height, int format, int type, int bufSize, java.nio.Buffer data);
 
     /**
      * glGetnUniformfv
@@ -15367,8 +15128,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformfv(int program, int location, int bufSize, float[] params, int offset);
+    @Api void glGetnUniformfv(int program, int location, int bufSize, float[] params, int offset);
 
     /**
      * glGetnUniformfv
@@ -15641,8 +15401,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformfv(int program, int location, int bufSize, java.nio.FloatBuffer params);
+    @Api void glGetnUniformfv(int program, int location, int bufSize, java.nio.FloatBuffer params);
 
     /**
      * glGetnUniformiv
@@ -15915,8 +15674,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformiv(int program, int location, int bufSize, int[] params, int offset);
+    @Api void glGetnUniformiv(int program, int location, int bufSize, int[] params, int offset);
 
     /**
      * glGetnUniformiv
@@ -16189,8 +15947,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformiv(int program, int location, int bufSize, java.nio.IntBuffer params);
+    @Api void glGetnUniformiv(int program, int location, int bufSize, java.nio.IntBuffer params);
 
     /**
      * glGetnUniformuiv
@@ -16463,8 +16220,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformuiv(int program, int location, int bufSize, int[] params, int offset);
+    @Api void glGetnUniformuiv(int program, int location, int bufSize, int[] params, int offset);
 
     /**
      * glGetnUniformuiv
@@ -16737,8 +16493,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetnUniformuiv(int program, int location, int bufSize, java.nio.IntBuffer params);
+    @Api void glGetnUniformuiv(int program, int location, int bufSize, java.nio.IntBuffer params);
 
     /**
      * glMinSampleShading
@@ -16836,8 +16591,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glMinSampleShading(float value);
+    @Api void glMinSampleShading(float value);
 
     /**
      * glPatchParameteri
@@ -16945,8 +16699,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glPatchParameteri(int pname, int value);
+    @Api void glPatchParameteri(int pname, int value);
 
     /**
      * glTexParameterIiv
@@ -18562,8 +18315,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexParameterIiv(int target, int pname, int[] params, int offset);
+    @Api void glTexParameterIiv(int target, int pname, int[] params, int offset);
 
     /**
      * glTexParameterIiv
@@ -20179,8 +19931,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexParameterIiv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glTexParameterIiv(int target, int pname, java.nio.IntBuffer params);
 
     /**
      * glTexParameterIuiv
@@ -21796,8 +21547,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexParameterIuiv(int target, int pname, int[] params, int offset);
+    @Api void glTexParameterIuiv(int target, int pname, int[] params, int offset);
 
     /**
      * glTexParameterIuiv
@@ -23413,8 +23163,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexParameterIuiv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glTexParameterIuiv(int target, int pname, java.nio.IntBuffer params);
 
     /**
      * glGetTexParameterIiv
@@ -23742,8 +23491,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetTexParameterIiv(int target, int pname, int[] params, int offset);
+    @Api void glGetTexParameterIiv(int target, int pname, int[] params, int offset);
 
     /**
      * glGetTexParameterIiv
@@ -24071,8 +23819,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetTexParameterIiv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glGetTexParameterIiv(int target, int pname, java.nio.IntBuffer params);
 
     /**
      * glGetTexParameterIuiv
@@ -24400,8 +24147,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetTexParameterIuiv(int target, int pname, int[] params, int offset);
+    @Api void glGetTexParameterIuiv(int target, int pname, int[] params, int offset);
 
     /**
      * glGetTexParameterIuiv
@@ -24729,8 +24475,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetTexParameterIuiv(int target, int pname, java.nio.IntBuffer params);
+    @Api void glGetTexParameterIuiv(int target, int pname, java.nio.IntBuffer params);
 
     /**
      * glSamplerParameterIiv
@@ -26189,8 +25934,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glSamplerParameterIiv(int sampler, int pname, int[] param, int offset);
+    @Api void glSamplerParameterIiv(int sampler, int pname, int[] param, int offset);
 
     /**
      * glSamplerParameterIiv
@@ -27649,8 +27393,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glSamplerParameterIiv(int sampler, int pname, java.nio.IntBuffer param);
+    @Api void glSamplerParameterIiv(int sampler, int pname, java.nio.IntBuffer param);
 
     /**
      * glSamplerParameterIuiv
@@ -29109,8 +28852,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glSamplerParameterIuiv(int sampler, int pname, int[] param, int offset);
+    @Api void glSamplerParameterIuiv(int sampler, int pname, int[] param, int offset);
 
     /**
      * glSamplerParameterIuiv
@@ -30569,8 +30311,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glSamplerParameterIuiv(int sampler, int pname, java.nio.IntBuffer param);
+    @Api void glSamplerParameterIuiv(int sampler, int pname, java.nio.IntBuffer param);
 
     /**
      * glGetSamplerParameterIiv
@@ -30855,8 +30596,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetSamplerParameterIiv(int sampler, int pname, int[] params, int offset);
+    @Api void glGetSamplerParameterIiv(int sampler, int pname, int[] params, int offset);
 
     /**
      * glGetSamplerParameterIiv
@@ -31141,8 +30881,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetSamplerParameterIiv(int sampler, int pname, java.nio.IntBuffer params);
+    @Api void glGetSamplerParameterIiv(int sampler, int pname, java.nio.IntBuffer params);
 
     /**
      * glGetSamplerParameterIuiv
@@ -31427,8 +31166,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetSamplerParameterIuiv(int sampler, int pname, int[] params, int offset);
+    @Api void glGetSamplerParameterIuiv(int sampler, int pname, int[] params, int offset);
 
     /**
      * glGetSamplerParameterIuiv
@@ -31713,8 +31451,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glGetSamplerParameterIuiv(int sampler, int pname, java.nio.IntBuffer params);
+    @Api void glGetSamplerParameterIuiv(int sampler, int pname, java.nio.IntBuffer params);
 
     /**
      * glTexBuffer
@@ -32200,8 +31937,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexBuffer(int target, int internalformat, int buffer);
+    @Api void glTexBuffer(int target, int internalformat, int buffer);
 
     /**
      * glTexBufferRange
@@ -32707,8 +32443,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexBufferRange(int target, int internalformat, int buffer, int offset, int size);
+    @Api void glTexBufferRange(int target, int internalformat, int buffer, int offset, int size);
 
     /**
      * glTexStorage3DMultisample
@@ -33555,12 +33290,10 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api
-    void glTexStorage3DMultisample(int target, int samples, int internalformat, int width, int height, int depth, boolean fixedsamplelocations);
+    @Api void glTexStorage3DMultisample(int target, int samples, int internalformat, int width, int height, int depth, boolean fixedsamplelocations);
 
     interface DebugProc {
 
-        @Api
-        void onMessage(int source, int type, int id, int severity, String message);
+        @Api void onMessage(int source, int type, int id, int severity, String message);
     }
 }

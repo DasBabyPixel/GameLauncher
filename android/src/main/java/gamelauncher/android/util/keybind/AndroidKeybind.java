@@ -28,40 +28,33 @@ public class AndroidKeybind extends AbstractGameResource implements Keybind {
         this.manager = manager;
     }
 
-    @Override
-    protected void cleanup0() {
+    @Override protected void cleanup0() {
         handlers.clear();
     }
 
-    @Override
-    public String name() {
+    @Override public String name() {
         return display;
     }
 
-    @Override
-    public int uniqueId() {
+    @Override public int uniqueId() {
         return id;
     }
 
-    @Override
-    public void handle(KeybindEvent entry) {
+    @Override public void handle(KeybindEvent entry) {
         for (KeybindHandler handler : handlers) {
             handler.handle(entry);
         }
     }
 
-    @Override
-    public void addHandler(KeybindHandler handler) {
+    @Override public void addHandler(KeybindHandler handler) {
         handlers.add(handler);
     }
 
-    @Override
-    public void removeHandler(KeybindHandler handler) {
+    @Override public void removeHandler(KeybindHandler handler) {
         handlers.remove(handler);
     }
 
-    @Override
-    public KeybindManager manager() {
+    @Override public KeybindManager manager() {
         return manager;
     }
 }

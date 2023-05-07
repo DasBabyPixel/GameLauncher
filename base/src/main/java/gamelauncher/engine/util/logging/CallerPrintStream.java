@@ -31,8 +31,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
 //		this.logger = logger;
     }
 
-    @Override
-    public void converted(String line) {
+    @Override public void converted(String line) {
         parent.offerCalled(level, caller, line);
     }
 
@@ -64,8 +63,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         lock.unlock();
     }
 
-    @Override
-    public void write(int b) {
+    @Override public void write(int b) {
         boolean bool = setCaller();
         super.write(b);
         if (bool) {
@@ -73,8 +71,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void write(byte[] buf, int off, int len) {
+    @Override public void write(byte[] buf, int off, int len) {
         boolean bool = setCaller();
         super.write(buf, off, len);
         if (bool) {
@@ -82,8 +79,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(boolean b) {
+    @Override public void print(boolean b) {
         boolean bool = setCaller();
         super.print(b);
         if (bool) {
@@ -91,8 +87,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(char c) {
+    @Override public void print(char c) {
         boolean bool = setCaller();
         super.print(c);
         if (bool) {
@@ -100,8 +95,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(int i) {
+    @Override public void print(int i) {
         boolean bool = setCaller();
         super.print(i);
         if (bool) {
@@ -109,8 +103,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(long l) {
+    @Override public void print(long l) {
         boolean bool = setCaller();
         super.print(l);
         if (bool) {
@@ -118,8 +111,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(float f) {
+    @Override public void print(float f) {
         boolean bool = setCaller();
         super.print(f);
         if (bool) {
@@ -127,8 +119,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(double d) {
+    @Override public void print(double d) {
         boolean bool = setCaller();
         super.print(d);
         if (bool) {
@@ -136,8 +127,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(char[] s) {
+    @Override public void print(char[] s) {
         boolean bool = setCaller();
         super.print(s);
         if (bool) {
@@ -145,8 +135,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(String s) {
+    @Override public void print(String s) {
         boolean bool = setCaller();
         super.print(s);
         if (bool) {
@@ -154,8 +143,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void print(Object obj) {
+    @Override public void print(Object obj) {
         boolean bool = setCaller();
         super.print(obj);
         if (bool) {
@@ -163,8 +151,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println() {
+    @Override public void println() {
         boolean bool = setCaller();
         super.println();
         if (bool) {
@@ -172,8 +159,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(boolean x) {
+    @Override public void println(boolean x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -181,8 +167,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(char x) {
+    @Override public void println(char x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -190,8 +175,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(int x) {
+    @Override public void println(int x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -199,8 +183,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(long x) {
+    @Override public void println(long x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -208,8 +191,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(float x) {
+    @Override public void println(float x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -217,8 +199,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(double x) {
+    @Override public void println(double x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -226,8 +207,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(char[] x) {
+    @Override public void println(char[] x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -235,8 +215,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(String x) {
+    @Override public void println(String x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -244,8 +223,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public void println(Object x) {
+    @Override public void println(Object x) {
         boolean bool = setCaller();
         super.println(x);
         if (bool) {
@@ -253,8 +231,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         }
     }
 
-    @Override
-    public PrintStream printf(String format, Object... args) {
+    @Override public PrintStream printf(String format, Object... args) {
         boolean bool = setCaller();
         super.printf(format, args);
         if (bool) {
@@ -263,8 +240,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream printf(Locale l, String format, Object... args) {
+    @Override public PrintStream printf(Locale l, String format, Object... args) {
         boolean bool = setCaller();
         super.printf(l, format, args);
         if (bool) {
@@ -273,8 +249,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream format(String format, Object... args) {
+    @Override public PrintStream format(String format, Object... args) {
         boolean bool = setCaller();
         super.format(format, args);
         if (bool) {
@@ -283,8 +258,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream format(Locale l, String format, Object... args) {
+    @Override public PrintStream format(Locale l, String format, Object... args) {
         boolean bool = setCaller();
         super.format(l, format, args);
         if (bool) {
@@ -293,8 +267,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream append(CharSequence csq) {
+    @Override public PrintStream append(CharSequence csq) {
         boolean bool = setCaller();
         super.append(csq);
         if (bool) {
@@ -303,8 +276,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream append(CharSequence csq, int start, int end) {
+    @Override public PrintStream append(CharSequence csq, int start, int end) {
         boolean bool = setCaller();
         super.append(csq, start, end);
         if (bool) {
@@ -313,8 +285,7 @@ public class CallerPrintStream extends PrintStream implements ConverterStream {
         return this;
     }
 
-    @Override
-    public PrintStream append(char c) {
+    @Override public PrintStream append(char c) {
         boolean bool = setCaller();
         super.append(c);
         if (bool) {

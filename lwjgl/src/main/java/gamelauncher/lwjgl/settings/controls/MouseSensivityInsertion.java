@@ -11,19 +11,19 @@ import gamelauncher.engine.settings.controls.ControlsSettingSection;
  */
 public class MouseSensivityInsertion extends ClassBasedSettingSectionInsertion {
 
-	/**
-	 * The sensitivy {@link SettingPath}
-	 */
-	public static final SettingPath SENSIVITY = new SettingPath("sensivity");
+    /**
+     * The sensitivy {@link SettingPath}
+     */
+    public static final SettingPath SENSIVITY = new SettingPath("sensivity");
 
-	/**
-	 */
-	public MouseSensivityInsertion() {
-		super(ControlsSettingSection.class);
-	}
+    /**
+     *
+     */
+    public MouseSensivityInsertion() {
+        super(ControlsSettingSection.class);
+    }
 
-	@Override
-	protected void construct(SettingSectionConstructor constructor) {
-		constructor.addSetting(SENSIVITY, new SimpleSetting<>(Float.TYPE, 1.0F));
-	}
+    @Override protected void construct(SettingSectionConstructor constructor) {
+        constructor.addSetting(SENSIVITY, new SimpleSetting<>(Float.TYPE, 1.0F));
+    }
 }

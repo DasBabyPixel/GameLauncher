@@ -18,8 +18,7 @@ public interface FontFactory {
      * @return a {@link Font} created with the given {@link ResourceStream}
      * @throws GameException an exception
      */
-    @Api
-    default Font createFont(ResourceStream stream) throws GameException {
+    @Api default Font createFont(ResourceStream stream) throws GameException {
         return createFont(stream, false);
     }
 
@@ -28,8 +27,7 @@ public interface FontFactory {
      * @return a {@link Font} created with the given {@link Resource}
      * @throws GameException an exception
      */
-    @Api
-    default Font createFont(Resource resource) throws GameException {
+    @Api default Font createFont(Resource resource) throws GameException {
         return createFont(resource.newResourceStream(), true);
     }
 
@@ -39,7 +37,6 @@ public interface FontFactory {
      * @return a font created with the given {@link ResourceStream}
      * @throws GameException an exception
      */
-    @Api
-    Font createFont(ResourceStream stream, boolean close) throws GameException;
+    @Api Font createFont(ResourceStream stream, boolean close) throws GameException;
 
 }

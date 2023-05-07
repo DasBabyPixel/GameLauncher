@@ -14,28 +14,23 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class AndroidMemoryManagement implements MemoryManagement {
-    @Override
-    public ByteBuffer alloc(int size) {
+    @Override public ByteBuffer alloc(int size) {
         return ByteBuffer.allocate(size);
     }
 
-    @Override
-    public ByteBuffer calloc(int size) {
+    @Override public ByteBuffer calloc(int size) {
         return ByteBuffer.allocate(size);
     }
 
-    @Override
-    public ByteBuffer allocDirect(int size) {
+    @Override public ByteBuffer allocDirect(int size) {
         return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
-    @Override
-    public ByteBuffer callocDirect(int size) {
+    @Override public ByteBuffer callocDirect(int size) {
         return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
-    @Override
-    public void free(Buffer buffer) {
+    @Override public void free(Buffer buffer) {
         // GC handles this
     }
 }

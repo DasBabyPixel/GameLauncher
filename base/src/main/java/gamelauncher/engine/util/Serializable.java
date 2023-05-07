@@ -8,19 +8,20 @@ import com.google.gson.JsonElement;
  */
 public interface Serializable {
 
-	/**
-	 * Serializes this object
-	 * 
-	 * @param gson
-	 * @return the {@link JsonElement} serialized of this {@link Serializable}
-	 */
-	JsonElement serialize(Gson gson);
+    /**
+     * Serializes this object
+     *
+     * @param gson
+     * @return the {@link JsonElement} serialized of this {@link Serializable}
+     */
+    JsonElement serialize(Gson gson);
 
-	/**
-	 * Deserializes the {@link JsonElement}
-	 * @param gson
-	 * @param element
-	 */
-	void deserialize(Gson gson, JsonElement element);
+    /**
+     * Deserializes the {@link JsonElement}
+     *
+     * @param gson
+     * @param element
+     */
+    void deserialize(Gson gson, JsonElement element);
 
 }

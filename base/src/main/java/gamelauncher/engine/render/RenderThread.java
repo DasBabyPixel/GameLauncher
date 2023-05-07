@@ -7,14 +7,14 @@ import gamelauncher.engine.util.concurrent.ExecutorThread;
  */
 public interface RenderThread extends ExecutorThread {
 
-	/**
-	 * @return the frame of this {@link RenderThread}
-	 */
-	Frame frame();
-	
-	/**
-	 * @return the name of this {@link Thread}
-	 */
-	String name();
-	
+    /**
+     * @return the frame of this {@link RenderThread}
+     */
+    Frame frame();
+
+    /**
+     * @return the name of this {@link Thread}
+     */
+    String name();
+
 }

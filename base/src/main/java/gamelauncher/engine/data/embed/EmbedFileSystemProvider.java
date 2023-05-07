@@ -28,18 +28,15 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
     protected EmbedFileSystemProvider() {
     }
 
-    @Override
-    public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
+    @Override public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
         return EmbedFileAttributeView.get(toEmbedPath(path), type);
     }
 
-    @Override
-    public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
+    @Override public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
         return type != BasicFileAttributes.class && type != EmbedFileAttributes.class ? null : type.cast(embedFileSystem.getAttributes(toEmbedPath(path)));
     }
 
-    @Override
-    public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
+    @Override public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
         EmbedPath embedPath = toEmbedPath(path);
 //        InputStream in = embedFileSystem.cl.getResourceAsStream(
 //                embedPath.toAbsolutePath().toString().substring(1));
@@ -52,33 +49,27 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
             final ReadableByteChannel rbc = Channels.newChannel(in);
             long read = 0L;
 
-            @Override
-            public boolean isOpen() {
+            @Override public boolean isOpen() {
                 return rbc.isOpen();
             }
 
-            @Override
-            public void close() throws IOException {
+            @Override public void close() throws IOException {
                 rbc.close();
             }
 
-            @Override
-            public int write(ByteBuffer src) {
+            @Override public int write(ByteBuffer src) {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
-            public SeekableByteChannel truncate(long size) {
+            @Override public SeekableByteChannel truncate(long size) {
                 throw new NonWritableChannelException();
             }
 
-            @Override
-            public long size() {
+            @Override public long size() {
                 return size;
             }
 
-            @Override
-            public int read(ByteBuffer dst) throws IOException {
+            @Override public int read(ByteBuffer dst) throws IOException {
                 final int read = this.rbc.read(dst);
                 if (read > 0) {
                     this.read += read;
@@ -86,25 +77,21 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
                 return read;
             }
 
-            @Override
-            public SeekableByteChannel position(long newPosition) {
+            @Override public SeekableByteChannel position(long newPosition) {
                 throw new UnsupportedOperationException();
             }
 
-            @Override
-            public long position() {
+            @Override public long position() {
                 return read;
             }
         };
     }
 
-    @Override
-    public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
+    @Override public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+    @Override public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
         int index = attributes.indexOf(':');
         String type;
         String substring2;
@@ -122,8 +109,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
         return value.readAttributes(substring2);
     }
 
-    @Override
-    public void setAttribute(Path path, String attribute, Object o, LinkOption... options) throws IOException {
+    @Override public void setAttribute(Path path, String attribute, Object o, LinkOption... options) throws IOException {
         int index = attribute.indexOf(58);
         String substring;
         String substring2;
@@ -141,8 +127,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
         value.setAttribute(substring2, o);
     }
 
-    @Override
-    public String getScheme() {
+    @Override public String getScheme() {
         return "embed";
     }
 
@@ -156,8 +141,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
         throw new ProviderMismatchException();
     }
 
-    @Override
-    public FileSystem newFileSystem(URI uri, Map<String, ?> env) throws IOException {
+    @Override public FileSystem newFileSystem(URI uri, Map<String, ?> env) throws IOException {
         if (embedFileSystem != null) {
             throw new FileSystemAlreadyExistsException();
         }
@@ -174,48 +158,39 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
         return new DataSupplier.ClassLoader(Thread.currentThread().getContextClassLoader());
     }
 
-    @Override
-    public FileSystem getFileSystem(URI uri) {
+    @Override public FileSystem getFileSystem(URI uri) {
         return embedFileSystem;
     }
 
-    @Override
-    public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
+    @Override public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void delete(Path path) throws IOException {
+    @Override public void delete(Path path) throws IOException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void copy(Path source, Path target, CopyOption... options) throws IOException {
+    @Override public void copy(Path source, Path target, CopyOption... options) throws IOException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void move(Path source, Path target, CopyOption... options) throws IOException {
+    @Override public void move(Path source, Path target, CopyOption... options) throws IOException {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public boolean isSameFile(Path path, Path path2) throws IOException {
+    @Override public boolean isSameFile(Path path, Path path2) throws IOException {
         return path.toRealPath().equals(path2.toRealPath());
     }
 
-    @Override
-    public boolean isHidden(Path path) throws IOException {
+    @Override public boolean isHidden(Path path) throws IOException {
         return false;
     }
 
-    @Override
-    public FileStore getFileStore(Path path) throws IOException {
+    @Override public FileStore getFileStore(Path path) throws IOException {
         return new EmbedFileStore(embedFileSystem);
     }
 
-    @Override
-    public void checkAccess(Path path, AccessMode... modes) throws IOException {
+    @Override public void checkAccess(Path path, AccessMode... modes) throws IOException {
         for (AccessMode mode : modes) {
             if (mode == AccessMode.WRITE) throw new AccessDeniedException(path.toString());
             if (mode == AccessMode.EXECUTE) throw new AccessDeniedException(path.toString());
@@ -225,8 +200,7 @@ public class EmbedFileSystemProvider extends FileSystemProvider {
         else throw new FileNotFoundException();
     }
 
-    @Override
-    public Path getPath(URI uri) {
+    @Override public Path getPath(URI uri) {
         String s = uri.getSchemeSpecificPart();
         int index = s.indexOf("#/");
         if (index == -1) {

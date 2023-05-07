@@ -21,33 +21,27 @@ public class LWJGLMouseButtonKeybindEvent extends AbstractKeybindEvent implement
         this.type = type;
     }
 
-    @Override
-    public float mouseX() {
+    @Override public float mouseX() {
         return mouseX;
     }
 
-    @Override
-    public float mouseY() {
+    @Override public float mouseY() {
         return mouseY;
     }
 
-    @Override
-    public Type type() {
+    @Override public Type type() {
         return type;
     }
 
-    @Override
-    public int buttonId() {
+    @Override public int buttonId() {
         return buttonId;
     }
 
-    @Override
-    public MouseButtonKeybindEvent withType(Type type) {
+    @Override public MouseButtonKeybindEvent withType(Type type) {
         return new LWJGLMouseButtonKeybindEvent(keybind(), buttonId, mouseX, mouseY, type);
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "MouseButtonKeybindEntry [mouseX=" + mouseX + ", mouseY=" + mouseY + ", type=" + type + "]";
     }
 

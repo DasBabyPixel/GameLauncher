@@ -374,7 +374,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     }
                 }
             });
-            GLFW.glfwSetCursorEnterCallback(this.glfwId, (wid, entered) -> this.frame.mouse.setInWindow(entered));
+            GLFW.glfwSetCursorEnterCallback(this.glfwId, (wid, entered) -> {
+                this.frame.mouse.setInWindow(entered);
+                if (!entered) this.frame.input.mouseMove((float) frame.mouse().getX(), (float) frame.mouse().getY(), Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
+            });
             GLFW.glfwSetCursorPosCallback(this.glfwId, (wid, xpos, ypos) -> {
                 ypos = ypos + 0.5F;
                 xpos = xpos + 0.5F;

@@ -18,8 +18,7 @@ public class EmbedFileAttributeView implements BasicFileAttributeView {
         this.isZipView = isZipView;
     }
 
-    @SuppressWarnings("unchecked")
-    static <V extends FileAttributeView> V get(final EmbedPath zipPath, final Class<V> clazz) {
+    @SuppressWarnings("unchecked") static <V extends FileAttributeView> V get(final EmbedPath zipPath, final Class<V> clazz) {
         if (clazz == null) {
             throw new NullPointerException();
         }
@@ -53,8 +52,7 @@ public class EmbedFileAttributeView implements BasicFileAttributeView {
         return this.path.getFileSystem().getAttributes(path);
     }
 
-    @Override
-    public void setTimes(final FileTime fileTime, final FileTime fileTime2, final FileTime fileTime3) throws IOException {
+    @Override public void setTimes(final FileTime fileTime, final FileTime fileTime2, final FileTime fileTime3) throws IOException {
         throw new UnsupportedOperationException();
 //		this.path.setTimes(fileTime, fileTime2, fileTime3);
     }

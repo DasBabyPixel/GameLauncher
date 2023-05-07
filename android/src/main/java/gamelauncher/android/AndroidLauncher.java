@@ -19,8 +19,7 @@ public class AndroidLauncher extends Activity {
 
     private Logger logger;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
         logger = Logger.logger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
@@ -53,13 +52,11 @@ public class AndroidLauncher extends Activity {
         }
     }
 
-    @Override
-    protected void onDestroy() {
+    @Override protected void onDestroy() {
         super.onDestroy();
         System.exit(0);
     }
 
-    @Api
-    public void init(AndroidGameLauncher launcher) {
+    @Api public void init(AndroidGameLauncher launcher) {
     }
 }

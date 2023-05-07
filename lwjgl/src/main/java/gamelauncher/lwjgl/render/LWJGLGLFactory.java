@@ -13,8 +13,7 @@ public class LWJGLGLFactory implements GLFactory {
         this.launcher = launcher;
     }
 
-    @Override
-    public GLFWGLContext createContext() throws GameException {
+    @Override public GLFWGLContext createContext() throws GameException {
         GLFWFrame glfwFrame = new GLFWFrame(launcher);
         return glfwFrame.context();
     }

@@ -5,26 +5,24 @@ package gamelauncher.engine.settings;
  */
 public interface SettingSection extends Setting<SettingSection> {
 
-	/**
-	 * @param path
-	 * @return the {@link SettingSection} for this {@link SettingPath}
-	 */
-	SettingSection getSubSection(SettingPath path);
+    /**
+     * @param path
+     * @return the {@link SettingSection} for this {@link SettingPath}
+     */
+    SettingSection getSubSection(SettingPath path);
 
-	/**
-	 * @param <T>
-	 * @param path
-	 * @return the {@link Setting} for this {@link SettingPath}
-	 */
-	<T> Setting<T> getSetting(SettingPath path);
+    /**
+     * @param <T>
+     * @param path
+     * @return the {@link Setting} for this {@link SettingPath}
+     */
+    <T> Setting<T> getSetting(SettingPath path);
 
-	@Override
-	default SettingSection getValue() {
-		return this;
-	}
+    @Override default SettingSection getValue() {
+        return this;
+    }
 
-	@Override
-	default void setValue(SettingSection value) {
-		throw new UnsupportedOperationException();
-	}
+    @Override default void setValue(SettingSection value) {
+        throw new UnsupportedOperationException();
+    }
 }

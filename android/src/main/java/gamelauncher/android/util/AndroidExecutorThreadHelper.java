@@ -20,8 +20,7 @@ public class AndroidExecutorThreadHelper implements ExecutorThreadHelper {
         this.launcher = launcher;
     }
 
-    @Override
-    public ExecutorThread currentThread() {
+    @Override public ExecutorThread currentThread() {
         if (Thread.currentThread() instanceof ExecutorThread) return (ExecutorThread) Thread.currentThread();
         Frame f = launcher.frame();
         if (f != null) {

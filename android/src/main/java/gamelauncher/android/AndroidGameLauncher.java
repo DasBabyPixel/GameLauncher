@@ -9,9 +9,9 @@ package gamelauncher.android;
 
 import android.opengl.GLSurfaceView;
 import android.os.Build;
-import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.RequiresApi;
+import gamelauncher.android.font.AndroidGlyphProvider;
 import gamelauncher.android.gl.AndroidGLFactory;
 import gamelauncher.android.gl.AndroidGLLoader;
 import gamelauncher.android.gl.AndroidMemoryManagement;
@@ -41,6 +41,7 @@ public class AndroidGameLauncher extends GameLauncher {
     private final AndroidGLLoader glLoader;
     private final GLESThreadGroup glThreadGroup;
     private final AndroidLauncher activity;
+    private final GLES gles;
     LauncherGLSurfaceView view;
     private volatile boolean keyboardVisible = false;
     private EGL10 egl;
@@ -50,15 +51,11 @@ public class AndroidGameLauncher extends GameLauncher {
         this.activity = activity;
         this.gameDirectory(activity.getFilesDir().toPath());
         this.glLoader = new AndroidGLLoader();
-        GLES gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
+        gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
         this.contextProvider(new GLESContextProvider(gles, this));
         try {
             this.embedFileSystem(new AndroidEmbedFileSystemProvider(activity.getAssets()).newFileSystem((URI) null, null));
-            Log.w("gamelauncher", embedFileSystem().getPath("assets", "languages", "gamelaucher", "en.json").toString());
-            Thread.sleep(1000);
         } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         this.executorThreadHelper(new AndroidExecutorThreadHelper(this));
@@ -74,12 +71,20 @@ public class AndroidGameLauncher extends GameLauncher {
         this.glThreadGroup = new GLESThreadGroup();
     }
 
+    @Override protected void start0() throws GameException {
+        this.glyphProvider(new AndroidGlyphProvider(gles));
+    }
+
     @Override protected void loadCustomPlugins() {
         activity.init(this);
     }
 
     @Override public void frame(Frame frame) {
         super.frame(frame);
+    }
+
+    public AndroidLauncher activity() {
+        return activity;
     }
 
     public GLSurfaceView view() {

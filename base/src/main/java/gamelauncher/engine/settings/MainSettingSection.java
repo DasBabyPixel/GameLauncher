@@ -8,18 +8,16 @@ import gamelauncher.engine.settings.controls.ControlsSettingSection;
  */
 public class MainSettingSection extends AbstractSettingSection {
 
-	@SuppressWarnings("javadoc")
-	public static final SettingPath CONTROLS = new SettingPath("controls");
+    @SuppressWarnings("javadoc") public static final SettingPath CONTROLS = new SettingPath("controls");
 
-	/**
-	 * @param eventManager
-	 */
-	public MainSettingSection(EventManager eventManager) {
-		super(eventManager);
-	}
+    /**
+     * @param eventManager
+     */
+    public MainSettingSection(EventManager eventManager) {
+        super(eventManager);
+    }
 
-	@Override
-	protected void addSettings(EventManager eventManager) {
-		this.addSetting(CONTROLS, new ControlsSettingSection(eventManager));
-	}
+    @Override protected void addSettings(EventManager eventManager) {
+        this.addSetting(CONTROLS, new ControlsSettingSection(eventManager));
+    }
 }

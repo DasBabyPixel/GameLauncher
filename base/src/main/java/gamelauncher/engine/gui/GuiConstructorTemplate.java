@@ -14,16 +14,13 @@ public abstract class GuiConstructorTemplate {
 
     private final Class<?>[] argumentTypes;
 
-    @Api
-    public GuiConstructorTemplate(Class<?>... argumentTypes) {
+    @Api public GuiConstructorTemplate(Class<?>... argumentTypes) {
         this.argumentTypes = argumentTypes;
     }
 
-    @Api
-    public Class<?>[] argumentTypes() {
+    @Api public Class<?>[] argumentTypes() {
         return argumentTypes;
     }
 
-    @Api
-    public abstract Object[] arguments();
+    @Api public abstract Object[] arguments();
 }

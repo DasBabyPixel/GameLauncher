@@ -11,8 +11,7 @@ import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadHelper;
 
 public class LWJGLExecutorThreadHelper implements ExecutorThreadHelper {
-    @Override
-    public ExecutorThread currentThread() {
+    @Override public ExecutorThread currentThread() {
         if (Thread.currentThread() instanceof ExecutorThread) {
             return (ExecutorThread) Thread.currentThread();
         }

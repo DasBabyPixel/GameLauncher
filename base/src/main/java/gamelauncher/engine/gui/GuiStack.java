@@ -29,14 +29,14 @@ public class GuiStack {
      * @return the last {@link Gui} of the stack
      */
     public StackEntry popGui() {
-        return deque.poll();
+        return deque.pollLast();
     }
 
     /**
      * @return the last {@link Gui} of the stack
      */
     public StackEntry peekGui() {
-        return deque.peek();
+        return deque.peekLast();
     }
 
     /**

@@ -41,8 +41,7 @@ public class GLESTextureManager extends AbstractGameResource implements TextureM
         return launcher;
     }
 
-    @Override
-    public GLESTexture createTexture() throws GameException {
+    @Override public GLESTexture createTexture() throws GameException {
         try {
             lock.lock();
             if (this.frame == null) {
@@ -58,9 +57,7 @@ public class GLESTextureManager extends AbstractGameResource implements TextureM
         return new GLESTexture(gles, owner, this.service);
     }
 
-    @Override
-    public void cleanup0() throws GameException {
-        if (frame != null)
-            frame.cleanup();
+    @Override public void cleanup0() throws GameException {
+        if (frame != null) frame.cleanup();
     }
 }

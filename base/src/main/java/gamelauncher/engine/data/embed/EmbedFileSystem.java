@@ -70,43 +70,35 @@ public class EmbedFileSystem extends FileSystem {
         return dataSupplier.directory(path);
     }
 
-    @Override
-    public FileSystemProvider provider() {
+    @Override public FileSystemProvider provider() {
         return provider;
     }
 
-    @Override
-    public void close() throws IOException {
+    @Override public void close() throws IOException {
         isOpen = false;
     }
 
-    @Override
-    public boolean isOpen() {
+    @Override public boolean isOpen() {
         return isOpen;
     }
 
-    @Override
-    public boolean isReadOnly() {
+    @Override public boolean isReadOnly() {
         return true;
     }
 
-    @Override
-    public String getSeparator() {
+    @Override public String getSeparator() {
         return "/";
     }
 
-    @Override
-    public Iterable<Path> getRootDirectories() {
+    @Override public Iterable<Path> getRootDirectories() {
         return Collections.singletonList(path);
     }
 
-    @Override
-    public Iterable<FileStore> getFileStores() {
+    @Override public Iterable<FileStore> getFileStores() {
         return Collections.singleton(new EmbedFileStore(this));
     }
 
-    @Override
-    public PathMatcher getPathMatcher(String s) {
+    @Override public PathMatcher getPathMatcher(String s) {
         final int index = s.indexOf(58);
         if (index == -1) {
             throw new IllegalArgumentException();
@@ -126,21 +118,18 @@ public class EmbedFileSystem extends FileSystem {
 
             final Pattern val$pattern = Pattern.compile(regexPattern);
 
-            @Override
-            public boolean matches(final Path path) {
+            @Override public boolean matches(final Path path) {
                 return this.val$pattern.matcher(path.toString()).matches();
             }
 
         };
     }
 
-    @Override
-    public Set<String> supportedFileAttributeViews() {
+    @Override public Set<String> supportedFileAttributeViews() {
         return supportedFileAttributeViews;
     }
 
-    @Override
-    public Path getPath(String first, String... more) {
+    @Override public Path getPath(String first, String... more) {
         List<String> l = new ArrayList<>(Arrays.asList(first.split("/")));
         for (String m : more) {
             l.addAll(Arrays.asList(m.split("/")));
@@ -154,13 +143,11 @@ public class EmbedFileSystem extends FileSystem {
         return new EmbedPath(this, segments, absolute);
     }
 
-    @Override
-    public UserPrincipalLookupService getUserPrincipalLookupService() {
+    @Override public UserPrincipalLookupService getUserPrincipalLookupService() {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public WatchService newWatchService() {
+    @Override public WatchService newWatchService() {
         throw new UnsupportedOperationException();
     }
 }

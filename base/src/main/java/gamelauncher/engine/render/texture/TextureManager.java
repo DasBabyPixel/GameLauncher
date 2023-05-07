@@ -8,11 +8,10 @@ import gamelauncher.engine.util.GameException;
  */
 public interface TextureManager extends GameResource {
 
-	/**
-	 * @return a new {@link Texture}
-	 *
-	 * @throws GameException an exception
-	 */
-	Texture createTexture() throws GameException;
+    /**
+     * @return a new {@link Texture}
+     * @throws GameException an exception
+     */
+    Texture createTexture() throws GameException;
 
 }

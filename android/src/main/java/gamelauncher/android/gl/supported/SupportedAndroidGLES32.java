@@ -17,7 +17,9 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-@Api @RequiresApi(api = Build.VERSION_CODES.N) public class SupportedAndroidGLES32 extends SupportedAndroidGLES31 implements gamelauncher.gles.gl.GLES32 {
+@Api
+@RequiresApi(api = Build.VERSION_CODES.N)
+public class SupportedAndroidGLES32 extends SupportedAndroidGLES31 implements gamelauncher.gles.gl.GLES32 {
 
     @Override public void glBlendBarrier() {
         GLES32.glBlendBarrier();

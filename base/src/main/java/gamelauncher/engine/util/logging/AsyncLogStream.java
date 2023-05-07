@@ -41,12 +41,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.ansi = launcher.ansi();
         this.system = Logger.system;
         this.setName("AsyncLogStream");
-        this.out = new PrintStream(this.system, false);
+        this.out = new PrintStream(this.system, true);
     }
 
-    @SuppressWarnings("RedundantThrows")
-    @Override
-    protected void handleElement(LogEntry<?> element) throws GameException {
+    @SuppressWarnings("RedundantThrows") @Override protected void handleElement(LogEntry<?> element) throws GameException {
         this.log(element);
     }
 
@@ -66,8 +64,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         Threads.waitFor(this.exit());
     }
 
@@ -178,8 +175,6 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             Formatted f = (Formatted) message;
             this.log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
         } else {
-//			this.logString(LogLevel.ERROR, entry.time, entry.caller, entry.thread, entry.logger,
-//					"Unsupported logging method. Please upgrade");
             this.logString(entry.level, entry.time, entry.caller, entry.thread, entry.logger, message.toString());
         }
     }
@@ -222,6 +217,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                 this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
             }
             this.out.printf(ansi.formatln(), object);
+            this.out.flush();
         }
     }
 
@@ -259,15 +255,5 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             this.caller = caller;
             this.time = time;
         }
-
-        public <V> LogEntry<V> withObject(V object) {
-            return new LogEntry<>(this.logger, this.thread, object, this.level, this.caller, this.time);
-        }
-
-        public LogEntry<T> withLevel(LogLevel level) {
-            return new LogEntry<>(this.logger, this.thread, this.object, level, this.caller, this.time);
-        }
-
     }
-
 }

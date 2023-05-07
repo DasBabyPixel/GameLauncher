@@ -24,8 +24,7 @@ public class GLFWThread extends AbstractExecutorThread {
         this.setName("GLFW-Thread");
     }
 
-    @Override
-    protected void startExecuting() {
+    @Override protected void startExecuting() {
         if (!GLFW.glfwInit()) {
             throw new ExceptionInInitializerError("Couldn't initialize GLFW");
         }
@@ -39,8 +38,7 @@ public class GLFWThread extends AbstractExecutorThread {
         this.monitorManager.init();
     }
 
-    @Override
-    protected void stopExecuting() {
+    @Override protected void stopExecuting() {
         for (GLFWUser user : this.users) {
             user.destroy();
         }
@@ -53,8 +51,7 @@ public class GLFWThread extends AbstractExecutorThread {
         this.terminateFuture.complete(null);
     }
 
-    @Override
-    protected void workExecution() {
+    @Override protected void workExecution() {
         GLFW.glfwWaitEventsTimeout(0.5D);
         GLFW.glfwPollEvents();
     }
@@ -64,13 +61,11 @@ public class GLFWThread extends AbstractExecutorThread {
     //		return false;
     //	}
 
-    @Override
-    protected boolean shouldWaitForSignal() {
+    @Override protected boolean shouldWaitForSignal() {
         return false;
     }
 
-    @Override
-    protected void signal() {
+    @Override protected void signal() {
         if (!this.exit) {
             GLFW.glfwPostEmptyEvent();
         }

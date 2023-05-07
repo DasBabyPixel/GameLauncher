@@ -9,15 +9,14 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public class LWJGLNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
 
-	private final LWJGLNetworkClient client;
+    private final LWJGLNetworkClient client;
 
-	public LWJGLNetworkAcceptor(LWJGLNetworkClient client) {
-		this.client = client;
-	}
+    public LWJGLNetworkAcceptor(LWJGLNetworkClient client) {
+        this.client = client;
+    }
 
-	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, Packet msg) throws Exception {
-		client.handleIncomingPacket(msg);
-	}
+    @Override protected void channelRead0(ChannelHandlerContext ctx, Packet msg) throws Exception {
+        client.handleIncomingPacket(msg);
+    }
 
 }

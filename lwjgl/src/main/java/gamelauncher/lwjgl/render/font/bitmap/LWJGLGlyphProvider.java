@@ -59,7 +59,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
     @Override public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
         Key fkey = text.style().font();
         if (fkey == null) fkey = new Key("fonts/calibri.ttf");
-        Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().embedFileSystem().getPath("assets"))));
+        Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().assets())));
         STBTTFontinfo finfo = STBTTFontinfo.malloc();
         if (!STBTruetype.stbtt_InitFont(finfo, font.data())) {
             font.cleanup();
@@ -92,6 +92,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             e.add(f.getNow(null));
         }
         finfo.free();
+        font.cleanup();
         Collection<Model> meshes = new ArrayList<>();
         int mwidth = 0;
         int mheight = 0;
@@ -135,7 +136,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
         GameItem gi = new GameItem(cmodel);
         gi.addColor(1, 1, 1, 0);
         GameItemModel gim = gi.createModel();
-        return new GlyphModelWrapper(font, gim, mwidth, mheight, ascent, descent);
+        return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
     }
 
     public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
@@ -154,7 +155,6 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             if (entry != null) {
                 break ret;
             }
-            int gindex = STBTruetype.stbtt_FindGlyphIndex(finfo, id);
             MemoryManagement memoryManagement = frame.launcher().memoryManagement();
             IntBuffer x0 = memoryManagement.allocInt(1);
             IntBuffer y0 = memoryManagement.allocInt(1);
@@ -196,7 +196,7 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             memoryManagement.free(y0);
             memoryManagement.free(x1);
             memoryManagement.free(y1);
-            GlyphEntry e = new GlyphEntry(gdata, gindex, pixelHeight, key, buf);
+            GlyphEntry e = new GlyphEntry(gdata, key, buf);
 
             DynamicSizeTextureAtlas.AddFuture af = this.textureAtlas.addGlyph(id, e);
             af.glFuture().thenRun(() -> memoryManagement.free(e.buffer)).exceptionally(ex -> {

@@ -123,8 +123,7 @@ public abstract class ScissorStack {
             return h;
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
             return "Scissor{" + "x=" + x + ", y=" + y + ", w=" + w + ", h=" + h + '}';
         }
     }

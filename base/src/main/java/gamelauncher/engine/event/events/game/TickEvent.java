@@ -7,10 +7,10 @@ import gamelauncher.engine.event.Event;
  */
 public abstract class TickEvent extends Event {
 
-	/**
-	 * @author DasBabyPixel
-	 */
-	public static class Game extends TickEvent {
+    /**
+     * @author DasBabyPixel
+     */
+    public static class Game extends TickEvent {
 
-	}
+    }
 }

@@ -201,8 +201,7 @@ public class Threads extends AbstractGameResource {
         services.remove(service);
     }
 
-    @Override
-    public void cleanup0() throws GameException {
+    @Override public void cleanup0() throws GameException {
         try {
             for (ExecutorThreadService service : services) {
                 CompletableFuture<Void> fut = service.exit();

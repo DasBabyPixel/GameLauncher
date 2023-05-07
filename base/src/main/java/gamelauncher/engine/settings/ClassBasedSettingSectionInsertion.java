@@ -7,15 +7,13 @@ import gamelauncher.engine.event.events.settings.SettingSectionConstructEvent;
  */
 public abstract class ClassBasedSettingSectionInsertion extends SettingSectionInsertion {
 
-	private final Class<?> target;
+    private final Class<?> target;
 
-	public ClassBasedSettingSectionInsertion(Class<?> target) {
-		this.target = target;
-	}
+    public ClassBasedSettingSectionInsertion(Class<?> target) {
+        this.target = target;
+    }
 
-	@Override
-	protected boolean shouldHandle(SettingSectionConstructEvent event) {
-		return super.shouldHandle(event) && event.constructor().getSection().getClass()
-				.equals(target);
-	}
+    @Override protected boolean shouldHandle(SettingSectionConstructEvent event) {
+        return super.shouldHandle(event) && event.constructor().getSection().getClass().equals(target);
+    }
 }

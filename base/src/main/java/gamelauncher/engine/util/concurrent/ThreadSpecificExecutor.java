@@ -15,8 +15,7 @@ public interface ThreadSpecificExecutor extends Executor {
 
     Thread thread();
 
-    @Override
-    default void execute(@NotNull Runnable command) {
+    @Override default void execute(@NotNull Runnable command) {
         post(command);
     }
 

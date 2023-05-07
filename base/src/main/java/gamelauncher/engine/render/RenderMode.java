@@ -6,6 +6,6 @@ package gamelauncher.engine.render;
 @SuppressWarnings("javadoc")
 public enum RenderMode {
 
-	CONTINUOUSLY, ON_UPDATE, MANUAL
+    CONTINUOUSLY, ON_UPDATE, MANUAL
 
 }
