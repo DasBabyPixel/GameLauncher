@@ -247,7 +247,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                         templates:
                         for (GuiConstructorTemplate template : GuiConstructorTemplates.defaults()) {
                             Class<?>[] args = template.argumentTypes();
-                            if (args.length != parameters.length) continue templates;
+                            if (args.length != parameters.length) continue;
                             for (int i = 0; i < args.length; i++) {
                                 if (!args[i].equals(parameters[i])) {
                                     continue templates;
@@ -266,6 +266,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
             @SuppressWarnings("unchecked") Constructor<? extends Gui> c = (Constructor<? extends Gui>) defaultCls.getConstructor(constructorTemplate.argumentTypes());
             GuiConstructor<?> constructor = new GuiConstructor<>(c, constructorTemplate);
             registered(clazz).put(distribution, constructor);
+            if (defaultCls != clazz) registered(defaultCls.asSubclass(Gui.class)).put(distribution, constructor);
         } catch (Exception ex) {
             logger.error(ex);
         }

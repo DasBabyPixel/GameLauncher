@@ -48,6 +48,7 @@ import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.i18n.LanguageManager;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.AnsiProvider;
+import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.engine.util.service.ServiceProvider;
@@ -205,8 +206,8 @@ public abstract class GameLauncher {
         this.languageManager = new LanguageManager(this);
         this.modelIdRegistry = new ModelIdRegistry();
 
-//        System.setOut(this.logger.createPrintStream(LogLevel.STDOUT));
-//        System.setErr(this.logger.createPrintStream(LogLevel.STDERR));
+        System.setOut(this.logger.createPrintStream(LogLevel.STDOUT));
+        System.setErr(this.logger.createPrintStream(LogLevel.STDERR));
 
         this.logger.infof(new Key("starting"));
         this.logger.infof(new Key("os"), operatingSystem.osName());

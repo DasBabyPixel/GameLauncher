@@ -7,10 +7,7 @@
 
 package gamelauncher.android.font;
 
-import android.graphics.Bitmap;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
+import android.graphics.*;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberInvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
@@ -74,8 +71,8 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
         Paint.FontMetrics fm = paint.getFontMetrics();
 
-        float scale = -1;
-        float descent = fm.descent;
+        float scale = pixelHeight;
+        float descent = -fm.descent;
         float ascent = fm.ascent;
         char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
         Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
@@ -161,7 +158,6 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             char[] ca1 = new char[]{ch};
             Rect bounds = new Rect();
             paint.getTextBounds(ca1, 0, 1, bounds);
-            System.out.println(ch + ": " + bounds);
 
             MemoryManagement memoryManagement = gles.memoryManagement();
             GlyphData gdata = new GlyphData();
@@ -171,10 +167,13 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             gdata.width = bounds.width();
             gdata.height = bounds.height();
 
-            Bitmap bitmap = Bitmap.createBitmap(2 + gdata.width, 2 + gdata.height, Bitmap.Config.ARGB_8888);
-            Bitmap alpha = bitmap.extractAlpha();
-            ByteBuffer abuf = memoryManagement.allocDirect(4 * (2 + gdata.width) * (2 + gdata.height));
-            alpha.copyPixelsToBuffer(abuf);
+            Bitmap bitmap = Bitmap.createBitmap(2 + gdata.width, 2 + gdata.height, Bitmap.Config.ALPHA_8);
+            bitmap.eraseColor(0x00000000);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawText(ca1, 0, 1, -gdata.bearingX, gdata.height - gdata.bearingY, paint);
+
+            ByteBuffer abuf = memoryManagement.callocDirect((2 + gdata.width) * (2 + gdata.height));
+            bitmap.copyPixelsToBuffer(abuf);
 
             // Setup for usage by LWJGLTexture
             ByteBuffer buf = memoryManagement.calloc(DataUtil.BYTES_INT * abuf.capacity() + DataUtil.BYTES_INT * 2 + GLESTexture.SIGNATURE_RAW.length);
@@ -182,11 +181,13 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             buf.putInt(gdata.width + 2);
             buf.putInt(gdata.height + 2);
             //			buf.put(apxls);
-            for (int i = 0; i < abuf.capacity(); i += 4) {
+            for (int i = 0; i < abuf.capacity(); i += 1) {
                 buf.position(buf.position() + 3);
-                buf.put(abuf.get(i + 3));
+                buf.put(abuf.get(i));
+//                if (b != 0) System.out.println(b);
             }
             buf.flip();
+            memoryManagement.free(abuf);
 
             GlyphEntry e = new GlyphEntry(gdata, key, buf);
 

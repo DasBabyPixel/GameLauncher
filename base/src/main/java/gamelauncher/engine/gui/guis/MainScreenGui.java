@@ -45,7 +45,7 @@ public interface MainScreenGui extends Gui {
             GUIs.add(textureGui);
 
             ButtonGui button = launcher.guiManager().createGui(ButtonGui.class);
-            button.text().value(Component.text("test"));
+            ((ButtonGui.Simple.TextForeground) button.foreground().value()).textGui().text().value(Component.text("test"));
             button.xProperty().bind(xProperty());
             button.yProperty().bind(yProperty().add(100));
             button.widthProperty().bind(widthProperty());

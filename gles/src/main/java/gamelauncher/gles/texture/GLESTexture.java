@@ -301,7 +301,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return fut;
     }
 
-    @SuppressWarnings("deprecation") @Override public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
+    @Override public CompletableFuture<Void> copyTo(Texture other, int srcX, int srcY, int dstX, int dstY, int width, int height) throws GameException {
         if (!(other instanceof GLESTexture)) {
             ClassCastException cause = new ClassCastException("Texture passed is no LWJLTexture");
             GameException ge = new GameException(cause);

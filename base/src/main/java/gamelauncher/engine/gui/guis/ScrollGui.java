@@ -104,11 +104,11 @@ public interface ScrollGui extends Gui {
             this.horizontalScrollbar.max.bind(this.guiWidth.subtract(this.displayWidth).max(0));
             this.verticalScrollbar.max.bind(this.guiHeight.subtract(this.displayHeight).max(0));
             this.displayX = this.xProperty();
-            this.displayY = this.yProperty().mapToNumber(n -> {
+            this.displayY = this.yProperty().mapToDouble(n -> {
                 if (this.horizontalScrollbar.visible.booleanValue()) {
                     return n.doubleValue() + this.horizontalScrollbar.thickness.doubleValue();
                 }
-                return n;
+                return n.doubleValue();
             }).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness);
             this.horizontalScrollbar.visible.bind(this.displayWidth.mapToBoolean(n -> n.floatValue() < this.guiWidth.floatValue()));
             this.verticalScrollbar.visible.bind(this.displayHeight.mapToBoolean(n -> n.floatValue() < this.guiHeight.floatValue()));
@@ -117,11 +117,11 @@ public interface ScrollGui extends Gui {
 
             ScrollbarGui verticalScrollbarGui = new ScrollbarGui(this.launcher(), this.guiWidth, this.guiHeight, this.verticalScrollbar, this.displayWidth, this.displayHeight);
             verticalScrollbarGui.xProperty().bind(this.xProperty().add(this.displayWidth));
-            verticalScrollbarGui.yProperty().bind(this.yProperty().mapToNumber(n -> {
+            verticalScrollbarGui.yProperty().bind(this.yProperty().mapToDouble(n -> {
                 if (this.horizontalScrollbar.visible.booleanValue()) {
                     return n.doubleValue() + this.horizontalScrollbar.thickness.doubleValue();
                 }
-                return n;
+                return n.doubleValue();
             }).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness));
             verticalScrollbarGui.widthProperty().bind(this.verticalScrollbar.thickness);
             verticalScrollbarGui.heightProperty().bind(this.displayHeight);
