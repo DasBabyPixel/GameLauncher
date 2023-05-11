@@ -74,9 +74,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     private CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
         Gui gui = this.guis.remove(framebuffer);
         if (gui != null) {
-            return framebuffer.renderThread().submit(() -> {
-                gui.cleanup(framebuffer);
-            }).thenCombine(launcher.gameThread().runLater(() -> {
+            return framebuffer.renderThread().submit(() -> gui.cleanup(framebuffer)).thenCombine(launcher.gameThread().runLater(() -> {
                 gui.unfocus();
                 gui.onClose();
             }), (unused, unused2) -> null);
@@ -102,7 +100,6 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                 oldGui.init(framebuffer);
                 oldGui.cleanup(framebuffer);
             });
-            framebuffer.scheduleRedraw();
         }
         gui.widthProperty().bind(framebuffer.width());
         gui.heightProperty().bind(framebuffer.height());
