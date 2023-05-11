@@ -25,6 +25,7 @@ import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -38,7 +39,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class SimpleGuiManager extends AbstractGameResource implements GuiManager {
     private static final Logger logger = Logger.logger();
     private final GameLauncher launcher;
-    private final Map<Framebuffer, GuiStack> guis = new ConcurrentHashMap<>();
+    private final Map<Framebuffer, Gui> guis = new ConcurrentHashMap<>();
     private final Map<Class<? extends Gui>, Map<GuiDistribution, GameSupplier<? extends Gui>>> registeredGuis = new HashMap<>();
     private final Map<Class<? extends Gui>, Set<GameFunction<? extends Gui, ? extends Gui>>> converters = new HashMap<>();
     private final Map<Class<? extends Gui>, GuiDistribution> preferredDistribution = new HashMap<>();
@@ -56,7 +57,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         this.launcher.eventManager().unregisterListener(this);
         CompletableFuture<?>[] futures = new CompletableFuture[this.guis.size()];
         int i = 0;
-        for (Map.Entry<Framebuffer, GuiStack> entry : this.guis.entrySet()) {
+        for (Map.Entry<Framebuffer, Gui> entry : this.guis.entrySet()) {
             futures[i++] = this.cleanupLater(entry.getKey());
         }
         for (CompletableFuture<?> fut : futures) {
@@ -71,33 +72,21 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
      * @return a future for the task
      */
     private CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
-        GuiStack stack = this.guis.remove(framebuffer);
-        if (stack != null) {
+        Gui gui = this.guis.remove(framebuffer);
+        if (gui != null) {
             return framebuffer.renderThread().submit(() -> {
-                boolean first = true;
-                GuiStack.StackEntry se;
-                while ((se = stack.popGui()) != null) {
-                    if (first) {
-                        first = false;
-                        se.gui.unfocus();
-                        se.gui.onClose();
-                    }
-                    se.gui.cleanup(framebuffer);
-                }
-            });
+                gui.cleanup(framebuffer);
+            }).thenCombine(launcher.gameThread().runLater(() -> {
+                gui.unfocus();
+                gui.onClose();
+            }), (unused, unused2) -> null);
         }
         return CompletableFuture.completedFuture(null);
     }
 
     @Override public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
         if (gui == null) throw new NullPointerException("Gui");
-        GuiStack stack = this.guis.get(framebuffer);
-        if (stack == null) {
-            stack = new GuiStack();
-            this.guis.put(framebuffer, stack);
-        }
-        GuiStack.StackEntry stackEntryCurrentGui = stack.peekGui();
-        Gui currentGui = stackEntryCurrentGui == null ? null : stackEntryCurrentGui.gui;
+        Gui currentGui = this.guis.put(framebuffer, gui);
         if (currentGui != null) {
             currentGui.unfocus();
             currentGui.onClose();
@@ -113,21 +102,20 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                 oldGui.init(framebuffer);
                 oldGui.cleanup(framebuffer);
             });
+            framebuffer.scheduleRedraw();
+            return;
         }
         gui.widthProperty().bind(framebuffer.width());
         gui.heightProperty().bind(framebuffer.height());
-        stack.pushGui(gui);
         gui.onOpen();
         gui.focus();
+        Gui finalGui = gui;
+        framebuffer.renderThread().submit(() -> finalGui.init(framebuffer));
         framebuffer.scheduleRedraw();
     }
 
-    @Api @Override public Gui currentGui(Framebuffer framebuffer) throws GameException {
-        if (!this.guis.containsKey(framebuffer)) {
-            return null;
-        }
-        GuiStack.StackEntry e = this.guis.get(framebuffer).peekGui();
-        return e == null ? null : e.gui;
+    @Api @Override public @Nullable Gui currentGui(Framebuffer framebuffer) throws GameException {
+        return this.guis.get(framebuffer);
     }
 
     @Override public void cleanup(Framebuffer framebuffer) throws GameException {
@@ -139,11 +127,8 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void updateGuis() throws GameException {
-        for (GuiStack stack : this.guis.values()) {
-            GuiStack.StackEntry e = stack.peekGui();
-            if (e != null) {
-                e.gui.update();
-            }
+        for (Gui gui : this.guis.values()) {
+            gui.update();
         }
     }
 
@@ -273,7 +258,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void redrawAll() {
-        for (Map.Entry<Framebuffer, GuiStack> e : guis.entrySet()) {
+        for (Map.Entry<Framebuffer, Gui> e : guis.entrySet()) {
             e.getKey().scheduleRedraw();
         }
     }
@@ -282,14 +267,11 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         if (!shouldHandle(event)) return;
         KeybindEvent entry = event.entry();
         // TODO: Gui Selection - not relevant with only one frame visible in this guimanager
-        for (GuiStack stack : guis.values()) {
-            GuiStack.StackEntry e = stack.peekGui();
-            if (e != null) {
-                try {
-                    e.gui.handle(entry);
-                } catch (GameException ex) {
-                    logger.error(ex);
-                }
+        for (Gui gui : guis.values()) {
+            try {
+                gui.handle(entry);
+            } catch (GameException ex) {
+                logger.error(ex);
             }
         }
     }

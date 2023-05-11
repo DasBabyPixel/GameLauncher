@@ -5,8 +5,11 @@ import gamelauncher.engine.util.collections.Collections;
 import java.util.Deque;
 
 /**
+ * <b>REMOVED FROM USE!!!</b>
+ *
  * @author DasBabyPixel
  */
+@Deprecated
 public class GuiStack {
 
     private final Deque<StackEntry> deque = Collections.newConcurrentDeque();
