@@ -103,7 +103,6 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
                 oldGui.cleanup(framebuffer);
             });
             framebuffer.scheduleRedraw();
-            return;
         }
         gui.widthProperty().bind(framebuffer.width());
         gui.heightProperty().bind(framebuffer.height());
