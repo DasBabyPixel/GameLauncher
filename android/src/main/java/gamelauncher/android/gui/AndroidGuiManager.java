@@ -8,15 +8,11 @@
 package gamelauncher.android.gui;
 
 import gamelauncher.android.AndroidGameLauncher;
-import gamelauncher.android.gui.launcher.AndroidLineGui;
 import gamelauncher.engine.gui.SimpleGuiManager;
-import gamelauncher.engine.gui.launcher.LineGui;
-import gamelauncher.gles.GLES;
 
 public class AndroidGuiManager extends SimpleGuiManager {
 
-    public AndroidGuiManager(AndroidGameLauncher launcher, GLES gles) {
+    public AndroidGuiManager(AndroidGameLauncher launcher) {
         super(launcher);
-        this.registerGuiCreator(null, LineGui.class, () -> new AndroidLineGui(launcher, gles));
     }
 }

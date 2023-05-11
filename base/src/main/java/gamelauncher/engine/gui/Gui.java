@@ -7,10 +7,10 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.GameThread;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 
 /**
  * @author DasBabyPixel
@@ -68,11 +68,11 @@ public interface Gui {
      */
     @Api BooleanValue focusedProperty();
 
-    @Api <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer);
+    @Api <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, GameConsumer<T> eventConsumer);
 
-    @Api <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer);
+    @Api <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, GameConsumer<T> eventConsumer);
 
-    @Api <T extends KeybindEvent> Collection<Consumer<? super T>> keybindHandlers(Class<T> clazz);
+    @Api <T extends KeybindEvent> Collection<GameConsumer<? super T>> keybindHandlers(Class<T> clazz);
 
     /**
      * Called when the contents of the window should be initialized

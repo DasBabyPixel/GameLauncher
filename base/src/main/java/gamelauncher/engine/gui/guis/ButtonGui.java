@@ -119,12 +119,24 @@ public interface ButtonGui extends Gui {
 
         protected void buttonPressed(MouseButtonKeybindEvent event) throws GameException {
             GameConsumer<MouseButtonKeybindEvent> cons = buttonPressed;
-            if (cons != null) cons.accept(event);
+            if (cons != null) {
+                try {
+                    cons.accept(event);
+                } catch (GameException ex) {
+                    throw ex;
+                } catch (Throwable t) {
+                    throw new GameException(t);
+                }
+            }
         }
 
         public static class ColorBackground extends ParentableAbstractGui {
 
             private final InterpolatedColor backgroundColor;
+            private final BooleanValue highlight = BooleanValue.falseValue();
+            private final PropertyVector4f highlightColor = new PropertyVector4f(0.1F, 0.1F, 0.1F, 0.9F);
+            private final PropertyVector4f defaultColor = new PropertyVector4f(0.0F, 0.0F, 0.0F, 0.8F);
+            private final Runnable recalc;
 
             public ColorBackground(ButtonGui buttonGui) throws GameException {
                 super(buttonGui.launcher());
@@ -138,16 +150,33 @@ public interface ButtonGui extends Gui {
                 colorGui.heightProperty().bind(this.heightProperty());
                 colorGui.color().bind(backgroundColor.currentColor());
                 this.GUIs.add(colorGui);
-                Runnable recalc = () -> {
-                    if (this.hovering().booleanValue() || buttonGui.pressing().booleanValue()) {
-                        backgroundColor.setDesired(new PropertyVector4f(0.1F, 0.1F, 0.1F, 0.9F), TimeUnit.MILLISECONDS.toNanos(150));
+                recalc = () -> {
+                    if (this.hovering().booleanValue() || buttonGui.pressing().booleanValue() || this.highlight.booleanValue()) {
+                        backgroundColor.setDesired(highlightColor, TimeUnit.MILLISECONDS.toNanos(150));
                     } else {
-                        backgroundColor.setDesired(new PropertyVector4f(0F, 0, 0, 0.8F), TimeUnit.MILLISECONDS.toNanos(250));
+                        backgroundColor.setDesired(defaultColor, TimeUnit.MILLISECONDS.toNanos(250));
                     }
                 };
                 buttonGui.pressing().addListener(p -> recalc.run());
-                this.hovering().addListener((p, o, n) -> recalc.run());
+                this.hovering().addListener((a, b, c) -> recalc.run());
+                highlight.addListener(property -> recalc.run());
                 recalc.run();
+            }
+
+            @Api @Deprecated public void recalc() {
+                recalc.run();
+            }
+
+            @Api public PropertyVector4f highlightColor() {
+                return highlightColor;
+            }
+
+            @Api public PropertyVector4f defaultColor() {
+                return defaultColor;
+            }
+
+            @Api public BooleanValue highlight() {
+                return highlight;
             }
 
             @Override protected void doUpdate() {

@@ -2,10 +2,8 @@ package gamelauncher.lwjgl.gui;
 
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
 import gamelauncher.engine.gui.SimpleGuiManager;
-import gamelauncher.engine.gui.launcher.LineGui;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEvent;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.gui.launcher.LWJGLLineGui;
 import gamelauncher.lwjgl.util.keybind.LWJGLMouseMoveKeybindEvent;
 
 /**
@@ -18,7 +16,6 @@ public class LWJGLGuiManager extends SimpleGuiManager {
     public LWJGLGuiManager(LWJGLGameLauncher launcher) {
         super(launcher);
         this.launcher = launcher;
-        this.registerGuiCreator(null, LineGui.class, () -> new LWJGLLineGui(launcher));
     }
 
     @Override protected boolean shouldHandle(KeybindEntryEvent event) {

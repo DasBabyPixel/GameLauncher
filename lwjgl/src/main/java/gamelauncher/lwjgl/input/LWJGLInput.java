@@ -7,9 +7,11 @@
 
 package gamelauncher.lwjgl.input;
 
+import com.lmax.disruptor.EventPoller;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SleepingWaitStrategy;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.keybind.*;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.util.keybind.*;
@@ -18,7 +20,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Queue;
 
 /**
  * @author DasBabyPixel
@@ -26,43 +27,50 @@ import java.util.Queue;
 public class LWJGLInput implements Input {
     private static final int ALL_MOUSE_PRESSED = -1;
 
-    private final List<Entry> pressed = Collections.synchronizedList(new ArrayList<>());
-    private final Queue<QueueEntry> queue = Collections.newConcurrentQueue();
+    private final List<Entry> pressed = new ArrayList<>();
+    private final RingBuffer<QueueEntry> ringBuffer = RingBuffer.createMultiProducer(QueueEntry::new, 1024, new SleepingWaitStrategy());
+    private final EventPoller<QueueEntry> poller = ringBuffer.newPoller();
     private final List<Entry> mousePressed = new ArrayList<>();
     private final KeybindManager keybindManager;
+
+    {
+        ringBuffer.addGatingSequences(poller.getSequence());
+    }
 
     public LWJGLInput(GLFWFrame frame) {
         this.keybindManager = frame.launcher().keybindManager();
     }
 
     @Override public void handleInput() throws GameException {
-        QueueEntry qe;
-        while ((qe = this.queue.poll()) != null) {
-            this.event(qe.entry, qe.type);
-            switch (qe.type) {
-                case PRESSED:
-                    this.pressed.add(qe.entry);
-                    if (qe.entry.type == DeviceType.MOUSE) {
-                        this.mousePressed.add(qe.entry);
-                    }
-                    break;
-                case RELEASED:
-                    int index = this.pressed.indexOf(qe.entry);
-                    if (index == -1) {
+        try {
+            poller.poll((qe, sequence, endOfBatch) -> {
+                this.event(qe.entry, qe.type);
+                switch (qe.type) {
+                    case PRESSED:
+                        this.pressed.add(qe.entry);
+                        if (qe.entry.type == DeviceType.MOUSE) {
+                            this.mousePressed.add(qe.entry);
+                        }
                         break;
-                    }
-                    Entry inPressed = this.pressed.remove(index);
-                    if (inPressed.type == DeviceType.MOUSE) {
-                        this.mousePressed.remove(inPressed);
-                    }
-                default:
-                    break;
-            }
-        }
-        synchronized (pressed) {
+                    case RELEASED:
+                        int index = this.pressed.indexOf(qe.entry);
+                        if (index == -1) {
+                            break;
+                        }
+                        Entry inPressed = this.pressed.remove(index);
+                        if (inPressed.type == DeviceType.MOUSE) {
+                            this.mousePressed.remove(inPressed);
+                        }
+                    default:
+                        break;
+                }
+                return true;
+            });
             for (int i = 0; i < pressed.size(); i++) {
                 event(pressed.get(i), InputType.HELD);
             }
+        } catch (Exception e) {
+            throw new GameException(e);
         }
     }
 
@@ -146,35 +154,39 @@ public class LWJGLInput implements Input {
     }
 
     public void scroll(float xoffset, float yoffset) throws GameException {
-        this.queue.add(this.newQueueEntry(this.newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL));
+        enqueue(this.newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL);
     }
 
     public void mouseMove(float omx, float omy, float mx, float my) {
-        this.queue.add(this.newQueueEntry(this.newEntry(ALL_MOUSE_PRESSED, omx, omy, mx, my), InputType.MOVE));
+        enqueue(this.newEntry(ALL_MOUSE_PRESSED, omx, omy, mx, my), InputType.MOVE);
     }
 
     public void mousePress(int key, float mx, float my) {
-        this.queue.add(this.newQueueEntry(this.newEntry(key, 0, 0, mx, my), InputType.PRESSED));
+        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.PRESSED);
     }
 
     public void mouseRelease(int key, float mx, float my) {
-        this.queue.add(this.newQueueEntry(this.newEntry(key, 0, 0, mx, my), InputType.RELEASED));
+        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.RELEASED);
     }
 
     public void keyRepeat(int key, int scancode, char ch) {
-        this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch), InputType.REPEAT));
+        enqueue(this.newEntry(key, scancode, ch), InputType.REPEAT);
     }
 
     public void keyPress(int key, int scancode, char ch) {
-        this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch), InputType.PRESSED));
+        enqueue(this.newEntry(key, scancode, ch), InputType.PRESSED);
     }
 
     public void keyRelease(int key, int scancode, char ch) {
-        this.queue.add(this.newQueueEntry(this.newEntry(key, scancode, ch), InputType.RELEASED));
+        enqueue(this.newEntry(key, scancode, ch), InputType.RELEASED);
     }
 
     public void character(char ch) {
-        this.queue.add(this.newQueueEntry(this.newEntry(0, 0, ch), InputType.CHARACTER));
+        enqueue(this.newEntry(0, 0, ch), InputType.CHARACTER);
+    }
+
+    public void enqueue(Entry entry, InputType type) {
+        ringBuffer.publishEvent((event, sequence, arg0, arg1) -> event.set(arg0, arg1), entry, type);
     }
 
     private Entry newEntry(int key, int scancode, char ch) {
@@ -183,10 +195,6 @@ public class LWJGLInput implements Input {
 
     private Entry newEntry(int key, float omx, float omy, float mx, float my) {
         return new Entry(key, DeviceType.MOUSE, omx, omy, mx, my);
-    }
-
-    private QueueEntry newQueueEntry(Entry entry, InputType inputType) {
-        return new QueueEntry(entry, inputType);
     }
 
     /**
@@ -239,12 +247,15 @@ public class LWJGLInput implements Input {
 
     private static class QueueEntry {
 
-        private final Entry entry;
-        private final InputType type;
+        private Entry entry;
+        private InputType type;
 
-        public QueueEntry(Entry entry, InputType type) {
+        public QueueEntry() {
+        }
+
+        public void set(Entry entry, InputType inputType) {
             this.entry = entry;
-            this.type = type;
+            this.type = inputType;
         }
 
         @Override public boolean equals(Object obj) {

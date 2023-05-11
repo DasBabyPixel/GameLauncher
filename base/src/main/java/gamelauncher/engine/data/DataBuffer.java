@@ -53,9 +53,6 @@ public class DataBuffer {
      * @return the old writer index
      */
     @Api public int writerIndex(int writerIndex) {
-        if (writerIndex >= this.memory.capacity()) {
-            throw new ArrayIndexOutOfBoundsException(writerIndex + " >= " + this.memory.capacity());
-        }
         int old = this.writerIndex;
         this.writerIndex = writerIndex;
         return old;

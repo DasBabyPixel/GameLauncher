@@ -64,7 +64,7 @@ public class AndroidGameLauncher extends GameLauncher {
         this.shaderLoader(new GLESShaderLoader(gles));
         this.gameRenderer(new GLESGameRenderer(gles));
         this.modelLoader(new GLESModelLoader(gles, this));
-        this.guiManager(new AndroidGuiManager(this, gles));
+        this.guiManager(new AndroidGuiManager(this));
         this.fontFactory(new BasicFontFactory(gles, this));
         this.textureManager(gles.textureManager());
         gles.init();

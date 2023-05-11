@@ -3,11 +3,13 @@ package gamelauncher.gles;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.guis.ColorGui;
+import gamelauncher.engine.gui.guis.LineGui;
 import gamelauncher.engine.gui.guis.TextureGui;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.gles.gl.GLFactory;
 import gamelauncher.gles.gui.GLESColorGui;
 import gamelauncher.gles.gui.GLESGuiConstructorTemplates;
+import gamelauncher.gles.gui.GLESLineGui;
 import gamelauncher.gles.gui.GLESTextureGui;
 import gamelauncher.gles.mesh.MeshGLDataFactory;
 import gamelauncher.gles.render.MeshRenderer;
@@ -28,6 +30,7 @@ public class GLES {
         this.glFactory = glFactory;
         this.textureManager = new GLESTextureManager(launcher, this);
         launcher.profiler().addHandler("render", new GLSectionHandler());
+        launcher.serviceProvider().register(GLES.class, this);
         launcher.serviceProvider().register(MeshGLDataFactory.class, new MeshGLDataFactory.FactoryGL30(this));
         launcher.serviceProvider().register(MeshRenderer.class, new MeshRenderer(this));
         GLESGuiConstructorTemplates.init(this);
@@ -56,5 +59,6 @@ public class GLES {
     @Api public void init() {
         launcher.guiManager().registerGuiCreator(null, TextureGui.class, GLESTextureGui.class);
         launcher.guiManager().registerGuiCreator(null, ColorGui.class, GLESColorGui.class);
+        launcher.guiManager().registerGuiCreator(null, LineGui.class, GLESLineGui.class);
     }
 }

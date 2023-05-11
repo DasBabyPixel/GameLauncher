@@ -6,6 +6,7 @@ import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 
 /**
  * @author DasBabyPixel
@@ -31,7 +31,7 @@ public abstract class AbstractGui implements Gui {
     private final NumberValue visibleH = NumberValue.withValue(0D);
     private final GameLauncher launcher;
     private final BooleanValue focused = BooleanValue.falseValue();
-    private final Map<Class<?>, List<Consumer<KeybindEvent>>> keybindHandlers = new ConcurrentHashMap<>();
+    private final Map<Class<?>, List<GameConsumer<KeybindEvent>>> keybindHandlers = new ConcurrentHashMap<>();
     private final List<Class<?>> registeredHandlers = new CopyOnWriteArrayList<>();
 
     public AbstractGui(GameLauncher launcher) {
@@ -74,16 +74,16 @@ public abstract class AbstractGui implements Gui {
         return focused;
     }
 
-    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
+    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> void registerKeybindHandler(Class<T> clazz, GameConsumer<T> eventConsumer) {
         keybindHandlers.compute(clazz, (aClass, consumers) -> {
             if (consumers == null) consumers = new CopyOnWriteArrayList<>();
-            consumers.add((Consumer<KeybindEvent>) eventConsumer);
+            consumers.add((GameConsumer<KeybindEvent>) eventConsumer);
             registeredHandlers.add(aClass);
             return consumers;
         });
     }
 
-    @Override public <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, Consumer<T> eventConsumer) {
+    @Override public <T extends KeybindEvent> void unregisterKeybindHandler(Class<T> clazz, GameConsumer<T> eventConsumer) {
         keybindHandlers.computeIfPresent(clazz, (aClass, consumers) -> {
             consumers.remove(eventConsumer);
             if (consumers.isEmpty()) {
@@ -94,21 +94,21 @@ public abstract class AbstractGui implements Gui {
         });
     }
 
-    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> Collection<Consumer<? super T>> keybindHandlers(Class<T> clazz) {
-        Collection<Consumer<? super T>> col = new ArrayList<>();
-        for (Map.Entry<Class<?>, List<Consumer<KeybindEvent>>> entry : keybindHandlers.entrySet()) {
+    @SuppressWarnings("unchecked") @Override public <T extends KeybindEvent> Collection<GameConsumer<? super T>> keybindHandlers(Class<T> clazz) {
+        Collection<GameConsumer<? super T>> col = new ArrayList<>();
+        for (Map.Entry<Class<?>, List<GameConsumer<KeybindEvent>>> entry : keybindHandlers.entrySet()) {
             if (entry.getKey().isAssignableFrom(clazz)) {
-                col.add((Consumer<? super T>) entry.getValue());
+                col.add((GameConsumer<? super T>) entry.getValue());
             }
         }
         return col;
     }
 
-    protected void callKeybindHandlers(KeybindEvent event) {
+    protected void callKeybindHandlers(KeybindEvent event) throws GameException {
         for (int i = 0; i < registeredHandlers.size(); i++) {
             Class<?> clazz = registeredHandlers.get(i);
             if (clazz.isInstance(event)) {
-                List<Consumer<KeybindEvent>> l = keybindHandlers.get(clazz);
+                List<GameConsumer<KeybindEvent>> l = keybindHandlers.get(clazz);
                 if (l != null) {
                     for (int i1 = 0; i1 < l.size(); i1++) {
                         l.get(i1).accept(event);
