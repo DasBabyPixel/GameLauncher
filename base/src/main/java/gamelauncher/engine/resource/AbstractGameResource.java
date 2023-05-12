@@ -105,7 +105,11 @@ public abstract class AbstractGameResource implements GameResource {
                 AbstractGameResource.logCleanup(this);
             }
         } else {
-            AbstractGameResource.logger().error(new GameException("Multiple cleanups"));
+            GameException ex = new GameException("Multiple cleanups");
+            GameException ex2 = new GameException("Stack: " + exName);
+            ex2.setStackTrace(stack);
+            ex.addSuppressed(ex2);
+            AbstractGameResource.logger().error(ex);
         }
     }
 
