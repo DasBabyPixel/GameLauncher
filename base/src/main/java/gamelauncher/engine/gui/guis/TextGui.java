@@ -7,8 +7,11 @@ import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.ParentableAbstractGui;
-import gamelauncher.engine.render.*;
+import gamelauncher.engine.render.BasicCamera;
+import gamelauncher.engine.render.Camera;
 import gamelauncher.engine.render.ContextProvider.ContextType;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.GameItem.GameItemModel;
 import gamelauncher.engine.render.model.GlyphStaticModel;
 import gamelauncher.engine.util.GameException;
@@ -61,21 +64,26 @@ public interface TextGui extends Gui {
             this.color.w.addListener((NumberValue p) -> this.redraw());
         }
 
-        @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
-            if (this.itemModel != null) this.itemModel.cleanup();
+        @Override protected void doCleanup() throws GameException {
+            if (this.itemModel != null) {
+                this.itemModel.cleanup();
+                itemModel = null;
+            }
             this.launcher().contextProvider().freeContext(this.hud, ContextType.HUD);
+            hud = null;
         }
 
-        @Override protected void doInit(Framebuffer framebuffer) throws GameException {
-            this.hud = this.launcher().contextProvider().loadContext(framebuffer, ContextType.HUD);
+        @Override protected void doInit() throws GameException {
+            this.hud = this.launcher().contextProvider().loadContext(launcher().frame().framebuffer(), ContextType.HUD);
+            ensureModel();
         }
 
-        @Override protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+        @Override protected void preRender(float mouseX, float mouseY, float partialTick) throws GameException {
             this.ensureModel();
-            super.preRender(framebuffer, mouseX, mouseY, partialTick);
+            super.preRender(mouseX, mouseY, partialTick);
         }
 
-        @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+        @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
             if (itemModel != null) {
                 this.hud.update(this.camera);
                 this.hud.drawModel(this.itemModel, Math.round(this.x()), Math.round(this.y() + this.baselineYOffset.floatValue()), 0);
@@ -123,6 +131,8 @@ public interface TextGui extends Gui {
 
                 if (oldModel != null) {
                     oldModel.cleanup();
+                    
+                    System.out.println("cleanup");
                 }
             }
         }

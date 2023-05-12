@@ -132,7 +132,7 @@ public class GLESGameRenderer implements GameRenderer {
             this.contexthud = launcher.contextProvider().loadContext(this.mainFramebuffer, ContextType.HUD);
             ((GLESDrawContext) this.contexthud).swapTopBottom = true;
 
-            launcher.guiManager().openGuiByClass(this.mainFramebuffer, MainScreenGui.class);
+            launcher.guiManager().openGuiByClass(MainScreenGui.class);
 
             //			updateScreenItems();
 
@@ -186,7 +186,7 @@ public class GLESGameRenderer implements GameRenderer {
                 this.crenderer = renderer;
             }
             if (renderer != null) {
-                renderer.render(this.mainFramebuffer);
+                renderer.render();
             }
 
             this.mainFramebuffer.unbind();
@@ -202,14 +202,14 @@ public class GLESGameRenderer implements GameRenderer {
             if (renderer == null) {
                 return;
             }
-            renderer.cleanup(this.mainFramebuffer);
+            renderer.cleanup();
         }
 
         private void init(Renderer renderer) throws GameException {
             if (renderer == null) {
                 return;
             }
-            renderer.init(this.mainFramebuffer);
+            renderer.init();
         }
 
     }

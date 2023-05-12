@@ -16,7 +16,6 @@ import gamelauncher.engine.gui.guis.ButtonGui;
 import gamelauncher.engine.gui.guis.MainScreenGui;
 import gamelauncher.engine.gui.guis.ScrollGui;
 import gamelauncher.engine.gui.guis.TextGui;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -25,6 +24,7 @@ import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
@@ -33,16 +33,15 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class SimpleGuiManager extends AbstractGameResource implements GuiManager {
     private static final Logger logger = Logger.logger();
     private final GameLauncher launcher;
-    private final Map<Framebuffer, Gui> guis = new ConcurrentHashMap<>();
     private final Map<Class<? extends Gui>, Map<GuiDistribution, GameSupplier<? extends Gui>>> registeredGuis = new HashMap<>();
     private final Map<Class<? extends Gui>, Set<GameFunction<? extends Gui, ? extends Gui>>> converters = new HashMap<>();
     private final Map<Class<? extends Gui>, GuiDistribution> preferredDistribution = new HashMap<>();
+    private volatile Gui gui = null;
 
     public SimpleGuiManager(GameLauncher launcher) {
         this.launcher = launcher;
@@ -55,11 +54,9 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
 
     @Override public void cleanup0() throws GameException {
         this.launcher.eventManager().unregisterListener(this);
-        CompletableFuture<?>[] futures = new CompletableFuture[this.guis.size()];
+        CompletableFuture<?>[] futures = new CompletableFuture[1];
         int i = 0;
-        for (Map.Entry<Framebuffer, Gui> entry : this.guis.entrySet()) {
-            futures[i++] = this.cleanupLater(entry.getKey());
-        }
+        futures[i] = this.cleanupLater();
         for (CompletableFuture<?> fut : futures) {
             Threads.waitFor(fut);
         }
@@ -68,13 +65,12 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     /**
      * Cleanes up a framebuffer and its guis
      *
-     * @param framebuffer the framebuffer
      * @return a future for the task
      */
-    private CompletableFuture<Void> cleanupLater(Framebuffer framebuffer) {
-        Gui gui = this.guis.remove(framebuffer);
+    private CompletableFuture<Void> cleanupLater() {
+        Gui gui = this.gui;
         if (gui != null) {
-            return framebuffer.renderThread().submit(() -> gui.cleanup(framebuffer)).thenCombine(launcher.gameThread().runLater(() -> {
+            return launcher.frame().renderThread().submit(gui::cleanup).thenCombine(launcher.gameThread().runLater(() -> {
                 gui.unfocus();
                 gui.onClose();
             }), (unused, unused2) -> null);
@@ -82,40 +78,37 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         return CompletableFuture.completedFuture(null);
     }
 
-    @Override public void openGui(Framebuffer framebuffer, Gui gui) throws GameException {
-        if (gui == null) throw new NullPointerException("Gui");
-        Gui currentGui = this.guis.put(framebuffer, gui);
+    @Override public void openGui(@NotNull Gui gui) throws GameException {
+        Gui currentGui = this.gui;
         if (currentGui != null) {
             currentGui.unfocus();
             currentGui.onClose();
+            launcher.frame().renderThread().submit(currentGui::cleanup);
         }
         Gui oldGui = gui;
         gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
         if (oldGui != gui) {
             oldGui.onOpen();
-            oldGui.focus();
+            oldGui.update();
+            launcher.frame().renderThread().submit(() -> {
+                oldGui.init();
+                oldGui.cleanup();
+            });
             oldGui.unfocus();
             oldGui.onClose();
-            framebuffer.renderThread().submit(() -> {
-                oldGui.init(framebuffer);
-                oldGui.cleanup(framebuffer);
-            });
         }
-        gui.widthProperty().bind(framebuffer.width());
-        gui.heightProperty().bind(framebuffer.height());
+        gui.widthProperty().bind(launcher.frame().framebuffer().width());
+        gui.heightProperty().bind(launcher.frame().framebuffer().height());
+        this.gui = gui;
         gui.onOpen();
         gui.focus();
         Gui finalGui = gui;
-        framebuffer.renderThread().submit(() -> finalGui.init(framebuffer));
-        framebuffer.scheduleRedraw();
+        launcher.frame().renderThread().submit(finalGui::init);
+        launcher.frame().framebuffer().scheduleRedraw();
     }
 
-    @Api @Override public @Nullable Gui currentGui(Framebuffer framebuffer) throws GameException {
-        return this.guis.get(framebuffer);
-    }
-
-    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
-        Threads.waitFor(this.cleanupLater(framebuffer));
+    @Api @Override public @Nullable Gui currentGui() throws GameException {
+        return gui;
     }
 
     @Override public GameLauncher launcher() {
@@ -123,9 +116,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void updateGuis() throws GameException {
-        for (Gui gui : this.guis.values()) {
-            gui.update();
-        }
+        gui.update();
     }
 
     @Override public GuiDistribution preferredDistribution(Class<? extends Gui> clazz) {
@@ -254,21 +245,17 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void redrawAll() {
-        for (Map.Entry<Framebuffer, Gui> e : guis.entrySet()) {
-            e.getKey().scheduleRedraw();
-        }
+        launcher.frame().framebuffer().scheduleRedraw();
     }
 
     @EventHandler protected void handle(KeybindEntryEvent event) {
         if (!shouldHandle(event)) return;
         KeybindEvent entry = event.entry();
         // TODO: Gui Selection - not relevant with only one frame visible in this guimanager
-        for (Gui gui : guis.values()) {
-            try {
-                gui.handle(entry);
-            } catch (GameException ex) {
-                logger.error(ex);
-            }
+        try {
+            gui.handle(entry);
+        } catch (GameException ex) {
+            logger.error(ex);
         }
     }
 

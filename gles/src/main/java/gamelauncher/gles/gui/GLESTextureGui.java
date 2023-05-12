@@ -29,14 +29,14 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
         this.texture = gles.textureManager().createTexture();
     }
 
-    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup() throws GameException {
         texture.cleanup();
         model.cleanup();
         launcher().contextProvider().freeContext(context, ContextProvider.ContextType.HUD);
     }
 
-    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
-        context = launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
+    @Override protected void doInit() throws GameException {
+        context = launcher().contextProvider().loadContext(launcher().frame().framebuffer(), ContextProvider.ContextType.HUD);
         Texture2DModel t2d = new Texture2DModel(texture);
         GameItem item = new GameItem(t2d);
 
@@ -48,11 +48,11 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
         model = item.createModel();
     }
 
-    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
         context.update(camera);
         context.drawModel(model);
         context.program().clearUniforms();
-        return super.doRender(framebuffer, mouseX, mouseY, partialTick);
+        return super.doRender(mouseX, mouseY, partialTick);
     }
 
     @Override public Texture texture() {

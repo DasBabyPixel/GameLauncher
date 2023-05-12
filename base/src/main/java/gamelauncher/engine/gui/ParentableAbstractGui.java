@@ -25,10 +25,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @Api
 public abstract class ParentableAbstractGui extends AbstractGui {
 
+    private final Deque<Gui> addGUIQueue = Collections.newConcurrentDeque();
+    private final Deque<Gui> removeGUIQueue = Collections.newConcurrentDeque();
     /**
      * The {@link Gui}s of this {@link ParentableAbstractGui} object
      */
-    public final Deque<Gui> GUIs = Collections.newConcurrentDeque();
+    private final Deque<Gui> GUIs = Collections.newConcurrentDeque();
     private final AtomicReference<Gui> focusedGui = new AtomicReference<>(null);
     private final AtomicBoolean initialized = new AtomicBoolean();
     private final NumberValue lastMouseX = NumberValue.withValue(Float.NEGATIVE_INFINITY);
@@ -37,12 +39,45 @@ public abstract class ParentableAbstractGui extends AbstractGui {
     private final String className = this.getClass().getName();
     private final Collection<Integer> mouseButtons = ConcurrentHashMap.newKeySet();
     private final Map<Integer, Collection<Gui>> mouseDownGuis = new ConcurrentHashMap<>();
-    protected Framebuffer framebuffer;
 
     public ParentableAbstractGui(GameLauncher launcher) {
         super(launcher);
         hovering.addDependencies(lastMouseX, lastMouseY).addDependencies(visibleXProperty(), visibleYProperty(), visibleWidthProperty(), visibleHeightProperty());
         hovering.addListener(Property::value);
+    }
+
+    public void addGUI(Gui gui) {
+        addGUIQueue.offer(gui);
+    }
+
+    public void removeGUI(Gui gui) {
+        removeGUIQueue.offer(gui);
+    }
+
+    public Deque<Gui> GUIs() {
+        return GUIs;
+    }
+
+    @Override public final void update() throws GameException {
+        Gui g;
+        while ((g = addGUIQueue.poll()) != null) {
+            GUIs.add(g);
+            g.onOpen();
+            Framebuffer fb = this.launcher().frame().framebuffer();
+            fb.renderThread().submit(g::init);
+        }
+        while ((g = removeGUIQueue.poll()) != null) {
+            GUIs.remove(g);
+            if (g.focused()) g.unfocus();
+            g.onClose();
+            Framebuffer fb = this.launcher().frame().framebuffer();
+            fb.renderThread().submit(g::cleanup);
+        }
+
+        this.doUpdate();
+        for (Gui gui : GUIs) {
+            gui.update();
+        }
     }
 
     private void mouseClicked(MouseButtonKeybindEvent entry) throws GameException {
@@ -117,24 +152,24 @@ public abstract class ParentableAbstractGui extends AbstractGui {
     @Api protected void doUpdate() throws GameException {
     }
 
-    @Api protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Api protected void doCleanup() throws GameException {
     }
 
-    @Api protected void doInit(Framebuffer framebuffer) throws GameException {
+    @Api protected void doInit() throws GameException {
     }
 
-    @Api protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected void preRender(float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Api protected void postRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected void postRender(float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Api protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Api protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
         return true;
     }
 
     @Api protected void redraw() {
-        if (this.framebuffer != null) this.framebuffer.scheduleRedraw();
+        this.launcher().frame().framebuffer().scheduleRedraw();
     }
 
     @Override public BooleanValue hovering() {
@@ -145,42 +180,40 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         return this.initialized.get();
     }
 
-    @Override public final void init(Framebuffer framebuffer) throws GameException {
+    @Override public final void init() throws GameException {
         if (this.initialized.compareAndSet(false, true)) {
-            this.framebuffer = framebuffer;
-            this.doInit(framebuffer);
+            this.doInit();
             Iterator<Gui> it = GUIs.descendingIterator();
-            while (it.hasNext()) it.next().init(framebuffer);
+            while (it.hasNext()) it.next().init();
         }
     }
 
-    @Override public final void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
-        ScissorStack scissor = framebuffer.scissorStack();
+    @Override public final void render(float mouseX, float mouseY, float partialTick) throws GameException {
+        ScissorStack scissor = launcher().frame().framebuffer().scissorStack();
         scissor.pushScissor(this);
         try {
             this.launcher().profiler().begin("render", "Gui-" + this.className);
-            this.init(framebuffer);
-            this.preRender(framebuffer, mouseX, mouseY, partialTick);
-            if (this.doRender(framebuffer, mouseX, mouseY, partialTick)) {
+            this.init();
+            this.preRender(mouseX, mouseY, partialTick);
+            if (this.doRender(mouseX, mouseY, partialTick)) {
                 for (Gui gui : GUIs) {
-                    gui.render(framebuffer, mouseX, mouseY, partialTick);
+                    gui.render(mouseX, mouseY, partialTick);
                 }
             }
-            this.postRender(framebuffer, mouseX, mouseY, partialTick);
+            this.postRender(mouseX, mouseY, partialTick);
         } finally {
             this.launcher().profiler().end();
             scissor.popScissor();
         }
     }
 
-    @Override public final void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public final void cleanup() throws GameException {
         if (this.initialized.compareAndSet(true, false)) {
             for (Gui gui : GUIs) {
-                gui.cleanup(framebuffer);
+                gui.cleanup();
             }
-            this.doCleanup(framebuffer);
-            super.cleanup(framebuffer);
-            this.framebuffer = null;
+            this.doCleanup();
+            super.cleanup();
         }
     }
 
@@ -189,13 +222,6 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         Gui focusedGui = this.focusedGui.get();
         if (focusedGui != null) {
             focusedGui.unfocus();
-        }
-    }
-
-    @Override public final void update() throws GameException {
-        this.doUpdate();
-        for (Gui gui : GUIs) {
-            gui.update();
         }
     }
 

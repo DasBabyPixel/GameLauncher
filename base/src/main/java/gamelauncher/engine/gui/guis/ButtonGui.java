@@ -45,6 +45,8 @@ public interface ButtonGui extends Gui {
         private final Property<Gui> background;
         private final Property<Gui> foreground;
         private final BooleanValue pressing = BooleanValue.falseValue();
+        private volatile boolean backgroundChanged = false;
+        private volatile boolean foregroundChanged = false;
         private volatile @Nullable GameConsumer<MouseButtonKeybindEvent> buttonPressed = null;
 
         public Simple(GameLauncher launcher) throws GameException {
@@ -56,19 +58,21 @@ public interface ButtonGui extends Gui {
             background.addListener(Property::value);
             foreground.addListener(Property::value);
             ChangeListener<Gui> changeListener = (property, oldValue, newValue) -> {
+                backgroundChanged = true;
+                foregroundChanged = true;
                 if (oldValue != null) {
                     oldValue.xProperty().unbind();
                     oldValue.yProperty().unbind();
                     oldValue.widthProperty().unbind();
                     oldValue.heightProperty().unbind();
-                    GUIs.remove(oldValue);
+                    removeGUI(oldValue);
                 }
                 if (newValue != null) {
                     newValue.xProperty().bind(xProperty());
                     newValue.yProperty().bind(yProperty());
                     newValue.widthProperty().bind(widthProperty());
                     newValue.heightProperty().bind(heightProperty());
-                    GUIs.add(newValue);
+                    addGUI(newValue);
                 }
             };
             background.addListener(changeListener);
@@ -149,7 +153,7 @@ public interface ButtonGui extends Gui {
                 colorGui.widthProperty().bind(this.widthProperty());
                 colorGui.heightProperty().bind(this.heightProperty());
                 colorGui.color().bind(backgroundColor.currentColor());
-                this.GUIs.add(colorGui);
+                addGUI(colorGui);
                 recalc = () -> {
                     if (this.hovering().booleanValue() || buttonGui.pressing().booleanValue() || this.highlight.booleanValue()) {
                         backgroundColor.setDesired(highlightColor, TimeUnit.MILLISECONDS.toNanos(150));
@@ -199,7 +203,7 @@ public interface ButtonGui extends Gui {
                 textGui.yProperty().bind(this.yProperty().add(this.heightProperty().divide(2)).subtract(textGui.heightProperty().divide(2)));
                 textGui.heightProperty().bind(this.heightProperty());
                 textGui.color().bind(textColor.currentColor());
-                GUIs.add(textGui);
+                addGUI(textGui);
 
                 Runnable recalc = () -> {
                     if (this.hovering().booleanValue() || buttonGui.pressing().booleanValue()) {

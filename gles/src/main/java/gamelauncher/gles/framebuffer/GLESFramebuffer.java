@@ -56,7 +56,6 @@ public class GLESFramebuffer extends AbstractFramebuffer {
     }
 
     @Override protected void cleanup0() throws GameException {
-        super.cleanup0();
         StateRegistry.currentGl().glDeleteFramebuffers(1, new int[]{this.id}, 0);
     }
 

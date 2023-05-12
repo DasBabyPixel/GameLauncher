@@ -10,7 +10,10 @@ package gamelauncher.gles.gui;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.ColorGui;
-import gamelauncher.engine.render.*;
+import gamelauncher.engine.render.ContextProvider;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.EmptyCamera;
+import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.gles.GLES;
@@ -35,13 +38,13 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         this.color.w.addListener((NumberValue v) -> this.redraw());
     }
 
-    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup() throws GameException {
         this.launcher().contextProvider().freeContext(this.context, ContextProvider.ContextType.HUD);
         this.model.cleanup();
     }
 
-    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
-        this.context = this.launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
+    @Override protected void doInit() throws GameException {
+        this.context = this.launcher().contextProvider().loadContext(launcher().frame().framebuffer(), ContextProvider.ContextType.HUD);
 
         Mesh mesh = new RectMesh(gles);
         Mesh.Material mat = mesh.material();
@@ -62,12 +65,12 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
         item.color().w.bind(this.color.w);
     }
 
-    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
         this.context.update(EmptyCamera.instance());
         launcher().profiler().check();
         this.context.drawModel(this.model);
         this.context.program().clearUniforms();
-        return super.doRender(framebuffer, mouseX, mouseY, partialTick);
+        return super.doRender(mouseX, mouseY, partialTick);
     }
 
     @Override public PropertyVector4f color() {

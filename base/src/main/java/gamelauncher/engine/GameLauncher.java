@@ -272,6 +272,7 @@ public abstract class GameLauncher {
     public void stop() throws GameException {
         GameRunnable r = () -> {
             try {
+//                Threads.waitFor(frame.renderThread().submit(() -> gameRenderer.cleanup(frame)));
                 this.guiManager.cleanup();
                 Threads.waitFor(this.gameThread.exit());
                 this.stop0();

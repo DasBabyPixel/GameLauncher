@@ -14,7 +14,6 @@ import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.gui.ParentableAbstractGui;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.InterpolatedColor;
@@ -91,14 +90,14 @@ public interface ScrollGui extends Gui {
                     guiHeight.number(0);
                     oldValue.xProperty().unbind();
                     oldValue.yProperty().unbind();
-                    this.GUIs.remove(oldValue);
+                    removeGUI(oldValue);
                 }
                 if (newValue != null) {
                     guiWidth.bind(newValue.widthProperty());
                     guiHeight.bind(newValue.heightProperty());
                     newValue.xProperty().bind(guiX);
                     newValue.yProperty().bind(guiY);
-                    this.GUIs.add(newValue);
+                    addGUI(newValue);
                 }
             });
             this.horizontalScrollbar.max.bind(this.guiWidth.subtract(this.displayWidth).max(0));
@@ -125,14 +124,14 @@ public interface ScrollGui extends Gui {
             }).addDependencies(this.horizontalScrollbar.visible, this.horizontalScrollbar.thickness));
             verticalScrollbarGui.widthProperty().bind(this.verticalScrollbar.thickness);
             verticalScrollbarGui.heightProperty().bind(this.displayHeight);
-            this.GUIs.add(verticalScrollbarGui);
+            addGUI(verticalScrollbarGui);
 
             ScrollbarGui horizontalScrollbarGui = new ScrollbarGui(this.launcher(), this.guiWidth, this.guiHeight, this.horizontalScrollbar, this.displayWidth, this.displayHeight);
             horizontalScrollbarGui.xProperty().bind(this.xProperty());
             horizontalScrollbarGui.yProperty().bind(this.yProperty());
             horizontalScrollbarGui.widthProperty().bind(this.displayWidth);
             horizontalScrollbarGui.heightProperty().bind(this.horizontalScrollbar.thickness);
-            this.GUIs.add(horizontalScrollbarGui);
+            addGUI(horizontalScrollbarGui);
         }
 
         @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
@@ -150,17 +149,17 @@ public interface ScrollGui extends Gui {
             return super.doHandle(entry);
         }
 
-        @Override protected final boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
-            ScissorStack scissor = framebuffer.scissorStack();
+        @Override protected final boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
+            ScissorStack scissor = launcher().frame().framebuffer().scissorStack();
             final Gui cgui = this.gui.value();
             if (cgui != null) {
                 scissor.pushScissor(displayX, displayY, displayWidth, displayHeight);
-                cgui.render(framebuffer, mouseX, mouseY, partialTick);
+                cgui.render(mouseX, mouseY, partialTick);
                 scissor.popScissor();
             }
 
-            for (Gui gui : GUIs)
-                if (gui != cgui) gui.render(framebuffer, mouseX, mouseY, partialTick);
+            for (Gui gui : GUIs())
+                if (gui != cgui) gui.render(mouseX, mouseY, partialTick);
 
             return false;
         }
@@ -383,7 +382,7 @@ public interface ScrollGui extends Gui {
                 this.curBackgroundColor.set(this.backgroundColor);
                 PropertyVector4f guiBackgroundColor = backgroundGui.color();
                 guiBackgroundColor.bind(this.curBackgroundColor.currentColor());
-                this.GUIs.add(backgroundGui);
+                addGUI(backgroundGui);
 
                 ColorGui scrollbarGui = launcher.guiManager().createGui(ColorGui.class);
                 scrollbarGui.xProperty().bind(this.scrollbarX);
@@ -393,7 +392,7 @@ public interface ScrollGui extends Gui {
                 this.curScrollbarColor.set(this.scrollbarColor);
                 PropertyVector4f guiScrollbarColor = scrollbarGui.color();
                 guiScrollbarColor.bind(this.curScrollbarColor.currentColor());
-                this.GUIs.add(scrollbarGui);
+                addGUI(scrollbarGui);
 
                 BooleanValue highlightOrDrag = this.highlight.or(this.dragging);
                 highlightOrDrag.addListener(Property::value);
@@ -477,17 +476,17 @@ public interface ScrollGui extends Gui {
                 }
             }
 
-            @Override protected void preRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) {
+            @Override protected void preRender(float mouseX, float mouseY, float partialTick) {
                 this.curScrollbarColor.calculateCurrent();
                 this.curBackgroundColor.calculateCurrent();
                 this.scrollbar.progress.calculateCurrent();
             }
 
-            @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+            @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
                 if (!this.scrollbar.visible.booleanValue()) {
                     return false;
                 }
-                return super.doRender(framebuffer, mouseX, mouseY, partialTick);
+                return super.doRender(mouseX, mouseY, partialTick);
             }
 
             /**

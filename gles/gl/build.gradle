@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+tasks {
+    jar {
+        manifest {
+            attributes('Automatic-Module-Name': 'gamelauncher.gles.gl')
+        }
+    }
+}
+
+dependencies {
+    api parent.parent.project('api')
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId project.name
+            groupId = project.group
+            version = project.version
+            from components.java
+        }
+    }
+}

@@ -14,7 +14,7 @@ public class ExampleGame extends Game {
 
     @Override protected void launch0(Framebuffer framebuffer) throws GameException {
         System.out.println("launch example game");
-        this.launcher().guiManager().openGui(framebuffer, new ExampleGameGui(this.launcher()));
+        this.launcher().guiManager().openGui(new ExampleGameGui(this.launcher()));
     }
 
     @Override protected void close0() {

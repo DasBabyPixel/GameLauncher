@@ -3,15 +3,11 @@ package gamelauncher.engine.gui;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.util.keybind.KeybindEntryEvent;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.Renderer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.MouseMoveKeybindEvent;
 import gamelauncher.engine.util.profiler.Profiler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author DasBabyPixel
@@ -22,7 +18,7 @@ public class GuiRenderer extends Renderer {
 
     private final Profiler profiler;
 
-    private final Map<Framebuffer, Listener> listeners = new ConcurrentHashMap<>();
+    private volatile Listener listener = null;
 
     public GuiRenderer(GameLauncher launcher) {
         this.launcher = launcher;
@@ -33,27 +29,28 @@ public class GuiRenderer extends Renderer {
         return launcher;
     }
 
-    @Override public void render(Framebuffer framebuffer) throws GameException {
+    @Override public void render() throws GameException {
         profiler.begin("render", "render_window");
-        Gui gui = launcher.guiManager().currentGui(framebuffer);
-        Listener l = listeners.get(framebuffer);
+        Gui gui = launcher.guiManager().currentGui();
+        Listener l = listener;
         float partial = launcher.gameThread().partialTick();
         if (gui != null) {
-            gui.render(framebuffer, l.mx, l.my, partial);
+            gui.render(l.mx, l.my, partial);
         }
         profiler.end();
     }
 
-    @Override public void init(Framebuffer framebuffer) throws GameException {
+    @Override public void init() throws GameException {
         profiler.begin("render", "init_window");
-        listeners.put(framebuffer, new Listener());
-        launcher.eventManager().registerListener(listeners.get(framebuffer));
+        this.listener = new Listener();
+        launcher.eventManager().registerListener(listener);
         profiler.end();
     }
 
-    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public void cleanup() throws GameException {
         profiler.begin("render", "cleanup_window");
-        Listener l = listeners.remove(framebuffer);
+        Listener l = listener;
+        listener = null;
         launcher.eventManager().unregisterListener(l);
         profiler.end();
     }

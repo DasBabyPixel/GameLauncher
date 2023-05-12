@@ -36,7 +36,6 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
     }
 
     @Override public void cleanup0() throws GameException {
-        super.cleanup0();
         //		this.handle.cleanup();
     }
 

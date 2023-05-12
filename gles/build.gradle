@@ -13,6 +13,7 @@ tasks {
 
 dependencies {
     api parent.project('api')
+    api project('gl')
 }
 
 publishing {

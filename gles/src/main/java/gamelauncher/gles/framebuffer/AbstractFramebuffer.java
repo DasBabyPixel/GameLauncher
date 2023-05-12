@@ -6,7 +6,6 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLESScissorStack;
 
 /**
@@ -28,10 +27,6 @@ public abstract class AbstractFramebuffer extends AbstractGameResource implement
         this.renderThread = render;
         this.draw = draw;
         this.scissor = new GLESScissorStack(this);
-    }
-
-    @Override protected void cleanup0() throws GameException {
-        this.renderThread.frame().launcher().guiManager().cleanup(this);
     }
 
     @Override public NumberValue width() {

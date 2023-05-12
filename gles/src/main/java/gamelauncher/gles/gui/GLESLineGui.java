@@ -11,7 +11,10 @@ import de.dasbabypixel.api.property.NumberInvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.LineGui;
-import gamelauncher.engine.render.*;
+import gamelauncher.engine.render.ContextProvider;
+import gamelauncher.engine.render.DrawContext;
+import gamelauncher.engine.render.EmptyCamera;
+import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
@@ -68,13 +71,13 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
         toY.addListener(invalidationListener);
     }
 
-    @Override protected void doCleanup(Framebuffer framebuffer) throws GameException {
+    @Override protected void doCleanup() throws GameException {
         launcher().contextProvider().freeContext(context, ContextProvider.ContextType.HUD);
         model.cleanup();
     }
 
-    @Override protected void doInit(Framebuffer framebuffer) throws GameException {
-        context = launcher().contextProvider().loadContext(framebuffer, ContextProvider.ContextType.HUD);
+    @Override protected void doInit() throws GameException {
+        context = launcher().contextProvider().loadContext(launcher().frame().framebuffer(), ContextProvider.ContextType.HUD);
         // @formatter:off
         Mesh mesh = new Mesh(gles, new float[] {
                 -0.5F,  0.0F, 0.0F,
@@ -97,7 +100,7 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
         invalidationListener.invalidated(null);
     }
 
-    @Override protected boolean doRender(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
         context.update(EmptyCamera.instance());
         context.drawModel(model);
         context.program().clearUniforms();

@@ -4,7 +4,6 @@ import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.keybind.KeybindEvent;
@@ -118,13 +117,13 @@ public abstract class AbstractGui implements Gui {
         }
     }
 
-    @Override public void init(Framebuffer framebuffer) throws GameException {
+    @Override public void init() throws GameException {
     }
 
-    @Override public void render(Framebuffer framebuffer, float mouseX, float mouseY, float partialTick) throws GameException {
+    @Override public void render(float mouseX, float mouseY, float partialTick) throws GameException {
     }
 
-    @Override public void cleanup(Framebuffer framebuffer) throws GameException {
+    @Override public void cleanup() throws GameException {
     }
 
     @Api @Override public void onClose() throws GameException {

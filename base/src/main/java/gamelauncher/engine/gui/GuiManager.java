@@ -2,11 +2,11 @@ package gamelauncher.engine.gui;
 
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author DasBabyPixel
@@ -15,35 +15,31 @@ import gamelauncher.engine.util.function.GameSupplier;
 public interface GuiManager extends GameResource {
 
     /**
-     * Opens a {@link Gui} for a window. Use null to exit the current gui.
+     * Opens a {@link Gui}
      *
-     * @param framebuffer the framebuffer to open the gui on
-     * @param gui         the gui to open, null to exit the current gui
+     * @param gui the gui to open, null to exit the current gui
      */
-    @Api void openGui(Framebuffer framebuffer, Gui gui) throws GameException;
+    @Api void openGui(@NotNull Gui gui) throws GameException;
 
     /**
-     * @param framebuffer the framebuffer to get the gui from
      * @return the current gui for a window
      */
-    @Api Gui currentGui(Framebuffer framebuffer) throws GameException;
+    @Api Gui currentGui() throws GameException;
 
     /**
      * Cleans up the guis for a framebuffer
-     *
-     * @param framebuffer the framebuffer to clean up the guis on
      */
-    @Api void cleanup(Framebuffer framebuffer) throws GameException;
+    @Override @Api void cleanup() throws GameException;
 
     /**
-     * Opens a {@link Gui} for a window.
+     * Opens a {@link Gui}
      */
-    @Api default void openGuiByClass(Framebuffer framebuffer, GuiDistribution distribution, Class<? extends Gui> clazz) throws GameException {
-        openGui(framebuffer, createGui(distribution, clazz));
+    @Api default void openGuiByClass(GuiDistribution distribution, Class<? extends Gui> clazz) throws GameException {
+        openGui(createGui(distribution, clazz));
     }
 
-    @Api default void openGuiByClass(Framebuffer framebuffer, Class<? extends Gui> clazz) throws GameException {
-        openGuiByClass(framebuffer, null, clazz);
+    @Api default void openGuiByClass(Class<? extends Gui> clazz) throws GameException {
+        openGuiByClass(null, clazz);
     }
 
     @Api void redrawAll();
