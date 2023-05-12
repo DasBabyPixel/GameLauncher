@@ -117,6 +117,8 @@ public interface TextGui extends Gui {
                     this.itemModel = item.createModel();
                     this.cwidth = this.model.width();
                     cwidthprop.intValue();
+                } else {
+                    this.itemModel = null;
                 }
 
                 if (oldModel != null) {
