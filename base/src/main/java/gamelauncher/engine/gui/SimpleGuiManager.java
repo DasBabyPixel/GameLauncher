@@ -88,6 +88,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         if (currentGui != null) {
             currentGui.unfocus();
             currentGui.onClose();
+            framebuffer.renderThread().submit(() -> currentGui.cleanup(framebuffer));
         }
         Gui oldGui = gui;
         gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
@@ -105,8 +106,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         gui.heightProperty().bind(framebuffer.height());
         gui.onOpen();
         gui.focus();
-        Gui finalGui = gui;
-        framebuffer.renderThread().submit(() -> finalGui.init(framebuffer));
+        guis.put(framebuffer, gui);
         framebuffer.scheduleRedraw();
     }
 

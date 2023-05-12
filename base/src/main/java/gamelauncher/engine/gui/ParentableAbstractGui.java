@@ -133,6 +133,10 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         return true;
     }
 
+    public Framebuffer framebuffer() {
+        return framebuffer;
+    }
+
     @Api protected void redraw() {
         if (this.framebuffer != null) this.framebuffer.scheduleRedraw();
     }
