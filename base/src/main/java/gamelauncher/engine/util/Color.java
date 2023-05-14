@@ -45,6 +45,38 @@ public class Color {
         this.a = a;
     }
 
+    public static int ired(int rgba) {
+        return (rgba >> 16) & 0xFF;
+    }
+
+    public static int igreen(int rgba) {
+        return (rgba >> 8) & 0xFF;
+    }
+
+    public static int iblue(int rgba) {
+        return (rgba) & 0xFF;
+    }
+
+    public static int ialpha(int rgba) {
+        return (rgba >> 24) & 0xFF;
+    }
+
+    public static float fred(int rgba) {
+        return ired(rgba) / 255F;
+    }
+
+    public static float fgreen(int rgba) {
+        return igreen(rgba) / 255F;
+    }
+
+    public static float fblue(int rgba) {
+        return iblue(rgba) / 255F;
+    }
+
+    public static float falpha(int rgba) {
+        return ialpha(rgba) / 255F;
+    }
+
     /**
      * @param alpha
      * @return the new color

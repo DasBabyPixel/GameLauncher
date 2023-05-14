@@ -7,6 +7,7 @@
 
 package gamelauncher.engine.resource;
 
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.logging.Logger;
 
 import java.util.Collection;
@@ -20,14 +21,14 @@ public class ResourceTracker {
      * @param resource a resource
      */
     public static void startTracking(GameResource resource) {
-        resources.add(resource);
+        if (Debug.trackResources) resources.add(resource);
     }
 
     /**
      * @param resource a resource
      */
     public static void stopTracking(GameResource resource) {
-        resources.remove(resource);
+        if (Debug.trackResources) resources.remove(resource);
     }
 
     private static Logger logger() {
@@ -41,14 +42,16 @@ public class ResourceTracker {
      * Called on exit
      */
     public static void exit() {
-        for (GameResource resource : resources) {
-            if (resource instanceof AbstractGameResource) {
-                AbstractGameResource aresource = (AbstractGameResource) resource;
-                Exception ex = new Exception("Stack: " + aresource.creationThreadName);
-                ex.setStackTrace(aresource.creationStack);
-                logger().errorf("Memory Leak: %s%n%s", resource, ex);
-            } else {
-                logger().errorf("Memory Leak: %s", resource);
+        if (Debug.trackResources) {
+            for (GameResource resource : resources) {
+                if (resource instanceof AbstractGameResource) {
+                    AbstractGameResource aresource = (AbstractGameResource) resource;
+                    Exception ex = new Exception("Stack: " + aresource.creationThreadName);
+                    ex.setStackTrace(aresource.creationStack);
+                    logger().errorf("Memory Leak: %s%n%s", resource, ex);
+                } else {
+                    logger().errorf("Memory Leak: %s", resource);
+                }
             }
         }
     }

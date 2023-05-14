@@ -27,6 +27,8 @@ import org.joml.Math;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -46,6 +48,7 @@ public class GLESTexture extends AbstractGameResource implements Texture {
     private final AtomicInteger textureId = new AtomicInteger(0);
     private final NumberValue width = NumberValue.withValue(0);
     private final NumberValue height = NumberValue.withValue(0);
+    private final Map<GLESTextureFilter.FilterType, GLESTextureFilter.Filter> filters = new HashMap<>();
     private final Profiler profiler;
     private final GLES gles;
     private final GLESTextureManager manager;
@@ -59,6 +62,12 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         this.owner = owner;
         this.service = service;
         this.profiler = gles.launcher().profiler();
+        filters.put(GLESTextureFilter.FilterType.MINIFICATION, GLESTextureFilter.Filter.LINEAR);
+        filters.put(GLESTextureFilter.FilterType.MAGNIFICATION, GLESTextureFilter.Filter.LINEAR);
+    }
+
+    public Map<GLESTextureFilter.FilterType, GLESTextureFilter.Filter> filters() {
+        return filters;
     }
 
     public GLES gles() {
@@ -188,8 +197,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         GLES20 cur = StateRegistry.currentGl();
         cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
         cur.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filters.get(GLESTextureFilter.FilterType.MINIFICATION).gl());
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filters.get(GLESTextureFilter.FilterType.MAGNIFICATION).gl());
         cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), cwidth, cheight, 0, format.gl(), GL_UNSIGNED_BYTE, null);
         cur.glBindTexture(GL_TEXTURE_2D, 0);
         lock.writeLock().unlock();

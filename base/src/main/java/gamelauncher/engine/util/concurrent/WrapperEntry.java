@@ -7,6 +7,7 @@
 
 package gamelauncher.engine.util.concurrent;
 
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
 
 import java.util.Arrays;
@@ -41,7 +42,7 @@ public class WrapperEntry {
      * @return a new {@link WrapperEntry} for this thread
      */
     public static WrapperEntry newEntry() {
-        if (Threads.calculateThreadStacks) {
+        if (Debug.calculateThreadStacks) {
             StackTraceElement[] stack = new Exception().getStackTrace();
             stack = Arrays.copyOfRange(stack, 2, stack.length);
             return new WrapperEntry(stack, WrapperEntry.cause(), Thread.currentThread());

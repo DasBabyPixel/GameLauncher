@@ -22,7 +22,6 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
@@ -118,9 +117,9 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 
                             GlyphData data = e.entry.data;
                             float pb = -data.bearingY - data.height;
-                            float pt = pb + data.height + 3;
+                            float pt = pb + data.height;
                             float pl = xpos;
-                            float pr = pl + data.width + 3;
+                            float pr = pl + data.width;
                             float width = pr - pl;
                             float height = pt - pb;
                             float x = pl + width / 2;
@@ -167,7 +166,6 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
         int id = this.getId(key);
 
         DynamicSizeTextureAtlas.AddFuture af = this.textureAtlas.addGlyph(id, () -> {
-            Threads.sleep(250);
             MemoryManagement memoryManagement = frame.launcher().memoryManagement();
             IntBuffer x0 = memoryManagement.allocInt(1);
             IntBuffer y0 = memoryManagement.allocInt(1);

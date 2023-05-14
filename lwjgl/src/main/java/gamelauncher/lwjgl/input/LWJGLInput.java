@@ -64,6 +64,7 @@ public class LWJGLInput implements Input {
                     default:
                         break;
                 }
+                qe.clear();
                 return true;
             });
             for (int i = 0; i < pressed.size(); i++) {
@@ -264,6 +265,11 @@ public class LWJGLInput implements Input {
             if (this.getClass() != obj.getClass()) return false;
             QueueEntry other = (QueueEntry) obj;
             return Objects.equals(this.entry, other.entry) && this.type == other.type;
+        }
+
+        public void clear() {
+            entry = null;
+            type = null;
         }
     }
 

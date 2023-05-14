@@ -7,6 +7,7 @@
 
 package gamelauncher.gles.font.bitmap;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
@@ -17,9 +18,9 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.gl.GLES20;
-import gamelauncher.gles.states.StateRegistry;
+import gamelauncher.gles.GLESCompat;
 import gamelauncher.gles.texture.GLESTexture;
+import gamelauncher.gles.texture.GLESTextureFilter;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4i;
@@ -42,16 +43,12 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     private final ExecutorThread owner;
     private final GLES gles;
     private final MemoryManagement memoryManagement;
-    volatile int maxTextureSize;
 
     public DynamicSizeTextureAtlas(GLES gles, GameLauncher launcher, ExecutorThread owner) {
         this.gles = gles;
         this.launcher = launcher;
         this.owner = owner;
         this.memoryManagement = gles.memoryManagement();
-        this.owner.submit(() -> {
-            this.maxTextureSize = StateRegistry.currentGl().glGetInteger(GLES20.GL_MAX_TEXTURE_SIZE);
-        });
     }
 
     private static boolean intersects(Vector4i v1, Vector4i v2) {
@@ -74,7 +71,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         return ((rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty || th > ry));
     }
 
-    public AtlasEntry getGlyph(int id) {
+    @Api public AtlasEntry getGlyph(int id) {
         try {
             lock.readLock().lock();
             return glyphs.get(id);
@@ -141,6 +138,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                 }
                 if (af == null) {
                     e.texture = gles.textureManager().createTexture(owner);
+                    e.texture.filters().put(GLESTextureFilter.FilterType.MINIFICATION, GLESTextureFilter.Filter.LINEAR);
+                    e.texture.filters().put(GLESTextureFilter.FilterType.MAGNIFICATION, GLESTextureFilter.Filter.NEAREST);
                     e.texture.allocate(64, 64);
                     byTexture.put(e.texture, new HashSet<>());
                     af = add(glyphId, e);
@@ -207,7 +206,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     private Vector4i scaledBounds(Vector4i textureBounds) {
         boolean same = textureBounds.z == textureBounds.w;
         int newWidth = same ? textureBounds.z * 2 : textureBounds.z;
-        if (newWidth > maxTextureSize) {
+        if (newWidth > GLESCompat.MAX_TEXTURE_SIZE) {
             return textureBounds;
         }
         int newHeight = same ? textureBounds.w : textureBounds.w * 2;

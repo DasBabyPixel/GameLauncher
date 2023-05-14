@@ -149,7 +149,7 @@ public interface TextGui extends Gui {
                 this.itemModel = item.createModel();
                 this.baselineYOffset.unbind();
                 this.cwidthprop.unbind();
-                this.baselineYOffset.bind(newModel.descent().negate().multiply(mult));
+                this.baselineYOffset.bind(newModel.descent().subtract(1).negate().multiply(mult));
                 this.cwidthprop.bind(newModel.width().multiply(mult));
                 newModel = null;
                 if (oldModel != null) oldModel.cleanup();

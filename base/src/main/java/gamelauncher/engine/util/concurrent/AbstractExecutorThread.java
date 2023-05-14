@@ -11,6 +11,7 @@ import com.lmax.disruptor.EventPoller;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
@@ -181,9 +182,9 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
     @Override public final void workQueue() {
         try {
             poller.poll((e, sequence, endOfBatch) -> {
-                if (Threads.calculateThreadStacks) this.currentEntry = e.entry;
+                if (Debug.calculateThreadStacks) this.currentEntry = e.entry;
                 this.work(e.run, e.fut);
-                if (Threads.calculateThreadStacks) this.currentEntry = null;
+                if (Debug.calculateThreadStacks) this.currentEntry = null;
                 e.clear();
                 return true;
             });

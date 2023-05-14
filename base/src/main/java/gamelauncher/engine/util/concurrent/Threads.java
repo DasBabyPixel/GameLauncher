@@ -27,12 +27,6 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class Threads extends AbstractGameResource {
 
-    /**
-     * Wheather or not stack traces should be calculated with causes from other threads when tasks
-     * are submitted
-     */
-    public static final boolean calculateThreadStacks = Boolean.getBoolean("calculateThreadStacks");
-
     private static final Logger logger = Logger.logger();
 
     /**

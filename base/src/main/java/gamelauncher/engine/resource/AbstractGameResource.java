@@ -1,6 +1,7 @@
 package gamelauncher.engine.resource;
 
 import gamelauncher.engine.util.Arrays;
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
@@ -13,17 +14,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class AbstractGameResource extends StorageResource {
 
     private static final Logger logger = Logger.logger();
-    final StackTraceElement[] creationStack;
-    final String creationThreadName;
     private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
     private final AtomicBoolean calledCleanup = new AtomicBoolean(false);
+    StackTraceElement[] creationStack;
+    String creationThreadName;
     StackTraceElement[] cleanupStack;
     String cleanupThreadName;
 
     public AbstractGameResource() {
-        StackTraceElement[] es = new Exception().getStackTrace();
-        this.creationThreadName = Thread.currentThread().getName();
-        this.creationStack = Arrays.copyOfRange(es, 1, es.length);
+        if (Debug.trackResources) {
+            StackTraceElement[] es = new Exception().getStackTrace();
+            this.creationThreadName = Thread.currentThread().getName();
+            this.creationStack = Arrays.copyOfRange(es, 1, es.length);
+        }
         if (autoTrack()) startTracking();
     }
 
@@ -44,9 +47,11 @@ public abstract class AbstractGameResource extends StorageResource {
      */
     @Override public final CompletableFuture<Void> cleanup() throws GameException {
         if (calledCleanup.compareAndSet(false, true)) {
-            cleanupStack = new Exception().getStackTrace();
-            cleanupStack = Arrays.copyOfRange(cleanupStack, 1, cleanupStack.length);
-            cleanupThreadName = Thread.currentThread().getName();
+            if (Debug.trackResources) {
+                cleanupStack = new Exception().getStackTrace();
+                cleanupStack = Arrays.copyOfRange(cleanupStack, 1, cleanupStack.length);
+                cleanupThreadName = Thread.currentThread().getName();
+            }
             CompletableFuture<Void> f = this.cleanup0();
             if (f == null) {
                 cleanupFuture.complete(null);
@@ -63,12 +68,14 @@ public abstract class AbstractGameResource extends StorageResource {
             }
         } else {
             GameException ex = new GameException("Multiple cleanups");
-            GameException ex2 = new GameException("CreationStack: " + creationThreadName);
-            GameException ex3 = new GameException("CleanupStack: " + cleanupThreadName);
-            ex2.setStackTrace(creationStack);
-            ex3.setStackTrace(cleanupStack);
-            ex.addSuppressed(ex2);
-            ex.addSuppressed(ex3);
+            if (Debug.trackResources) {
+                GameException ex2 = new GameException("CreationStack: " + creationThreadName);
+                GameException ex3 = new GameException("CleanupStack: " + cleanupThreadName);
+                ex2.setStackTrace(creationStack);
+                ex3.setStackTrace(cleanupStack);
+                ex.addSuppressed(ex2);
+                ex.addSuppressed(ex3);
+            }
             logger.error(ex);
         }
         return cleanupFuture;

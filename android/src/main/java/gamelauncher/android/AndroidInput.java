@@ -50,57 +50,61 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         }
         try {
             poller.poll((queueEvent, sequence, endOfBatch) -> {
-                KeybindEvent event = queueEvent.event;
-                if (event instanceof MouseHandle) {
-                    MotionEvent e = ((MouseHandle) event).event();
-                    try {
-                        int action = e.getActionMasked();
-                        int index = e.getActionIndex();
-                        int id = e.getPointerId(index);
-                        int keybindId = id | AndroidKeybindManager.BITS_TOUCH;
-                        float pressure = e.getPressure(index);
-                        float x = e.getX(index);
-                        float y = e.getY(index);
+                try {
+                    KeybindEvent event = queueEvent.event;
+                    if (event instanceof MouseHandle) {
+                        MotionEvent e = ((MouseHandle) event).event();
+                        try {
+                            int action = e.getActionMasked();
+                            int index = e.getActionIndex();
+                            int id = e.getPointerId(index);
+                            int keybindId = id | AndroidKeybindManager.BITS_TOUCH;
+                            float pressure = e.getPressure(index);
+                            float x = e.getX(index);
+                            float y = e.getY(index);
 //                    System.out.println(id + "   " + e);
-                        Keybind keybind = keybindManager.keybind(keybindId);
-                        if (action == MotionEvent.ACTION_MOVE) {
-                            for (index = 0; index < e.getPointerCount(); index++) {
-                                id = e.getPointerId(index);
-                                keybindId = id | AndroidKeybindManager.BITS_TOUCH;
-                                if (!mousePressed.containsKey(keybindId)) continue;
-                                PointerEntry entry = mousePressed.get(keybindId);
-                                x = e.getX(index);
-                                y = e.getY(index);
-                                pressure = e.getPressure(index);
-                                //noinspection DataFlowIssue
-                                if (entry.x == x && entry.y == y) continue;
-                                keybind = keybindManager.keybind(keybindId);
-                                keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, entry.y, x, y));
-                                entry.x = x;
-                                entry.y = y;
-                                entry.pressure = pressure;
+                            Keybind keybind = keybindManager.keybind(keybindId);
+                            if (action == MotionEvent.ACTION_MOVE) {
+                                for (index = 0; index < e.getPointerCount(); index++) {
+                                    id = e.getPointerId(index);
+                                    keybindId = id | AndroidKeybindManager.BITS_TOUCH;
+                                    if (!mousePressed.containsKey(keybindId)) continue;
+                                    PointerEntry entry = mousePressed.get(keybindId);
+                                    x = e.getX(index);
+                                    y = e.getY(index);
+                                    pressure = e.getPressure(index);
+                                    //noinspection DataFlowIssue
+                                    if (entry.x == x && entry.y == y) continue;
+                                    keybind = keybindManager.keybind(keybindId);
+                                    keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, entry.y, x, y));
+                                    entry.x = x;
+                                    entry.y = y;
+                                    entry.pressure = pressure;
+                                }
+                            } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+                                mousePressed.put(keybindId, new PointerEntry(id, x, y, pressure));
+                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.PRESS));
+                            } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
+                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.RELEASE));
+                                mousePressed.remove(keybindId);
                             }
-                        } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-                            mousePressed.put(keybindId, new PointerEntry(id, x, y, pressure));
-                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.PRESS));
-                        } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
-                            keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.RELEASE));
-                            mousePressed.remove(keybindId);
+                        } finally {
+                            e.recycle();
                         }
-                    } finally {
-                        e.recycle();
+                        return true;
                     }
-                    return true;
-                }
-                keybindManager.post(event);
-                if (event instanceof KeyboardKeybindEvent) {
-                    int id = event.keybind().uniqueId();
-                    KeyboardKeybindEvent.Type type = ((KeyboardKeybindEvent) event).type();
-                    if (type == KeyboardKeybindEvent.Type.PRESS) {
-                        keyboardPressed.put(id, (KeyboardKeybindEvent) event);
-                    } else if (type == KeyboardKeybindEvent.Type.RELEASE) {
-                        keyboardPressed.remove(id);
+                    keybindManager.post(event);
+                    if (event instanceof KeyboardKeybindEvent) {
+                        int id = event.keybind().uniqueId();
+                        KeyboardKeybindEvent.Type type = ((KeyboardKeybindEvent) event).type();
+                        if (type == KeyboardKeybindEvent.Type.PRESS) {
+                            keyboardPressed.put(id, (KeyboardKeybindEvent) event);
+                        } else if (type == KeyboardKeybindEvent.Type.RELEASE) {
+                            keyboardPressed.remove(id);
+                        }
                     }
+                } finally {
+                    queueEvent.clear();
                 }
                 return true;
             });
@@ -154,6 +158,10 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
 
     private static class QueueEntry {
         private KeybindEvent event;
+
+        public void clear() {
+            event = null;
+        }
 
         private static class Factory implements EventFactory<QueueEntry> {
             @Override public QueueEntry newInstance() {

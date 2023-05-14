@@ -1,8 +1,8 @@
 package gamelauncher.engine.util.concurrent;
 
-import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventPoller;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SleepingWaitStrategy;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author DasBabyPixel
  */
 public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThread {
-    protected final RingBuffer<QueueEntry<T>> queue;
+    protected final RingBuffer<QueueEntry<T>> ringBuffer;
     protected final EventPoller<QueueEntry<T>> poller;
     private final Logger logger = Logger.logger(getClass());
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
@@ -28,9 +28,9 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
 
     @Api public AbstractQueueSubmissionThread(GameLauncher launcher) {
         super(launcher);
-        this.queue = RingBuffer.createMultiProducer(QueueEntry::new, 1024, new BlockingWaitStrategy());
-        this.poller = queue.newPoller();
-        queue.addGatingSequences(poller.getSequence());
+        this.ringBuffer = RingBuffer.createMultiProducer(QueueEntry::new, 1024, new SleepingWaitStrategy());
+        this.poller = ringBuffer.newPoller();
+        ringBuffer.addGatingSequences(poller.getSequence());
     }
 
     /**
@@ -103,6 +103,8 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
                     OutputStream out = Logger.system.computeOutputStream(Output.ERR);
                     t.printStackTrace(new PrintStream(out, true));
                 }
+                event.val = null;
+                event.fut = null;
                 return true;
             });
         } catch (Exception ex) {
@@ -126,7 +128,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
      */
     @Api public final CompletableFuture<Void> submit(T element) {
         CompletableFuture<Void> fut = new CompletableFuture<>();
-        this.queue.publishEvent((event, sequence, arg0, arg1) -> {
+        this.ringBuffer.publishEvent((event, sequence, arg0, arg1) -> {
             event.fut = arg1;
             event.val = arg0;
         }, element, fut);

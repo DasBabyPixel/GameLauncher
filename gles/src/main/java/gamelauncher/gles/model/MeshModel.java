@@ -8,7 +8,6 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.mesh.Mesh;
 import gamelauncher.gles.render.MeshRenderer;
 import java8.util.concurrent.CompletableFuture;
-import org.joml.Vector4f;
 
 /**
  * @author DasBabyPixel
@@ -29,8 +28,8 @@ public class MeshModel extends AbstractGameResource implements Model {
     }
 
     @Override public void render(ShaderProgram program) throws GameException {
-        Color color = new Color(program.getLauncher().modelIdRegistry().id(this));
-        program.uId.set(new Vector4f(color.ired() / 255F, color.iblue() / 255F, color.igreen() / 255F, color.ialpha() / 255F));
+        int id = program.getLauncher().modelIdRegistry().id(this);
+        program.uId.set(Color.fred(id), Color.fgreen(id), Color.fblue(id), Color.falpha(id));
         program.getLauncher().serviceProvider().service(MeshRenderer.class).render(program, mesh);
     }
 }
