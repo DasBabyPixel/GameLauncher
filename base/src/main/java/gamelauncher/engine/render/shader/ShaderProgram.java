@@ -1,7 +1,7 @@
 package gamelauncher.engine.render.shader;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.ReferenceCountedGameResource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * @author DasBabyPixel
  */
-public abstract class ShaderProgram extends AbstractGameResource {
+public abstract class ShaderProgram extends ReferenceCountedGameResource {
 
     public final Map<String, Uniform> uniformMap;
     public final List<Uniform> uploadUniforms;

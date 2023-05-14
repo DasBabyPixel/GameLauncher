@@ -14,6 +14,7 @@ import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.gl.GLES32;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -103,10 +104,11 @@ public interface MeshGLDataFactory {
             gles.memoryManagement().free(buf);
         }
 
-        @Override protected void cleanup0() throws GameException {
+        @Override protected CompletableFuture<Void> cleanup0() throws GameException {
             GLES32 gl = StateRegistry.currentGl();
             gl.glDeleteBuffers(vbos.length, vbos, 0);
             gl.glDeleteVertexArrays(1, new int[]{this.vao}, 0);
+            return null;
         }
 
         @Override public void draw() {

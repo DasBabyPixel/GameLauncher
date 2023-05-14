@@ -61,7 +61,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
             }
         }
         this.frame.launcher.glThreadGroup().terminated(this);
-        if (this.cleanupContextOnExit && !this.frame.context.cleanedUp()) {
+        if (this.cleanupContextOnExit && frame.cleaningUp) {
             this.frame.context.cleanup();
         } else {
             this.frame.context.destroyCurrent();
@@ -194,10 +194,6 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
 
     @Override public GLFWFrame frame() {
         return this.frame;
-    }
-
-    @Override public String name() {
-        return getName();
     }
 
     private void lock() {

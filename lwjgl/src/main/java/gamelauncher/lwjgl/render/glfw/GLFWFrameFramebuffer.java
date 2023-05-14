@@ -6,6 +6,7 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.gles.GLESScissorStack;
+import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengles.GLES20;
 
@@ -38,7 +39,8 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
         frame.scheduleDraw();
     }
 
-    @Override protected void cleanup0() {
+    @Override protected CompletableFuture<Void> cleanup0() {
+        return null;
     }
 
     @Override public GLFWFrameRenderThread renderThread() {

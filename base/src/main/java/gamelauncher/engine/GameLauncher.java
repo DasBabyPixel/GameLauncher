@@ -34,8 +34,8 @@ import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.texture.TextureManager;
-import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceLoader;
+import gamelauncher.engine.resource.ResourceTracker;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
@@ -50,11 +50,13 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.engine.util.logging.SelectiveStream;
 import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.engine.util.service.ServiceProvider;
 import java8.util.function.Predicate;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -273,14 +275,14 @@ public abstract class GameLauncher {
         GameRunnable r = () -> {
             try {
 //                Threads.waitFor(frame.renderThread().submit(() -> gameRenderer.cleanup(frame)));
-                this.guiManager.cleanup();
-                Threads.waitFor(this.gameThread.exit());
+                Threads.await(this.guiManager.cleanup());
+                Threads.await(this.gameThread.exit());
                 this.stop0();
-                this.modelIdRegistry.cleanup();
-                this.keybindManager.cleanup();
-                this.resourceLoader.cleanup();
+                Threads.await(this.modelIdRegistry.cleanup());
+                Threads.await(this.keybindManager.cleanup());
+                Threads.await(this.resourceLoader.cleanup());
                 this.pluginManager.unloadPlugins();
-                this.threads.cleanup();
+                Threads.await(this.threads.cleanup());
                 this.embedFileSystem.close();
                 try {
                     lock.release();
@@ -288,8 +290,8 @@ public abstract class GameLauncher {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                Logger.asyncLogStream().cleanup();
-                AbstractGameResource.exit();
+                Threads.await(Logger.asyncLogStream().cleanup());
+                ResourceTracker.exit();
             } catch (Throwable ex) {
                 logger.error(ex);
                 try {
@@ -328,12 +330,18 @@ public abstract class GameLauncher {
         try {
             Logger.asyncLogStream().cleanup();
         } catch (GameException e) {
-            throw new RuntimeException(e);
+            Logger.system.setOutput(SelectiveStream.Output.ERR);
+            PrintStream ps = new PrintStream(Logger.system, true);
+            e.printStackTrace(ps);
+            ps.flush();
         }
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Logger.system.setOutput(SelectiveStream.Output.ERR);
+            PrintStream ps = new PrintStream(Logger.system, true);
+            e.printStackTrace(ps);
+            ps.flush();
         }
         System.exit(-1);
     }

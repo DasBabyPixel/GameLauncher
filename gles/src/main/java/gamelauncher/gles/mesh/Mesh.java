@@ -7,6 +7,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.texture.GLESTexture;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4f;
 
 public class Mesh extends AbstractGameResource {
@@ -64,8 +65,8 @@ public class Mesh extends AbstractGameResource {
         return applyLighting;
     }
 
-    @Override public void cleanup0() throws GameException {
-        glData.cleanup();
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return glData.cleanup();
     }
 
     public static class Material implements ProgramObject {

@@ -6,6 +6,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.framebuffer.GLESFramebuffer;
 import gamelauncher.gles.states.ContextLocal;
+import java8.util.concurrent.CompletableFuture;
 
 public class CLTextureUtility extends AbstractGameResource {
 
@@ -25,9 +26,8 @@ public class CLTextureUtility extends AbstractGameResource {
         return new TUContextLocal(gles);
     }
 
-    @Override public void cleanup0() throws GameException {
-        this.framebuffer1.cleanup();
-        this.framebuffer2.cleanup();
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return CompletableFuture.allOf(framebuffer1.cleanup(), framebuffer2.cleanup());
     }
 
     private static class TUContextLocal extends ContextLocal<CLTextureUtility> {

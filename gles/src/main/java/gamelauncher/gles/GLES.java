@@ -6,6 +6,7 @@ import gamelauncher.engine.gui.guis.ColorGui;
 import gamelauncher.engine.gui.guis.LineGui;
 import gamelauncher.engine.gui.guis.TextureGui;
 import gamelauncher.engine.render.Frame;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.gl.GLFactory;
 import gamelauncher.gles.gui.GLESColorGui;
 import gamelauncher.gles.gui.GLESGuiConstructorTemplates;
@@ -24,7 +25,7 @@ public class GLES {
     private final GLFactory glFactory;
     private final GLESTextureManager textureManager;
 
-    public GLES(GameLauncher launcher, MemoryManagement memoryManagement, GLFactory glFactory) {
+    public GLES(GameLauncher launcher, MemoryManagement memoryManagement, GLFactory glFactory) throws GameException {
         this.launcher = launcher;
         this.memoryManagement = memoryManagement;
         this.glFactory = glFactory;

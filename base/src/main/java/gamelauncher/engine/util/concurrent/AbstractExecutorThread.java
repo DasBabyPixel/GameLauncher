@@ -7,18 +7,16 @@
 
 package gamelauncher.engine.util.concurrent;
 
-import de.dasbabypixel.annotations.Api;
+import com.lmax.disruptor.EventPoller;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SleepingWaitStrategy;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
 
-import java.util.Deque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * @author DasBabyPixel
@@ -26,7 +24,8 @@ import java.util.concurrent.locks.LockSupport;
 public abstract class AbstractExecutorThread extends AbstractGameThread implements ExecutorThread {
 
     private static final Logger logger = Logger.logger(AbstractExecutorThread.class);
-    private final Deque<QueueEntry> queue = Collections.newConcurrentDeque();
+    private final RingBuffer<QueueEntry> ringBuffer = RingBuffer.createMultiProducer(QueueEntry::new, 1024, new SleepingWaitStrategy());
+    private final EventPoller<QueueEntry> poller = ringBuffer.newPoller();
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
     private final AtomicBoolean work = new AtomicBoolean();
     /**
@@ -36,6 +35,10 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
     protected volatile boolean exit = false;
     private boolean skipNextSignalWait = false;
 
+    {
+        ringBuffer.addGatingSequences(poller.getSequence());
+    }
+
     public AbstractExecutorThread(GameLauncher launcher, ThreadGroup group) {
         super(launcher, group, (Runnable) null);
     }
@@ -43,24 +46,24 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
     /**
      * @return the exit future
      */
-    public CompletableFuture<Void> exitFuture() {
+    public final CompletableFuture<Void> exitFuture() {
         return this.exitFuture;
     }
 
     /**
      * @return the exit future
      */
-    public CompletableFuture<Void> exit() {
+    public final CompletableFuture<Void> exit() {
         this.exit = true;
         this.signal();
         return this.exitFuture();
     }
 
-    @Override protected void cleanup0() throws GameException {
-        Threads.waitFor(this.exit());
+    @Override protected final CompletableFuture<Void> cleanup0() throws GameException {
+        return this.exit();
     }
 
-    @Override public String name() {
+    @Override public final String name() {
         return getName();
     }
 
@@ -116,12 +119,10 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
             }
             this.loop();
             this.stopExecuting();
+            stopTracking();
             this.exitFuture.complete(null);
-            if (!this.cleanedUp) {
-                this.cleanedUp = true;
-                AbstractGameResource.logCleanup(this);
-            }
         } catch (Throwable ex) {
+            stopTracking();
             GameException st = this.buildStacktrace();
             st.initCause(ex);
             launcher().handleError(st);
@@ -156,88 +157,57 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         return ex;
     }
 
-    @Api protected boolean shouldHandle(QueueEntry entry) {
-        return true;
-    }
-
     protected boolean shouldWaitForSignal() {
         return true;
     }
 
     protected void signal() {
         work.set(true);
-        Threads.unpark((ParkableThread) this);
+        Threads.unpark(this);
     }
 
-    @Override public final CompletableFuture<Void> submitLast(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submit(GameRunnable runnable) {
+        if (runnable == null) throw new IllegalArgumentException("Null runnable");
         CompletableFuture<Void> fut = new CompletableFuture<>();
         if (Thread.currentThread() == this) {
             this.work(runnable, fut);
         } else {
-            this.queue.offerLast(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
+            ringBuffer.publishEvent((event, sequence, arg0, arg1, arg2) -> event.set(arg1, arg0, arg2), fut, WrapperEntry.newEntry(), runnable);
             this.signal();
         }
         return fut;
-    }
-
-    @Override public final CompletableFuture<Void> submitFirst(GameRunnable runnable) {
-        CompletableFuture<Void> fut = new CompletableFuture<>();
-        if (Thread.currentThread() == this) {
-            this.work(runnable, fut);
-        } else {
-            this.queue.offerFirst(new QueueEntry(fut, runnable, WrapperEntry.newEntry()));
-            this.signal();
-        }
-        return fut;
-    }
-
-    @Override public void park() {
-        if (Thread.currentThread() != this) {
-            throw new SecurityException("May not call this from any other thread than self");
-        }
-        LockSupport.park();
-        workQueue();
-    }
-
-    @Override public void park(long nanos) {
-        if (Thread.currentThread() != this) {
-            throw new SecurityException("May not call this from any other thread than self");
-        }
-        LockSupport.parkNanos(nanos);
-        workQueue();
-    }
-
-    @Override public void unpark() {
-        LockSupport.unpark(this);
     }
 
     @Override public final void workQueue() {
-        QueueEntry e;
-        while ((e = this.queue.pollFirst()) != null) {
-            if (!this.shouldHandle(e)) {
-                this.queue.offerFirst(e);
-                return;
-            }
-            if (Threads.calculateThreadStacks) {
-                this.currentEntry = e.entry;
-            }
-            this.work(e.run, e.fut);
-            if (Threads.calculateThreadStacks) {
-                this.currentEntry = null;
-            }
+        try {
+            poller.poll((e, sequence, endOfBatch) -> {
+                if (Threads.calculateThreadStacks) this.currentEntry = e.entry;
+                this.work(e.run, e.fut);
+                if (Threads.calculateThreadStacks) this.currentEntry = null;
+                e.clear();
+                return true;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     protected static final class QueueEntry {
 
-        public final WrapperEntry entry;
-        public final CompletableFuture<Void> fut;
-        public final GameRunnable run;
+        public WrapperEntry entry;
+        public CompletableFuture<Void> fut;
+        public GameRunnable run;
 
-        public QueueEntry(CompletableFuture<Void> fut, GameRunnable run, WrapperEntry entry) {
+        public void set(WrapperEntry entry, CompletableFuture<Void> fut, GameRunnable run) {
+            this.entry = entry;
             this.fut = fut;
             this.run = run;
-            this.entry = entry;
+        }
+
+        public void clear() {
+            entry = null;
+            fut = null;
+            run = null;
         }
     }
 }

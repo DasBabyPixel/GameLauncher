@@ -20,7 +20,7 @@ import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
@@ -32,7 +32,9 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryUtil;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -51,20 +53,21 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final Property<FrameRenderer> frameRenderer;
     final FrameCounter frameCounter;
     final GLFWGLContext context;
-    final Collection<GLFWGLContext> contexts;
+    final Deque<GLFWGLContext> contexts;
     final Property<GameConsumer<Frame>> closeCallback = Property.withValue(GLFWFrame.simpleCCB);
     final NumberValue windowWidth = NumberValue.withValue(0D);
     final NumberValue windowHeight = NumberValue.withValue(0D);
     final BooleanValue fullscreen = BooleanValue.falseValue();
     final Property<Monitor> monitor = Property.empty();
     final ManualQueryFramebuffer manualFramebuffer;
+    boolean cleaningUp = false;
     private boolean created;
 
     public GLFWFrame(LWJGLGameLauncher launcher) throws GameException {
         super();
         this.created = false;
         this.launcher = launcher;
-        this.contexts = new CopyOnWriteArraySet<>();
+        this.contexts = Collections.newConcurrentDeque();
         this.frameCounter = new FrameCounter();
         this.closeFuture = new CompletableFuture<>();
         this.renderMode = Property.empty();
@@ -76,15 +79,18 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.input = new LWJGLInput(this);
         this.context = new GLFWGLContext(new CopyOnWriteArraySet<>());
         this.context.owner = renderThread;
-        Threads.waitFor(this.launcher.getGLFWThread().submit(() -> this.context.create(this, null)));
-        this.renderThread.start();
-        this.created = true;
+        this.context.frame = this;
+        this.launcher.getGLFWThread().submit(() -> {
+            this.context.create(null);
+            this.created = true;
+            this.renderThread.start();
+        });
     }
 
     GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
         super();
         this.launcher = launcher;
-        this.contexts = new CopyOnWriteArraySet<>();
+        this.contexts = Collections.newConcurrentDeque();
         this.frameCounter = new FrameCounter();
         this.closeFuture = new CompletableFuture<>();
         this.renderMode = Property.empty();
@@ -112,15 +118,25 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         }).start();
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        cleaningUp = true;
         this.renderThread.cleanupContextOnExit = true;
-        Threads.waitFor(this.renderThread.exit());
-        for (GLFWGLContext context : this.contexts) {
-            context.cleanup();
+        CompletableFuture<Void> f3 = this.renderThread.exit();
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
+        GLFWGLContext context;
+        while ((context = contexts.poll()) != null) {
+            context.parent = null;
+            futs.add(context.cleanup());
         }
-        this.manualFramebuffer.cleanup();
-        this.framebuffer.cleanup();
+        CompletableFuture<Void> f1 = this.manualFramebuffer.cleanup();
+        CompletableFuture<Void> f2 = this.framebuffer.cleanup();
+        futs.add(f1);
+        futs.add(f2);
+        futs.add(f3);
         this.contexts.clear();
+        CompletableFuture<Void> f = CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
+        f.thenRun(() -> cleaningUp = false);
+        return f;
     }
 
     @Override public GLFWFrameRenderThread renderThread() {

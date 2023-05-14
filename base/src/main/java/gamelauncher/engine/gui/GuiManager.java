@@ -27,11 +27,6 @@ public interface GuiManager extends GameResource {
     @Api Gui currentGui() throws GameException;
 
     /**
-     * Cleans up the guis for a framebuffer
-     */
-    @Override @Api void cleanup() throws GameException;
-
-    /**
      * Opens a {@link Gui}
      */
     @Api default void openGuiByClass(GuiDistribution distribution, Class<? extends Gui> clazz) throws GameException {

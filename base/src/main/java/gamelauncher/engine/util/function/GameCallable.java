@@ -24,7 +24,7 @@ public interface GameCallable<T> {
      * @param <T>
      * @author DasBabyPixel
      */
-    public static class FuturisticGameRunnable<T> implements GameRunnable {
+    class FuturisticGameRunnable<T> implements GameRunnable {
 
         private final CompletableFuture<T> future = new CompletableFuture<>();
         private final GameCallable<T> callable;

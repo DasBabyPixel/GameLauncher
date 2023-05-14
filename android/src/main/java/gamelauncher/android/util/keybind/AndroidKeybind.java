@@ -12,6 +12,7 @@ import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.KeybindHandler;
 import gamelauncher.engine.util.keybind.KeybindManager;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -28,8 +29,9 @@ public class AndroidKeybind extends AbstractGameResource implements Keybind {
         this.manager = manager;
     }
 
-    @Override protected void cleanup0() {
+    @Override protected CompletableFuture<Void> cleanup0() {
         handlers.clear();
+        return null;
     }
 
     @Override public String name() {

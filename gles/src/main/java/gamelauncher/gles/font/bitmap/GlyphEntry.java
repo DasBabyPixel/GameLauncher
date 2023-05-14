@@ -4,9 +4,9 @@ import java.nio.ByteBuffer;
 
 public class GlyphEntry {
 
-    public final GlyphData data;
     public final GlyphKey key;
-    public final ByteBuffer buffer;
+    public GlyphData data;
+    public ByteBuffer buffer;
 
     public GlyphEntry(GlyphData data, GlyphKey key, ByteBuffer buffer) {
         this.data = data;

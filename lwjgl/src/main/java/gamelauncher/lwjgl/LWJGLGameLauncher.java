@@ -86,11 +86,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @EventHandler public void handle(LauncherInitializedEvent event) {
-        try {
-            Threads.waitFor(this.mainFrame.showWindow());
-        } catch (GameException ex) {
-            ex.printStackTrace();
-        }
+        this.mainFrame.showWindow();
     }
 
     @Override public AnsiProvider ansi() {
@@ -113,7 +109,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         this.mainFrame = new GLFWFrame(this);
         this.frame(this.mainFrame);
-        this.mainFrame.framebuffer().renderThread().submit(() -> this.glyphProvider(new LWJGLGlyphProvider(this)));
+        glyphProvider(new LWJGLGlyphProvider(this));
         this.mainFrame.renderMode(RenderMode.ON_UPDATE);
         this.mainFrame.closeCallback().value(frame -> {
             this.mainFrame.hideWindow();
@@ -137,11 +133,11 @@ public class LWJGLGameLauncher extends GameLauncher {
 
     @Override protected void stop0() throws GameException {
 
-        this.glyphProvider().cleanup();
-        this.textureManager().cleanup();
+        Threads.await(this.glyphProvider().cleanup());
+        Threads.await(this.textureManager().cleanup());
 
-        this.mainFrame.cleanup();
-        Threads.waitFor(this.glfwThread.exit());
+        Threads.await(this.mainFrame.cleanup());
+        Threads.await(this.glfwThread.exit());
     }
 
     @Override protected void registerSettingInsertions() {

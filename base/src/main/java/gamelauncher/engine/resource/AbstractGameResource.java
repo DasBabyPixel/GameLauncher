@@ -2,93 +2,39 @@ package gamelauncher.engine.resource;
 
 import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author DasBabyPixel
  */
-public abstract class AbstractGameResource implements GameResource {
+public abstract class AbstractGameResource extends StorageResource {
 
-    private static final Collection<GameResource> resources = ConcurrentHashMap.newKeySet();
-    private static Logger logger;
-    private final StackTraceElement[] stack;
-
-    private final String exName;
-
+    private static final Logger logger = Logger.logger();
+    final StackTraceElement[] creationStack;
+    final String creationThreadName;
     private final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
-    private final Map<Key, Object> map = new ConcurrentHashMap<>();
-    private volatile boolean cleanedUp = false;
+    private final AtomicBoolean calledCleanup = new AtomicBoolean(false);
+    StackTraceElement[] cleanupStack;
+    String cleanupThreadName;
 
-    /**
-     *
-     */
     public AbstractGameResource() {
         StackTraceElement[] es = new Exception().getStackTrace();
-        this.exName = Thread.currentThread().getName();
-        this.stack = Arrays.copyOfRange(es, 1, es.length);
-        create(this);
+        this.creationThreadName = Thread.currentThread().getName();
+        this.creationStack = Arrays.copyOfRange(es, 1, es.length);
+        if (autoTrack()) startTracking();
     }
 
     /**
-     * @param resource a resource
+     * This will only be called once in the constructor.
+     * This should be overridden.
+     *
+     * @return whether this resource should be tracked as soon as it is created.
      */
-    public static void create(GameResource resource) {
-        resources.add(resource);
-    }
-
-    /**
-     * @param resource a resource
-     */
-    public static void logCleanup(GameResource resource) {
-        resources.remove(resource);
-    }
-
-    private static Logger logger() {
-        if (logger == null) {
-            return logger = Logger.logger();
-        }
-        return logger;
-    }
-
-    /**
-     * Called on exit
-     */
-    public static void exit() {
-        for (GameResource resource : resources) {
-            if (resource instanceof AbstractGameResource) {
-                AbstractGameResource aresource = (AbstractGameResource) resource;
-                Exception ex = new Exception("Stack: " + aresource.exName);
-                ex.setStackTrace(aresource.stack);
-                logger().errorf("Memory Leak: %s%n%s", resource, ex);
-            } else {
-                logger().errorf("Memory Leak: %s", resource);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key) {
-        return (T) map.get(key);
-    }
-
-    @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
-        return (T) map.computeIfAbsent(key, key1 -> {
-            try {
-                return defaultSupplier.get();
-            } catch (GameException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    @Override public void storeValue(Key key, Object value) {
-        map.put(key, value);
+    protected boolean autoTrack() {
+        return true;
     }
 
     /**
@@ -96,35 +42,46 @@ public abstract class AbstractGameResource implements GameResource {
      *
      * @throws GameException an exception
      */
-    @Override public final void cleanup() throws GameException {
-        if (!this.cleanedUp()) {
-            this.setCleanedUp();
-            this.cleanup0();
-            if (this.cleanedUp()) {
-                this.cleanupFuture.complete(null);
-                AbstractGameResource.logCleanup(this);
+    @Override public final CompletableFuture<Void> cleanup() throws GameException {
+        if (calledCleanup.compareAndSet(false, true)) {
+            cleanupStack = new Exception().getStackTrace();
+            cleanupStack = Arrays.copyOfRange(cleanupStack, 1, cleanupStack.length);
+            cleanupThreadName = Thread.currentThread().getName();
+            CompletableFuture<Void> f = this.cleanup0();
+            if (f == null) {
+                cleanupFuture.complete(null);
+                stopTracking();
+            } else {
+                f.thenRun(() -> {
+                    cleanupFuture.complete(null);
+                    stopTracking();
+                }).exceptionally(t -> {
+                    cleanupFuture.completeExceptionally(t);
+                    stopTracking();
+                    return null;
+                });
             }
         } else {
             GameException ex = new GameException("Multiple cleanups");
-            GameException ex2 = new GameException("Stack: " + exName);
-            ex2.setStackTrace(stack);
+            GameException ex2 = new GameException("CreationStack: " + creationThreadName);
+            GameException ex3 = new GameException("CleanupStack: " + cleanupThreadName);
+            ex2.setStackTrace(creationStack);
+            ex3.setStackTrace(cleanupStack);
             ex.addSuppressed(ex2);
-            AbstractGameResource.logger().error(ex);
+            ex.addSuppressed(ex3);
+            logger.error(ex);
         }
+        return cleanupFuture;
     }
 
     @Override public boolean cleanedUp() {
-        return this.cleanedUp;
+        return cleanupFuture.isDone();
     }
 
     @Override public CompletableFuture<Void> cleanupFuture() {
         return this.cleanupFuture;
     }
 
-    protected void setCleanedUp() {
-        this.cleanedUp = true;
-    }
-
-    protected abstract void cleanup0() throws GameException;
+    protected abstract CompletableFuture<Void> cleanup0() throws GameException;
 
 }

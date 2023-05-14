@@ -14,11 +14,13 @@ import gamelauncher.engine.util.ByteBufferBackedInputStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.texture.GLESTexture;
+import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4i;
 
@@ -38,21 +40,18 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
     private final GameLauncher launcher;
     private final ExecutorThread owner;
-    volatile int maxTextureSize;
-    private CompletableFuture<?> last = CompletableFuture.completedFuture(null);
     private final GLES gles;
+    private final MemoryManagement memoryManagement;
+    volatile int maxTextureSize;
 
     public DynamicSizeTextureAtlas(GLES gles, GameLauncher launcher, ExecutorThread owner) {
         this.gles = gles;
         this.launcher = launcher;
         this.owner = owner;
+        this.memoryManagement = gles.memoryManagement();
         this.owner.submit(() -> {
             this.maxTextureSize = StateRegistry.currentGl().glGetInteger(GLES20.GL_MAX_TEXTURE_SIZE);
         });
-    }
-
-    public Map<GLESTexture, Collection<AtlasEntry>> byTexture() {
-        return byTexture;
     }
 
     private static boolean intersects(Vector4i v1, Vector4i v2) {
@@ -85,67 +84,81 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     }
 
     public CompletableFuture<Void> removeGlyph(int glyphId) {
-        return launcher.threads().cached.submit(() -> {
-            try {
-                lock.writeLock().lock();
-                AtlasEntry entry = glyphs.remove(glyphId);
-                if (entry != null) {
-                    Collection<AtlasEntry> col = byTexture.get(entry.texture);
-                    col.remove(entry);
-                    if (col.isEmpty()) {
-                        byTexture.remove(entry.texture);
+        try {
+            lock.writeLock().lock();
+            AtlasEntry entry = glyphs.remove(glyphId);
+            if (entry != null) {
+                Collection<AtlasEntry> col = byTexture.get(entry.texture);
+                col.remove(entry);
+                if (col.isEmpty()) {
+                    byTexture.remove(entry.texture);
+                    try {
                         entry.texture.cleanup();
+                    } catch (GameException e) {
+                        CompletableFuture<Void> f = new CompletableFuture<>();
+                        f.completeExceptionally(e);
+                        return f;
                     }
-                } else {
-                    logger.error("Already cleaned up glyph " + glyphId);
-                    GameException ex = Threads.buildStacktrace();
-                    ex.initCause(new GameException());
-                    logger.error(ex);
                 }
-            } finally {
-                lock.writeLock().unlock();
+            } else {
+                logger.error("Already cleaned up glyph " + glyphId);
+                GameException ex = Threads.buildStacktrace();
+                ex.initCause(new GameException());
+                logger.error(ex);
             }
-        });
+        } finally {
+            lock.writeLock().unlock();
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
-    public AddFuture addGlyph(int glyphId, GlyphEntry entry) {
+    public AddFuture addGlyph(int glyphId, GameSupplier<GlyphEntry> dataSupplier) {
         if (cleanedUp()) {
             return new AddFuture(false, CompletableFuture.completedFuture(null));
         }
-        lock.readLock().lock();
-        if (glyphs.containsKey(glyphId)) {
-            lock.readLock().unlock();
-            return new AddFuture(true, CompletableFuture.completedFuture(null));
-        }
-        lock.readLock().unlock();
-        try {
-            lock.writeLock().lock();
-            if (glyphs.containsKey(glyphId)) {
-                lock.writeLock().unlock();
-                return new AddFuture(true, CompletableFuture.completedFuture(null));
-            }
-
-            AtlasEntry e = new AtlasEntry(null, entry, new Vector4i(0, 0, entry.data.width, entry.data.height));
-            AddFuture af = null;
-            for (GLESTexture texture : byTexture.keySet()) {
-                e.texture = texture;
-                af = add(glyphId, e);
-                if (af.suc) {
-                    break;
+        CompletableFuture<AtlasEntry> fut = new CompletableFuture<>();
+        launcher.threads().workStealing.submit(() -> {
+            try {
+                lock.writeLock().lock();
+                if (glyphs.containsKey(glyphId)) {
+                    glyphs.get(glyphId).entry.key.required.incrementAndGet();
+                    fut.complete(glyphs.get(glyphId));
+                    lock.writeLock().unlock();
+                    return;
                 }
-                e.texture = null;
+                GlyphEntry entry = dataSupplier.get();
+
+                AtlasEntry e = new AtlasEntry(null, entry, new Vector4i(0, 0, entry.data.width, entry.data.height));
+                entry.key.required.incrementAndGet();
+                AddFuture af = null;
+                for (GLESTexture texture : byTexture.keySet()) {
+                    e.texture = texture;
+                    af = add(glyphId, e);
+                    if (af.suc) {
+                        break;
+                    }
+                    e.texture = null;
+                }
+                if (af == null) {
+                    e.texture = gles.textureManager().createTexture(owner);
+                    e.texture.allocate(64, 64);
+                    byTexture.put(e.texture, new HashSet<>());
+                    af = add(glyphId, e);
+                }
+                af.glFuture.thenRun(() -> {
+                    memoryManagement.free(entry.buffer);
+                    fut.complete(e);
+                }).exceptionally(t -> {
+                    memoryManagement.free(entry.buffer);
+                    fut.completeExceptionally(t);
+                    return null;
+                });
+                lock.writeLock().unlock();
+            } catch (GameException e) {
+                throw new RuntimeException(e);
             }
-            if (af == null) {
-                e.texture = gles.textureManager().createTexture(owner);
-                e.texture.allocate(64, 64);
-                byTexture.put(e.texture, new HashSet<>());
-                af = add(glyphId, e);
-            }
-            lock.writeLock().unlock();
-            return af;
-        } catch (GameException e) {
-            throw new RuntimeException(e);
-        }
+        });
+        return new AddFuture(true, fut);
     }
 
     private AddFuture add(int glyphId, AtlasEntry e) throws GameException {
@@ -179,38 +192,15 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                 }
             }
             ResourceStream stream = new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer), null);
-            CompletableFuture<Void> glf = new CompletableFuture<>();
-            last = last.thenRunAsync(() -> {
-                e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> {
-                    launcher.guiManager().redrawAll();
-                    glf.complete(null);
-                });
-                //					e.texture.write();
-                //					e.texture.write();
-            }, launcher.threads().cached.executor());
+            CompletableFuture<AtlasEntry> glf = new CompletableFuture<>();
+            e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> glf.complete(e));
+            //					e.texture.write();
+            //					e.texture.write();
             byTexture.get(e.texture).add(e);
             glyphs.put(glyphId, e);
             return new AddFuture(true, glf);
         } finally {
             lock.writeLock().unlock();
-        }
-    }
-
-    public static class AddFuture {
-        private final boolean suc;
-        private final CompletableFuture<Void> glFuture;
-
-        public AddFuture(boolean suc, CompletableFuture<Void> glFuture) {
-            this.suc = suc;
-            this.glFuture = glFuture;
-        }
-
-        public boolean suc() {
-            return suc;
-        }
-
-        public CompletableFuture<Void> glFuture() {
-            return glFuture;
         }
     }
 
@@ -261,8 +251,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
         return found;
     }
 
-    @Override public void cleanup0() throws GameException {
-        Threads.waitFor(owner.submit(() -> {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return owner.submit(() -> {
             lock.writeLock().lock();
             for (GLESTexture texture : byTexture.keySet()) {
                 texture.cleanup();
@@ -270,7 +260,25 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
             glyphs.clear();
             byTexture.clear();
             lock.writeLock().unlock();
-        }));
+        });
+    }
+
+    public static class AddFuture {
+        private final boolean suc;
+        private final CompletableFuture<AtlasEntry> glFuture;
+
+        public AddFuture(boolean suc, CompletableFuture<AtlasEntry> glFuture) {
+            this.suc = suc;
+            this.glFuture = glFuture;
+        }
+
+        public boolean suc() {
+            return suc;
+        }
+
+        public CompletableFuture<AtlasEntry> future() {
+            return glFuture;
+        }
     }
 
 }

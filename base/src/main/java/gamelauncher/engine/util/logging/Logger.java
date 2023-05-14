@@ -169,7 +169,7 @@ public abstract class Logger {
     public static class Initializer {
         public static void init(GameLauncher launcher) {
             Logger.system.addEntry(System.out, SelectiveStream.Output.OUT);
-            Logger.system.addEntry(System.err, SelectiveStream.Output.ERR);
+//            Logger.system.addEntry(System.err, SelectiveStream.Output.ERR);
             asyncLogStream = new AsyncLogStream(launcher);
         }
     }

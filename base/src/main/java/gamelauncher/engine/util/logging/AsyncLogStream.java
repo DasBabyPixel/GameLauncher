@@ -34,7 +34,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final AnsiProvider ansi;
     private final LogColor C100 = new LogColor(100, 100, 100);
-//			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
+    //			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
     public AsyncLogStream(GameLauncher launcher) {
         super(launcher);
@@ -52,6 +52,11 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         if (!this.exit) {
             return this.submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
         }
+        try {
+            Threads.await(exitFuture());
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
         this.log(new LogEntry<>(logger, Thread.currentThread(), message, level));
         return CompletableFuture.completedFuture(null);
     }
@@ -64,8 +69,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
     }
 
-    @Override public void cleanup0() throws GameException {
-        Threads.waitFor(this.exit());
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return this.exit();
     }
 
     void setSystemLevel(LogLevel level) {
@@ -217,7 +222,6 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                 this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
             }
             this.out.printf(ansi.formatln(), object);
-            this.out.flush();
         }
     }
 
@@ -228,15 +232,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     protected static class LogEntry<T> {
 
         final Logger logger;
-
         final Thread thread;
-
         final T object;
-
         final LogLevel level;
-
         final StackTraceElement caller;
-
         final TemporalAccessor time;
 
         public LogEntry(Logger logger, Thread thread, T object, LogLevel level) {

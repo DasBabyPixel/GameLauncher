@@ -62,6 +62,7 @@ public interface ScrollGui extends Gui {
 
         public Simple(GameLauncher launcher) throws GameException {
             super(launcher);
+            // TODO has to be reworked to not have circular property dependencies. This is stupid and may break in future property versions
             this.gui = Property.empty();
             this.guiWidth = NumberValue.withValue(0D);
             this.guiHeight = NumberValue.withValue(0D);

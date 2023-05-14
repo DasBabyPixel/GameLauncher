@@ -15,7 +15,6 @@ import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
@@ -66,17 +65,13 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return gles;
     }
 
-    public MemoryManagement memoryManagement() {
-        return memoryManagement;
-    }
-
     private void upload0(ByteBuffer buffer, int x, int y, int width, int height) throws InvalidSizeException {
         profiler.begin("render", "upload");
         lock.writeLock().lock();
         int mintw = x + width;
         int minth = y + height;
         if (cwidth < mintw || cheight < minth) {
-            throw new InvalidSizeException();
+            throw new InvalidSizeException(cwidth + " < " + mintw + " || " + cheight + " < " + minth);
         }
         GLES20 cur = StateRegistry.currentGl();
         cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
@@ -157,6 +152,25 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         }
     }
 
+    public CompletableFuture<ByteBuffer> pixels() {
+        return owner.submit(() -> {
+            try {
+                lock.writeLock().lock();
+                ByteBuffer buf = memoryManagement.allocDirect(cwidth * cheight * DataUtil.BYTES_INT);
+                if (cwidth == 0 || cheight == 0) return buf;
+                GLES30 cur = StateRegistry.currentGl();
+                CLTextureUtility u = manager.clTextureUtility.get();
+                u.framebuffer1.bind();
+                cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId.get(), 0);
+                cur.glReadPixels(0, 0, cwidth, cheight, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+                u.framebuffer1.unbind();
+                return buf;
+            } finally {
+                lock.writeLock().unlock();
+            }
+        });
+    }
+
     private void safeCreate() {
         lock.writeLock().lock();
         if (textureId.get() == 0) {
@@ -182,15 +196,15 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         profiler.end();
     }
 
-    @Override public void cleanup0() throws GameException {
-        Threads.waitFor(owner.submit(() -> {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return owner.submit(() -> {
             lock.writeLock().lock();
             int id = textureId.getAndSet(0);
             if (id != 0) {
                 StateRegistry.currentGl().glDeleteTextures(1, new int[]{id}, 0);
             }
             lock.writeLock().unlock();
-        }));
+        });
     }
 
     @Override public CompletableFuture<Void> allocate(int width, int height) {
@@ -463,8 +477,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
 
     public static class InvalidSizeException extends GameException {
 
-        public InvalidSizeException() {
-            super();
+        public InvalidSizeException(String message) {
+            super(message);
         }
     }
 }

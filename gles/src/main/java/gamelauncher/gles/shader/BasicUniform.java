@@ -9,6 +9,7 @@ import gamelauncher.engine.util.profiler.Profiler;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.gles.util.MemoryManagement;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -48,8 +49,9 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
         this.floatBuffer.position(0);
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         memory.free(floatBuffer); // Also frees intbuffer, as they are the same
+        return null;
     }
 
     @Override public Uniform upload() {

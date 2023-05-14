@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java8.util.concurrent.CompletableFuture;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -59,7 +60,8 @@ public class ModelIdRegistry extends AbstractGameResource {
         }
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        return null;
     }
 
     private class CleanerThread extends Thread {

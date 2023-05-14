@@ -4,6 +4,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameSupplier;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -45,7 +46,8 @@ public class SimpleResourceLoader extends ResourceLoader {
             return new ResourceStream(path, directory, sup.get(), null);
         }
 
-        @Override protected void cleanup0() throws GameException {
+        @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+            return null;
         }
     }
 }

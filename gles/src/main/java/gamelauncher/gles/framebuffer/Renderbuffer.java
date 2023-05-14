@@ -2,6 +2,7 @@ package gamelauncher.gles.framebuffer;
 
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import static gamelauncher.gles.gl.GLES20.GL_RENDERBUFFER;
 
@@ -9,7 +10,7 @@ public class Renderbuffer extends AbstractGameResource {
 
     private final int id;
     private final int format;
-    private int width, height;
+    private int width = -1, height = -1;
 
     public Renderbuffer(int format, int width, int height) {
         this.format = format;
@@ -28,8 +29,9 @@ public class Renderbuffer extends AbstractGameResource {
         unbind();
     }
 
-    @Override public void cleanup0() {
+    @Override public CompletableFuture<Void> cleanup0() {
         StateRegistry.currentGl().glDeleteRenderbuffers(1, new int[]{id}, 0);
+        return null;
     }
 
     public int getId() {

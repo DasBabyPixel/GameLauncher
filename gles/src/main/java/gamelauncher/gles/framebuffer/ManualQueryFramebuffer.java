@@ -5,11 +5,11 @@ import de.dasbabypixel.api.property.InvalidationListener;
 import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.RenderThread;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 
 public class ManualQueryFramebuffer extends AbstractFramebuffer {
 
     private final Framebuffer handle;
-
     private final BooleanValue newValue = BooleanValue.trueValue();
 
     public ManualQueryFramebuffer(Framebuffer handle, RenderThread renderThread) {
@@ -35,8 +35,9 @@ public class ManualQueryFramebuffer extends AbstractFramebuffer {
         return this.newValue;
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
         //		this.handle.cleanup();
+        return null;
     }
 
     @Override public void beginFrame() {

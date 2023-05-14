@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AndroidGlyphProvider extends AbstractGameResource implements GlyphProvider {
     private static final Logger logger = Logger.logger();
@@ -71,7 +72,7 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
         Paint.FontMetrics fm = paint.getFontMetrics();
 
-        float scale = pixelHeight;
+        @SuppressWarnings("UnnecessaryLocalVariable") float scale = pixelHeight;
         float descent = -fm.descent;
         float ascent = fm.ascent;
         char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
@@ -85,8 +86,10 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
 //        this.textureAtlas.byTexture().keySet().forEach(t -> t.write());
 
+        AtomicInteger countdown = new AtomicInteger(futures.size());
+
         for (CompletableFuture<AtlasEntry> future : futures) {
-            Threads.waitFor(future);
+            Threads.await(future);
         }
         for (CompletableFuture<AtlasEntry> f : futures) {
             Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
@@ -149,12 +152,8 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
     public CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, Paint paint, char ch) throws GameException {
 //        return this.frame.launcher().threads().cached.submit(() -> {
         int id = this.getId(key);
-        AtlasEntry entry = this.textureAtlas.getGlyph(id);
-        ret:
-        {
-            if (entry != null) {
-                break ret;
-            }
+        DynamicSizeTextureAtlas.AddFuture af = textureAtlas.addGlyph(id, () -> {
+
             char[] ca1 = new char[]{ch};
             Rect bounds = new Rect();
             paint.getTextBounds(ca1, 0, 1, bounds);
@@ -172,10 +171,10 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             Canvas canvas = new Canvas(bitmap);
             canvas.drawText(ca1, 0, 1, -gdata.bearingX, gdata.height - gdata.bearingY, paint);
 
-            ByteBuffer abuf = memoryManagement.callocDirect((2 + gdata.width) * (2 + gdata.height));
+            ByteBuffer abuf = memoryManagement.allocDirect((2 + gdata.width) * (2 + gdata.height));
             bitmap.copyPixelsToBuffer(abuf);
 
-            // Setup for usage by LWJGLTexture
+            // Setup for usage by GLESTexture
             ByteBuffer buf = memoryManagement.calloc(DataUtil.BYTES_INT * abuf.capacity() + DataUtil.BYTES_INT * 2 + GLESTexture.SIGNATURE_RAW.length);
             buf.put(GLESTexture.SIGNATURE_RAW);
             buf.putInt(gdata.width + 2);
@@ -189,27 +188,21 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             buf.flip();
             memoryManagement.free(abuf);
 
-            GlyphEntry e = new GlyphEntry(gdata, key, buf);
-
-            DynamicSizeTextureAtlas.AddFuture af = this.textureAtlas.addGlyph(id, e);
-            af.glFuture().thenRun(() -> memoryManagement.free(e.buffer)).exceptionally(ex -> {
-                logger.error(ex);
-                return null;
-            });
-            if (!af.suc()) {
-                throw new GameException("Could not add glyph to texture atlas");
-            }
-            entry = this.textureAtlas.getGlyph(id);
-
+            return new GlyphEntry(gdata, key, buf);
+        });
+        af.future().exceptionally(ex -> {
+            logger.error(ex);
+            return null;
+        });
+        if (!af.suc()) {
+            throw new GameException("Could not add glyph to texture atlas");
         }
-        entry.entry.key.required.incrementAndGet();
-        return CompletableFuture.completedFuture(entry);
+        return af.future();
 //        });
     }
 
-    @Override public void cleanup0() throws GameException {
-        this.textureAtlas.cleanup();
-        this.frame.cleanup();
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return CompletableFuture.allOf(textureAtlas.cleanup(), frame.cleanup());
     }
 
     public int getId(GlyphKey key) {
@@ -251,9 +244,11 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             texture2DModel.render(program);
         }
 
-        @Override protected void cleanup0() throws GameException {
-            Threads.waitFor(releaseGlyphKey(e.entry.key));
-            if (texture2DModel != null) texture2DModel.cleanup();
+        @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+            CompletableFuture<Void> f1 = releaseGlyphKey(e.entry.key);
+            CompletableFuture<Void> f2 = null;
+            if (texture2DModel != null) f2 = texture2DModel.cleanup();
+            return f2 == null ? f1 : CompletableFuture.allOf(f1, f2);
         }
     }
 }

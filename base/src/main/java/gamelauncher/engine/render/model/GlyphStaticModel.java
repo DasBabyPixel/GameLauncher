@@ -1,28 +1,30 @@
 package gamelauncher.engine.render.model;
 
+import de.dasbabypixel.api.property.NumberValue;
+
 /**
  * @author DasBabyPixel
  */
-public interface GlyphStaticModel extends Model {
+public interface GlyphStaticModel extends WrapperModel {
 
     /**
      * @return the width
      */
-    int width();
+    NumberValue width();
 
     /**
      * @return the height
      */
-    int height();
+    NumberValue height();
 
     /**
      * @return the descent
      */
-    float descent();
+    NumberValue descent();
 
     /**
      * @return the ascent
      */
-    float ascent();
+    NumberValue ascent();
 
 }

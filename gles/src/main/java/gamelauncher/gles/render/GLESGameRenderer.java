@@ -24,6 +24,7 @@ import gamelauncher.gles.gl.GLES30;
 import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,7 +122,7 @@ public class GLESGameRenderer implements GameRenderer {
             GLESCompat.printDebugInfos(gles.launcher().logger());
 
             this.mainFramebuffer = new BasicFramebuffer(gles, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
-            this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.getColorTexture()));
+            this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.colorTexture()));
             this.mainScreenItem.scale().x.bind(this.mainFramebuffer.width());
             this.mainScreenItem.scale().y.bind(this.mainFramebuffer.height());
             this.mainScreenItem.position().x.bind(this.mainFramebuffer.width().divide(2D));
@@ -138,10 +139,11 @@ public class GLESGameRenderer implements GameRenderer {
 
         }
 
-        @Override public void cleanup0() throws GameException {
-            this.mainScreenItemModel.cleanup();
+        @Override public CompletableFuture<Void> cleanup0() throws GameException {
+            CompletableFuture<Void> f1 = this.mainScreenItemModel.cleanup();
             launcher.contextProvider().freeContext(this.contexthud, ContextType.HUD);
-            this.mainFramebuffer.cleanup();
+            CompletableFuture<Void> f2 = this.mainFramebuffer.cleanup();
+            return CompletableFuture.allOf(f1, f2);
         }
 
         public void windowSizeChanged() throws GameException {

@@ -15,7 +15,10 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.KeybindManager;
+import java8.util.concurrent.CompletableFuture;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,10 +57,12 @@ public class AndroidKeybindManager extends AbstractGameResource implements Keybi
         });
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
         for (Keybind keybind : keybinds.values()) {
-            keybind.cleanup();
+            futs.add(keybind.cleanup());
         }
         keybinds.clear();
+        return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
     }
 }

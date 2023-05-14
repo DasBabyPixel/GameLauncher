@@ -3,6 +3,7 @@ package gamelauncher.gles.framebuffer;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import static gamelauncher.gles.gl.GLES20.GL_FRAMEBUFFER;
 import static gamelauncher.gles.gl.GLES20.GL_FRAMEBUFFER_COMPLETE;
@@ -28,24 +29,21 @@ public class GLESFramebuffer extends AbstractFramebuffer {
         StateRegistry.currentGl().glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    public boolean isComplete() {
-        try {
-            this.bind();
-            int status = StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER);
-            return status == GL_FRAMEBUFFER_COMPLETE;
-        } finally {
-            this.unbind();
-        }
+    /**
+     * @return if the framebuffer is complete. Must be bound before with {@link #bind()}
+     */
+    protected boolean isComplete() {
+        return StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     }
 
-    public void checkComplete() throws GameException {
+    /**
+     * Checks if the framebuffer is complete. Must be bound before with {@link #bind()}
+     *
+     * @throws GameException
+     */
+    protected void checkComplete() throws GameException {
         if (!this.isComplete()) {
-            try {
-                this.bind();
-                throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER)));
-            } finally {
-                this.unbind();
-            }
+            throw new GameException("Framebuffer not complete: Error " + Integer.toHexString(StateRegistry.currentGl().glCheckFramebufferStatus(GL_FRAMEBUFFER)));
         }
     }
 
@@ -55,8 +53,9 @@ public class GLESFramebuffer extends AbstractFramebuffer {
     @Override public void endFrame() {
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         StateRegistry.currentGl().glDeleteFramebuffers(1, new int[]{this.id}, 0);
+        return null;
     }
 
     public int getId() {

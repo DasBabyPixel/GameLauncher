@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameFunction;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -92,7 +93,7 @@ public class ResourceStream extends AbstractGameResource implements Closeable {
      * @see InputStream#close()
      * @see OutputStream#close()
      */
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         try {
             if (this.in != null) {
                 this.in.close();
@@ -105,6 +106,7 @@ public class ResourceStream extends AbstractGameResource implements Closeable {
         } catch (IOException ex) {
             throw this.closeError = new GameException(ex);
         }
+        return null;
     }
 
     /**

@@ -1,8 +1,6 @@
 package gamelauncher.gles.model;
 
 import gamelauncher.engine.render.model.Model;
-import gamelauncher.engine.render.shader.ShaderProgram;
-import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.mesh.Mesh;
 import gamelauncher.gles.texture.GLESTexture;
@@ -13,7 +11,6 @@ public class Texture2DModel extends MeshModel implements Model {
 //    private final int texbuffer;
 //    private final int idxbuffer;
 //    private final int vertexCount;
-    private final GLESTexture texture;
 
     public Texture2DModel(GLESTexture texture) {
         this(texture, 0F, 1F, 1F, 0F);
@@ -22,7 +19,6 @@ public class Texture2DModel extends MeshModel implements Model {
     public Texture2DModel(GLESTexture texture, float textureLeft, float textureTop, float textureRight, float textureBottom) {
         super(new Mesh(texture.gles(), new float[]{-0.5F, -0.5F, 0F, -0.5F, 0.5F, 0F, 0.5F, 0.5F, 0F, 0.5F, -0.5F, 0F}, new float[]{textureLeft, 1 - textureBottom, textureLeft, 1 - textureTop, textureRight, 1 - textureTop, textureRight, 1 - textureBottom}, new int[]{0, 2, 1, 0, 3, 2}, GLES20.GL_TRIANGLES, false));
         mesh.material().texture = texture;
-        this.texture = texture;
 //        this.texture = texture;
 //        textureTop = 1 - textureTop;
 //        textureBottom = 1 - textureBottom;
@@ -68,34 +64,7 @@ public class Texture2DModel extends MeshModel implements Model {
 //        //@formatter:on
     }
 
-    @Override public void render(ShaderProgram program) throws GameException {
-        super.render(program);
-//        GLES30 c = StateRegistry.currentGl();
-//        program.uapplyLighting.set(0);
-//        program.uhasTexture.set(1);
-//        if (fake) {
-////            program.uhasTexture.set(0);
-//            Color color = new Color(program.getLauncher().modelIdRegistry().id(this), true);
-//            program.uid.set(new Vector4f(color.getRed() / 255F, color.getBlue() / 255F, color.getGreen() / 255F, color.getAlpha() / 255F));
-//        } else {
-//            program.uid.set(new Vector4f(0, 0, 0, 0));
-//        }
-//        c.glActiveTexture(GLES20.GL_TEXTURE0);
-//        c.glBindTexture(GLES20.GL_TEXTURE_2D, this.texture.getTextureId());
-//        c.glBindVertexArray(this.vao);
-//        program.uploadUniforms();
-//        c.glEnableVertexAttribArray(0);
-//        c.glEnableVertexAttribArray(1);
-//        c.glDrawElements(GLES20.GL_TRIANGLES, this.vertexCount, GLES20.GL_UNSIGNED_INT, 0);
-//        c.glDisableVertexAttribArray(0);
-//        c.glDisableVertexAttribArray(1);
-    }
-
-    @Override public void cleanup0() throws GameException {
-        super.cleanup0();
-    }
-
     public GLESTexture texture() {
-        return this.texture;
+        return this.mesh().material().texture;
     }
 }

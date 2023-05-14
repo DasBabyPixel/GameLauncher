@@ -15,6 +15,7 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.gl.*;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import javax.microedition.khronos.egl.*;
 import java.util.Collection;
@@ -84,7 +85,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         return this;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected void cleanup0() {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override protected CompletableFuture<Void> cleanup0() {
         this.sharedContexts.remove(this);
         EGL10 egl = launcher.egl();
         egl.eglDestroySurface(display, surface);
@@ -92,6 +93,7 @@ public class AndroidGLContext extends AbstractGameResource implements GLContext 
         display = null;
         surface = null;
         context = null;
+        return null;
     }
 
     @Override public void makeCurrent() {

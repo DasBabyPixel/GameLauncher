@@ -1,7 +1,6 @@
 package gamelauncher.gles.framebuffer;
 
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.render.GLESGameRenderer;
@@ -25,14 +24,15 @@ public class BasicFramebuffer extends GLESFramebuffer {
         super(gles.mainFrame());
         this.width().number(width);
         this.height().number(height);
-        this.bind();
 
         GLES20 c = StateRegistry.currentGl();
         this.colorTexture = gles.textureManager().createTexture(gles.launcher().executorThreadHelper().currentThread());
-        Threads.waitFor(this.colorTexture.allocate(this.width().intValue(), this.height().intValue()));
-        c.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getTextureId(), 0);
+        this.colorTexture.allocate(this.width().intValue(), this.height().intValue()); // This will execute immediately, we do not have to wait for the future
         this.depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, this.width().intValue(), this.height().intValue());
-        c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this.depthStencilRenderbuffer.getId());
+
+        this.bind();
+        c.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
+        c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRenderbuffer.getId());
         this.checkComplete();
         this.unbind();
     }
@@ -43,7 +43,8 @@ public class BasicFramebuffer extends GLESFramebuffer {
         }
         this.width().number(width);
         this.height().number(height);
-        Threads.waitFor(this.resizeColorTexture());
+        CompletableFuture<Void> fut = this.resizeColorTexture(); // This should also execute immediately, I still add a check just to be sure and throw an exception if an error occurs
+        if (!fut.isDone()) throw new IllegalStateException("Wrong thread");
         this.bind();
         StateRegistry.currentGl().glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getTextureId(), 0);
         this.unbind();
@@ -51,11 +52,11 @@ public class BasicFramebuffer extends GLESFramebuffer {
         this.resizeDepthStencilRenderbuffer();
     }
 
-    public GLESTexture getColorTexture() {
+    public GLESTexture colorTexture() {
         return this.colorTexture;
     }
 
-    public Renderbuffer getDepthStencilRenderbuffer() {
+    public Renderbuffer depthStencilRenderbuffer() {
         return this.depthStencilRenderbuffer;
     }
 
@@ -67,9 +68,10 @@ public class BasicFramebuffer extends GLESFramebuffer {
         return this.colorTexture.allocate(this.width().intValue(), this.height().intValue());
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
         this.colorTexture.cleanup();
         this.depthStencilRenderbuffer.cleanup();
         super.cleanup0();
+        return null;
     }
 }

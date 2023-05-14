@@ -201,10 +201,6 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         return this.frame;
     }
 
-    @Override public String name() {
-        return getName();
-    }
-
     private void lock() {
         while (!this.modifying.compareAndSet(false, true)) Thread.yield();
     }

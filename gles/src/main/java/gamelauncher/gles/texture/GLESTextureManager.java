@@ -16,6 +16,7 @@ import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.states.ContextLocal;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,10 +27,10 @@ public class GLESTextureManager extends AbstractGameResource implements TextureM
     public final GLES gles;
     public final ContextLocal<CLTextureUtility> clTextureUtility;
     private final Lock lock = new ReentrantLock(true);
-    private Frame frame;
     private final GameLauncher launcher;
+    private Frame frame;
 
-    public GLESTextureManager(GameLauncher launcher, GLES gles) {
+    public GLESTextureManager(GameLauncher launcher, GLES gles) throws GameException {
         this.launcher = launcher;
         this.gles = gles;
         this.clTextureUtility = CLTextureUtility.local(gles);
@@ -42,14 +43,18 @@ public class GLESTextureManager extends AbstractGameResource implements TextureM
     }
 
     @Override public GLESTexture createTexture() throws GameException {
-        try {
-            lock.lock();
-            if (this.frame == null) {
-                this.frame = gles.launcher().frame().newFrame();
+        if (frame == null) {
+            try {
+                lock.lock();
+                if (this.frame == null) {
+                    this.frame = gles.launcher().frame().newFrame();
+                }
+                return this.createTexture(this.frame.renderThread());
+            } finally {
+                lock.unlock();
             }
+        } else {
             return this.createTexture(this.frame.renderThread());
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -57,7 +62,8 @@ public class GLESTextureManager extends AbstractGameResource implements TextureM
         return new GLESTexture(gles, owner, this.service);
     }
 
-    @Override public void cleanup0() throws GameException {
-        if (frame != null) frame.cleanup();
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        if (frame != null) return frame.cleanup();
+        return null;
     }
 }

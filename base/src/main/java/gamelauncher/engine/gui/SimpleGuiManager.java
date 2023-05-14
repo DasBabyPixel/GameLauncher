@@ -18,7 +18,6 @@ import gamelauncher.engine.gui.guis.ScrollGui;
 import gamelauncher.engine.gui.guis.TextGui;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.function.GameSupplier;
 import gamelauncher.engine.util.keybind.KeybindEvent;
@@ -52,14 +51,9 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         registerGuiCreator(null, TextGui.class);
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
         this.launcher.eventManager().unregisterListener(this);
-        CompletableFuture<?>[] futures = new CompletableFuture[1];
-        int i = 0;
-        futures[i] = this.cleanupLater();
-        for (CompletableFuture<?> fut : futures) {
-            Threads.waitFor(fut);
-        }
+        return this.cleanupLater();
     }
 
     /**

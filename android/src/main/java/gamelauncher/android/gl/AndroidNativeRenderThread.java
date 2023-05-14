@@ -48,7 +48,7 @@ public class AndroidNativeRenderThread implements IAndroidRenderThread {
         return "UI-Thread";
     }
 
-    @Override public CompletableFuture<Void> submitLast(GameRunnable runnable) {
+    @Override public CompletableFuture<Void> submit(GameRunnable runnable) {
         if (executor.isCurrentThread()) {
             try {
                 runnable.run();
@@ -72,23 +72,6 @@ public class AndroidNativeRenderThread implements IAndroidRenderThread {
             fut.completeExceptionally(new Throwable("Failed to submit task"));
         }
         return fut;
-    }
-
-    @Override public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
-        // We cant do this lol, so we just submit as last
-        return submitLast(runnable);
-    }
-
-    @Override public void park() {
-        // We do not park... We will get an Application Not Responding message!
-    }
-
-    @Override public void park(long nanos) {
-        // We do not park... We will get an Application Not Responding message!
-    }
-
-    @Override public void unpark() {
-        // We do not park... We will get an Application Not Responding message!
     }
 
     @Override public void workQueue() {

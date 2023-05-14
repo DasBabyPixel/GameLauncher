@@ -90,7 +90,8 @@ public class EmptyUniform implements Uniform {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void cleanup() throws GameException {
+    @Override public CompletableFuture<Void> cleanup() throws GameException {
+        return null;
     }
 
     @Override public boolean cleanedUp() {

@@ -5,6 +5,7 @@ import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 
 public final class GLESCombinedModelsModel extends AbstractGameResource implements CombinedModelsModel {
 
@@ -18,10 +19,10 @@ public final class GLESCombinedModelsModel extends AbstractGameResource implemen
         throw new UnsupportedOperationException("Not correctly implemented. This should not render. Use #getModels() to query the models to be rendered");
     }
 
-    @Override public void cleanup0() throws GameException {
-        for (Model model : this.models) {
-            model.cleanup();
-        }
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        CompletableFuture<?>[] futures = new CompletableFuture[models.length];
+        for (int i = 0; i < models.length; i++) futures[i] = models[i].cleanup();
+        return CompletableFuture.allOf(futures);
     }
 
     @Override public Model[] getModels() {

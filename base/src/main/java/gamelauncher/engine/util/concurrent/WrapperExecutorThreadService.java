@@ -76,26 +76,6 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void park() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public void unpark() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public void park(long nanos) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public CompletableFuture<Void> submitLast(GameRunnable runnable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override public CompletableFuture<Void> submitFirst(GameRunnable runnable) {
-        throw new UnsupportedOperationException();
-    }
-
     static class WrapperCallable<T> implements Runnable {
 
         static final ThreadLocal<WrapperCallable<?>> threadLocal = new ThreadLocal<>();

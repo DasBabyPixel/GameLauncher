@@ -2,6 +2,7 @@ package gamelauncher.engine.render.shader;
 
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -21,13 +22,6 @@ public class ObjectUniform extends AbstractGameResource implements Uniform {
     public ObjectUniform(ShaderProgram program, String name) {
         this.program = program;
         this.name = name;
-    }
-
-    @Override public boolean cleanedUp() {
-        return true;
-    }
-
-    @Override protected void cleanup0() throws GameException {
     }
 
     @Override public Uniform upload() {
@@ -95,5 +89,9 @@ public class ObjectUniform extends AbstractGameResource implements Uniform {
     @Override public Uniform clear() {
         this.value.set(null);
         return this;
+    }
+
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        return null;
     }
 }

@@ -3,10 +3,13 @@ package gamelauncher.engine.resource;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -80,9 +83,11 @@ public abstract class ResourceLoader extends AbstractGameResource {
         });
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
         for (Path path : resources.keySet()) {
-            resources.remove(path).cleanup();
+            futs.add(resources.remove(path).cleanup());
         }
+        return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
     }
 }

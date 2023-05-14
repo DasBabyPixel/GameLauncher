@@ -6,18 +6,17 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
+import java8.util.concurrent.CompletableFuture;
 
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class GLESShaderProgram extends ShaderProgram {
 
-    private final int programId;
-    final AtomicInteger refCount = new AtomicInteger(1);
     final Path path;
+    private final int programId;
+    private final GLES gles;
     private int vertexShaderId;
     private int fragmentShaderId;
-    private final GLES gles;
 
     public GLESShaderProgram(GLES gles, Path path) throws GameException {
         super(gles.launcher());
@@ -107,20 +106,14 @@ public class GLESShaderProgram extends ShaderProgram {
         StateRegistry.currentGl().glUseProgram(0);
     }
 
-    @Override public boolean cleanedUp() {
-        return this.refCount.get() == 0;
-    }
-
-    @Override public void cleanup0() throws GameException {
-        if (this.refCount.decrementAndGet() == 0) {
-            this.unbind();
-            if (this.programId != 0) {
-                StateRegistry.currentGl().glDeleteProgram(this.programId);
-            }
-            for (Uniform uniform : uniformMap.values()) {
-                uniform.cleanup();
-            }
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        this.unbind();
+        if (this.programId != 0) {
+            StateRegistry.currentGl().glDeleteProgram(this.programId);
         }
+        for (Uniform uniform : uniformMap.values()) {
+            uniform.cleanup();
+        }
+        return null;
     }
-
 }

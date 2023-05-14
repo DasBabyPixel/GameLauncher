@@ -3,6 +3,7 @@ package gamelauncher.engine.plugin;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -57,7 +58,7 @@ public class EntryInputStream extends AbstractGameResource implements AutoClosea
         cleanup();
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
         if (!directory) {
             try {
                 zip.close();
@@ -65,6 +66,7 @@ public class EntryInputStream extends AbstractGameResource implements AutoClosea
                 throw new GameException(ex);
             }
         }
+        return null;
     }
 
     public static class Entry {

@@ -19,53 +19,33 @@ import java8.util.concurrent.CompletableFuture;
  * @author DasBabyPixel
  */
 @Api
-public interface ExecutorThread extends ParkableThread {
+public interface ExecutorThread {
 
-    @Api default CompletableFuture<Void> submit(GameRunnable runnable) {
-        return submitLast(runnable);
-    }
+    @Api CompletableFuture<Void> submit(GameRunnable runnable);
 
-    @Api
-
-    default <T> CompletableFuture<T> submit(GameCallable<T> callable) {
-        return submitLast(callable);
-    }
-
-    @Api CompletableFuture<Void> submitLast(GameRunnable runnable);
-
-    @Api default <T> CompletableFuture<T> submitLast(GameCallable<T> callable) {
+    @Api default <T> CompletableFuture<T> submit(GameCallable<T> callable) {
         FuturisticGameRunnable<T> fut = callable.toRunnable();
-        submitLast(fut);
+        submit(fut);
         return fut.getFuture();
     }
 
-    @Api CompletableFuture<Void> submitFirst(GameRunnable runnable);
+    @Deprecated(forRemoval = true) @Api default CompletableFuture<Void> submitLast(GameRunnable runnable) {
+        return submit(runnable);
+    }
 
-    @Api default <T> CompletableFuture<T> submitFirst(GameCallable<T> callable) {
-        FuturisticGameRunnable<T> fut = callable.toRunnable();
-        submitFirst(fut);
-        return fut.getFuture();
+    @Deprecated(forRemoval = true) @Api default <T> CompletableFuture<T> submitLast(GameCallable<T> callable) {
+        return submit(callable);
     }
 
     /**
-     * Parks this thread. This will stop parking once a task is available
-     */
-    @Override void park();
-
-    /**
-     * Parks this thread. This will stop parking once a task is available
-     */
-    @Override void park(long nanos);
-
-    /**
-     * Unparks this thread
-     */
-    @Override void unpark();
-
-    /**
-     * Runs all submitted tasks on the current thread. DO NOT CALL THIS UNLESS YOU
-     * KNOW WHAT YOU'RE DOING!
+     * Runs all submitted tasks on the current thread.<br>
+     * <b>DO NOT CALL THIS UNLESS YOU KNOW WHAT YOU'RE DOING!</b>
      */
     @Api void workQueue();
+
+    /**
+     * @return the name of this thread
+     */
+    String name();
 
 }

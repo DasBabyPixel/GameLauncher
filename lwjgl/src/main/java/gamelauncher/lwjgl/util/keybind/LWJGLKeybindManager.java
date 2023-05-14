@@ -7,6 +7,7 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.KeybindManager;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,11 +58,12 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
         event.keybind().handle(event);
     }
 
-    @Override protected void cleanup0() throws GameException {
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         for (Keybind k : keybinds.values()) {
             k.cleanup();
         }
         keybinds.clear();
+        return CompletableFuture.completedFuture(null);
     }
 
     private void loadKeybind(int id) {

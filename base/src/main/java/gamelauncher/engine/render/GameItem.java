@@ -9,6 +9,7 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyVector3f;
 import gamelauncher.engine.util.property.PropertyVector4f;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -92,8 +93,8 @@ public class GameItem extends AbstractGameResource {
         return model;
     }
 
-    @Override public void cleanup0() throws GameException {
-        model.cleanup();
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return model.cleanup();
     }
 
     /**
@@ -116,9 +117,6 @@ public class GameItem extends AbstractGameResource {
      */
     public static final class GameItemModel extends AbstractGameResource implements ColorMultiplierModel, ColorAddModel {
 
-        /**
-         *
-         */
         public final GameItem gameItem;
         private final Vector4f addColor = new Vector4f();
         private final Vector4f color = new Vector4f();
@@ -127,8 +125,8 @@ public class GameItem extends AbstractGameResource {
             this.gameItem = gameItem;
         }
 
-        @Override public void cleanup0() throws GameException {
-            gameItem.cleanup();
+        @Override public CompletableFuture<Void> cleanup0() throws GameException {
+            return gameItem.cleanup();
         }
 
         @Override public void render(ShaderProgram program) throws GameException {

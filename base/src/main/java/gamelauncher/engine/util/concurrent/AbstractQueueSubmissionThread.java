@@ -36,14 +36,14 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
     /**
      * @return the exitfuture
      */
-    @Api public CompletableFuture<Void> exitFuture() {
+    @Api public final CompletableFuture<Void> exitFuture() {
         return this.exitFuture;
     }
 
     /**
      * @return the exitfuture
      */
-    @Api public CompletableFuture<Void> exit() {
+    @Api public final CompletableFuture<Void> exit() {
         this.exit = true;
         this.signal();
         return this.exitFuture();
@@ -59,13 +59,13 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
     @Api protected void workExecution() {
     }
 
-    @Api protected void loop() {
+    @Api protected final void loop() {
         this.waitForSignal();
         this.workQueue();
         this.workExecution();
     }
 
-    @Api protected void waitForSignal() {
+    @Api protected final void waitForSignal() {
         if (this.exit) return;
         while (!this.work.compareAndSet(true, false)) {
             Threads.park();
@@ -83,7 +83,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
         }
         this.loop();
         this.stopExecuting();
-        this.loop();
+        stopTracking();
         this.exitFuture.complete(null);
     }
 
@@ -94,7 +94,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
      */
     @Api public final void workQueue() {
         try {
-            EventPoller.PollState s = poller.poll((event, sequence, endOfBatch) -> {
+            poller.poll((event, sequence, endOfBatch) -> {
                 try {
                     this.handleElement(event.val);
                     event.fut.complete(null);

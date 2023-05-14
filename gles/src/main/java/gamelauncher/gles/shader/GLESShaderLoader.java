@@ -107,7 +107,7 @@ public class GLESShaderLoader implements ShaderLoader {
         Resource resource = loader.resource(path);
         if (this.programs.containsKey(resource)) {
             GLESShaderProgram program = this.programs.get(resource);
-            program.refCount.incrementAndGet();
+            program.require();
             return program;
         }
         ResourceStream rootStream = resource.newResourceStream();

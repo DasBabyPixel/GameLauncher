@@ -7,6 +7,7 @@ import gamelauncher.engine.util.Color;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.mesh.Mesh;
 import gamelauncher.gles.render.MeshRenderer;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4f;
 
 /**
@@ -19,8 +20,8 @@ public class MeshModel extends AbstractGameResource implements Model {
         this.mesh = mesh;
     }
 
-    @Override protected void cleanup0() throws GameException {
-        this.mesh.cleanup();
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        return this.mesh.cleanup();
     }
 
     public Mesh mesh() {

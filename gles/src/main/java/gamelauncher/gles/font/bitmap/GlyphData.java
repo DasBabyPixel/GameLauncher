@@ -4,7 +4,7 @@ public class GlyphData {
 
     public int width;
     public int height;
-    public int advance;
+    public float advance;
     public int bearingX;
     public int bearingY;
 

@@ -1,11 +1,11 @@
 package gamelauncher.lwjgl.util.keybind;
 
 import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeybindEvent;
 import gamelauncher.engine.util.keybind.KeybindHandler;
 import gamelauncher.engine.util.keybind.KeybindManager;
+import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +52,8 @@ public class LWJGLKeybind extends AbstractGameResource implements Keybind {
         return manager;
     }
 
-    @Override public void cleanup0() throws GameException {
+    @Override public CompletableFuture<Void> cleanup0() {
         handlers.clear();
+        return null;
     }
 }

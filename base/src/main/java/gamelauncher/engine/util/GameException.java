@@ -20,4 +20,9 @@ public class GameException extends Exception {
     public GameException(Throwable cause) {
         super(cause);
     }
+
+    public static GameException wrap(Throwable throwable) {
+        if (throwable instanceof GameException) return (GameException) throwable;
+        return new GameException(throwable);
+    }
 }

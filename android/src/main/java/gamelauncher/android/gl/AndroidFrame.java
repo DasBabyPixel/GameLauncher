@@ -123,7 +123,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
         return launcher;
     }
 
-    @Override protected void cleanup0() throws GameException {
-        this.manualFramebuffer.cleanup();
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        return this.manualFramebuffer.cleanup();
     }
 }

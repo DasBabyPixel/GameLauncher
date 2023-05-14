@@ -15,6 +15,6 @@ public interface RenderThread extends ExecutorThread {
     /**
      * @return the name of this {@link Thread}
      */
-    String name();
+    @Override String name();
 
 }

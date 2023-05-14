@@ -24,10 +24,11 @@ public class SelectiveStream extends OutputStream {
         this.currentEntry.get().out.write(b);
     }
 
-    private void computeOutputStream() {
+    private void computeOutputStream() throws IOException {
         if (this.outputChanged.compareAndSet(true, false)) {
             Output o = this.output.get();
-            this.currentEntry.set(null);
+            Entry c = this.currentEntry.getAndSet(null);
+            if (c != null) c.out.flush();
             Iterator<Entry> it = this.entries.iterator();
             if (it.hasNext()) {
                 Entry e = it.next();

@@ -49,7 +49,7 @@ public interface MainScreenGui extends Gui {
             button.xProperty().bind(xProperty());
             button.yProperty().bind(yProperty().add(100));
             button.widthProperty().bind(widthProperty());
-            button.heightProperty().bind(heightProperty().divide(4));
+            button.heightProperty().bind(heightProperty().divide(1.5));
             button.onButtonPressed(event -> launcher.guiManager().openGui(new Simple2(launcher)));
             addGUI(button);
         }

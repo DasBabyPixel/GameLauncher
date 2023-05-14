@@ -10,13 +10,16 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.gles.GLES;
+import java8.util.concurrent.CompletableFuture;
 import org.joml.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -204,12 +207,15 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
         this.runForChildren(GLESDrawContext::invalidateProjectionMatrix);
     }
 
-    @Override public void cleanup0() throws GameException {
-        this.listener.cleanup();
-        this.runForChildren(GLESDrawContext::cleanup);
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
+        futs.add(this.listener.cleanup());
+        this.runForChildren(c -> futs.add(c.cleanup()));
+        return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
     }
 
     private void pDrawModel(Model model, double x, double y, double z, double rx, double ry, double rz, double sx, double sy, double sz, Vector4f colorMultiplier, Vector4f colorAdd) throws GameException {
+        if (model == null) return;
         if (model instanceof ColorMultiplierModel) {
             Vector4f mult = ((ColorMultiplierModel) model).getColor();
             colorMultiplier.mul(mult);
@@ -233,7 +239,7 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
                 this.pDrawModel(m, 0, 0, 0, 0, 0, 0, 1, 1, 1, combColorMultiplier, combColorAdd);
             }
         } else if (model instanceof WrapperModel) {
-            this.pDrawModel(((WrapperModel) model).getHandle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
+            this.pDrawModel(((WrapperModel) model).handle(), x, y, z, rx, ry, rz, sx, sy, sz, colorMultiplier, colorAdd);
         } else {
             this.setupModelMatrix(x, y, z, rx, ry, rz, sx, sy, sz);
             this.drawMesh(model, colorMultiplier, colorAdd);

@@ -10,6 +10,13 @@ import java8.util.concurrent.CompletableFuture;
  * @author DasBabyPixel
  */
 public interface GameResource {
+    default void startTracking() {
+        ResourceTracker.startTracking(this);
+    }
+
+    default void stopTracking() {
+        ResourceTracker.stopTracking(this);
+    }
 
     @Api void storeValue(Key key, Object value);
 
@@ -22,7 +29,7 @@ public interface GameResource {
      *
      * @throws GameException an exception
      */
-    @Api void cleanup() throws GameException;
+    @Api CompletableFuture<Void> cleanup() throws GameException;
 
     /**
      * @return if this resource is cleaned up

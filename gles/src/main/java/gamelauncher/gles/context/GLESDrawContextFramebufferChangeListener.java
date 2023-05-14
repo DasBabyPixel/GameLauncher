@@ -5,6 +5,7 @@ import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 
 import java.lang.ref.WeakReference;
 
@@ -40,8 +41,8 @@ public class GLESDrawContextFramebufferChangeListener extends AbstractGameResour
         }
     }
 
-    @Override public void cleanup0() {
-        launcher.threads().cached.submit(() -> {
+    @Override public CompletableFuture<Void> cleanup0() {
+        return launcher.threads().workStealing.submit(() -> { // TODO this is hacky, we should update this when I finally get around to fix the property library
             w.removeListener(this);
             h.removeListener(this);
         });

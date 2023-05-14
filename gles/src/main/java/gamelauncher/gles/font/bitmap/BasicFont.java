@@ -17,61 +17,38 @@ import gamelauncher.gles.GLES;
 import java8.util.concurrent.CompletableFuture;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class BasicFont extends AbstractGameResource implements Font {
 
-    final AtomicInteger refcount = new AtomicInteger(0);
-    final Lock lock = new ReentrantLock(true);
-    private final CompletableFuture<Void> future;
-    private final Path path;
-    private final BasicFontFactory factory;
+    private final CompletableFuture<ByteBuffer> future;
+    private final GLES gles;
     private volatile boolean done = false;
     private volatile ByteBuffer data;
-    private final GLES gles;
 
-    BasicFont(GLES gles, BasicFontFactory factory, GameLauncher launcher, ResourceStream stream) {
+    BasicFont(GLES gles, GameLauncher launcher, ResourceStream stream) {
         this.gles = gles;
-        this.path = stream.getPath();
-        this.factory = factory;
-        this.future = launcher.threads().cached.submit(() -> {
+        this.future = launcher.threads().workStealing.submit(() -> {
             byte[] b = stream.readAllBytes();
             stream.cleanup();
             this.data = gles.memoryManagement().alloc(b.length);
             this.data.put(b).flip();
             this.done = true;
+            return data;
         });
     }
 
     @Override public ByteBuffer data() throws GameException {
         if (!this.done) {
-            Threads.waitFor(this.future);
+            Threads.await(this.future);
         }
         return this.data;
     }
 
-    @Override public boolean cleanedUp() {
-        return this.refcount.get() == 0;
+    @Override public CompletableFuture<ByteBuffer> dataFuture() {
+        return future;
     }
 
-    @Override public void cleanup0() throws GameException {
-        try {
-            this.lock.lock();
-            if (this.refcount.decrementAndGet() <= 0) {
-                if (this.path != null) {
-                    this.factory.fonts.remove(this.path);
-                }
-                if (!this.done) {
-                    Threads.waitFor(this.future);
-                }
-                gles.memoryManagement().free(this.data);
-            }
-        } finally {
-            this.lock.unlock();
-        }
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        return future.thenRun(() -> gles.memoryManagement().free(data));
     }
-
 }

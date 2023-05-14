@@ -168,10 +168,6 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         return true;
     }
 
-    public Framebuffer framebuffer() {
-        return framebuffer;
-    }
-
     @Api protected void redraw() {
         this.launcher().frame().framebuffer().scheduleRedraw();
     }
@@ -194,20 +190,23 @@ public abstract class ParentableAbstractGui extends AbstractGui {
 
     @Override public final void render(float mouseX, float mouseY, float partialTick) throws GameException {
         ScissorStack scissor = launcher().frame().framebuffer().scissorStack();
-        scissor.pushScissor(this);
         try {
             this.launcher().profiler().begin("render", "Gui-" + this.className);
             this.init();
             this.preRender(mouseX, mouseY, partialTick);
-            if (this.doRender(mouseX, mouseY, partialTick)) {
-                for (Gui gui : GUIs) {
-                    gui.render(mouseX, mouseY, partialTick);
+            scissor.pushScissor(this);
+            try {
+                if (this.doRender(mouseX, mouseY, partialTick)) {
+                    for (Gui gui : GUIs) {
+                        gui.render(mouseX, mouseY, partialTick);
+                    }
                 }
+            } finally {
+                scissor.popScissor();
             }
             this.postRender(mouseX, mouseY, partialTick);
         } finally {
             this.launcher().profiler().end();
-            scissor.popScissor();
         }
     }
 
