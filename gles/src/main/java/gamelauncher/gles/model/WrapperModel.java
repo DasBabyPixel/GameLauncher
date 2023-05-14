@@ -32,8 +32,9 @@ public class WrapperModel extends AbstractGameResource implements gamelauncher.e
     }
 
     public void handle(Model model) throws GameException {
-        if (cleanedUp()) model.cleanup();
-        else this.handle.value(model);
+        if (cleanedUp()) {
+            model.cleanup();
+        } else this.handle.value(model);
     }
 
     @Override public Model handle() {

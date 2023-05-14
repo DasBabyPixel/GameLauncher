@@ -10,6 +10,7 @@ import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.keybind.*;
+import gamelauncher.engine.util.logging.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 @Api
 public abstract class ParentableAbstractGui extends AbstractGui {
+    private final Logger logger = Logger.logger(getClass());
 
     private final Deque<Gui> addGUIQueue = Collections.newConcurrentDeque();
     private final Deque<Gui> removeGUIQueue = Collections.newConcurrentDeque();
@@ -213,7 +215,11 @@ public abstract class ParentableAbstractGui extends AbstractGui {
     @Override public final void cleanup() throws GameException {
         if (this.initialized.compareAndSet(true, false)) {
             for (Gui gui : GUIs) {
-                gui.cleanup();
+                try {
+                    gui.cleanup();
+                } catch (Throwable t) {
+                    logger.error(t);
+                }
             }
             this.doCleanup();
             super.cleanup();

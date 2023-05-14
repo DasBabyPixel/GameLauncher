@@ -22,6 +22,7 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
@@ -41,10 +42,7 @@ import org.lwjgl.stb.STBTruetype;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
     private static final Logger logger = Logger.logger();
@@ -61,96 +59,95 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
         Key fkey = text.style().font();
         if (fkey == null) fkey = new Key("fonts/calibri.ttf");
         Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().assets())));
-        font.dataFuture().thenAccept(fontData -> {
-            frame.launcher().threads().workStealing.submit(() -> {
-                STBTTFontinfo finfo = STBTTFontinfo.malloc();
-                if (!STBTruetype.stbtt_InitFont(finfo, fontData)) {
-                    font.cleanup();
-                    finfo.free();
-                    throw new GameException("Failed to initialize font");
-                }
-                float scale = STBTruetype.stbtt_ScaleForPixelHeight(finfo, pixelHeight);
-                int[] aascent = new int[1];
-                int[] adescent = new int[1];
-                int[] alinegap = new int[1];
-                STBTruetype.stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
-                float descent = adescent[0] * scale;
-                float ascent = aascent[0] * scale;
-                wrapper.ascent().number(ascent);
-                wrapper.descent().number(descent);
-                char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
-                Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
-                for (char ch : ar) {
-                    GlyphKey key = new GlyphKey(scale, ch);
-                    CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
-                    futures.add(fentry);
-                }
+        font.dataFuture().thenAccept(fontData -> frame.launcher().threads().workStealing.submit(() -> {
+            STBTTFontinfo finfo = STBTTFontinfo.malloc();
+            if (!STBTruetype.stbtt_InitFont(finfo, fontData)) {
+                font.cleanup();
+                finfo.free();
+                throw new GameException("Failed to initialize font");
+            }
+            float scale = STBTruetype.stbtt_ScaleForPixelHeight(finfo, pixelHeight);
+            int[] aascent = new int[1];
+            int[] adescent = new int[1];
+            int[] alinegap = new int[1];
+            STBTruetype.stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
+            float descent = adescent[0] * scale;
+            float ascent = aascent[0] * scale;
+            wrapper.ascent().number(ascent);
+            wrapper.descent().number(descent);
+            char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
+            Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
+            for (char ch : ar) {
+                GlyphKey key = new GlyphKey(scale, ch);
+                CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
+                futures.add(fentry);
+            }
 
-                GameRunnable r = () -> {
-                    finfo.free();
-                    font.cleanup();
+            GameRunnable r = () -> {
+                Threads.sleep(2000);
+                finfo.free();
+                font.cleanup();
 
-                    Map<GLESTexture, Collection<AtlasEntry>> entries = new HashMap<>();
-                    try {
-                        for (CompletableFuture<AtlasEntry> f : futures) {
-                            Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
-                            e.add(f.getNow(null));
-                        }
-                    } catch (Throwable t) {
-                        logger.error(t);
+                Map<GLESTexture, Collection<AtlasEntry>> entries = new HashMap<>();
+                try {
+                    for (CompletableFuture<AtlasEntry> f : futures) {
+                        Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
+                        e.add(f.getNow(null));
                     }
-                    Collection<Model> meshes = new ArrayList<>();
-                    float mwidth = 0;
-                    float mheight = 0;
-                    float xpos = 0;
-                    float z = 0;
-                    for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
-                        for (AtlasEntry e : entry.getValue()) {
-                            Vector4i bd = e.bounds;
+                } catch (Throwable t) {
+                    logger.error(t);
+                }
+                Collection<Model> meshes = new ArrayList<>();
+                float mwidth = 0;
+                float mheight = 0;
+                float xpos = 0;
+                float z = 0;
+                for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
+                    for (AtlasEntry e : entry.getValue()) {
+                        Vector4i bd = e.bounds;
 
-                            NumberValue tw = e.texture.width();
-                            NumberValue th = e.texture.height();
-                            NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
-                            NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
-                            NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
-                            NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
+                        NumberValue tw = e.texture.width();
+                        NumberValue th = e.texture.height();
+                        NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
+                        NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
+                        NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
+                        NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
 
-                            GlyphData data = e.entry.data;
-                            float pb = -data.bearingY - data.height;
-                            float pt = pb + data.height;
-                            float pl = xpos;
-                            float pr = pl + data.width;
-                            float width = pr - pl;
-                            float height = pt - pb;
-                            float x = pl + width / 2;
-                            float y = pt + height / 2;
+                        GlyphData data = e.entry.data;
+                        float pb = -data.bearingY - data.height;
+                        float pt = pb + data.height;
+                        float pl = xpos;
+                        float pr = pl + data.width;
+                        float width = pr - pl;
+                        float height = pt - pb;
+                        float x = pl + width / 2;
+                        float y = pt + height / 2;
 
-                            mheight = Math.max(mheight, height);
-                            mwidth = Math.max(mwidth, xpos + width);
-                            DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
+                        mheight = Math.max(mheight, height);
+                        mwidth = Math.max(mwidth, xpos + width);
+                        DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
-                            GameItem gi = new GameItem(m);
-                            gi.position(x, y, z);
-                            gi.scale(width, height, 1);
-                            meshes.add(gi.createModel());
-                            xpos += e.entry.data.advance;
-                        }
+                        GameItem gi = new GameItem(m);
+                        gi.position(x, y, z);
+                        gi.scale(width, height, 1);
+                        meshes.add(gi.createModel());
+                        xpos += e.entry.data.advance;
                     }
+                }
 
-                    CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
-                    GameItem gi = new GameItem(cmodel);
-                    gi.addColor(1, 1, 1, 0);
-                    GameItemModel gim = gi.createModel();
-                    wrapper.width(mwidth);
-                    wrapper.height(mheight);
-                    wrapper.handle(gim);
-                    frame.launcher().guiManager().redrawAll();
-                };
+                CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
+                GameItem gi = new GameItem(cmodel);
+                gi.addColor(1, 1, 1, 0);
+                GameItemModel gim = gi.createModel();
+                wrapper.width(mwidth);
+                wrapper.height(mheight);
+                wrapper.handle(gim);
+                frame.launcher().guiManager().redrawAll();
+            };
 
-                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(r.toRunnable());
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(r.toRunnable());
 
-            });
-        });
+        }));
         return wrapper;
     }
 
@@ -221,7 +218,10 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
     }
 
     @Override public CompletableFuture<Void> cleanup0() throws GameException {
-        return CompletableFuture.allOf(this.textureAtlas.cleanup(), this.frame.cleanup());
+        List<CompletableFuture<?>> futs = new ArrayList<>();
+        futs.add(textureAtlas.cleanup());
+        futs.add(frame.cleanup());
+        return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
     }
 
     public int getId(GlyphKey key) {
@@ -259,17 +259,8 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
                     texture2DModel.cleanup();
                 }
                 texture2DModel = new Texture2DModel(e.texture, tl.floatValue(), 1 - tb.floatValue(), tr.floatValue(), 1 - tt.floatValue());
-//                texture2DModel = new Texture2DModel(e.texture, 0, 0, 1, 1);
             }
             texture2DModel.render(program);
-//            texture2DModel.texture().pixels().thenAccept(pixels -> {
-//                BufferedImage img = LWJGLUtil.rgbaToImage(texture2DModel.texture().width().intValue(), texture2DModel.texture().height().intValue(), pixels);
-//                try {
-//                    ImageIO.write(img, "png", new File("img.png"));
-//                } catch (IOException ex) {
-//                    throw new RuntimeException(ex);
-//                }
-//            });
         }
 
         @Override protected CompletableFuture<Void> cleanup0() throws GameException {

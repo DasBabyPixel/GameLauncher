@@ -45,8 +45,6 @@ public interface ButtonGui extends Gui {
         private final Property<Gui> background;
         private final Property<Gui> foreground;
         private final BooleanValue pressing = BooleanValue.falseValue();
-        private volatile boolean backgroundChanged = false;
-        private volatile boolean foregroundChanged = false;
         private volatile @Nullable GameConsumer<MouseButtonKeybindEvent> buttonPressed = null;
 
         public Simple(GameLauncher launcher) throws GameException {
@@ -58,8 +56,6 @@ public interface ButtonGui extends Gui {
             background.addListener(Property::value);
             foreground.addListener(Property::value);
             ChangeListener<Gui> changeListener = (property, oldValue, newValue) -> {
-                backgroundChanged = true;
-                foregroundChanged = true;
                 if (oldValue != null) {
                     oldValue.xProperty().unbind();
                     oldValue.yProperty().unbind();

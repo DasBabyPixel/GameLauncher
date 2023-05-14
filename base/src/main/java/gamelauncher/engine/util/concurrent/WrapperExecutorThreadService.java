@@ -79,11 +79,8 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
     static class WrapperCallable<T> implements Runnable {
 
         static final ThreadLocal<WrapperCallable<?>> threadLocal = new ThreadLocal<>();
-
         final GameCallable<T> callable;
-
         final WrapperEntry entry;
-
         final CompletableFuture<T> fut = new CompletableFuture<>();
 
         public WrapperCallable(GameCallable<T> callable, WrapperEntry entry) {
@@ -137,7 +134,5 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
             }
             exitFuture.complete(null);
         }
-
     }
-
 }

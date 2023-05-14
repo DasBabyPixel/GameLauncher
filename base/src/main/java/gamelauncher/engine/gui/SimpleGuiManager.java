@@ -56,14 +56,10 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         return this.cleanupLater();
     }
 
-    /**
-     * Cleanes up a framebuffer and its guis
-     *
-     * @return a future for the task
-     */
     private CompletableFuture<Void> cleanupLater() {
         Gui gui = this.gui;
         if (gui != null) {
+            this.gui = null;
             return launcher.frame().renderThread().submit(gui::cleanup).thenCombine(launcher.gameThread().runLater(() -> {
                 gui.unfocus();
                 gui.onClose();
@@ -110,7 +106,8 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void updateGuis() throws GameException {
-        gui.update();
+        final Gui gui = this.gui;
+        if (gui != null) gui.update();
     }
 
     @Override public GuiDistribution preferredDistribution(Class<? extends Gui> clazz) {

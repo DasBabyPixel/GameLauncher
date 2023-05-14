@@ -99,7 +99,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
                 try {
                     cfr.refreshDisplay(this.frame);
                     this.refreshPhaser.arrive();
-                } catch (GameException ex) {
+                } catch (Throwable ex) {
                     this.frame.launcher.handleError(ex);
                 }
                 break cfr;
@@ -108,14 +108,14 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
                 if (this.frameRenderer != null) {
                     try {
                         this.frameRenderer.cleanup(this.frame);
-                    } catch (GameException ex) {
+                    } catch (Throwable ex) {
                         this.frame.launcher.handleError(ex);
                     }
                 }
                 this.frameRenderer = cfr;
                 try {
                     cfr.init(this.frame);
-                } catch (GameException ex) {
+                } catch (Throwable ex) {
                     this.frame.launcher.handleError(ex);
                 }
             }
@@ -128,7 +128,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
                 }
                 try {
                     cfr.windowSizeChanged(this.frame);
-                } catch (GameException ex) {
+                } catch (Throwable ex) {
                     this.frame.launcher.handleError(ex);
                 }
             }
@@ -140,7 +140,7 @@ public class GLFWFrameRenderThread extends AbstractExecutorThread implements Ren
                 } else {
                     this.frame.frameCounter.frameNoWait();
                 }
-            } catch (GameException ex) {
+            } catch (Throwable ex) {
                 this.frame.launcher.handleError(ex);
             }
         }

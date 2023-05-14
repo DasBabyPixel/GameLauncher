@@ -81,6 +81,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     }
 
     public CompletableFuture<Void> removeGlyph(int glyphId) {
+        if (cleanedUp()) return CompletableFuture.completedFuture(null);
         try {
             lock.writeLock().lock();
             AtlasEntry entry = glyphs.remove(glyphId);

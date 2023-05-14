@@ -14,8 +14,11 @@ import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService.WrapperC
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
+import java8.util.concurrent.ForkJoinPool;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -156,7 +159,7 @@ public class Threads extends AbstractGameResource {
      * @return a new work stealing pool
      */
     public ExecutorThreadService newWorkStealingPool() {
-        ExecutorThreadService service = new WrapperExecutorThreadService(Executors.newWorkStealingPool());
+        ExecutorThreadService service = new WrapperExecutorThreadService(new ForkJoinPool());
         services.add(service);
         return service;
     }
@@ -165,7 +168,7 @@ public class Threads extends AbstractGameResource {
      * @return a new cached thread pool
      */
     public ExecutorThreadService newCachedThreadPool() {
-        ExecutorThreadService service = new WrapperExecutorThreadService(Executors.newCachedThreadPool());
+        ExecutorThreadService service = new WrapperExecutorThreadService(new ThreadPoolExecutor(4, Integer.MAX_VALUE, 5L, TimeUnit.SECONDS, new SynchronousQueue<>()));
         services.add(service);
         return service;
     }
@@ -179,22 +182,24 @@ public class Threads extends AbstractGameResource {
     }
 
     @Override public CompletableFuture<Void> cleanup0() throws GameException {
-        try {
-            for (ExecutorThreadService service : services) {
-                CompletableFuture<Void> fut = service.exit();
-                try {
-                    fut.get(5, TimeUnit.SECONDS);
-                } catch (ExecutionException ex) {
-                    logger.error(ex);
-                } catch (TimeoutException ex) {
-                    Collection<GameRunnable> cancelled = service.exitNow();
-                    logger.errorf("Terminating ExecutorService (%s) took more than 5 seconds. Enforcing termination. Cancelled %s tasks", service.getClass().getSimpleName(), cancelled.size());
-                }
-            }
-        } catch (InterruptedException ex) {
-            logger.error(ex);
+//        try {
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
+        for (ExecutorThreadService service : services) {
+            CompletableFuture<Void> fut = service.exit();
+            futs.add(fut);
+//                try {
+//                    fut.get(5, TimeUnit.SECONDS);
+//                } catch (ExecutionException ex) {
+//                    logger.error(ex);
+//                } catch (TimeoutException ex) {
+//                    Collection<GameRunnable> cancelled = service.exitNow();
+//                    logger.errorf("Terminating ExecutorService (%s) took more than 5 seconds. Enforcing termination. Cancelled %s tasks", service.getClass().getSimpleName(), cancelled.size());
+//                }
         }
-        return null;
+//        } catch (InterruptedException ex) {
+//            logger.error(ex);
+//        }
+        return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
     }
 
 }

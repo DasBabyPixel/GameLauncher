@@ -31,7 +31,7 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
     public GLESColorGui(GLES gles) {
         super(gles.launcher());
         this.gles = gles;
-        this.color = new PropertyVector4f(0, 0, 0, 0);
+        this.color = new PropertyVector4f(0, 0, 0, 1);
         this.color.x.addListener((NumberValue v) -> this.redraw());
         this.color.y.addListener((NumberValue v) -> this.redraw());
         this.color.z.addListener((NumberValue v) -> this.redraw());
@@ -67,7 +67,6 @@ public class GLESColorGui extends ParentableAbstractGui implements ColorGui {
 
     @Override protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
         this.context.update(EmptyCamera.instance());
-        launcher().profiler().check();
         this.context.drawModel(this.model);
         this.context.program().clearUniforms();
         return super.doRender(mouseX, mouseY, partialTick);
