@@ -11,7 +11,7 @@ public class GlyphModelWrapper extends gamelauncher.gles.model.WrapperModel impl
     private final NumberValue width = NumberValue.withValue(0F);
     private final NumberValue height = NumberValue.withValue(0F);
 
-    public GlyphModelWrapper(Model handle, int width, int height, float ascent, float descent) {
+    public GlyphModelWrapper(Model handle, float width, float height, float ascent, float descent) {
         super();
         this.handle.value(handle);
         this.width.number(width);

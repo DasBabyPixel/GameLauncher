@@ -98,7 +98,7 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
         // TODO cleanup
         Collection<Model> meshes = new ArrayList<>();
         int mwidth = 0;
-        int mheight = 0;
+        float mheight = 0;
         int xpos = 0;
         float z = 0;
         for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
@@ -113,14 +113,14 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
                 NumberValue tt = NumberValue.constant(bd.y + 0.5).add(bd.w - 0.5).divide(th);
 
                 GlyphData data = e.entry.data;
-                int pb = -data.bearingY - data.height;
-                int pt = pb + data.height;
+                float pb = -data.bearingY - data.height;
+                float pt = pb + data.height;
                 int pl = xpos;
                 int pr = pl + data.width;
                 int width = pr - pl;
-                int height = pt - pb;
+                float height = pt - pb;
                 int x = pl + width / 2;
-                int y = pt + height / 2;
+                float y = pt + height / 2;
 
                 mheight = Math.max(mheight, height);
                 mwidth = Math.max(mwidth, xpos + width);

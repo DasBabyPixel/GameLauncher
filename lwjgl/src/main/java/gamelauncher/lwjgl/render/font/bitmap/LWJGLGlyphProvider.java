@@ -22,7 +22,6 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
@@ -34,6 +33,8 @@ import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.gles.util.MemoryManagement;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java8.util.concurrent.CompletableFuture;
 import org.joml.Math;
 import org.joml.Vector4i;
@@ -42,7 +43,9 @@ import org.lwjgl.stb.STBTruetype;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphProvider {
     private static final Logger logger = Logger.logger();
@@ -76,23 +79,29 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             wrapper.ascent().number(ascent);
             wrapper.descent().number(descent);
             char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
-            Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
+            List<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
             for (char ch : ar) {
                 GlyphKey key = new GlyphKey(scale, ch);
-                CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(key, finfo, ch, pixelHeight, scale);
+                CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(key, finfo, ch, scale);
                 futures.add(fentry);
+            }
+            float[] kernAdvances = new float[ar.length];
+            for (int i = 0; i < ar.length; i++) {
+                int ch = ar[i];
+                int nex = ar.length - 1 == i ? -1 : ar[i + 1];
+                if (nex == -1) kernAdvances[i] = 0;
+                else kernAdvances[i] = STBTruetype.stbtt_GetCodepointKernAdvance(finfo, ch, nex) * scale;
             }
 
             GameRunnable r = () -> {
-                Threads.sleep(2000);
                 finfo.free();
                 font.cleanup();
 
-                Map<GLESTexture, Collection<AtlasEntry>> entries = new HashMap<>();
+                Int2ObjectMap<AtlasEntry> entryByIndex = new Int2ObjectOpenHashMap<>();
                 try {
+                    int i = 0;
                     for (CompletableFuture<AtlasEntry> f : futures) {
-                        Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
-                        e.add(f.getNow(null));
+                        entryByIndex.put(i++, f.getNow(null));
                     }
                 } catch (Throwable t) {
                     logger.error(t);
@@ -102,37 +111,38 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
                 float mheight = 0;
                 float xpos = 0;
                 float z = 0;
-                for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
-                    for (AtlasEntry e : entry.getValue()) {
-                        Vector4i bd = e.bounds;
+                for (int i = 0; i < entryByIndex.size(); i++) {
+                    AtlasEntry e = entryByIndex.get(i);
+                    if (i == 0) xpos = -e.entry.data.bearingX;
 
-                        NumberValue tw = e.texture.width();
-                        NumberValue th = e.texture.height();
-                        NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
-                        NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
-                        NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
-                        NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
+                    Vector4i bd = e.bounds;
 
-                        GlyphData data = e.entry.data;
-                        float pb = -data.bearingY - data.height;
-                        float pt = pb + data.height;
-                        float pl = xpos;
-                        float pr = pl + data.width;
-                        float width = pr - pl;
-                        float height = pt - pb;
-                        float x = pl + width / 2;
-                        float y = pt + height / 2;
+                    NumberValue tw = e.texture.width();
+                    NumberValue th = e.texture.height();
+                    NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
+                    NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
+                    NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
+                    NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
 
-                        mheight = Math.max(mheight, height);
-                        mwidth = Math.max(mwidth, xpos + width);
-                        DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
+                    GlyphData data = e.entry.data;
+                    float pb = -data.bearingY - data.height;
+                    float pt = pb + data.height;
+                    float pl = xpos + data.bearingX;
+                    float pr = pl + data.width;
+                    float width = pr - pl;
+                    float height = pt - pb;
+                    float x = pl + width / 2;
+                    float y = pt + height / 2;
 
-                        GameItem gi = new GameItem(m);
-                        gi.position(x, y, z);
-                        gi.scale(width, height, 1);
-                        meshes.add(gi.createModel());
-                        xpos += e.entry.data.advance;
-                    }
+                    mheight = Math.max(mheight, height);
+                    mwidth = Math.max(mwidth, pl + width);
+                    DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
+
+                    GameItem gi = new GameItem(m);
+                    gi.position(x, y, z);
+                    gi.scale(width, height, 1);
+                    meshes.add(gi.createModel());
+                    xpos += e.entry.data.advance + kernAdvances[i];
                 }
 
                 CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
@@ -151,14 +161,14 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
         return wrapper;
     }
 
-    public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
+    private CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
         if (key.required.decrementAndGet() == 0) {
             return this.textureAtlas.removeGlyph(this.getId(key));
         }
         return CompletableFuture.completedFuture(null);
     }
 
-    public CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, char ch, int pixelHeight, float scale) throws GameException {
+    private CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, STBTTFontinfo finfo, int ch, float scale) throws GameException {
 //        return this.frame.launcher().threads().cached.submit(() -> {
         int id = this.getId(key);
 

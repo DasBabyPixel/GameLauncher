@@ -45,11 +45,11 @@ public interface MainScreenGui extends Gui {
             addGUI(textureGui);
 
             ButtonGui button = launcher.guiManager().createGui(ButtonGui.class);
-            ((ButtonGui.Simple.TextForeground) button.foreground().value()).textGui().text().value(Component.text("test"));
+            ((ButtonGui.Simple.TextForeground) button.foreground().value()).textGui().text().value(Component.text("pVAVG Map"));
             button.xProperty().bind(xProperty());
             button.yProperty().bind(yProperty().add(heightProperty().subtract(button.heightProperty()).divide(2)));
             button.widthProperty().bind(widthProperty());
-            button.heightProperty().bind(heightProperty().divide(1.1));
+            button.heightProperty().bind(heightProperty().divide(2));
             button.onButtonPressed(event -> launcher.guiManager().openGui(new Simple2(launcher)));
             addGUI(button);
         }
