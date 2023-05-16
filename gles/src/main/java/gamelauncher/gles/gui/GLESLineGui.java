@@ -17,6 +17,7 @@ import gamelauncher.engine.render.EmptyCamera;
 import gamelauncher.engine.render.GameItem;
 import gamelauncher.engine.render.model.Model;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.mesh.Mesh;
@@ -30,6 +31,7 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
     private final NumberValue fromY = NumberValue.withValue(0D);
     private final NumberValue toX = NumberValue.withValue(0D);
     private final NumberValue toY = NumberValue.withValue(0D);
+    private final PropertyVector4f color = new PropertyVector4f(1, 1, 1, 1);
     private final NumberInvalidationListener invalidationListener;
     private final NumberValue lineWidth = NumberValue.withValue(0D);
     private DrawContext context;
@@ -73,6 +75,7 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
 
     @Override protected void doCleanup() throws GameException {
         launcher().contextProvider().freeContext(context, ContextProvider.ContextType.HUD);
+        gameItem.color().unbind();
         model.cleanup();
     }
 
@@ -95,7 +98,7 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
         }, GLES20.GL_TRIANGLES, false);
         // @formatter:on
         gameItem = new GameItem(new MeshModel(mesh));
-        gameItem.color().set(1, 1, 1, 1);
+        gameItem.color().bind(color);
         model = gameItem.createModel();
         invalidationListener.invalidated(null);
     }
@@ -125,5 +128,9 @@ public class GLESLineGui extends ParentableAbstractGui implements LineGui {
 
     @Override public NumberValue lineWidth() {
         return lineWidth;
+    }
+
+    @Override public PropertyVector4f color() {
+        return color;
     }
 }

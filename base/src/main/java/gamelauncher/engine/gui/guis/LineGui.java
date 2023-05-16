@@ -10,6 +10,7 @@ package gamelauncher.engine.gui.guis;
 import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.gui.Gui;
+import gamelauncher.engine.util.property.PropertyVector4f;
 
 public interface LineGui extends Gui {
     @Api NumberValue fromX();
@@ -21,4 +22,6 @@ public interface LineGui extends Gui {
     @Api NumberValue toY();
 
     @Api NumberValue lineWidth();
+
+    @Api PropertyVector4f color();
 }

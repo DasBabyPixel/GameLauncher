@@ -29,12 +29,33 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author DasBabyPixel
  */
+@Api
 public interface ScrollGui extends Gui {
 
     /**
      * @return the gui
      */
-    Property<Gui> gui();
+    @Api Property<Gui> gui();
+
+    /**
+     * @return the x position of the content screen
+     */
+    @Api NumberValue displayX();
+
+    /**
+     * @return the y position of the content screen
+     */
+    @Api NumberValue displayY();
+
+    /**
+     * @return the width of the content screen. This is equivalent to the width visible to the gui
+     */
+    @Api NumberValue displayWidth();
+
+    /**
+     * @return the height of the content screen. This is equivalent to the height visible to the gui
+     */
+    @Api NumberValue displayHeight();
 
     @Api
     class LWJGL extends Simple {
@@ -138,12 +159,16 @@ public interface ScrollGui extends Gui {
         @Override protected boolean doHandle(KeybindEvent entry) throws GameException {
             if (entry instanceof ScrollKeybindEvent) {
                 ScrollKeybindEvent s = (ScrollKeybindEvent) entry;
+                this.horizontalScrollbar.clamp();
+                this.verticalScrollbar.clamp();
                 float mulx = this.displayWidth.floatValue() / 10;
                 float muly = this.displayHeight.floatValue() / 5;
                 float dx = s.deltaX();
                 float dy = s.deltaY();
                 this.horizontalScrollbar.desireProgress(this.horizontalScrollbar.desiredProgress().floatValue() - dx * mulx, TimeUnit.MILLISECONDS.toNanos(150));
                 this.verticalScrollbar.desireProgress(this.verticalScrollbar.desiredProgress().floatValue() - dy * muly, TimeUnit.MILLISECONDS.toNanos(150));
+                this.horizontalScrollbar.clamp();
+                this.verticalScrollbar.clamp();
                 this.redraw();
                 return false;
             }
@@ -176,16 +201,28 @@ public interface ScrollGui extends Gui {
             return this.gui;
         }
 
+        @Override public NumberValue displayX() {
+            return displayX;
+        }
+
+        @Override public NumberValue displayY() {
+            return displayY;
+        }
+
+        @Override public NumberValue displayWidth() {
+            return displayWidth;
+        }
+
+        @Override public NumberValue displayHeight() {
+            return displayHeight;
+        }
+
         private static class GradualProgress {
 
             private final NumberValue lastProgress = NumberValue.withValue(0F);
-
             private final NumberValue curProgress = NumberValue.withValue(0F);
-
             private final NumberValue desiredProgress = NumberValue.withValue(0F);
-
             private final NumberValue nanotimeStarted = NumberValue.withValue(0F);
-
             private final NumberValue nanotimeDone = NumberValue.withValue(0F);
 
             private void reset() {
@@ -258,7 +295,7 @@ public interface ScrollGui extends Gui {
             }
 
             private void clamp() {
-                this.progress.setWithoutTimer(Math.clamp(this.progress.desiredProgress.floatValue(), 0, this.max.floatValue()));
+                this.progress.setWithoutTimer(Math.clamp(0, this.max.floatValue(), this.progress.desiredProgress.floatValue()));
             }
 
             /**
@@ -342,6 +379,7 @@ public interface ScrollGui extends Gui {
             private final NumberValue displayWidth;
             private final NumberValue displayHeight;
             private final BooleanValue dragging;
+            @SuppressWarnings("FieldCanBeLocal") private final BooleanValue highlightOrDrag;
             private float dragOffset = 0;
 
             private ScrollbarGui(GameLauncher launcher, NumberValue guiWidth, NumberValue guiHeight, Scrollbar scrollbar, NumberValue displayWidth, NumberValue displayHeight) throws GameException {
@@ -395,7 +433,7 @@ public interface ScrollGui extends Gui {
                 guiScrollbarColor.bind(this.curScrollbarColor.currentColor());
                 addGUI(scrollbarGui);
 
-                BooleanValue highlightOrDrag = this.highlight.or(this.dragging);
+                highlightOrDrag = this.highlight.or(this.dragging);
                 highlightOrDrag.addListener(Property::value);
                 highlightOrDrag.addListener((Property<? extends Boolean> property, Boolean oldValue, Boolean newValue) -> {
                     if (newValue) {
