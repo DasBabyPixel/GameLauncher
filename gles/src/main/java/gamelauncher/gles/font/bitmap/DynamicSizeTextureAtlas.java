@@ -9,6 +9,7 @@ package gamelauncher.gles.font.bitmap;
 
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.render.texture.TextureFilter;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
 import gamelauncher.engine.util.ByteBufferBackedInputStream;
@@ -20,7 +21,6 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESCompat;
 import gamelauncher.gles.texture.GLESTexture;
-import gamelauncher.gles.texture.GLESTextureFilter;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
 import org.joml.Vector4i;
@@ -139,8 +139,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                 }
                 if (af == null) {
                     e.texture = gles.textureManager().createTexture(owner);
-                    e.texture.filters().put(GLESTextureFilter.FilterType.MINIFICATION, GLESTextureFilter.Filter.LINEAR);
-                    e.texture.filters().put(GLESTextureFilter.FilterType.MAGNIFICATION, GLESTextureFilter.Filter.NEAREST);
+                    e.texture.filter(TextureFilter.FilterType.MINIFICATION, TextureFilter.Filter.LINEAR);
+                    e.texture.filter(TextureFilter.FilterType.MAGNIFICATION, TextureFilter.Filter.NEAREST);
                     e.texture.allocate(64, 64);
                     byTexture.put(e.texture, new HashSet<>());
                     af = add(glyphId, e);

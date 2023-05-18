@@ -67,6 +67,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
             g.onOpen();
             Framebuffer fb = this.launcher().frame().framebuffer();
             fb.renderThread().submit(g::init);
+            redraw();
         }
         while ((g = removeGUIQueue.poll()) != null) {
             GUIs.remove(g);
@@ -74,6 +75,7 @@ public abstract class ParentableAbstractGui extends AbstractGui {
             g.onClose();
             Framebuffer fb = this.launcher().frame().framebuffer();
             fb.renderThread().submit(g::cleanup);
+            redraw();
         }
 
         this.doUpdate();

@@ -7,6 +7,7 @@
 
 package gamelauncher.gles.gui;
 
+import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.gui.ParentableAbstractGui;
 import gamelauncher.engine.gui.guis.TextureGui;
 import gamelauncher.engine.render.*;
@@ -18,26 +19,29 @@ import gamelauncher.gles.texture.GLESTexture;
 
 public class GLESTextureGui extends ParentableAbstractGui implements TextureGui {
 
-    private final GLESTexture texture;
+    private final Property<Texture> texture = Property.empty();
     private final Camera camera;
+    private final GLES gles;
+    private boolean generated = false;
     private GameItem.GameItemModel model;
     private DrawContext context;
 
     public GLESTextureGui(GLES gles) throws GameException {
         super(gles.launcher());
+        this.gles = gles;
         this.camera = EmptyCamera.instance();
-        this.texture = gles.textureManager().createTexture();
     }
 
     @Override protected void doCleanup() throws GameException {
-        texture.cleanup();
+        if (generated) texture.value().cleanup();
         model.cleanup();
         launcher().contextProvider().freeContext(context, ContextProvider.ContextType.HUD);
     }
 
     @Override protected void doInit() throws GameException {
+
         context = launcher().contextProvider().loadContext(launcher().frame().framebuffer(), ContextProvider.ContextType.HUD);
-        Texture2DModel t2d = new Texture2DModel(texture);
+        Texture2DModel t2d = new Texture2DModel(texture());
         GameItem item = new GameItem(t2d);
 
         item.position().x.bind(xProperty().add(widthProperty().divide(2)));
@@ -55,7 +59,20 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
         return super.doRender(mouseX, mouseY, partialTick);
     }
 
-    @Override public Texture texture() {
+    @Override public GLESTexture texture() throws GameException {
+        Texture tex = texture.value();
+        if (tex == null) {
+            generated = true;
+            this.texture.value(tex = gles.textureManager().createTexture());
+        }
+        return (GLESTexture) tex;
+    }
+
+    @Override public void texture(Texture texture) throws GameException {
+        this.texture.value(texture);
+    }
+
+    @Override public Property<Texture> textureProperty() {
         return texture;
     }
 }

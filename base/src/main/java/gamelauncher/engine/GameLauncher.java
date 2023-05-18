@@ -39,6 +39,7 @@ import gamelauncher.engine.resource.ResourceTracker;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.OperatingSystem;
@@ -100,12 +101,7 @@ public abstract class GameLauncher {
     private OperatingSystem operatingSystem;
     private SettingSection settings;
     private GameRenderer gameRenderer;
-    private ModelLoader modelLoader;
-    private GlyphProvider glyphProvider;
-    private ShaderLoader shaderLoader;
     private GuiManager guiManager;
-    private KeybindManager keybindManager;
-    private TextureManager textureManager;
     private FontFactory fontFactory;
     private NetworkClient networkClient;
     private LanguageManager languageManager;
@@ -169,6 +165,7 @@ public abstract class GameLauncher {
     }
 
     @SuppressWarnings("NewApi") public final void start(String[] args) throws GameException {
+        Debug.printInformation();
         try {
             fileChannel = FileChannel.open(gameDirectory.resolve("lock"), StandardOpenOption.APPEND, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             lock = fileChannel.tryLock(0, Long.MAX_VALUE, false);
@@ -272,6 +269,7 @@ public abstract class GameLauncher {
     }
 
     public void stop() throws GameException {
+        currentGame.close();
         GameRunnable r = () -> {
             try {
 //                Threads.waitFor(frame.renderThread().submit(() -> gameRenderer.cleanup(frame)));
@@ -279,7 +277,6 @@ public abstract class GameLauncher {
                 Threads.await(this.gameThread.exit());
                 this.stop0();
                 Threads.await(this.modelIdRegistry.cleanup());
-                Threads.await(this.keybindManager.cleanup());
                 Threads.await(this.resourceLoader.cleanup());
                 this.pluginManager.unloadPlugins();
                 Threads.await(this.threads.cleanup());
@@ -360,11 +357,11 @@ public abstract class GameLauncher {
      * @return the {@link TextureManager}
      */
     @Api public TextureManager textureManager() {
-        return this.textureManager;
+        return serviceProvider.service(TextureManager.class);
     }
 
     protected void textureManager(TextureManager textureManager) {
-        this.textureManager = textureManager;
+        serviceProvider.register(TextureManager.class, textureManager);
     }
 
     /**
@@ -378,7 +375,7 @@ public abstract class GameLauncher {
      * @return the {@link KeybindManager}
      */
     @Api public KeybindManager keybindManager() {
-        return this.keybindManager;
+        return serviceProvider.service(KeybindManager.class);
     }
 
     protected void embedFileSystem(FileSystem embedFileSystem) {
@@ -386,7 +383,7 @@ public abstract class GameLauncher {
     }
 
     protected void keybindManager(KeybindManager keybindManager) {
-        this.keybindManager = keybindManager;
+        serviceProvider.register(KeybindManager.class, keybindManager);
     }
 
     @Api public ModelIdRegistry modelIdRegistry() {
@@ -452,14 +449,14 @@ public abstract class GameLauncher {
      * @return the {@link GlyphProvider}
      */
     @Api public GlyphProvider glyphProvider() {
-        return this.glyphProvider;
+        return serviceProvider.service(GlyphProvider.class);
     }
 
     /**
      * Sets the current {@link GlyphProvider}
      */
     protected void glyphProvider(GlyphProvider glyphProvider) {
-        this.glyphProvider = glyphProvider;
+        serviceProvider.register(GlyphProvider.class, glyphProvider);
     }
 
     /**
@@ -473,11 +470,11 @@ public abstract class GameLauncher {
      * @return the {@link ShaderLoader}
      */
     @Api public ShaderLoader shaderLoader() {
-        return this.shaderLoader;
+        return serviceProvider.service(ShaderLoader.class);
     }
 
     protected void shaderLoader(ShaderLoader shaderLoader) {
-        this.shaderLoader = shaderLoader;
+        serviceProvider.register(ShaderLoader.class, shaderLoader);
     }
 
     /**
@@ -519,11 +516,11 @@ public abstract class GameLauncher {
      * @return the {@link ModelLoader}
      */
     @Api public ModelLoader modelLoader() {
-        return this.modelLoader;
+        return serviceProvider.service(ModelLoader.class);
     }
 
     protected void modelLoader(ModelLoader loader) {
-        this.modelLoader = loader;
+        serviceProvider.register(ModelLoader.class, loader);
     }
 
     /**

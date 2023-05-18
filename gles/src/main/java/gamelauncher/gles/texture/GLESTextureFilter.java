@@ -7,24 +7,19 @@
 
 package gamelauncher.gles.texture;
 
+import gamelauncher.engine.render.texture.TextureFilter;
 import gamelauncher.gles.gl.GLES20;
 
 public class GLESTextureFilter {
 
-    public enum FilterType {
-        MINIFICATION, MAGNIFICATION
-    }
-
-    public enum Filter {
-        NEAREST(GLES20.GL_NEAREST), LINEAR(GLES20.GL_LINEAR);
-        private final int gl;
-
-        Filter(int gl) {
-            this.gl = gl;
-        }
-
-        public int gl() {
-            return gl;
+    public static int gl(TextureFilter.Filter filter) {
+        switch (filter) {
+            case LINEAR:
+                return GLES20.GL_LINEAR;
+            case NEAREST:
+                return GLES20.GL_NEAREST;
+            default:
+                throw new IllegalArgumentException();
         }
     }
 }

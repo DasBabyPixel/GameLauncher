@@ -81,7 +81,7 @@ public class LWJGLGameLauncher extends GameLauncher {
                 e.printStackTrace();
             }
             System.exit(-1);
-            throw new RuntimeException();
+            throw new Error();
         }
     }
 
@@ -138,6 +138,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
         Threads.await(this.mainFrame.cleanup());
         Threads.await(this.glfwThread.exit());
+        Threads.await(keybindManager().cleanup());
     }
 
     @Override protected void registerSettingInsertions() {

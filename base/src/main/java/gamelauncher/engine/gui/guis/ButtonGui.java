@@ -3,6 +3,7 @@ package gamelauncher.engine.gui.guis;
 import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.ChangeListener;
+import de.dasbabypixel.api.property.NumberInvalidationListener;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.Gui;
@@ -141,7 +142,6 @@ public interface ButtonGui extends Gui {
             public ColorBackground(ButtonGui buttonGui) throws GameException {
                 super(buttonGui.launcher());
                 this.backgroundColor = new InterpolatedColor();
-                this.backgroundColor.set(new PropertyVector4f(0F, 0, 0, 0.8F));
 
                 ColorGui colorGui = launcher().guiManager().createGui(ColorGui.class);
                 colorGui.xProperty().bind(this.xProperty());
@@ -160,7 +160,18 @@ public interface ButtonGui extends Gui {
                 buttonGui.pressing().addListener(p -> recalc.run());
                 this.hovering().addListener((a, b, c) -> recalc.run());
                 highlight.addListener(property -> recalc.run());
-                recalc.run();
+                defaultColor.x.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.y.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.z.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.w.addListener((NumberInvalidationListener) p -> recalc.run());
+                highlightColor.x.addListener((NumberInvalidationListener) p -> recalc.run());
+                highlightColor.y.addListener((NumberInvalidationListener) p -> recalc.run());
+                highlightColor.z.addListener((NumberInvalidationListener) p -> recalc.run());
+                highlightColor.w.addListener((NumberInvalidationListener) p -> recalc.run());
+            }
+
+            @Override protected void doInit() {
+                this.backgroundColor.set(defaultColor);
             }
 
             @Api @Deprecated public void recalc() {
@@ -184,15 +195,17 @@ public interface ButtonGui extends Gui {
             }
         }
 
+        @Api
         public static class TextForeground extends ParentableAbstractGui {
 
+            private final PropertyVector4f hoverColor = new PropertyVector4f(0.7F, 0.7F, 0.7F, 1F);
+            private final PropertyVector4f defaultColor = new PropertyVector4f(1F, 1F, 1F, 1F);
             private final InterpolatedColor textColor;
             private final TextGui textGui;
 
             public TextForeground(ButtonGui buttonGui) throws GameException {
                 super(buttonGui.launcher());
                 this.textColor = new InterpolatedColor();
-                this.textColor.set(new PropertyVector4f(1F, 1F, 1F, 1F));
                 textGui = launcher().guiManager().createGui(TextGui.class);
                 textGui.text().value(Component.text(getClass().getSimpleName()));
                 textGui.xProperty().bind(this.xProperty().add(this.widthProperty().divide(2)).subtract(textGui.widthProperty().divide(2)));
@@ -203,14 +216,33 @@ public interface ButtonGui extends Gui {
 
                 Runnable recalc = () -> {
                     if (this.hovering().booleanValue() || buttonGui.pressing().booleanValue()) {
-                        textColor.setDesired(new PropertyVector4f(0.7F, 0.7F, 0.7F, 1F), TimeUnit.MILLISECONDS.toNanos(50));
+                        textColor.setDesired(hoverColor, TimeUnit.MILLISECONDS.toNanos(50));
                     } else {
-                        textColor.setDesired(new PropertyVector4f(1F, 1F, 1F, 1F), TimeUnit.MILLISECONDS.toNanos(150));
+                        textColor.setDesired(defaultColor, TimeUnit.MILLISECONDS.toNanos(150));
                     }
                 };
                 buttonGui.pressing().addListener(p -> recalc.run());
                 this.hovering().addListener((p, o, n) -> recalc.run());
-                recalc.run();
+                defaultColor.x.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.y.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.z.addListener((NumberInvalidationListener) p -> recalc.run());
+                defaultColor.w.addListener((NumberInvalidationListener) p -> recalc.run());
+                hoverColor.x.addListener((NumberInvalidationListener) p -> recalc.run());
+                hoverColor.y.addListener((NumberInvalidationListener) p -> recalc.run());
+                hoverColor.z.addListener((NumberInvalidationListener) p -> recalc.run());
+                hoverColor.w.addListener((NumberInvalidationListener) p -> recalc.run());
+            }
+
+            @Override protected void doInit() {
+                this.textColor.set(defaultColor);
+            }
+
+            @Api public PropertyVector4f hoverColor() {
+                return hoverColor;
+            }
+
+            @Api public PropertyVector4f defaultColor() {
+                return defaultColor;
             }
 
             @Api public TextGui textGui() {

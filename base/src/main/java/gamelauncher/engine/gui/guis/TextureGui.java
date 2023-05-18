@@ -7,8 +7,10 @@
 
 package gamelauncher.engine.gui.guis;
 
+import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.gui.Gui;
 import gamelauncher.engine.render.texture.Texture;
+import gamelauncher.engine.util.GameException;
 
 /**
  * @author DasBabyPixel
@@ -18,6 +20,10 @@ public interface TextureGui extends Gui {
     /**
      * @return the texture
      */
-    Texture texture();
+    Texture texture() throws GameException;
+
+    void texture(Texture texture) throws GameException;
+
+    Property<Texture> textureProperty();
 
 }
