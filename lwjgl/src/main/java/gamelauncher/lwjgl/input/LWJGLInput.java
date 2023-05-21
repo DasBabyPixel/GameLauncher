@@ -129,7 +129,7 @@ public class LWJGLInput implements Input {
     }
 
     private void keyEvent(InputType inputType, int key, int scancode, char c) throws GameException {
-        int id = key == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode : LWJGLKeybindManager.KEYBOARD_ADD + key;
+        int id = key == GLFW.GLFW_KEY_UNKNOWN ? scancode == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_CODEPOINT_ADD + c : LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode : LWJGLKeybindManager.KEYBOARD_ADD + key;
         Keybind keybind = keybindManager.keybind(id);
         KeybindEvent event;
         switch (inputType) {
@@ -183,7 +183,7 @@ public class LWJGLInput implements Input {
     }
 
     public void character(char ch) {
-        enqueue(this.newEntry(0, 0, ch), InputType.CHARACTER);
+        enqueue(this.newEntry(GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, ch), InputType.CHARACTER);
     }
 
     public void enqueue(Entry entry, InputType type) {

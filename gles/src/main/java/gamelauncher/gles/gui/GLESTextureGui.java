@@ -13,6 +13,7 @@ import gamelauncher.engine.gui.guis.TextureGui;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.texture.Texture;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.property.PropertyVector4f;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.texture.GLESTexture;
@@ -20,6 +21,7 @@ import gamelauncher.gles.texture.GLESTexture;
 public class GLESTextureGui extends ParentableAbstractGui implements TextureGui {
 
     private final Property<Texture> texture = Property.empty();
+    private final PropertyVector4f color = new PropertyVector4f(1, 1, 1, 1);
     private final Camera camera;
     private final GLES gles;
     private boolean generated = false;
@@ -48,7 +50,7 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
         item.position().y.bind(yProperty().add(heightProperty().divide(2)));
         item.scale().x.bind(widthProperty());
         item.scale().y.bind(heightProperty());
-
+        item.color().bind(color);
         model = item.createModel();
     }
 
@@ -66,6 +68,10 @@ public class GLESTextureGui extends ParentableAbstractGui implements TextureGui 
             this.texture.value(tex = gles.textureManager().createTexture());
         }
         return (GLESTexture) tex;
+    }
+
+    @Override public PropertyVector4f color() {
+        return color;
     }
 
     @Override public void texture(Texture texture) throws GameException {

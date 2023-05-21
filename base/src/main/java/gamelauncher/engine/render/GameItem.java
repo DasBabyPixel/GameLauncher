@@ -24,12 +24,14 @@ public class GameItem extends AbstractGameResource {
     private final PropertyVector3f rotation;
     private final PropertyVector4f color;
     private final PropertyVector4f addColor;
+    private final boolean cleanupModel;
     protected Model model;
 
     /**
      *
      */
-    private GameItem() {
+    private GameItem(boolean cleanupModel) {
+        this.cleanupModel = cleanupModel;
         position = new PropertyVector3f(0, 0, 0);
         scale = new PropertyVector3f(1, 1, 1);
         rotation = new PropertyVector3f(0, 0, 0);
@@ -38,7 +40,11 @@ public class GameItem extends AbstractGameResource {
     }
 
     public GameItem(Model model) {
-        this();
+        this(model, true);
+    }
+
+    public GameItem(Model model, boolean cleanupModel) {
+        this(cleanupModel);
         this.model = model;
     }
 
@@ -94,7 +100,8 @@ public class GameItem extends AbstractGameResource {
     }
 
     @Override public CompletableFuture<Void> cleanup0() throws GameException {
-        return model.cleanup();
+        if (cleanupModel) return model.cleanup();
+        return null;
     }
 
     /**

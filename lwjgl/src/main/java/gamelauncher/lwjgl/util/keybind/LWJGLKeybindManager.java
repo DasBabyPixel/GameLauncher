@@ -34,7 +34,8 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
     /**
      * The number added for keyboard scancodes
      */
-    public static final int KEYBOARD_SCANCODE_ADD = 20000;
+    public static final int KEYBOARD_SCANCODE_ADD = 200000;
+    public static final int KEYBOARD_CODEPOINT_ADD = 20000;
     private static final String MOUSEBUTTON_PREFIX = "Button ";
     /**
      * The Map of {@link Keybind}s, by ID
@@ -82,9 +83,11 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
                 names.put(id, n1);
             } else if (id == SCROLL) {
                 names.put(id, "MouseWheel");
-            } else if (id >= MOUSE_ADD && id < KEYBOARD_SCANCODE_ADD) {
+            } else if (id >= MOUSE_ADD && id < KEYBOARD_CODEPOINT_ADD) {
                 names.put(id, MOUSEBUTTON_PREFIX + (id - MOUSE_ADD));
-            } else if (id > KEYBOARD_SCANCODE_ADD) {
+            } else if (id >= KEYBOARD_CODEPOINT_ADD && id < KEYBOARD_SCANCODE_ADD) {
+                names.put(id, Character.toString(id - KEYBOARD_CODEPOINT_ADD));
+            } else if (id >= KEYBOARD_SCANCODE_ADD) {
                 names.put(id, glfwGetKeyName(0, id - KEYBOARD_SCANCODE_ADD));
             } else {
                 throw new IllegalArgumentException("Key: " + id);
