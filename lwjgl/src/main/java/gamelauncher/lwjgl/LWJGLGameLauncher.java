@@ -126,7 +126,8 @@ public class LWJGLGameLauncher extends GameLauncher {
         keybind.addHandler(entry -> {
             if (entry instanceof KeyboardKeybindEvent) {
                 KeyboardKeybindEvent e = (KeyboardKeybindEvent) entry;
-                if (e.type() == Type.PRESS) mainFrame.fullscreen().value(!mainFrame.fullscreen().booleanValue());
+                if (e.type() != Type.PRESS) return;
+                mainFrame.fullscreen().value(!mainFrame.fullscreen().booleanValue());
             }
         });
     }

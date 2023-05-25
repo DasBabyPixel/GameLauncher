@@ -269,7 +269,7 @@ public abstract class GameLauncher {
     }
 
     public void stop() throws GameException {
-        currentGame.close();
+        if (currentGame != null) currentGame.close();
         GameRunnable r = () -> {
             try {
 //                Threads.waitFor(frame.renderThread().submit(() -> gameRenderer.cleanup(frame)));
