@@ -1,5 +1,6 @@
 package gamelauncher.engine.resource;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.util.Arrays;
 import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
@@ -89,6 +90,6 @@ public abstract class AbstractGameResource extends StorageResource {
         return this.cleanupFuture;
     }
 
-    protected abstract CompletableFuture<Void> cleanup0() throws GameException;
+    @Api protected abstract CompletableFuture<Void> cleanup0() throws GameException;
 
 }

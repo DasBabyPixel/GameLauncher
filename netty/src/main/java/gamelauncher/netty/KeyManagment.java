@@ -1,8 +1,8 @@
-package gamelauncher.lwjgl.network;
+package gamelauncher.netty;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.lwjgl.LWJGLGameLauncher;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import java.io.ByteArrayInputStream;
@@ -23,13 +23,13 @@ class KeyManagment {
 
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    private final LWJGLGameLauncher launcher;
+    private final GameLauncher launcher;
 
     PrivateKey privateKey;
 
     X509Certificate certificate;
 
-    public KeyManagment(LWJGLGameLauncher launcher) {
+    public KeyManagment(GameLauncher launcher) {
         this.launcher = launcher;
     }
 
@@ -64,7 +64,6 @@ class KeyManagment {
 
             Files.write(pkey, pkcs8.getEncoded());
             Files.write(pcert, x509.getEncoded());
-
         } catch (CertificateException | GameException ex) {
             ex.printStackTrace();
         }
@@ -82,10 +81,7 @@ class KeyManagment {
         CertificateFactory certfac = CertificateFactory.getInstance("X.509");
         PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(Files.readAllBytes(pkey));
         PrivateKey privateKey = keyfac.generatePrivate(pkcs8);
-        X509Certificate cert = (X509Certificate) certfac.generateCertificate(new ByteArrayInputStream(Files.readAllBytes(pcert)));
-        this.certificate = cert;
+        this.certificate = (X509Certificate) certfac.generateCertificate(new ByteArrayInputStream(Files.readAllBytes(pcert)));
         this.privateKey = privateKey;
-
     }
-
 }

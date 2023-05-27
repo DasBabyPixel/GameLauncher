@@ -1,18 +1,17 @@
-package gamelauncher.lwjgl.network;
+package gamelauncher.netty;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.PacketEncoder;
-import gamelauncher.netty.ByteBufMemory;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-class LWJGLNetworkHandler {
+class NettyNetworkHandler {
 
     // TODO: Check if this is a valid way for ByteBufs. Releasing etc.
     final ThreadLocal<ByteBufMemory> memory = ThreadLocal.withInitial(() -> new ByteBufMemory(Unpooled.buffer()));
     final PacketEncoder encoder;
 
-    public LWJGLNetworkHandler(PacketEncoder encoder) {
+    public NettyNetworkHandler(PacketEncoder encoder) {
         this.encoder = encoder;
     }
 

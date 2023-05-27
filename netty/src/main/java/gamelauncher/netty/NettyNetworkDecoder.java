@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.network;
+package gamelauncher.netty;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
@@ -12,13 +12,13 @@ import java.util.List;
 /**
  * @author DasBabyPixel
  */
-public class LWJGLNetworkDecoder extends ByteToMessageDecoder {
+public class NettyNetworkDecoder extends ByteToMessageDecoder {
 
-    private static final Logger logger = Logger.logger(LWJGLNetworkDecoder.class);
+    private static final Logger logger = Logger.logger(NettyNetworkDecoder.class);
 
-    private final LWJGLNetworkHandler handler;
+    private final NettyNetworkHandler handler;
 
-    public LWJGLNetworkDecoder(LWJGLNetworkHandler handler) {
+    public NettyNetworkDecoder(NettyNetworkHandler handler) {
         this.handler = handler;
     }
 

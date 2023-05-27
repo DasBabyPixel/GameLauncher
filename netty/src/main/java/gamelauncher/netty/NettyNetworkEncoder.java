@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.network;
+package gamelauncher.netty;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.data.DataUtil;
@@ -10,11 +10,11 @@ import io.netty.handler.codec.MessageToByteEncoder;
 /**
  * @author DasBabyPixel
  */
-public class LWJGLNetworkEncoder extends MessageToByteEncoder<Packet> {
+public class NettyNetworkEncoder extends MessageToByteEncoder<Packet> {
 
-    private final LWJGLNetworkHandler handler;
+    private final NettyNetworkHandler handler;
 
-    public LWJGLNetworkEncoder(LWJGLNetworkHandler handler) {
+    public NettyNetworkEncoder(NettyNetworkHandler handler) {
         this.handler = handler;
     }
 

@@ -1,4 +1,4 @@
-package gamelauncher.lwjgl.network;
+package gamelauncher.netty;
 
 import gamelauncher.engine.network.packet.Packet;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,11 +7,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 /**
  * @author DasBabyPixel
  */
-public class LWJGLNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
+public class NettyNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
 
-    private final LWJGLNetworkClient client;
+    private final NettyNetworkClient client;
 
-    public LWJGLNetworkAcceptor(LWJGLNetworkClient client) {
+    public NettyNetworkAcceptor(NettyNetworkClient client) {
         this.client = client;
     }
 

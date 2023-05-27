@@ -3,43 +3,47 @@ package gamelauncher.engine.network;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
+import gamelauncher.engine.resource.GameResource;
+import java8.util.concurrent.CompletableFuture;
 
 /**
  * @author DasBabyPixel
  */
-public interface NetworkClient {
+public interface NetworkClient extends GameResource {
 
     /**
-     * Starts the {@link NetworkClient}
+     * Starts the {@link NetworkClient}<br>
+     * This is basically an init method.<br>
+     * If this {@link NetworkClient} supports being a server, then the server is also started
      */
     void startClient();
 
     /**
-     * Stops the {@link NetworkClient}
+     * Stops the {@link NetworkClient}<br>
      */
     void stopClient();
 
     /**
      * @return if the {@link NetworkClient} is running
      */
-    boolean isRunning();
+    boolean running();
 
     /**
      * @return true if other clients may connect to this {@link NetworkClient}
      */
-    boolean isServer();
+    boolean server();
 
     /**
      * @return if this {@link NetworkClient} is connected
      */
-    boolean isConnected();
+    boolean connected();
 
     /**
      * Connects to the given address
      *
      * @param address
      */
-    void connect(NetworkAddress address);
+    CompletableFuture<Boolean> connect(NetworkAddress address);
 
     /**
      * Disconnects this {@link NetworkClient} from all current connections
@@ -63,6 +67,6 @@ public interface NetworkClient {
     /**
      * @return the {@link PacketRegistry}
      */
-    PacketRegistry getPacketRegistry();
+    PacketRegistry packetRegistry();
 
 }

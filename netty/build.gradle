@@ -14,6 +14,9 @@ tasks {
 dependencies {
     api parent.project('api')
     api libs.netty.common
+    api libs.netty.transport
+    api libs.netty.codec
+    api libs.netty.handler
     api libs.netty.buffer
 }
 
