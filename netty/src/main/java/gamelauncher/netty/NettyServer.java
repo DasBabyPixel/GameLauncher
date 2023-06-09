@@ -8,7 +8,8 @@
 package gamelauncher.netty;
 
 import de.dasbabypixel.api.property.Property;
-import gamelauncher.engine.network.NetworkServer;
+import gamelauncher.engine.network.NetworkAddress;
+import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.property.PropertyUtil;
 import io.netty.bootstrap.ServerBootstrap;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -58,14 +60,24 @@ public class NettyServer implements NetworkServer {
             ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
                 @Override public void initChannel(@NotNull Channel ch) throws Exception {
                     ClientConnection connection = new ClientConnection(client.cached, ch);
+                    connection.remoteAddress(NetworkAddress.bySocketAddress(ch.remoteAddress()));
+                    connection.localAddress(NetworkAddress.bySocketAddress(ch.localAddress()));
+                    ch.closeFuture().addListener(f -> {
+                        System.out.println("channel closed");
+                    });
                     ChannelPipeline p = ch.pipeline();
-                    logger.infof("Client connected: %s", ch.remoteAddress());
+                    logger.infof("Client %s connected on %s", connection.remoteAddress().toString(), connection.localAddress().toString());
                     client.setupPipeline(p, connection, SslContextBuilder.forServer(keyManagment.privateKey, keyManagment.certificate).build(), logger);
                 }
 
+                @Override public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+                    logger.infof("Client unregistered: %s", ctx.channel().remoteAddress().toString());
+                    super.channelUnregistered(ctx);
+                }
+
                 @Override public void channelInactive(@NotNull ChannelHandlerContext ctx) throws Exception {
+                    logger.infof("Client disconnected: %s", ctx.channel().remoteAddress().toString());
                     super.channelInactive(ctx);
-                    logger.infof("Client disconnected: %s", ctx.channel().remoteAddress());
                 }
             }).childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_KEEPALIVE, true);
             CompletableFuture<StartResult> fut = new CompletableFuture<>();
@@ -96,7 +108,7 @@ public class NettyServer implements NetworkServer {
             lock.lock();
             if (bossGroup == null) return;
             state.value(State.STOPPING);
-            channel.close();
+            channel.close().awaitUninterruptibly(1, TimeUnit.SECONDS);
             channel = null;
             bossGroup.shutdownGracefully();
             bossGroup = null;

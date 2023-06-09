@@ -10,6 +10,7 @@ package gamelauncher.netty;
 import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
@@ -27,6 +28,8 @@ public abstract class AbstractConnection extends AbstractGameResource implements
     private final Property<State> stateUnmodifiable = PropertyUtil.unmodifiable(state);
     private final Executor cached;
     private Channel channel;
+    private NetworkAddress remoteAddress;
+    private NetworkAddress localAddress;
 
     public AbstractConnection(Executor cached) {
         this.cached = cached;
@@ -34,6 +37,22 @@ public abstract class AbstractConnection extends AbstractGameResource implements
 
     protected void init(Channel channel) {
         this.channel = channel;
+    }
+
+    public void remoteAddress(NetworkAddress remoteAddress) {
+        this.remoteAddress = remoteAddress;
+    }
+
+    public void localAddress(NetworkAddress localAddress) {
+        this.localAddress = localAddress;
+    }
+
+    @Override public NetworkAddress remoteAddress() {
+        return remoteAddress;
+    }
+
+    @Override public NetworkAddress localAddress() {
+        return localAddress;
     }
 
     @Override public Property<State> state() {

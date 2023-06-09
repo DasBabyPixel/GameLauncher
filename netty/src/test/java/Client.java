@@ -19,13 +19,13 @@ public class Client {
 
     public Client() throws GameException {
         this.client = new NettyNetworkClient();
-        Connection con = client.connect(NetworkAddress.localhost());
+        Connection con = client.connect(NetworkAddress.localhost(client.port()));
         if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(5, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
             client.cleanup();
             throw new GameException("Failed to connect: Connection timed out");
         }
         Threads.await(con.sendPacketAsync(new PacketIdPacket(5)));
-        con.cleanup();
+        Threads.await(con.cleanup());
         client.cleanup();
     }
 

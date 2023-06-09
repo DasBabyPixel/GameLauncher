@@ -9,6 +9,7 @@ package gamelauncher.netty;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.network.LanDetector;
 import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.network.packet.Packet;
@@ -116,6 +117,10 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
 
     @Override public NettyServer server() {
         return server;
+    }
+
+    @Override public LanDetector createLanDetector(LanDetector.ClientHandler clientHandler) {
+        throw new UnsupportedOperationException();
     }
 
     @Override public Connection connect(NetworkAddress address) {

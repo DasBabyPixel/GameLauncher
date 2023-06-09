@@ -5,7 +5,7 @@
  * is strictly prohibited.
  */
 
-package gamelauncher.engine.network;
+package gamelauncher.engine.network.server;
 
 import de.dasbabypixel.api.property.Property;
 import java8.util.concurrent.CompletableFuture;

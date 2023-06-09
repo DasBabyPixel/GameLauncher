@@ -19,7 +19,6 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.Executor;
 
 public class NettyClientToServerConnection extends AbstractConnection {
@@ -29,24 +28,6 @@ public class NettyClientToServerConnection extends AbstractConnection {
         super(cached);
         eventLoopGroup = new NioEventLoopGroup();
         init(create(client, address, eventLoopGroup));
-    }
-
-    private Channel create(NettyNetworkClient client, NetworkAddress address, EventLoopGroup eventLoopGroup) {
-        Bootstrap b = new Bootstrap();
-        b.remoteAddress(new InetSocketAddress(((NetworkAddress.InetAddressCapableNetworkAddress) address).toInetAddress(), client.port())).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).group(eventLoopGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<>() {
-            @Override protected void initChannel(@NotNull Channel ch) throws Exception {
-                ChannelPipeline p = ch.pipeline();
-                client.setupPipeline(p, NettyClientToServerConnection.this, SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build(), NettyNetworkClient.logger);
-            }
-        });
-        ChannelFuture f = b.connect();
-        f.addListener((ChannelFutureListener) future -> {
-            if (future.isSuccess()) {
-                state.value(Connection.State.CONNECTED);
-                NettyNetworkClient.logger.infof("Connected to %s:%s", address, client.port());
-            } else cleanup();
-        });
-        return f.channel();
     }
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
@@ -66,5 +47,25 @@ public class NettyClientToServerConnection extends AbstractConnection {
             return null;
         });
         return f;
+    }
+
+    private Channel create(NettyNetworkClient client, NetworkAddress address, EventLoopGroup eventLoopGroup) {
+        Bootstrap b = new Bootstrap();
+        b.remoteAddress(((NetworkAddress.SocketAddressCapableNetworkAddress) address).toSocketAddress()).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).group(eventLoopGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<>() {
+            @Override protected void initChannel(@NotNull Channel ch) throws Exception {
+                ChannelPipeline p = ch.pipeline();
+                client.setupPipeline(p, NettyClientToServerConnection.this, SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build(), NettyNetworkClient.logger);
+            }
+        });
+        remoteAddress(NetworkAddress.bySocketAddress(b.config().remoteAddress()));
+        ChannelFuture f = b.connect();
+        f.addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                localAddress(NetworkAddress.bySocketAddress(future.channel().localAddress()));
+                state.value(Connection.State.CONNECTED);
+                NettyNetworkClient.logger.infof("Connected to %s", address);
+            } else cleanup();
+        });
+        return f.channel();
     }
 }

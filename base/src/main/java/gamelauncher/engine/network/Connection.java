@@ -18,6 +18,10 @@ import java.util.concurrent.TimeUnit;
 
 public interface Connection extends GameResource {
 
+    @Api NetworkAddress localAddress();
+
+    @Api NetworkAddress remoteAddress();
+
     @Api Property<State> state();
 
     /**

@@ -10,6 +10,7 @@ package gamelauncher.engine.network.packet.packets;
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
 
+@Deprecated(forRemoval = true)
 public class PacketIdPacket extends Packet {
 
     public int id;

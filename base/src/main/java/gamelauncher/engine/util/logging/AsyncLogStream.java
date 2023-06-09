@@ -23,7 +23,9 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.IllegalFormatException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,10 +53,6 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.out = new PrintStream(this.system, true);
     }
 
-    @SuppressWarnings("RedundantThrows") @Override protected void handleElement(LogEntry<?> element) throws GameException {
-        this.log(element);
-    }
-
     public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
         if (!this.exit) {
             return this.submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
@@ -80,12 +78,50 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         return this.exit();
     }
 
+    @SuppressWarnings("RedundantThrows") @Override protected void handleElement(LogEntry<?> element) throws GameException {
+        this.log(element);
+    }
+
     void setSystemLevel(LogLevel level) {
         if (level.level() > LogLevel.ERROR.level()) {
             this.system.setOutput(Output.ERR);
         } else {
             this.system.setOutput(Output.OUT);
         }
+    }
+
+    void log(LogEntry<?> entry) {
+        Object message = entry.object;
+        if (message == null) {
+            message = "null";
+        }
+        if (message instanceof LogMessage) {
+            LogMessage m = (LogMessage) message;
+            String format = launcher().languageManager().selectedLanguage().translate(m.key(), m.args());
+            Formatted f = new Formatted(format, m.args());
+            log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
+        } else if (message instanceof Formatted) {
+            Formatted f = (Formatted) message;
+            this.log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
+        } else {
+            this.logString(entry.level, entry.time, entry.caller, entry.thread, entry.logger, message.toString());
+        }
+    }
+
+    void printThread(Thread thread) {
+        this.out.printf(this.ansi0(AsyncLogStream.fgThread), thread.getName());
+    }
+
+    void printLoggerName(Logger logger) {
+        this.out.printf(this.ansi0(AsyncLogStream.fgLogger), logger.toString());
+    }
+
+    void printTime(TemporalAccessor time) {
+        this.out.printf(this.ansi0(AsyncLogStream.fgTime), this.formatter.format(time));
+    }
+
+    void printLevel(LogLevel level) {
+        this.out.printf(this.ansi0(level.displayColor()), level.name());
     }
 
     private void log(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger, Formatted f) {
@@ -144,7 +180,13 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                 data[i] = launcher().languageManager().selectedLanguage().translate((Key) data[i]);
             }
         }
-        String print = String.format(f.getFormat(), data);
+        String print;
+        try {
+            print = String.format(f.getFormat(), data);
+        } catch (IllegalFormatException ex) {
+            logString(level, time, caller, thread, logger, "Wrong format: \"" + f.getFormat() + "\", Arguments: " + Arrays.toString(data));
+            return;
+        }
         String[] lines = this.lines(print);
 
         int lci = 0;
@@ -173,42 +215,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.logString(level, time, caller, thread, logger, print);
     }
 
-    void log(LogEntry<?> entry) {
-        Object message = entry.object;
-        if (message == null) {
-            message = "null";
-        }
-        if (message instanceof LogMessage) {
-            LogMessage m = (LogMessage) message;
-            String format = launcher().languageManager().selectedLanguage().translate(m.key(), m.args());
-            Formatted f = new Formatted(format, m.args());
-            log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
-        } else if (message instanceof Formatted) {
-            Formatted f = (Formatted) message;
-            this.log(entry.level, entry.time, entry.caller, entry.thread, entry.logger, f);
-        } else {
-            this.logString(entry.level, entry.time, entry.caller, entry.thread, entry.logger, message.toString());
-        }
-    }
-
     private String ansi(LogColor color) {
         return ansi.ansi(color);
-    }
-
-    void printThread(Thread thread) {
-        this.out.printf(this.ansi0(AsyncLogStream.fgThread), thread.getName());
-    }
-
-    void printLoggerName(Logger logger) {
-        this.out.printf(this.ansi0(AsyncLogStream.fgLogger), logger.toString());
-    }
-
-    void printTime(TemporalAccessor time) {
-        this.out.printf(this.ansi0(AsyncLogStream.fgTime), this.formatter.format(time));
-    }
-
-    void printLevel(LogLevel level) {
-        this.out.printf(this.ansi0(level.displayColor()), level.name());
     }
 
     private String ansi0(LogColor color) {

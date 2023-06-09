@@ -11,6 +11,7 @@ import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
+import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.resource.GameResource;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -28,7 +29,7 @@ public interface NetworkClient extends GameResource {
     @Api void start();
 
     /**
-     * Stops the {@link NetworkClient}<br>
+     * Stops the {@link NetworkClient}
      */
     @Api void stop();
 
@@ -38,6 +39,8 @@ public interface NetworkClient extends GameResource {
     @Api boolean running();
 
     @Api NetworkServer server();
+
+    @Api LanDetector createLanDetector(LanDetector.ClientHandler clientHandler);
 
     /**
      * Connects to the given address

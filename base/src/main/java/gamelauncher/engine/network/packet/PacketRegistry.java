@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 public class PacketRegistry {
 
     private final Map<Class<? extends Packet>, Entry<? extends Packet>> entryMap = new ConcurrentHashMap<>();
-
     private final Map<Integer, Class<? extends Packet>> classById = new ConcurrentHashMap<>();
 
     /**

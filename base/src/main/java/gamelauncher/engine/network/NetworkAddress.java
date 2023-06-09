@@ -9,7 +9,8 @@ package gamelauncher.engine.network;
 
 import de.dasbabypixel.annotations.Api;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 /**
@@ -17,46 +18,19 @@ import java.net.UnknownHostException;
  */
 public interface NetworkAddress {
 
-    static NetworkAddress byName(String host) throws UnknownHostException {
-        return new InetNetworkAddress(InetAddress.getByName(host));
+    static NetworkAddress byName(String host, int port) throws UnknownHostException {
+        return bySocketAddress(new InetSocketAddress(host, port));
     }
 
-    static NetworkAddress localhost() {
-        return InetNetworkAddress.localhost;
+    static NetworkAddress bySocketAddress(SocketAddress socketAddress) {
+        return new SocketNetworkAddress(socketAddress);
     }
 
-    @Api
-    class InetNetworkAddress implements NetworkAddress, InetAddressCapableNetworkAddress {
-        private static final InetNetworkAddress localhost;
-
-        static {
-            try {
-                localhost = new InetNetworkAddress(InetAddress.getLocalHost());
-            } catch (UnknownHostException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private final InetAddress inetAddress;
-
-        public InetNetworkAddress(InetAddress inetAddress) {
-            this.inetAddress = inetAddress;
-        }
-
-        @Api public InetAddress inetAddress() {
-            return inetAddress;
-        }
-
-        @Override public InetAddress toInetAddress() {
-            return inetAddress;
-        }
-
-        @Override public String toString() {
-            return inetAddress.toString();
-        }
+    static NetworkAddress localhost(int port) {
+        return bySocketAddress(new InetSocketAddress(SocketNetworkAddress.localhost, port));
     }
 
-    interface InetAddressCapableNetworkAddress extends NetworkAddress {
-        @Api InetAddress toInetAddress();
+    interface SocketAddressCapableNetworkAddress extends NetworkAddress {
+        @Api SocketAddress toSocketAddress();
     }
 }
