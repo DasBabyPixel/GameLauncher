@@ -1,10 +1,20 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.network;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.engine.resource.GameResource;
-import java8.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.UnmodifiableView;
+
+import java.util.List;
 
 /**
  * @author DasBabyPixel
@@ -14,59 +24,50 @@ public interface NetworkClient extends GameResource {
     /**
      * Starts the {@link NetworkClient}<br>
      * This is basically an init method.<br>
-     * If this {@link NetworkClient} supports being a server, then the server is also started
      */
-    void startClient();
+    @Api void start();
 
     /**
      * Stops the {@link NetworkClient}<br>
      */
-    void stopClient();
+    @Api void stop();
 
     /**
      * @return if the {@link NetworkClient} is running
      */
-    boolean running();
+    @Api boolean running();
 
-    /**
-     * @return true if other clients may connect to this {@link NetworkClient}
-     */
-    boolean server();
-
-    /**
-     * @return if this {@link NetworkClient} is connected
-     */
-    boolean connected();
+    @Api NetworkServer server();
 
     /**
      * Connects to the given address
      *
      * @param address
      */
-    CompletableFuture<Boolean> connect(NetworkAddress address);
+    @Api Connection connect(NetworkAddress address);
 
     /**
-     * Disconnects this {@link NetworkClient} from all current connections
+     * @return all current valid connections. Should never contain a connection with state {@link Connection.State#CLOSED} because that is no longer valid
      */
-    void disconnect();
-
-    /**
-     * @param <T>
-     * @param packetTpye
-     * @param handler
-     */
-    <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api @UnmodifiableView List<Connection> connections();
 
     /**
      * @param <T>
      * @param packetTpye
      * @param handler
      */
-    <T extends Packet> void removeHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler);
+
+    /**
+     * @param <T>
+     * @param packetTpye
+     * @param handler
+     */
+    @Api <T extends Packet> void removeHandler(Class<T> packetTpye, PacketHandler<T> handler);
 
     /**
      * @return the {@link PacketRegistry}
      */
-    PacketRegistry packetRegistry();
+    @Api PacketRegistry packetRegistry();
 
 }

@@ -57,4 +57,7 @@ public class Collections {
         return new ConcurrentLinkedQueue<>();
     }
 
+    public static <T> List<T> unmodifiableList(List<? extends T> connections) {
+        return java.util.Collections.unmodifiableList(connections);
+    }
 }

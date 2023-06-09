@@ -17,13 +17,13 @@ public class PacketEncoder {
         int id = packet.key().hashCode();
         registry.getPacketType(id);
         buffer.writeInt(id);
-        packet.write(buffer);
+        buffer.write(packet);
     }
 
     public Packet read(DataBuffer buffer) throws PacketNotRegisteredException {
         int id = buffer.readInt();
         Packet packet = registry.createPacket(registry.getPacketType(id));
-        packet.read(buffer);
+        buffer.read(packet);
         return packet;
     }
 }

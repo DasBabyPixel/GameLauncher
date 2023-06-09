@@ -1,6 +1,12 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.netty;
 
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -22,15 +28,22 @@ import java.util.concurrent.locks.ReentrantLock;
 class KeyManagment {
 
     private final ReentrantLock lock = new ReentrantLock(true);
-
-    private final GameLauncher launcher;
-
+    private final Path sslDirectory;
+    private boolean loaded;
     PrivateKey privateKey;
-
     X509Certificate certificate;
 
-    public KeyManagment(GameLauncher launcher) {
-        this.launcher = launcher;
+    public KeyManagment(Path sslDirectory) {
+        this.sslDirectory = sslDirectory;
+    }
+
+    public boolean loaded() {
+        try {
+            lock.lock();
+            return loaded;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void load() {
@@ -44,6 +57,7 @@ class KeyManagment {
             if (this.privateKey == null || this.certificate == null) {
                 generateNew();
             }
+            loaded = true;
         } finally {
             lock.unlock();
         }
@@ -57,10 +71,9 @@ class KeyManagment {
             X509EncodedKeySpec x509 = new X509EncodedKeySpec(certificate.getEncoded());
             PKCS8EncodedKeySpec pkcs8 = new PKCS8EncodedKeySpec(privateKey.getEncoded());
 
-            Path directory = launcher.dataDirectory().resolve("ssl");
-            Files.createDirectories(directory);
-            Path pkey = directory.resolve("key");
-            Path pcert = directory.resolve("cert");
+            Files.createDirectories(sslDirectory);
+            Path pkey = sslDirectory.resolve("key");
+            Path pcert = sslDirectory.resolve("cert");
 
             Files.write(pkey, pkcs8.getEncoded());
             Files.write(pcert, x509.getEncoded());
@@ -70,10 +83,9 @@ class KeyManagment {
     }
 
     private void loadFromFile() throws Exception {
-        Path directory = launcher.dataDirectory().resolve("ssl");
-        Files.createDirectories(directory);
-        Path pkey = directory.resolve("key");
-        Path pcert = directory.resolve("cert");
+        Files.createDirectories(sslDirectory);
+        Path pkey = sslDirectory.resolve("key");
+        Path pcert = sslDirectory.resolve("cert");
         if (!Files.exists(pkey) || !Files.exists(pcert)) {
             return;
         }

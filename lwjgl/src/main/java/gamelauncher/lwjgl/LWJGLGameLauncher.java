@@ -41,6 +41,7 @@ import gamelauncher.lwjgl.util.LWJGLAnsiProvider;
 import gamelauncher.lwjgl.util.LWJGLExecutorThreadHelper;
 import gamelauncher.lwjgl.util.LWJGLMemoryManagement;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
+import gamelauncher.netty.NettyNetworkClient;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Configuration;
@@ -71,6 +72,7 @@ public class LWJGLGameLauncher extends GameLauncher {
             this.guiManager(new LWJGLGuiManager(this));
             this.fontFactory(new BasicFontFactory(gles, this));
             this.textureManager(gles.textureManager());
+            this.networkClient(new NettyNetworkClient(this));
             gles.init();
             this.glThreadGroup = new GLESThreadGroup();
         } catch (Throwable t) {
@@ -107,14 +109,14 @@ public class LWJGLGameLauncher extends GameLauncher {
         org.lwjgl.opengles.GLES.create(GL.getFunctionProvider());
         GL.destroy();
 
-        this.mainFrame = new GLFWFrame(this);
-        this.frame(this.mainFrame);
+        frame(mainFrame = new GLFWFrame(this));
         glyphProvider(new LWJGLGlyphProvider(this));
-        this.mainFrame.renderMode(RenderMode.ON_UPDATE);
-        this.mainFrame.closeCallback().value(frame -> {
-            this.mainFrame.hideWindow();
+        this.networkClient().start();
+        mainFrame.renderMode(RenderMode.ON_UPDATE);
+        mainFrame.closeCallback().value(frame -> {
+            mainFrame.hideWindow();
             try {
-                LWJGLGameLauncher.this.stop();
+                stop();
             } catch (GameException ex) {
                 ex.printStackTrace();
             }
@@ -133,7 +135,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @Override protected void stop0() throws GameException {
-
+        Threads.await(this.networkClient().cleanup());
         Threads.await(this.glyphProvider().cleanup());
         Threads.await(this.textureManager().cleanup());
 

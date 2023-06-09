@@ -8,131 +8,139 @@
 package gamelauncher.netty;
 
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
+import gamelauncher.engine.network.packet.packets.PacketIdPacket;
 import gamelauncher.engine.resource.AbstractGameResource;
-import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.logging.Logger;
-import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import java8.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.UnmodifiableView;
 
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class NettyNetworkClient extends AbstractGameResource implements NetworkClient {
 
-    public static final int PORT = 15684;
+    private static final int PORT = 15684;
 
-    private static final Logger logger = Logger.logger();
-
+    static final Logger logger = Logger.logger();
     private final Lock lock = new ReentrantLock(true);
 
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
     private final PacketRegistry packetRegistry = new PacketRegistry();
     private final NettyNetworkHandler handler = new NettyNetworkHandler(new PacketEncoder(packetRegistry));
-    private final KeyManagment keyManagment;
-    private final boolean connected = false;
-    private EventLoopGroup serverBossGroup;
-    private EventLoopGroup serverChildGroup;
-    private EventLoopGroup clientGroup;
+    private final List<Connection> connections = new ArrayList<>();
+    private final @UnmodifiableView List<Connection> connectionsUnmodifiable = Collections.unmodifiableList(connections);
+    private final GameLauncher launcher;
+    private final NettyServer server;
+    final ExecutorService cached;
+    private final boolean customCached;
     private volatile boolean running = false;
 
     public NettyNetworkClient(GameLauncher launcher) {
-        this.keyManagment = new KeyManagment(launcher);
+        this.launcher = launcher;
+        this.server = new NettyServer(this, launcher.dataDirectory().resolve("ssl"));
+        this.cached = (ExecutorService) launcher.threads().cached.executor();
+        this.customCached = false;
     }
 
-    public void setupPipeline(ChannelPipeline p, SslContext sslContext) throws SSLException {
+    @Deprecated @ApiStatus.Experimental public NettyNetworkClient() {
+        this.launcher = null;
+        this.server = new NettyServer(this, Paths.get("ssl"));
+        cached = Executors.newCachedThreadPool();
+        customCached = true;
+        initPackets();
+    }
+
+    private void initPackets() {
+        packetRegistry.register(PacketIdPacket.class, PacketIdPacket::new);
+    }
+
+    public void setupPipeline(ChannelPipeline p, Connection connection, SslContext sslContext, Logger logger) {
         SSLEngine engine = sslContext.newEngine(p.channel().alloc());
         p.addLast("ssl", new SslHandler(engine));
         p.addLast("packet_decoder", new NettyNetworkDecoder(handler));
-        p.addLast("packet_acceptor", new NettyNetworkAcceptor(NettyNetworkClient.this));
         p.addLast("packet_encoder", new NettyNetworkEncoder(handler));
+        p.addLast("packet_acceptor", new NettyNetworkAcceptor(this, connection, logger));
+        p.addLast("exception_handler", new ExceptionHandler(logger));
     }
 
-    @Override public void startClient() {
-        try {
-            lock.lock();
-            if (running) {
-                return;
+    @Override public void start() {
+        running = true;
+        // Nothing to do lol
+    }
+
+    @Override public void stop() {
+        running = false;
+        // Also nothing to do
+    }
+
+    @Override protected CompletableFuture<Void> cleanup0() {
+        if (!customCached) return launcher.threads().cached.submit(() -> {
+            stop();
+            try {
+                lock.lock();
+                for (Connection connection : connections) connection.cleanup();
+            } finally {
+                lock.unlock();
             }
-            serverBossGroup = new NioEventLoopGroup();
-            serverChildGroup = new NioEventLoopGroup();
-            ServerBootstrap b = new ServerBootstrap().group(serverBossGroup, serverChildGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
-                @Override public void initChannel(@NotNull Channel ch) throws Exception {
-                    ChannelPipeline p = ch.pipeline();
-                    setupPipeline(p, SslContextBuilder.forServer(keyManagment.privateKey, keyManagment.certificate).build());
-                }
-            }).option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.TCP_NODELAY, true);
-            Channel ch = b.bind(PORT).syncUninterruptibly().channel();
-            ch.closeFuture().addListener(future -> {
+        });
 
-            });
-            running = true;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override public void stopClient() {
-        try {
-            lock.lock();
-            running = false;
-            serverBossGroup.shutdownGracefully().syncUninterruptibly();
-            serverChildGroup.shutdownGracefully().syncUninterruptibly();
-        } finally {
-            lock.unlock();
-        }
+        cached.shutdown();
+        return null; // Let's be honest if we are using a custom client atm we terminate the process when the client is closed so what's the point in implementing this?
     }
 
     @Override public boolean running() {
         return running;
     }
 
-    @Override public boolean server() {
-        return true;
+    @Override public NettyServer server() {
+        return server;
     }
 
-    @Override public boolean connected() {
-        return connected;
-    }
-
-    @Override public CompletableFuture<Boolean> connect(NetworkAddress address) {
+    @Override public Connection connect(NetworkAddress address) {
         try {
             lock.lock();
-            if (clientGroup != null) {
-                disconnect();
-            }
-            Bootstrap b = new Bootstrap();
-            return null;
+            NettyClientToServerConnection connection = new NettyClientToServerConnection(cached, this, address);
+            connections.add(connection);
+            connection.cleanupFuture().thenRun(() -> {
+                try {
+                    lock.lock();
+                    connections.remove(connection);
+                } finally {
+                    lock.unlock();
+                }
+            });
+            return connection;
         } finally {
             lock.unlock();
         }
     }
 
-    @Override public void disconnect() {
+    @Override public @UnmodifiableView List<Connection> connections() {
         try {
             lock.lock();
-            if (clientGroup == null) {
-            }
-
+            return connectionsUnmodifiable;
         } finally {
             lock.unlock();
         }
@@ -151,31 +159,30 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         handlerLock.lock();
         if (handlers.containsKey(packetType)) {
             Collection<HandlerEntry<?>> col = handlers.get(packetType);
-            col.removeIf(he -> he.clazz.equals(packetType));
-            if (col.isEmpty()) {
-                handlers.remove(packetType);
-            }
+            col.removeIf(he -> he.clazz() == packetType && he.handler == handler);
+            if (col.isEmpty()) handlers.remove(packetType);
+
         }
         handlerLock.unlock();
+    }
+
+    public int port() {
+        return PORT;
     }
 
     @Override public PacketRegistry packetRegistry() {
         return packetRegistry;
     }
 
-    public void handleIncomingPacket(Packet packet) {
+    public void handleIncomingPacket(Connection connection, Packet packet, Logger logger) {
         Collection<HandlerEntry<?>> col = handlers.get(packet.getClass());
         if (col == null) {
-            logger.info("Received unhandled packet: " + packet.getClass());
+            logger.info("Received unhandled packet: " + packet.getClass() + ", " + packet);
             return;
         }
         for (HandlerEntry<?> h : col) {
-            h.receivePacket(packet);
+            h.receivePacket(connection, packet);
         }
-    }
-
-    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
-        return null;
     }
 
     static class HandlerEntry<T extends Packet> {
@@ -191,12 +198,8 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
             return clazz;
         }
 
-        public PacketHandler<T> handler() {
-            return handler;
-        }
-
-        public void receivePacket(Object packet) {
-            handler.receivePacket(clazz.cast(packet));
+        public void receivePacket(Connection connection, Object packet) {
+            handler.receivePacket(connection, clazz.cast(packet));
         }
 
     }

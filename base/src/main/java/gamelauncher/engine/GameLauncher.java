@@ -145,68 +145,17 @@ public abstract class GameLauncher {
         }
     }
 
-    @Api public AnsiProvider ansi() {
-        return new AnsiProvider.Unsupported();
-    }
-
-    @SuppressWarnings("NewApi") protected void gameDirectory(Path path) {
-        this.gameDirectory = path;
-        this.dataDirectory = this.gameDirectory.resolve("data");
-        this.settingsFile = this.gameDirectory.resolve("settings.json");
-        this.pluginsDirectory = this.gameDirectory.resolve("plugins");
-    }
-
-    @Api public boolean isOnOperatingSystem(Predicate<OperatingSystem> predicate) {
-        return predicate.test(operatingSystem);
-    }
-
-    protected void contextProvider(ContextProvider contextProvider) {
-        this.contextProvider = contextProvider;
-    }
-
     @SuppressWarnings("NewApi") public final void start(String[] args) throws GameException {
         Debug.printInformation();
-        try {
-            fileChannel = FileChannel.open(gameDirectory.resolve("lock"), StandardOpenOption.APPEND, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            lock = fileChannel.tryLock(0, Long.MAX_VALUE, false);
-            if (lock == null) {
-                fileChannel.close();
-                logger.error("GameLauncher already running");
-                Logger.asyncLogStream().cleanup();
-                System.exit(0);
-            }
-        } catch (Exception ex) {
-            logger.error(ex);
-        }
+        aquireLock();
+        initializeFileSystem();
 
-        if (embedFileSystem == null) {
-            try {
-                this.embedFileSystem = EmbedFileSystemProvider.instance.newFileSystem((URI) null, null);
-            } catch (ProviderNotFoundException ex) {
-                this.logger.error(ex);
-                this.startupFailed = true;
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-        this.assets = embedFileSystem.getPath("assets");
+        if (ensureSuccessfulStart()) return;
 
-        if (this.startupFailed) {
-            try {
-                if (this.embedFileSystem != null) this.embedFileSystem.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            logger.error("Failed to start");
-            Logger.asyncLogStream().cleanup();
-            this.threads.cleanup();
-            return;
-        }
         this.languageManager = new LanguageManager(this);
         this.modelIdRegistry = new ModelIdRegistry();
 
-        System.setOut(this.logger.createPrintStream(LogLevel.STDOUT));
-        System.setErr(this.logger.createPrintStream(LogLevel.STDERR));
+        setupOutputStreams();
 
         this.logger.infof(new Key("starting"));
         this.logger.infof(new Key("os"), operatingSystem.osName());
@@ -215,64 +164,27 @@ public abstract class GameLauncher {
 
         this.gameThread = new GameThread(this);
 
-        Files.createDirectories(this.gameDirectory);
-        Files.createDirectories(this.dataDirectory);
-        Files.createDirectories(this.pluginsDirectory);
-
         GuiConstructorTemplates.init(this);
 
-        for (Path externalPlugin : scs.externalPlugins) {
-            try {
-                this.pluginManager.loadPlugin(externalPlugin);
-            } catch (GameException exception) {
-                logger.error(exception);
-            }
-        }
-        this.pluginManager.loadPlugins(this.pluginsDirectory);
-        loadCustomPlugins();
+        loadPlugins(scs);
 
-        this.registerSettingInsertions();
-        this.settings = new MainSettingSection(this.eventManager);
-        if (!Files.exists(this.settingsFile)) {
-            Files.createFile(this.settingsFile);
-            this.settings.setDefaultValue();
-            this.saveSettings();
-        } else {
-            byte[] bytes = Files.readAllBytes(this.settingsFile);
-            String json = new String(bytes, Charsets.UTF_8);
-            JsonElement element = this.settingsGson.fromJson(json, JsonElement.class);
-            this.settings.deserialize(element);
-            JsonElement serialized = this.settingsGson.toJsonTree(this.settings.serialize());
-            if (!serialized.equals(element)) {
-                this.logger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
-//                DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD).appendLiteral('-').appendValue(ChronoField.MONTH_OF_YEAR, 2).appendLiteral('-').appendValue(ChronoField.DAY_OF_MONTH, 2).appendLiteral('_').appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral('-').appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-').appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
-                DateFormat format = SimpleDateFormat.getDateTimeInstance();
-                Files.move(this.settingsFile, this.settingsFile.getParent().resolve(String.format("backup-settings-%s.json", format.format(new Date()).replace(':', '-'))));
-                this.saveSettings();
-            }
-        }
+        initializeSettings();
 
         this.gameThread.runLater(() -> {
             this.start0();
             if (this.gameRenderer.renderer() != null && !(this.gameRenderer.renderer() instanceof GuiRenderer)) {
                 this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.renderer().getClass().getName());
             }
-            //			window.scheduleDrawAndWaitForFrame();
-            // TODO: Gotta render the frame twice in beginning, dunno why
             this.frame.scheduleDrawWaitForFrame();
             this.eventManager().post(new LauncherInitializedEvent(this));
         });
         this.gameThread.start();
     }
 
-    protected void loadCustomPlugins() {
-    }
-
     public void stop() throws GameException {
         if (currentGame != null) currentGame.close();
         GameRunnable r = () -> {
             try {
-//                Threads.waitFor(frame.renderThread().submit(() -> gameRenderer.cleanup(frame)));
                 Threads.await(this.guiManager.cleanup());
                 Threads.await(this.gameThread.exit());
                 this.stop0();
@@ -301,20 +213,12 @@ public abstract class GameLauncher {
         new Thread(r.toRunnable(), "ExitThread").start();
     }
 
-    protected final void tick() throws GameException {
-        this.eventManager().post(new TickEvent.Game());
-        this.frame().input().handleInput();
-        this.guiManager().updateGuis();
-        this.tick0();
+    @Api public AnsiProvider ansi() {
+        return new AnsiProvider.Unsupported();
     }
 
-    protected void tick0() throws GameException {
-    }
-
-    protected void start0() throws GameException {
-    }
-
-    protected void stop0() throws GameException {
+    @Api public boolean isOnOperatingSystem(Predicate<OperatingSystem> predicate) {
+        return predicate.test(operatingSystem);
     }
 
     /**
@@ -343,9 +247,6 @@ public abstract class GameLauncher {
         System.exit(-1);
     }
 
-    protected void registerSettingInsertions() {
-    }
-
     /**
      * @return the current tick of the {@link GameLauncher}
      */
@@ -360,10 +261,6 @@ public abstract class GameLauncher {
         return serviceProvider.service(TextureManager.class);
     }
 
-    protected void textureManager(TextureManager textureManager) {
-        serviceProvider.register(TextureManager.class, textureManager);
-    }
-
     /**
      * @return the {@link Threads Threads utility class} for this {@link GameLauncher}
      */
@@ -376,14 +273,6 @@ public abstract class GameLauncher {
      */
     @Api public KeybindManager keybindManager() {
         return serviceProvider.service(KeybindManager.class);
-    }
-
-    protected void embedFileSystem(FileSystem embedFileSystem) {
-        this.embedFileSystem = embedFileSystem;
-    }
-
-    protected void keybindManager(KeybindManager keybindManager) {
-        serviceProvider.register(KeybindManager.class, keybindManager);
     }
 
     @Api public ModelIdRegistry modelIdRegistry() {
@@ -408,19 +297,11 @@ public abstract class GameLauncher {
         return this.guiManager;
     }
 
-    protected void guiManager(GuiManager guiManager) {
-        this.guiManager = guiManager;
-    }
-
     /**
      * @return the {@link OperatingSystem}
      */
     @Api public OperatingSystem operatingSystem() {
         return this.operatingSystem;
-    }
-
-    protected void operatingSystem(OperatingSystem operatingSystem) {
-        this.operatingSystem = operatingSystem;
     }
 
     /**
@@ -453,13 +334,6 @@ public abstract class GameLauncher {
     }
 
     /**
-     * Sets the current {@link GlyphProvider}
-     */
-    protected void glyphProvider(GlyphProvider glyphProvider) {
-        serviceProvider.register(GlyphProvider.class, glyphProvider);
-    }
-
-    /**
      * @return the {@link Profiler}
      */
     @Api public Profiler profiler() {
@@ -471,10 +345,6 @@ public abstract class GameLauncher {
      */
     @Api public ShaderLoader shaderLoader() {
         return serviceProvider.service(ShaderLoader.class);
-    }
-
-    protected void shaderLoader(ShaderLoader shaderLoader) {
-        serviceProvider.register(ShaderLoader.class, shaderLoader);
     }
 
     /**
@@ -519,20 +389,11 @@ public abstract class GameLauncher {
         return serviceProvider.service(ModelLoader.class);
     }
 
-    protected void modelLoader(ModelLoader loader) {
-        serviceProvider.register(ModelLoader.class, loader);
-    }
-
     /**
      * @return the {@link ResourceLoader}
      */
     @Api public ResourceLoader resourceLoader() {
         return this.resourceLoader;
-    }
-
-    protected void resourceLoader(ResourceLoader loader) {
-        this.resourceLoader = loader;
-        loader.set();
     }
 
     @Api public void keyboardVisible(boolean visible) throws GameException {
@@ -562,11 +423,6 @@ public abstract class GameLauncher {
         this.debugMode = debugMode;
     }
 
-    protected void frame(Frame frame) {
-        this.frame = frame;
-        this.frame.frameRenderer(this.gameRenderer);
-    }
-
     @Api public Frame frame() {
         return frame;
     }
@@ -589,10 +445,6 @@ public abstract class GameLauncher {
         return executorThreadHelper;
     }
 
-    protected void executorThreadHelper(ExecutorThreadHelper executorThreadHelper) {
-        this.executorThreadHelper = executorThreadHelper;
-    }
-
     /**
      * @return the plugins directory
      */
@@ -605,10 +457,6 @@ public abstract class GameLauncher {
      */
     @Api public FontFactory fontFactory() {
         return this.fontFactory;
-    }
-
-    protected void fontFactory(FontFactory fontFactory) {
-        this.fontFactory = fontFactory;
     }
 
     /**
@@ -632,13 +480,6 @@ public abstract class GameLauncher {
         return this.gameRenderer;
     }
 
-    protected void gameRenderer(GameRenderer renderer) {
-        this.gameRenderer = renderer;
-        if (this.frame != null) {
-            this.frame.frameRenderer(renderer);
-        }
-    }
-
     /**
      * Saves the current settings
      *
@@ -648,4 +489,185 @@ public abstract class GameLauncher {
         Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(Charsets.UTF_8));
     }
 
+    @SuppressWarnings("NewApi") protected void gameDirectory(Path path) {
+        this.gameDirectory = path;
+        this.dataDirectory = this.gameDirectory.resolve("data");
+        this.settingsFile = this.gameDirectory.resolve("settings.json");
+        this.pluginsDirectory = this.gameDirectory.resolve("plugins");
+    }
+
+    protected void contextProvider(ContextProvider contextProvider) {
+        this.contextProvider = contextProvider;
+    }
+
+    protected void loadCustomPlugins() {
+    }
+
+    protected final void tick() throws GameException {
+        this.eventManager().post(new TickEvent.Game());
+        this.frame().input().handleInput();
+        this.guiManager().updateGuis();
+        this.tick0();
+    }
+
+    protected void tick0() throws GameException {
+    }
+
+    protected void start0() throws GameException {
+    }
+
+    protected void stop0() throws GameException {
+    }
+
+    protected void registerSettingInsertions() {
+    }
+
+    protected void textureManager(TextureManager textureManager) {
+        serviceProvider.register(TextureManager.class, textureManager);
+    }
+
+    protected void embedFileSystem(FileSystem embedFileSystem) {
+        this.embedFileSystem = embedFileSystem;
+    }
+
+    protected void keybindManager(KeybindManager keybindManager) {
+        serviceProvider.register(KeybindManager.class, keybindManager);
+    }
+
+    protected void guiManager(GuiManager guiManager) {
+        this.guiManager = guiManager;
+    }
+
+    protected void operatingSystem(OperatingSystem operatingSystem) {
+        this.operatingSystem = operatingSystem;
+    }
+
+    /**
+     * Sets the current {@link GlyphProvider}
+     */
+    protected void glyphProvider(GlyphProvider glyphProvider) {
+        serviceProvider.register(GlyphProvider.class, glyphProvider);
+    }
+
+    protected void shaderLoader(ShaderLoader shaderLoader) {
+        serviceProvider.register(ShaderLoader.class, shaderLoader);
+    }
+
+    protected void modelLoader(ModelLoader loader) {
+        serviceProvider.register(ModelLoader.class, loader);
+    }
+
+    protected void resourceLoader(ResourceLoader loader) {
+        this.resourceLoader = loader;
+        loader.set();
+    }
+
+    protected void frame(Frame frame) {
+        this.frame = frame;
+        this.frame.frameRenderer(this.gameRenderer);
+    }
+
+    protected void executorThreadHelper(ExecutorThreadHelper executorThreadHelper) {
+        this.executorThreadHelper = executorThreadHelper;
+    }
+
+    protected void fontFactory(FontFactory fontFactory) {
+        this.fontFactory = fontFactory;
+    }
+
+    protected void gameRenderer(GameRenderer renderer) {
+        this.gameRenderer = renderer;
+        if (this.frame != null) {
+            this.frame.frameRenderer(renderer);
+        }
+    }
+
+    @SuppressWarnings("NewApi") private void initializeSettings() throws GameException {
+        this.registerSettingInsertions();
+        this.settings = new MainSettingSection(this.eventManager);
+        if (!Files.exists(this.settingsFile)) {
+            Files.createFile(this.settingsFile);
+            this.settings.setDefaultValue();
+            this.saveSettings();
+        } else {
+            byte[] bytes = Files.readAllBytes(this.settingsFile);
+            String json = new String(bytes, Charsets.UTF_8);
+            JsonElement element = this.settingsGson.fromJson(json, JsonElement.class);
+            this.settings.deserialize(element);
+            JsonElement serialized = this.settingsGson.toJsonTree(this.settings.serialize());
+            if (!serialized.equals(element)) {
+                this.logger().warnf("Unexpected change in settings.json. Creating backup and replacing file.");
+                DateFormat format = SimpleDateFormat.getDateTimeInstance();
+                Files.move(this.settingsFile, this.settingsFile.getParent().resolve(String.format("backup-settings-%s.json", format.format(new Date()).replace(':', '-'))));
+                this.saveSettings();
+            }
+        }
+    }
+
+    @SuppressWarnings("NewApi") private void initializeFileSystem() throws GameException {
+        if (embedFileSystem == null) {
+            try {
+                this.embedFileSystem = EmbedFileSystemProvider.instance.newFileSystem((URI) null, null);
+            } catch (ProviderNotFoundException ex) {
+                this.logger.error(ex);
+                this.startupFailed = true;
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        this.assets = embedFileSystem.getPath("assets");
+        Files.createDirectories(this.gameDirectory);
+        Files.createDirectories(this.dataDirectory);
+        Files.createDirectories(this.pluginsDirectory);
+    }
+
+    private boolean ensureSuccessfulStart() throws GameException {
+        if (this.startupFailed) {
+            try {
+                if (this.embedFileSystem != null) this.embedFileSystem.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            logger.error("Failed to start");
+            Threads.await(Logger.asyncLogStream().cleanup());
+            Threads.await(this.threads.cleanup());
+            return true;
+        }
+        return false;
+    }
+
+    private void setupOutputStreams() {
+        System.setOut(this.logger.createPrintStream(LogLevel.STDOUT));
+        System.setErr(this.logger.createPrintStream(LogLevel.STDERR));
+    }
+
+    /**
+     * Aquires the Application Lock and ensures only a single instance is running
+     */
+    @SuppressWarnings("NewApi") private void aquireLock() {
+        try {
+            fileChannel = FileChannel.open(gameDirectory.resolve("lock"), StandardOpenOption.APPEND, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            lock = fileChannel.tryLock(0, Long.MAX_VALUE, false);
+            if (lock == null) {
+                fileChannel.close();
+                logger.error("GameLauncher already running");
+                Logger.asyncLogStream().cleanup();
+                System.exit(0);
+            }
+        } catch (Exception ex) {
+            logger.error(ex);
+        }
+    }
+
+    private void loadPlugins(StartCommandSettings scs) throws GameException {
+        for (Path externalPlugin : scs.externalPlugins) {
+            try {
+                this.pluginManager.loadPlugin(externalPlugin);
+            } catch (GameException exception) {
+                logger.error(exception);
+            }
+        }
+        this.pluginManager.loadPlugins(this.pluginsDirectory);
+        loadCustomPlugins();
+    }
 }

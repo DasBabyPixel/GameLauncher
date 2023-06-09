@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.util.logging;
 
 import gamelauncher.engine.GameLauncher;
@@ -38,7 +45,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 
     public AsyncLogStream(GameLauncher launcher) {
         super(launcher);
-        this.ansi = launcher.ansi();
+        this.ansi = launcher == null ? new AnsiProvider.Unsupported() : launcher.ansi();
         this.system = Logger.system;
         this.setName("AsyncLogStream");
         this.out = new PrintStream(this.system, true);

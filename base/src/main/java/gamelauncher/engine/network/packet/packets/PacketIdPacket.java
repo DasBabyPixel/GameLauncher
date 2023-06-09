@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.network.packet.packets;
 
 import gamelauncher.engine.data.DataBuffer;
@@ -24,4 +31,7 @@ public class PacketIdPacket extends Packet {
         id = buffer.readInt();
     }
 
+    @Override public String toString() {
+        return "PacketIdPacket{" + "id=" + id + '}';
+    }
 }

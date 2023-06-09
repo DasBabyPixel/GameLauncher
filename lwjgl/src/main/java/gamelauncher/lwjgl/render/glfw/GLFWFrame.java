@@ -441,7 +441,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.fbwidth.number(width);
                 this.fbheight.number(height);
                 if (this.frame.renderMode() != RenderMode.MANUAL) {
-                    this.frame.renderThread.scheduleDrawWait();
+                    this.frame.renderThread.scheduleDrawRefreshWait();
                 }
             });
         }

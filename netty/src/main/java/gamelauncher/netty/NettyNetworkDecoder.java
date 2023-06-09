@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.netty;
 
 import gamelauncher.engine.data.DataBuffer;
@@ -34,12 +41,7 @@ public class NettyNetworkDecoder extends ByteToMessageDecoder {
             return;
         }
         Packet packet = handler.encoder.read(buf);
+        handler.finishBuffer(buf);
         out.add(packet);
     }
-
-    @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause);
-        ctx.close();
-    }
-
 }

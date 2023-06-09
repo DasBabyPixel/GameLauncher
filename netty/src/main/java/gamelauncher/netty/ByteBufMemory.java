@@ -10,6 +10,10 @@ public class ByteBufMemory extends ByteMemory {
 
     public ByteBuf buf;
 
+    public ByteBufMemory() {
+        this(null);
+    }
+
     public ByteBufMemory(ByteBuf buf) {
         this.buf = buf;
     }
