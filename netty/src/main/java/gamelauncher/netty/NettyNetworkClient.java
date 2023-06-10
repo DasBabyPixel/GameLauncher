@@ -16,9 +16,10 @@ import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
-import gamelauncher.engine.network.packet.packets.PacketIdPacket;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.collections.Collections;
+import gamelauncher.engine.util.concurrent.ExecutorThreadService;
+import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService;
 import gamelauncher.engine.util.logging.Logger;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.ssl.SslContext;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import javax.net.ssl.SSLEngine;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,31 +55,28 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     private final List<Connection> connections = new ArrayList<>();
     private final @UnmodifiableView List<Connection> connectionsUnmodifiable = Collections.unmodifiableList(connections);
     private final GameLauncher launcher;
-    private final NettyServer server;
+    private final Path sslDirectory;
     final ExecutorService cached;
+    final ExecutorThreadService cachedService;
     private final boolean customCached;
     private volatile boolean running = false;
 
     public NettyNetworkClient(GameLauncher launcher) {
         this.launcher = launcher;
-        this.server = new NettyServer(this, launcher.dataDirectory().resolve("ssl"));
-        this.cached = (ExecutorService) launcher.threads().cached.executor();
+        this.sslDirectory = launcher.dataDirectory().resolve("ssl");
+        this.cached = (ExecutorService) (cachedService = launcher.threads().cached).executor();
         this.customCached = false;
     }
 
-    @Deprecated @ApiStatus.Experimental public NettyNetworkClient() {
+    @ApiStatus.Experimental public NettyNetworkClient() {
         this.launcher = null;
-        this.server = new NettyServer(this, Paths.get("ssl"));
+        this.sslDirectory = Paths.get("ssl");
         cached = Executors.newCachedThreadPool();
+        cachedService = new WrapperExecutorThreadService(cached);
         customCached = true;
-        initPackets();
     }
 
-    private void initPackets() {
-        packetRegistry.register(PacketIdPacket.class, PacketIdPacket::new);
-    }
-
-    public void setupPipeline(ChannelPipeline p, Connection connection, SslContext sslContext, Logger logger) {
+    public void setupPipeline(ChannelPipeline p, AbstractConnection connection, SslContext sslContext, Logger logger) {
         SSLEngine engine = sslContext.newEngine(p.channel().alloc());
         p.addLast("ssl", new SslHandler(engine));
         p.addLast("packet_decoder", new NettyNetworkDecoder(handler));
@@ -94,6 +93,15 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     @Override public void stop() {
         running = false;
         // Also nothing to do
+    }
+
+    void remove(NettyClientToServerConnection connection) {
+        try {
+            lock.lock();
+            connections.remove(connection);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override protected CompletableFuture<Void> cleanup0() {
@@ -115,8 +123,8 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         return running;
     }
 
-    @Override public NettyServer server() {
-        return server;
+    @Override public NettyServer newServer() {
+        return new NettyServer(this, sslDirectory);
     }
 
     @Override public LanDetector createLanDetector(LanDetector.ClientHandler clientHandler) {
@@ -128,14 +136,6 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
             lock.lock();
             NettyClientToServerConnection connection = new NettyClientToServerConnection(cached, this, address);
             connections.add(connection);
-            connection.cleanupFuture().thenRun(() -> {
-                try {
-                    lock.lock();
-                    connections.remove(connection);
-                } finally {
-                    lock.unlock();
-                }
-            });
             return connection;
         } finally {
             lock.unlock();
@@ -179,10 +179,11 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         return packetRegistry;
     }
 
-    public void handleIncomingPacket(Connection connection, Packet packet, Logger logger) {
+    public void handleIncomingPacket(AbstractConnection connection, Packet packet, Logger logger) {
+        boolean handled = connection.handle(packet);
         Collection<HandlerEntry<?>> col = handlers.get(packet.getClass());
         if (col == null) {
-            logger.info("Received unhandled packet: " + packet.getClass() + ", " + packet);
+            if (!handled) logger.info("Received unhandled packet: " + packet.getClass() + ", " + packet);
             return;
         }
         for (HandlerEntry<?> h : col) {

@@ -16,6 +16,7 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.i18n.Message;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 import java8.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -43,6 +44,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final AnsiProvider ansi;
     private final LogColor C100 = new LogColor(100, 100, 100);
+    private volatile boolean async;
+    private final Object asyncLock = new Object();
     //			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
     public AsyncLogStream(GameLauncher launcher) {
@@ -53,9 +56,21 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         this.out = new PrintStream(this.system, true);
     }
 
+    @ApiStatus.Experimental public boolean async() {
+        return async;
+    }
+
+    @ApiStatus.Experimental public void async(boolean async) {
+        this.async = async;
+    }
+
     public CompletableFuture<Void> offerLog(Logger logger, LogLevel level, Object message) {
         if (!this.exit) {
-            return this.submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
+            if (async) return this.submit(new LogEntry<>(logger, Thread.currentThread(), message, level));
+            synchronized (asyncLock) {
+                this.log(new LogEntry<>(logger, Thread.currentThread(), message, level));
+            }
+            return CompletableFuture.completedFuture(null);
         }
         try {
             Threads.await(exitFuture());
@@ -68,7 +83,10 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 
     public void offerCalled(LogLevel level, StackTraceElement caller, Object message) {
         if (!this.exit) {
-            this.submit(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+            if (async) this.submit(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+            else synchronized (asyncLock) {
+                log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+            }
             return;
         }
         this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));

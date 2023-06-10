@@ -1,11 +1,17 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.render;
 
 import de.dasbabypixel.api.property.NumberValue;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,19 +24,12 @@ import java.util.function.Consumer;
 public class FrameCounter {
 
     private static final long second = TimeUnit.SECONDS.toNanos(1);
-
     private final NumberValue limit = NumberValue.withValue(0D);
-
     private final NumberValue frameNanos = NumberValue.withValue(1L);
-
     private final Buffer buffer = new Buffer();
-
     private final AtomicInteger lastFps = new AtomicInteger(0);
-
     private final AtomicInteger lastFrameCount = new AtomicInteger(0);
-
     private final Collection<Consumer<Integer>> updateListeners = ConcurrentHashMap.newKeySet();
-
     private final Collection<Consumer<Float>> avgUpdateListeners = ConcurrentHashMap.newKeySet();
 
     /**
@@ -57,11 +56,14 @@ public class FrameCounter {
 
     private void offer(long nanos) {
         this.buffer.addFrame(nanos);
-        int fps = this.buffer.frames1Second.size();
+        int fps = fps();
         if (this.lastFps.getAndSet(fps) != fps) {
             this.updateListeners.forEach(l -> l.accept(fps));
         }
-        int average = this.buffer.frames5Second.size();
+        int average;
+        synchronized (buffer.frames5Second) {
+            average = buffer.frames5Second.size();
+        }
         if (this.lastFrameCount.getAndSet(average) != average) {
             this.avgUpdateListeners.forEach(l -> l.accept(average / 5.0F));
         }
@@ -82,7 +84,11 @@ public class FrameCounter {
         if (limit == 0) {
             this.offer(System.nanoTime());
         } else {
-            if (!this.buffer.frames5Second.isEmpty()) {
+            boolean empty;
+            synchronized (buffer.frames5Second) {
+                empty = buffer.frames5Second.isEmpty();
+            }
+            if (!empty) {
                 long frameNanos = this.frameNanos.longValue();
                 long nextFrame = this.buffer.lastFrame.get() + frameNanos;
                 if (nextFrame - System.nanoTime() > 0) {
@@ -97,14 +103,18 @@ public class FrameCounter {
      * @return the current fps
      */
     public int fps() {
-        return this.buffer.frames1Second.size();
+        synchronized (buffer.frames1Second) {
+            return this.buffer.frames1Second.size();
+        }
     }
 
     /**
      * @return the average fps over the last five seconds
      */
     public float fpsAvg() {
-        return this.buffer.frames5Second.size() / 5F;
+        synchronized (buffer.frames5Second) {
+            return this.buffer.frames5Second.size() / 5F;
+        }
     }
 
     /**
@@ -131,65 +141,45 @@ public class FrameCounter {
 
     private static class Buffer {
 
-        private final List<LongHandle> unusedHandles = Collections.synchronizedList(new ArrayList<>());
-
-        private final List<LongHandle> frames1Second = Collections.synchronizedList(new ArrayList<>());
-
-        private final List<LongHandle> frames5Second = Collections.synchronizedList(new ArrayList<>());
+        private final LongList frames1Second = new LongArrayList();
+        private final LongList frames5Second = new LongArrayList();
 
         private final AtomicLong lastFrame = new AtomicLong();
 
         public void addFrame(long frame) {
             this.removeOldFrames();
-            LongHandle handle = this.getHandle(frame);
-            this.frames1Second.add(handle);
-            this.frames5Second.add(handle);
-            this.lastFrame.set(frame);
-        }
-
-        private LongHandle getHandle(long value) {
-            synchronized (this.unusedHandles) {
-                if (!this.unusedHandles.isEmpty()) {
-                    LongHandle handle = this.unusedHandles.remove(0);
-                    handle.value = value;
-                    return handle;
-                }
+            synchronized (frames1Second) {
+                this.frames1Second.add(frame);
             }
-            LongHandle handle = new LongHandle();
-            handle.value = value;
-            return handle;
+            synchronized (frames5Second) {
+                this.frames5Second.add(frame);
+            }
+            this.lastFrame.set(frame);
         }
 
         private void removeOldFrames() {
             long compareTo = System.nanoTime() - FrameCounter.second * 5;
             synchronized (this.frames5Second) {
                 while (!this.frames5Second.isEmpty()) {
-                    LongHandle first = this.frames5Second.get(0);
-                    if (compareTo - first.value > 0) {
-                        this.frames5Second.remove(0);
-                        this.unusedHandles.add(first);
+                    long first = this.frames5Second.getLong(0);
+                    if (compareTo - first > 0) {
+                        this.frames5Second.removeLong(0);
                         continue;
                     }
                     break;
                 }
             }
             compareTo = System.nanoTime() - FrameCounter.second;
-            while (!this.frames1Second.isEmpty()) {
-                LongHandle first = this.frames1Second.get(0);
-                if (compareTo - first.value > 0) {
-                    this.frames1Second.remove(0);
-                    continue;
+            synchronized (frames1Second) {
+                while (!this.frames1Second.isEmpty()) {
+                    long first = this.frames1Second.getLong(0);
+                    if (compareTo - first > 0) {
+                        this.frames1Second.removeLong(0);
+                        continue;
+                    }
+                    break;
                 }
-                break;
             }
         }
-
-        private static class LongHandle {
-
-            private long value;
-
-        }
-
     }
-
 }

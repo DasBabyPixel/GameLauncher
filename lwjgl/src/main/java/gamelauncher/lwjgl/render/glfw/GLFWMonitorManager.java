@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.lwjgl.render.glfw;
 
 import gamelauncher.engine.util.logging.Logger;
@@ -57,7 +64,7 @@ public class GLFWMonitorManager {
         float[] sy = new float[1];
         GLFW.glfwGetMonitorContentScale(monitor, sx, sy);
         GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitor);
-        assert vidMode != null;
+        if (vidMode == null) throw new RuntimeException();
         Monitor m = new Monitor(name, x[0], y[0], vidMode.width(), vidMode.height(), sx[0], sy[0], monitor, new VideoMode(w[0], h[0], vidMode.refreshRate()));
         logger.infof("New Monitor connected! %s[x=%s, y=%s, width=%s, height=%s, " + "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(), m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());
         this.monitors.add(m);

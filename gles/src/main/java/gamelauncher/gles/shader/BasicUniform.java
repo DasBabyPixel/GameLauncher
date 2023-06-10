@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.gles.shader;
 
 import gamelauncher.engine.data.DataUtil;
@@ -25,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class BasicUniform extends AbstractGameResource implements Uniform {
 
+    private final Thread owner;
     private final int id;
     private final Type type;
     private final String name;
@@ -47,15 +55,18 @@ public class BasicUniform extends AbstractGameResource implements Uniform {
         this.floatBuffer = this.byteBuffer.asFloatBuffer();
         this.floatBuffer.put(defaultValues);
         this.floatBuffer.position(0);
+        owner = Thread.currentThread();
     }
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
-        memory.free(floatBuffer); // Also frees intbuffer, as they are the same
+        memory.free(byteBuffer); // Also frees intbuffer, as they are the same
+        if (owner != Thread.currentThread()) Thread.dumpStack();
         return null;
     }
 
     @Override public Uniform upload() {
         GLES20 c = StateRegistry.currentGl();
+        if (owner != Thread.currentThread()) Thread.dumpStack();
         //		if (!hasValue.get()) {
         //			switch (type) {
         //				case FLOAT1 -> set(0F);

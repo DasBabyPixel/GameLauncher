@@ -7,12 +7,14 @@
 
 package gamelauncher.engine.network.server;
 
+import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.network.Connection;
 
 public interface ServerListener {
 
-    default void connected(Connection connection) {
-
+    @Api default void connected(Connection connection) {
     }
 
+    @Api default void disconnected(Connection connection) {
+    }
 }

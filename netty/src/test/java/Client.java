@@ -7,7 +7,6 @@
 
 import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkAddress;
-import gamelauncher.engine.network.packet.packets.PacketIdPacket;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.netty.NettyNetworkClient;
@@ -19,13 +18,17 @@ public class Client {
 
     public Client() throws GameException {
         this.client = new NettyNetworkClient();
+        client.packetRegistry().register(TestPacket.class, TestPacket::new);
         Connection con = client.connect(NetworkAddress.localhost(client.port()));
-        if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(5, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
-            client.cleanup();
-            throw new GameException("Failed to connect: Connection timed out");
+        try {
+            if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(5, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
+                client.cleanup();
+                throw new GameException("Failed to connect: Connection timed out");
+            }
+            Threads.await(con.sendPacketAsync(new TestPacket("testtad")));
+        } finally {
+            Threads.await(con.cleanup());
         }
-        Threads.await(con.sendPacketAsync(new PacketIdPacket(5)));
-        Threads.await(con.cleanup());
         client.cleanup();
     }
 

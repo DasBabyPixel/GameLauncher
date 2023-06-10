@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.lwjgl.util.keybind;
 
 import gamelauncher.engine.util.keybind.Keybind;
@@ -30,6 +37,13 @@ public class LWJGLKeyboardKeybindEvent extends AbstractKeybindEvent implements K
 
         @Override public char character() {
             return character;
+        }
+
+        public static class Special extends Character implements CharacterKeybindEvent.Special {
+
+            public Special(Keybind keybind, Type type, char character) {
+                super(keybind, type, character);
+            }
         }
     }
 }

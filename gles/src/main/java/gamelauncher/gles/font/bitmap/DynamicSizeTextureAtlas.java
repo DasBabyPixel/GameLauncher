@@ -12,23 +12,21 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.render.texture.TextureFilter;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.resource.ResourceStream;
-import gamelauncher.engine.util.ByteBufferBackedInputStream;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
-import gamelauncher.engine.util.function.GameSupplier;
+import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESCompat;
 import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
+import java8.util.function.Consumer;
 import org.joml.Vector4i;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -82,40 +80,37 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
 
     public CompletableFuture<Void> removeGlyph(int glyphId) {
         if (cleanedUp()) return CompletableFuture.completedFuture(null);
-        try {
-            lock.writeLock().lock();
-            AtlasEntry entry = glyphs.remove(glyphId);
-            if (entry != null) {
-                Collection<AtlasEntry> col = byTexture.get(entry.texture);
-                col.remove(entry);
-                if (col.isEmpty()) {
-                    byTexture.remove(entry.texture);
-                    try {
+        return launcher.threads().workStealing.submit(() -> {
+            try {
+                lock.writeLock().lock();
+                AtlasEntry entry = glyphs.remove(glyphId);
+                if (entry != null) {
+                    Collection<AtlasEntry> col = byTexture.get(entry.texture);
+                    col.remove(entry);
+                    if (col.isEmpty()) {
+                        byTexture.remove(entry.texture);
                         entry.texture.cleanup();
-                    } catch (GameException e) {
-                        CompletableFuture<Void> f = new CompletableFuture<>();
-                        f.completeExceptionally(e);
-                        return f;
                     }
+                } else {
+                    logger.error("Already cleaned up glyph " + glyphId);
+                    GameException ex = Threads.buildStacktrace();
+                    ex.initCause(new GameException());
+                    logger.error(ex);
                 }
-            } else {
-                logger.error("Already cleaned up glyph " + glyphId);
-                GameException ex = Threads.buildStacktrace();
-                ex.initCause(new GameException());
-                logger.error(ex);
+            } finally {
+                lock.writeLock().unlock();
             }
-        } finally {
-            lock.writeLock().unlock();
-        }
-        return CompletableFuture.completedFuture(null);
+            return null;
+        });
     }
 
-    public AddFuture addGlyph(int glyphId, GameSupplier<GlyphEntry> dataSupplier) {
+    public <T> AddFuture addGlyph(Queue<Consumer<T>> tasks, int glyphId, GameFunction<T, GlyphEntry> dataSupplier) {
         if (cleanedUp()) {
             return new AddFuture(false, CompletableFuture.completedFuture(null));
         }
         CompletableFuture<AtlasEntry> fut = new CompletableFuture<>();
-        launcher.threads().workStealing.submit(() -> {
+
+        tasks.offer(obj -> {
             try {
                 lock.writeLock().lock();
                 if (glyphs.containsKey(glyphId)) {
@@ -124,7 +119,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                     lock.writeLock().unlock();
                     return;
                 }
-                GlyphEntry entry = dataSupplier.get();
+                GlyphEntry entry = dataSupplier.apply(obj);
 
                 AtlasEntry e = new AtlasEntry(null, entry, new Vector4i(0, 0, entry.data.width, entry.data.height));
                 entry.key.required.incrementAndGet();
@@ -146,10 +141,8 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                     af = add(glyphId, e);
                 }
                 af.glFuture.thenRun(() -> {
-                    memoryManagement.free(entry.buffer);
                     fut.complete(e);
                 }).exceptionally(t -> {
-                    memoryManagement.free(entry.buffer);
                     fut.completeExceptionally(t);
                     return null;
                 });
@@ -191,9 +184,12 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
                     return new AddFuture(false, CompletableFuture.completedFuture(null));
                 }
             }
-            ResourceStream stream = new ResourceStream(null, false, new ByteBufferBackedInputStream(e.entry.buffer), null);
+            ResourceStream stream = new ResourceStream(null, false, new ByteArrayInputStream(e.entry.pixels), null);
             CompletableFuture<AtlasEntry> glf = new CompletableFuture<>();
-            e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> glf.complete(e));
+            e.texture.uploadSubAsync(stream, e.bounds.x, e.bounds.y).thenRun(() -> glf.complete(e)).exceptionally(t -> {
+                glf.completeExceptionally(t);
+                return null;
+            });
             //					e.texture.write();
             //					e.texture.write();
             byTexture.get(e.texture).add(e);

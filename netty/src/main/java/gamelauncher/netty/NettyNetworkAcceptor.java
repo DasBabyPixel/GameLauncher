@@ -7,7 +7,6 @@
 
 package gamelauncher.netty;
 
-import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.util.logging.Logger;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,10 +18,10 @@ import io.netty.channel.SimpleChannelInboundHandler;
 public class NettyNetworkAcceptor extends SimpleChannelInboundHandler<Packet> {
 
     private final NettyNetworkClient client;
-    private final Connection connection;
+    private final AbstractConnection connection;
     private final Logger logger;
 
-    public NettyNetworkAcceptor(NettyNetworkClient client, Connection connection, Logger logger) {
+    public NettyNetworkAcceptor(NettyNetworkClient client, AbstractConnection connection, Logger logger) {
         this.client = client;
         this.connection = connection;
         this.logger = logger;

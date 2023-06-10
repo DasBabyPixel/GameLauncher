@@ -25,12 +25,13 @@ public class NettyClientToServerConnection extends AbstractConnection {
     private final EventLoopGroup eventLoopGroup;
 
     public NettyClientToServerConnection(Executor cached, NettyNetworkClient client, NetworkAddress address) {
-        super(cached);
+        super(cached, client);
         eventLoopGroup = new NioEventLoopGroup();
         init(create(client, address, eventLoopGroup));
     }
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        networkClient().remove(this);
         CompletableFuture<Void> f = new CompletableFuture<>();
         super.cleanup0().thenRun(() -> eventLoopGroup.shutdownGracefully().addListener(fut -> {
             if (fut.isSuccess()) f.complete(null);

@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.network.packet;
 
 import de.dasbabypixel.annotations.Api;
@@ -51,6 +58,10 @@ public class PacketRegistry {
             return classById.get(id);
         }
         throw new PacketNotRegisteredException(Integer.toString(id));
+    }
+
+    public void ensureRegistered(Class<? extends Packet> clazz) throws PacketNotRegisteredException {
+        if (!entryMap.containsKey(clazz)) throw new PacketNotRegisteredException(clazz.getName());
     }
 
     private static class Entry<T> {

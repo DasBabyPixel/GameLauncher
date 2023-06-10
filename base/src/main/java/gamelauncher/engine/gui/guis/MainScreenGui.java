@@ -78,12 +78,23 @@ public interface MainScreenGui extends Gui {
 
             ScrollGui sg = launcher.guiManager().createGui(ScrollGui.class);
 
-            ButtonGui button = launcher.guiManager().createGui(ButtonGui.class);
-            ((ButtonGui.Simple.TextForeground) button.foreground().value()).textGui().text().value(Component.text("testsdadasdas"));
-            button.widthProperty().number(1000);
-            button.heightProperty().number(600);
-            button.onButtonPressed(event -> launcher.guiManager().openGui(new Simple(launcher)));
-            sg.gui().value(button);
+            ParentableAbstractGui g = new ParentableAbstractGui(launcher) {
+                {
+                    for (int i = 0; i < 50; i++) {
+                        ButtonGui button = launcher.guiManager().createGui(ButtonGui.class);
+                        ((ButtonGui.Simple.TextForeground) button.foreground().value()).textGui().text().value(Component.text("Number " + (i + 1)));
+                        button.widthProperty().number(1000);
+                        button.heightProperty().number(50);
+                        button.xProperty().bind(xProperty());
+                        button.yProperty().bind(yProperty().add(i * 55));
+                        button.onButtonPressed(event -> launcher.guiManager().openGui(new Simple(launcher)));
+                        addGUI(button);
+                    }
+                    width(1000);
+                    height(50 * 55 - 5);
+                }
+            };
+            sg.gui().value(g);
             sg.widthProperty().bind(widthProperty());
             sg.heightProperty().bind(heightProperty().subtract(100));
             sg.xProperty().bind(xProperty());

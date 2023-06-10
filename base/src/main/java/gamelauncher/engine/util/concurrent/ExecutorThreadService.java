@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.util.concurrent;
 
 import de.dasbabypixel.annotations.Api;
@@ -17,6 +24,8 @@ public interface ExecutorThreadService extends ExecutorThread {
      * @return the exitfuture
      */
     @Api CompletableFuture<Void> exit();
+
+    @Api int threadCount();
 
     /**
      * @return the cancelled runnables

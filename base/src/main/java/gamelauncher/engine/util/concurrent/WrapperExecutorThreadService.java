@@ -12,11 +12,13 @@ import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
+import java8.util.concurrent.ForkJoinPool;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -57,6 +59,13 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
     @Override public CompletableFuture<Void> exit() {
         service.shutdown();
         return exitFuture;
+    }
+
+    @Override public int threadCount() {
+        if (service instanceof ForkJoinPool) return ((ForkJoinPool) service).getRunningThreadCount();
+        if (service instanceof java.util.concurrent.ForkJoinPool) return ((java.util.concurrent.ForkJoinPool) service).getRunningThreadCount();
+        if (service instanceof ThreadPoolExecutor) return ((ThreadPoolExecutor) service).getActiveCount();
+        return -1;
     }
 
     @Override public CompletableFuture<Void> exitFuture() {

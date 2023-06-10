@@ -29,7 +29,6 @@ import gamelauncher.gles.modelloader.GLESModelLoader;
 import gamelauncher.gles.render.GLESGameRenderer;
 import gamelauncher.gles.shader.GLESShaderLoader;
 import gamelauncher.gles.texture.GLESTextureManager;
-import gamelauncher.gles.util.MemoryManagement;
 import gamelauncher.lwjgl.gui.LWJGLGuiManager;
 import gamelauncher.lwjgl.render.LWJGLGLFactory;
 import gamelauncher.lwjgl.render.font.bitmap.LWJGLGlyphProvider;
@@ -53,7 +52,7 @@ public class LWJGLGameLauncher extends GameLauncher {
 
     private final GLES gles;
     private final GLESThreadGroup glThreadGroup;
-    private final MemoryManagement memoryManagement;
+    private final LWJGLMemoryManagement memoryManagement;
     private GLFWFrame mainFrame;
     private GLFWThread glfwThread;
 
@@ -142,6 +141,10 @@ public class LWJGLGameLauncher extends GameLauncher {
         Threads.await(this.mainFrame.cleanup());
         Threads.await(this.glfwThread.exit());
         Threads.await(keybindManager().cleanup());
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            int i = memoryManagement.count.get();
+            if (i != 0) System.out.println("Memory Alloc Leak Count: " + i);
+        }));
     }
 
     @Override protected void registerSettingInsertions() {
@@ -156,7 +159,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         return (LWJGLGuiManager) super.guiManager();
     }
 
-    public MemoryManagement memoryManagement() {
+    public LWJGLMemoryManagement memoryManagement() {
         return memoryManagement;
     }
 

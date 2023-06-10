@@ -38,7 +38,7 @@ public interface NetworkClient extends GameResource {
      */
     @Api boolean running();
 
-    @Api NetworkServer server();
+    @Api NetworkServer newServer();
 
     @Api LanDetector createLanDetector(LanDetector.ClientHandler clientHandler);
 

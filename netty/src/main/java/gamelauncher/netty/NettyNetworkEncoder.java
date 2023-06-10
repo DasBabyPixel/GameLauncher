@@ -12,7 +12,6 @@ import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.network.packet.Packet;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
@@ -24,10 +23,6 @@ public class NettyNetworkEncoder extends MessageToByteEncoder<Packet> {
 
     public NettyNetworkEncoder(NettyNetworkHandler handler) {
         this.handler = handler;
-    }
-
-    @Override public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        super.write(ctx, msg, promise);
     }
 
     @Override protected void encode(ChannelHandlerContext ctx, Packet msg, ByteBuf out) throws Exception {

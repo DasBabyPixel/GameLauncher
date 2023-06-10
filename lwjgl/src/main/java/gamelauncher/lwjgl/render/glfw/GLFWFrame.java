@@ -287,6 +287,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 PointerBuffer buf = MemoryUtil.memAllocPointer(1);
                 glfwGetError(buf);
                 String error = buf.getStringUTF8();
+                MemoryUtil.memFree(buf);
                 if (shared != null) System.out.println(shared.sharedContexts);
                 throw new RuntimeException("Error creating window: " + error);
             }
@@ -357,8 +358,16 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                         fullscreenOldH.number(height.intValue());
                         glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
                         glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
+                        int[] w = new int[1];
+                        int[] h = new int[1];
+                        glfwGetWindowSize(glfwId, w, h);
+                        if (w[0] < monitor.width() || h[0] < monitor.height()) {
+                            glfwSetWindowSizeLimits(glfwId, 1, 1, monitor.width(), monitor.height());
+                            glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
+                        }
                     } else {
                         glfwSetWindowPos(glfwId, fullscreenOldX.intValue(), fullscreenOldY.intValue());
+                        glfwSetWindowSizeLimits(glfwId, 1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
                         glfwSetWindowSize(glfwId, fullscreenOldW.intValue(), fullscreenOldH.intValue());
                     }
                 }));

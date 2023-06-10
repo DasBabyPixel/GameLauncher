@@ -129,7 +129,15 @@ public class LWJGLInput implements Input {
     }
 
     private void keyEvent(InputType inputType, int key, int scancode, char c) throws GameException {
+        if (inputType == InputType.PRESSED || inputType == InputType.REPEAT) {
+            if (key == GLFW.GLFW_KEY_BACKSPACE) {
+                keyEvent(InputType.CHARACTER, GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, '\b');
+            } else if (key == GLFW.GLFW_KEY_ENTER) {
+                keyEvent(InputType.CHARACTER, GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, '\n');
+            }
+        }
         int id = key == GLFW.GLFW_KEY_UNKNOWN ? scancode == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_CODEPOINT_ADD + c : LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode : LWJGLKeybindManager.KEYBOARD_ADD + key;
+
         Keybind keybind = keybindManager.keybind(id);
         KeybindEvent event;
         switch (inputType) {
@@ -146,7 +154,11 @@ public class LWJGLInput implements Input {
                 event = new LWJGLKeyboardKeybindEvent(keybind, KeyboardKeybindEvent.Type.REPEAT);
                 break;
             case CHARACTER:
-                event = new LWJGLKeyboardKeybindEvent.Character(keybind, KeyboardKeybindEvent.Type.CHARACTER, c);
+                if (c == '\b' || c == '\n') {
+                    event = new LWJGLKeyboardKeybindEvent.Character.Special(keybind, KeyboardKeybindEvent.Type.CHARACTER, c);
+                } else {
+                    event = new LWJGLKeyboardKeybindEvent.Character(keybind, KeyboardKeybindEvent.Type.CHARACTER, c);
+                }
                 break;
             default:
                 throw new UnsupportedOperationException();

@@ -5,6 +5,7 @@
  * is strictly prohibited.
  */
 
+import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.netty.NettyNetworkClient;
 
@@ -13,8 +14,10 @@ public class Server {
 
     public Server() {
         this.client = new NettyNetworkClient();
+        client.packetRegistry().register(TestPacket.class, TestPacket::new);
         client.start();
-        client.server().start();
+        NetworkServer server = client.newServer();
+        server.start();
     }
 
     public static void main(String[] args) throws GameException {

@@ -10,16 +10,11 @@ package gamelauncher.gles.util;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.data.DataUtil;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-/**
- * All Buffers allocated by this class must have the native byte order
- */
-@Api
-public interface MemoryManagement {
+public interface MemoryStack extends AutoCloseable {
 
     @Api ByteBuffer alloc(int size);
 
@@ -61,16 +56,9 @@ public interface MemoryManagement {
         return callocDirect(DataUtil.BYTES_FLOAT * size).asFloatBuffer();
     }
 
-    @Api default MemoryStack stackPush() {
-        return stackGet().push();
-    }
+    @Override void close();
 
-    @Api default MemoryStack stackPop() {
-        return stackGet().pop();
-    }
+    @Api MemoryStack push();
 
-    @Api MemoryStack stackGet();
-
-    @Api void free(Buffer buffer);
-
+    @Api MemoryStack pop();
 }

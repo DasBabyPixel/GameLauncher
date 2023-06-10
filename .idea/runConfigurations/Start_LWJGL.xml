@@ -5,7 +5,7 @@
     <selectedOptions>
       <option name="environmentVariables" visible="false" />
     </selectedOptions>
-    <option name="VM_PARAMETERS" value="-Ddebug=true -Djansi.passthrough=true -ea" />
+    <option name="VM_PARAMETERS" value="-Ddebug=true -Djansi.passthrough=true -ea -Xmx1024M" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <extension name="coverage">
       <pattern>

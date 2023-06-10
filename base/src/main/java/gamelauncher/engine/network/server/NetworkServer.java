@@ -8,15 +8,21 @@
 package gamelauncher.engine.network.server;
 
 import de.dasbabypixel.api.property.Property;
+import gamelauncher.engine.resource.GameResource;
 import java8.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.Nullable;
 
-public interface NetworkServer {
+public interface NetworkServer extends GameResource {
 
     Property<State> state();
 
     CompletableFuture<StartResult> start();
 
     void stop();
+
+    void serverListener(@Nullable ServerListener serverListener);
+
+    @Nullable ServerListener serverListener();
 
     interface StartResult {
         class Success implements StartResult {
