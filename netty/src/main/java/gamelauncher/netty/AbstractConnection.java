@@ -17,6 +17,8 @@ import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.property.PropertyUtil;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.GenericFutureListener;
 import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
@@ -29,23 +31,19 @@ public abstract class AbstractConnection extends AbstractGameResource implements
     protected final Property<State> state = Property.withValue(State.CLOSED);
     private final Property<State> stateUnmodifiable = PropertyUtil.unmodifiable(state);
     private final Executor cached;
-    private Channel channel;
-    private NetworkAddress remoteAddress;
-    private NetworkAddress localAddress;
     private final NettyNetworkClient networkClient;
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
+    private final GenericFutureListener<ChannelFuture> closeListener = f -> {
+        if (!cleanedUp()) cleanup();
+    };
+    private Channel channel;
+    private NetworkAddress remoteAddress;
+    private NetworkAddress localAddress;
 
     public AbstractConnection(Executor cached, NettyNetworkClient networkClient) {
         this.cached = cached;
         this.networkClient = networkClient;
-    }
-
-    protected void init(Channel channel) {
-        this.channel = channel;
-        this.channel.closeFuture().addListener(f -> {
-            cleanup();
-        });
     }
 
     public void remoteAddress(NetworkAddress remoteAddress) {
@@ -73,7 +71,13 @@ public abstract class AbstractConnection extends AbstractGameResource implements
     }
 
     public boolean handle(Packet packet) {
-        Collection<HandlerEntry<?>> col = handlers.get(packet.getClass());
+        Collection<HandlerEntry<?>> col;
+        try {
+            handlerLock.lock();
+            col = handlers.get(packet.getClass());
+        } finally {
+            handlerLock.unlock();
+        }
         if (col == null) return false;
         for (HandlerEntry<?> h : col) {
             h.receivePacket(this, packet);
@@ -161,8 +165,14 @@ public abstract class AbstractConnection extends AbstractGameResource implements
         return fut;
     }
 
+    protected void init(Channel channel) {
+        this.channel = channel;
+        this.channel.closeFuture().addListener(closeListener);
+    }
+
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         CompletableFuture<Void> f = new CompletableFuture<>();
+        channel.closeFuture().removeListener(closeListener);
         channel.close().addListener(fut -> {
             if (fut.isSuccess()) f.complete(null);
             else f.completeExceptionally(fut.cause());

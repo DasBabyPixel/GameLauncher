@@ -11,13 +11,15 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.netty.NettyNetworkClient;
 
+import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
     private final NettyNetworkClient client;
 
-    public Client() throws GameException {
+    public Client() throws GameException, UnknownHostException {
         this.client = new NettyNetworkClient();
+        client.port(19452);
         client.packetRegistry().register(TestPacket.class, TestPacket::new);
         Connection con = client.connect(NetworkAddress.localhost(client.port()));
         try {
@@ -27,12 +29,13 @@ public class Client {
             }
             Threads.await(con.sendPacketAsync(new TestPacket("testtad")));
         } finally {
-            Threads.await(con.cleanup());
+            if (!con.cleanedUp()) Threads.await(con.cleanup());
         }
         client.cleanup();
     }
 
     public static void main(String[] args) throws GameException {
+        System.setProperty("debug", "true");
         try {
             Basics.setup();
             new Client();

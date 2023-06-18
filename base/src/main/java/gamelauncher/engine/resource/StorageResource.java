@@ -33,7 +33,8 @@ abstract class StorageResource implements GameResource {
     }
 
     @Override public void storeValue(Key key, Object value) {
-        map.put(key, value);
+        if (value == null) map.remove(key);
+        else map.put(key, value);
     }
 
     protected void clearStorage() {

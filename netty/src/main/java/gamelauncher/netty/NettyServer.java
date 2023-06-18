@@ -87,8 +87,9 @@ public class NettyServer extends AbstractGameResource implements NetworkServer {
                 if (future.isSuccess()) {
                     this.state.value(State.RUNNING);
                     fut.complete(new StartResult.Success());
-                    logger.info("Server started");
+                    logger.info("Server started on " + channel.localAddress());
                 } else {
+                    logger.error("Server failed to start");
                     stop();
                     this.state.value(State.OFFLINE);
                     fut.complete(new StartResult.Failure(future.cause()));

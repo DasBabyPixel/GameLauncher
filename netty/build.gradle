@@ -18,6 +18,7 @@ dependencies {
     api libs.netty.codec
     api libs.netty.handler
     api libs.netty.buffer
+    api 'io.netty:netty-all:4.1.93.Final'
 }
 
 publishing {

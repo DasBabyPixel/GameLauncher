@@ -43,11 +43,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class NettyNetworkClient extends AbstractGameResource implements NetworkClient {
 
-    private static final int PORT = 15684;
-
     static final Logger logger = Logger.logger();
+    private static final int PORT = 15684;
+    final ExecutorService cached;
+    final ExecutorThreadService cachedService;
     private final Lock lock = new ReentrantLock(true);
-
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
     private final PacketRegistry packetRegistry = new PacketRegistry();
@@ -56,9 +56,8 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     private final @UnmodifiableView List<Connection> connectionsUnmodifiable = Collections.unmodifiableList(connections);
     private final GameLauncher launcher;
     private final Path sslDirectory;
-    final ExecutorService cached;
-    final ExecutorThreadService cachedService;
     private final boolean customCached;
+    private int port = PORT;
     private volatile boolean running = false;
 
     public NettyNetworkClient(GameLauncher launcher) {
@@ -93,30 +92,6 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     @Override public void stop() {
         running = false;
         // Also nothing to do
-    }
-
-    void remove(NettyClientToServerConnection connection) {
-        try {
-            lock.lock();
-            connections.remove(connection);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override protected CompletableFuture<Void> cleanup0() {
-        if (!customCached) return launcher.threads().cached.submit(() -> {
-            stop();
-            try {
-                lock.lock();
-                for (Connection connection : connections) connection.cleanup();
-            } finally {
-                lock.unlock();
-            }
-        });
-
-        cached.shutdown();
-        return null; // Let's be honest if we are using a custom client atm we terminate the process when the client is closed so what's the point in implementing this?
     }
 
     @Override public boolean running() {
@@ -172,7 +147,11 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     }
 
     public int port() {
-        return PORT;
+        return port;
+    }
+
+    public void port(int port) {
+        this.port = port;
     }
 
     @Override public PacketRegistry packetRegistry() {
@@ -188,6 +167,30 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         }
         for (HandlerEntry<?> h : col) {
             h.receivePacket(connection, packet);
+        }
+    }
+
+    @Override protected CompletableFuture<Void> cleanup0() {
+        if (!customCached) return launcher.threads().cached.submit(() -> {
+            stop();
+            try {
+                lock.lock();
+                for (Connection connection : new ArrayList<>(connections)) connection.cleanup();
+            } finally {
+                lock.unlock();
+            }
+        });
+
+        cached.shutdown();
+        return null; // Let's be honest if we are using a custom client atm we terminate the process when the client is closed so what's the point in implementing this?
+    }
+
+    void remove(NettyClientToServerConnection connection) {
+        try {
+            lock.lock();
+            connections.remove(connection);
+        } finally {
+            lock.unlock();
         }
     }
 
