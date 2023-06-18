@@ -19,7 +19,7 @@ public class ExceptionHandler extends ChannelDuplexHandler {
     }
 
     @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.errorf("%s: %s", ctx.channel().remoteAddress(), cause.getLocalizedMessage());
+        logger.errorf("%s: %s", ctx.channel().remoteAddress(), cause);
 
     }
 }

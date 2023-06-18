@@ -48,6 +48,7 @@ public class StandaloneServer {
                 Server s = servers.get(packet.id);
                 if (s != null) {
                     connection.storeValue(KEY_SERVER_ID, s.idCounter.incrementAndGet());
+                    connection.storeValue(KEY_SERVER, packet.id);
                     s.clients.put(connection.<Integer>storedValue(KEY_SERVER_ID), connection);
                     s.owner.sendPacket(new PacketClientConnected(connection.<Integer>storedValue(KEY_SERVER_ID)));
                     return;
@@ -77,10 +78,14 @@ public class StandaloneServer {
         });
         client.addHandler(PacketPayloadOutC2S.class, (connection, packet) -> {
             String serverId = connection.storedValue(KEY_SERVER);
+            System.out.println("rcv " + packet);
+            System.out.println(serverId);
+            System.out.println(servers);
             if (serverId == null) return;
             synchronized (servers) {
                 Server s = servers.get(serverId);
                 if (s == null) return;
+                System.out.println("receive packet " + packet);
                 s.owner.sendPacket(new PacketPayloadInC2S(connection.<Integer>storedValue(KEY_SERVER_ID), packet.data));
             }
         });
@@ -90,6 +95,7 @@ public class StandaloneServer {
                 if (s == null) return;
                 Connection con = s.clients.get(packet.target);
                 if (con == null) return;
+                System.out.println("receive packet " + packet);
                 con.sendPacket(new PacketPayloadInS2C(packet.data));
             }
         });
@@ -97,6 +103,7 @@ public class StandaloneServer {
             synchronized (servers) {
                 Server s = servers.get(packet.serverId);
                 if (s == null) return;
+                System.out.println("receive packet " + packet);
                 PacketPayloadInS2C payload = new PacketPayloadInS2C(packet.data);
                 for (Connection con : s.clients.values()) con.sendPacket(payload);
             }
