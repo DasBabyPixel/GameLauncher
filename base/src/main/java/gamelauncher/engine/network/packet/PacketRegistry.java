@@ -8,6 +8,7 @@
 package gamelauncher.engine.network.packet;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.util.logging.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +18,7 @@ import java.util.function.Supplier;
  * @author DasBabyPixel
  */
 public class PacketRegistry {
-
+    private static final Logger logger = Logger.logger();
     private final Map<Class<? extends Packet>, Entry<? extends Packet>> entryMap = new ConcurrentHashMap<>();
     private final Map<Integer, Class<? extends Packet>> classById = new ConcurrentHashMap<>();
 
@@ -27,7 +28,9 @@ public class PacketRegistry {
     public final <T extends Packet> void register(Class<T> clazz, Supplier<T> constructor) {
         Entry<T> entry = new Entry<>(constructor);
         entryMap.put(clazz, entry);
-        classById.put(constructor.get().key().hashCode(), clazz);
+        int id = constructor.get().key().hashCode();
+        classById.put(id, clazz);
+        logger.debugf("Registeded packet: %s - %s", id, clazz);
     }
 
     /**

@@ -480,6 +480,10 @@ public abstract class GameLauncher {
         return this.gameRenderer;
     }
 
+    public SettingSection settings() {
+        return settings;
+    }
+
     /**
      * Saves the current settings
      *

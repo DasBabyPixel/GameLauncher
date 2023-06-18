@@ -26,6 +26,7 @@ public class StandaloneServer {
     private static final Key KEY_SERVER = new Key("server");
     private static final Key KEY_SERVER_ID = new Key("server");
     private static final Map<String, Server> servers = new HashMap<>();
+    private static final Logger logger = Logger.logger();
 
     public static void main(String[] args) throws GameException {
         setup();
@@ -36,9 +37,10 @@ public class StandaloneServer {
         client.addHandler(PacketRequestServerId.class, (connection, packet) -> {
             synchronized (servers) {
                 String id = newId();
-                servers.put(id, new Server(connection));
+                servers.put(id, new Server(id, connection));
                 Collection<String> ids = connection.storedValue(KEY_IDS, ArrayList::new);
                 ids.add(id);
+                logger.infof("%s: New Server: %s", connection.remoteAddress(), id);
                 connection.sendPacket(new PacketRequestServerId.Response(id));
             }
         });
@@ -51,6 +53,7 @@ public class StandaloneServer {
                     connection.storeValue(KEY_SERVER, packet.id);
                     s.clients.put(connection.<Integer>storedValue(KEY_SERVER_ID), connection);
                     s.owner.sendPacket(new PacketClientConnected(connection.<Integer>storedValue(KEY_SERVER_ID)));
+                    logger.infof("%s: Connected to Server: %s", connection.remoteAddress(), packet.id);
                     return;
                 }
             }
@@ -67,25 +70,15 @@ public class StandaloneServer {
                 if (!ids.contains(packet.id)) return;
                 ids.remove(packet.id);
                 Server s = servers.remove(packet.id);
-                for (Connection c : new HashMap<>(s.clients).values()) {
-                    try {
-                        c.cleanup();
-                    } catch (GameException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+                shutdown(s);
             }
         });
         client.addHandler(PacketPayloadOutC2S.class, (connection, packet) -> {
             String serverId = connection.storedValue(KEY_SERVER);
-            System.out.println("rcv " + packet);
-            System.out.println(serverId);
-            System.out.println(servers);
             if (serverId == null) return;
             synchronized (servers) {
                 Server s = servers.get(serverId);
                 if (s == null) return;
-                System.out.println("receive packet " + packet);
                 s.owner.sendPacket(new PacketPayloadInC2S(connection.<Integer>storedValue(KEY_SERVER_ID), packet.data));
             }
         });
@@ -95,7 +88,6 @@ public class StandaloneServer {
                 if (s == null) return;
                 Connection con = s.clients.get(packet.target);
                 if (con == null) return;
-                System.out.println("receive packet " + packet);
                 con.sendPacket(new PacketPayloadInS2C(packet.data));
             }
         });
@@ -103,7 +95,6 @@ public class StandaloneServer {
             synchronized (servers) {
                 Server s = servers.get(packet.serverId);
                 if (s == null) return;
-                System.out.println("receive packet " + packet);
                 PacketPayloadInS2C payload = new PacketPayloadInS2C(packet.data);
                 for (Connection con : s.clients.values()) con.sendPacket(payload);
             }
@@ -118,7 +109,7 @@ public class StandaloneServer {
                     if (ids != null) {
                         for (String id : ids) {
                             Server s = servers.remove(id);
-                            s.clients.clear();
+                            shutdown(s);
                         }
                         ids.clear();
                     }
@@ -127,7 +118,10 @@ public class StandaloneServer {
                 if (serverId != null) {
                     connection.storeValue(KEY_SERVER, null);
                     Server server = servers.get(serverId);
-                    server.clients.remove(connection.<Integer>storedValue(KEY_SERVER_ID));
+                    if (server != null) {
+                        server.owner.sendPacket(new PacketClientDisconnected(connection.storedValue(KEY_SERVER_ID)));
+                        server.clients.remove(connection.<Integer>storedValue(KEY_SERVER_ID));
+                    }
                     connection.storeValue(KEY_SERVER_ID, null);
                 }
             }
@@ -140,6 +134,23 @@ public class StandaloneServer {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private static void shutdown(Server server) {
+        for (Connection connection : server.clients.values()) {
+            try {
+                connection.cleanup();
+            } catch (GameException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        logger.infof("Server Shutdown: %s", server.id);
+        server.clients.clear();
+        try {
+            if (!server.owner.cleanedUp()) server.owner.cleanup();
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static String newId() {
@@ -166,7 +177,6 @@ public class StandaloneServer {
         registry.register(PacketPayloadOutC2S.class, PacketPayloadOutC2S::new);
         registry.register(PacketPayloadOutS2A.class, PacketPayloadOutS2A::new);
         registry.register(PacketPayloadOutS2C.class, PacketPayloadOutS2C::new);
-
     }
 
     public static void setup() {
@@ -179,11 +189,13 @@ public class StandaloneServer {
     }
 
     private static class Server {
+        private final String id;
         private final Map<Integer, Connection> clients = new ConcurrentHashMap<>();
         private final AtomicInteger idCounter = new AtomicInteger();
         private final Connection owner;
 
-        public Server(Connection owner) {
+        public Server(String id, Connection owner) {
+            this.id = id;
             this.owner = owner;
         }
     }

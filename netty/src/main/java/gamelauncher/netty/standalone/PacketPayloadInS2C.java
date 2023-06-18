@@ -14,7 +14,7 @@ public class PacketPayloadInS2C extends Packet {
     public byte[] data;
 
     public PacketPayloadInS2C() {
-        super("payload_in_c2s");
+        super("payload_in_s2c");
     }
 
     public PacketPayloadInS2C(byte[] data) {
