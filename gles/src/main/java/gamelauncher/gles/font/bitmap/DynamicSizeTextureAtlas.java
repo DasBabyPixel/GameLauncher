@@ -20,7 +20,6 @@ import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESCompat;
 import gamelauncher.gles.texture.GLESTexture;
-import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
 import java8.util.function.Consumer;
 import org.joml.Vector4i;
@@ -40,13 +39,11 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     private final GameLauncher launcher;
     private final ExecutorThread owner;
     private final GLES gles;
-    private final MemoryManagement memoryManagement;
 
     public DynamicSizeTextureAtlas(GLES gles, GameLauncher launcher, ExecutorThread owner) {
         this.gles = gles;
         this.launcher = launcher;
         this.owner = owner;
-        this.memoryManagement = gles.memoryManagement();
     }
 
     private static boolean intersects(Vector4i v1, Vector4i v2) {

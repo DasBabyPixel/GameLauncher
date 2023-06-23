@@ -11,6 +11,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.proxy.HttpProxyHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class ProxyClient {
         b.option(ChannelOption.TCP_NODELAY, true);
         b.handler(new ChannelInitializer<>() {
             @Override protected void initChannel(@NotNull Channel ch) throws Exception {
-//                ch.pipeline().addLast(new HttpProxyHandler(new InetSocketAddress("192.168.3.13", 8080), authUser, authPassword));
+                ch.pipeline().addLast(new HttpProxyHandler(new InetSocketAddress("192.168.3.13", 8080), authUser, authPassword));
                 ch.pipeline().addLast(new HttpClientCodec(), new HttpObjectAggregator(Integer.MAX_VALUE), new ChannelInboundHandlerAdapter() {
                     @Override public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
                         System.out.println("INCOMING: " + msg);

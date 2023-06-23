@@ -13,6 +13,7 @@ import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.resource.GameResource;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.List;
@@ -37,6 +38,10 @@ public interface NetworkClient extends GameResource {
      * @return if the {@link NetworkClient} is running
      */
     @Api boolean running();
+
+    @Api @Nullable ProxyConfiguration proxy();
+
+    @Api void proxy(@Nullable ProxyConfiguration proxy);
 
     @Api NetworkServer newServer();
 

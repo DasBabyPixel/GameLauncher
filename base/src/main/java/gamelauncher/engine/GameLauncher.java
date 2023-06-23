@@ -87,7 +87,7 @@ public abstract class GameLauncher {
     private final Threads threads;
     private final PluginManager pluginManager;
     private final Profiler profiler;
-    private final Gson settingsGson = new GsonBuilder().setPrettyPrinting().create();
+    private final Gson settingsGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
     private final GameRegistry gameRegistry;
     private final ServiceProvider serviceProvider;
     private Path gameDirectory;

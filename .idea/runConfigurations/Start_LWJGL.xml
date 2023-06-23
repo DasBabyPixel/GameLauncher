@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" singleton="false">
+  <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" singleton="true">
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="gamelauncher.lwjgl.main" />
     <selectedOptions>

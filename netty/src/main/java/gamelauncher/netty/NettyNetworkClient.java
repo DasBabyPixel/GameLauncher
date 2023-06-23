@@ -8,15 +8,13 @@
 package gamelauncher.netty;
 
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.network.Connection;
-import gamelauncher.engine.network.LanDetector;
-import gamelauncher.engine.network.NetworkAddress;
-import gamelauncher.engine.network.NetworkClient;
+import gamelauncher.engine.network.*;
 import gamelauncher.engine.network.packet.Packet;
 import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService;
@@ -26,6 +24,8 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import javax.net.ssl.SSLEngine;
@@ -57,6 +57,7 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     private final GameLauncher launcher;
     private final Path sslDirectory;
     private final boolean customCached;
+    private ProxyConfiguration proxy;
     private int port = PORT;
     private volatile boolean running = false;
 
@@ -86,7 +87,29 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
 
     @Override public void start() {
         running = true;
-        // Nothing to do lol
+        if (launcher.settings().getSetting(MainSettingSection.PROXY_HOST).getValue() != null) {
+            String host = launcher.settings().<String>getSetting(MainSettingSection.PROXY_HOST).getValue();
+            int port = launcher.settings().<Integer>getSetting(MainSettingSection.PROXY_PORT).getValue();
+            String user = launcher.settings().<String>getSetting(MainSettingSection.PROXY_USERNAME).getValue();
+            String pass = launcher.settings().<String>getSetting(MainSettingSection.PROXY_PASSWORD).getValue();
+            this.proxy = new ProxyConfiguration() {
+                @Override public @NotNull String hostname() {
+                    return host;
+                }
+
+                @Override public int port() {
+                    return port;
+                }
+
+                @Override public @Nullable String username() {
+                    return user;
+                }
+
+                @Override public @Nullable String password() {
+                    return pass;
+                }
+            };
+        }
     }
 
     @Override public void stop() {
@@ -100,6 +123,14 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
 
     @Override public NettyServer newServer() {
         return new NettyServer(this, sslDirectory);
+    }
+
+    @Override public ProxyConfiguration proxy() {
+        return proxy;
+    }
+
+    @Override public void proxy(ProxyConfiguration proxy) {
+        this.proxy = proxy;
     }
 
     @Override public LanDetector createLanDetector(LanDetector.ClientHandler clientHandler) {

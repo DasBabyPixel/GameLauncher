@@ -1,24 +1,45 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 tasks {
     jar {
         manifest {
-            attributes('Automatic-Module-Name': 'gamelauncher.netty')
+            attributes.put('Automatic-Module-Name', 'gamelauncher.netty')
+            attributes.put('Main-Class', 'gamelauncher.netty.standalone.StandaloneServer')
         }
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('standalone-server')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+    minimize()
+    minimize {
+        exclude(dependency('org.bouncycastle:.*:.*'))
     }
 }
 
 dependencies {
     api parent.project('api')
+    runtimeOnly 'org.bouncycastle:bcpkix-jdk15on:1.70'
     api libs.netty.common
     api libs.netty.transport
     api libs.netty.codec
+    api libs.netty.codec.http
     api libs.netty.handler
+    api libs.netty.handler.proxy
     api libs.netty.buffer
-    api 'io.netty:netty-all:4.1.93.Final'
+}
+getComponents().forEach { c ->
+    if (c instanceof AdhocComponentWithVariants) {
+        c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+            skip()
+        }
+    }
 }
 
 publishing {

@@ -9,16 +9,19 @@ package gamelauncher.netty;
 
 import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkAddress;
+import gamelauncher.engine.network.ProxyConfiguration;
 import gamelauncher.engine.util.GameException;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.Executor;
 
 public class NettyClientToServerConnection extends AbstractConnection {
@@ -55,6 +58,22 @@ public class NettyClientToServerConnection extends AbstractConnection {
         b.remoteAddress(((NetworkAddress.SocketAddressCapableNetworkAddress) address).toSocketAddress()).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true).group(eventLoopGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<>() {
             @Override protected void initChannel(@NotNull Channel ch) throws Exception {
                 ChannelPipeline p = ch.pipeline();
+                ProxyConfiguration proxy = client.proxy();
+                try {
+                    if (proxy != null) {
+                        String host = proxy.hostname();
+                        int port = proxy.port();
+                        String user = proxy.username();
+                        String pass = proxy.password();
+                        if (user == null) {
+                            p.addLast(new HttpProxyHandler(new InetSocketAddress(host, port)));
+                        } else if (pass != null) {
+                            p.addLast(new HttpProxyHandler(new InetSocketAddress(host, port), user, pass));
+                        }
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
                 client.setupPipeline(p, NettyClientToServerConnection.this, SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build(), NettyNetworkClient.logger);
             }
         });

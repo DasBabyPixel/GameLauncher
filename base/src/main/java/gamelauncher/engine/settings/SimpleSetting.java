@@ -21,7 +21,7 @@ public class SimpleSetting<T> implements Setting<T> {
     public SimpleSetting(Type type, Supplier<T> defaultSupplier) {
         this.type = type;
         this.defaultSupplier = defaultSupplier;
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        this.gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
     }
 
     public SimpleSetting(Type type, T defaultValue) {

@@ -80,93 +80,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         return gles;
     }
 
-    private void upload0(ByteBuffer buffer, int x, int y, int width, int height) throws InvalidSizeException {
-        profiler.begin("render", "upload");
-        lock.writeLock().lock();
-        int mintw = x + width;
-        int minth = y + height;
-        if (cwidth < mintw || cheight < minth) {
-            throw new InvalidSizeException(cwidth + " < " + mintw + " || " + cheight + " < " + minth);
-        }
-        GLES20 cur = StateRegistry.currentGl();
-        cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
-        profiler.check();
-        cur.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, format.get().gl(), GL_UNSIGNED_BYTE, buffer);
-        profiler.check();
-        cur.glBindTexture(GL_TEXTURE_2D, 0);
-        profiler.check();
-        lock.writeLock().unlock();
-        profiler.end();
-    }
-
-    private boolean isRaw(byte[] data) {
-        for (int i = 0; i < SIGNATURE_RAW.length; i++) {
-            if (data[i] != SIGNATURE_RAW[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void resize0(int width, int height) {
-        profiler.begin("render", "resize");
-        try {
-            lock.writeLock().lock();
-            int owidth = cwidth;
-            int oheight = cheight;
-            int oid = textureId.get();
-            if (oid == 0) {
-                safeCreate();
-                oid = textureId.get();
-            }
-
-            if (oheight == 0 || owidth == 0) {
-                allocateCreated(width, height);
-                return;
-            }
-
-            int nid = createTexture();
-            cwidth = width;
-            cheight = height;
-
-            int copyw = Math.min(owidth, width);
-            int copyh = Math.min(oheight, height);
-
-            GLESTextureFormat format = this.format.get();
-
-            GLES30 cur = StateRegistry.currentGl();
-
-            cur.glBindTexture(GL_TEXTURE_2D, nid);
-            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), width, height, 0, format.gl(), GL_UNSIGNED_BYTE, null);
-            cur.glBindTexture(GL_TEXTURE_2D, 0);
-
-            CLTextureUtility u = manager.clTextureUtility.get();
-            u.framebuffer1.bind();
-            cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, nid, 0);
-            u.framebuffer1.unbind();
-            u.framebuffer2.bind();
-            cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, oid, 0);
-            u.framebuffer2.unbind();
-
-            cur.glBindFramebuffer(GL_READ_FRAMEBUFFER, u.framebuffer2.getId());
-            cur.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, u.framebuffer1.getId());
-            cur.glBlitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            cur.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            cur.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-            textureId.set(nid);
-            cur.glDeleteTextures(1, new int[]{oid}, 0);
-            cur.glFlush();
-            cur.glFinish();
-        } finally {
-            lock.writeLock().unlock();
-            profiler.end();
-        }
-    }
-
     @Override public CompletableFuture<ByteBuffer> queryPixels() {
         return owner.submit(() -> {
             try {
@@ -184,31 +97,6 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                 lock.writeLock().unlock();
             }
         });
-    }
-
-    private void safeCreate() {
-        lock.writeLock().lock();
-        if (textureId.get() == 0) {
-            textureId.set(createTexture());
-        }
-        lock.writeLock().unlock();
-    }
-
-    private void allocateCreated(int width, int height) {
-        profiler.begin("render", "allocate_created");
-        lock.writeLock().lock();
-        cwidth = width;
-        cheight = height;
-        GLESTextureFormat format = this.format.get();
-        GLES20 cur = StateRegistry.currentGl();
-        cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
-        cur.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GLESTextureFilter.gl(filters.get(TextureFilter.FilterType.MINIFICATION)));
-        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GLESTextureFilter.gl(filters.get(TextureFilter.FilterType.MAGNIFICATION)));
-        cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), cwidth, cheight, 0, format.gl(), GL_UNSIGNED_BYTE, null);
-        cur.glBindTexture(GL_TEXTURE_2D, 0);
-        lock.writeLock().unlock();
-        profiler.end();
     }
 
     @Override public CompletableFuture<Void> cleanup0() throws GameException {
@@ -364,12 +252,124 @@ public class GLESTexture extends AbstractGameResource implements Texture {
         });
     }
 
-    private int createTexture() {
-        return StateRegistry.currentGl().glGenTextures();
-    }
-
     public int getTextureId() {
         return textureId.get();
+    }
+
+    private void upload0(ByteBuffer buffer, int x, int y, int width, int height) throws InvalidSizeException {
+        profiler.begin("render", "upload");
+        lock.writeLock().lock();
+        int mintw = x + width;
+        int minth = y + height;
+        if (cwidth < mintw || cheight < minth) {
+            throw new InvalidSizeException(cwidth + " < " + mintw + " || " + cheight + " < " + minth);
+        }
+        GLES20 cur = StateRegistry.currentGl();
+        cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
+        profiler.check();
+        cur.glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, format.get().gl(), GL_UNSIGNED_BYTE, buffer);
+        profiler.check();
+        cur.glBindTexture(GL_TEXTURE_2D, 0);
+        profiler.check();
+        lock.writeLock().unlock();
+        profiler.end();
+    }
+
+    private boolean isRaw(byte[] data) {
+        for (int i = 0; i < SIGNATURE_RAW.length; i++) {
+            if (data[i] != SIGNATURE_RAW[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void resize0(int width, int height) {
+        profiler.begin("render", "resize");
+        try {
+            lock.writeLock().lock();
+            int owidth = cwidth;
+            int oheight = cheight;
+            int oid = textureId.get();
+            if (oid == 0) {
+                safeCreate();
+                oid = textureId.get();
+            }
+
+            if (oheight == 0 || owidth == 0) {
+                allocateCreated(width, height);
+                return;
+            }
+
+            int nid = createTexture();
+            cwidth = width;
+            cheight = height;
+
+            int copyw = Math.min(owidth, width);
+            int copyh = Math.min(oheight, height);
+
+            GLESTextureFormat format = this.format.get();
+
+            GLES30 cur = StateRegistry.currentGl();
+
+            cur.glBindTexture(GL_TEXTURE_2D, nid);
+            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), width, height, 0, format.gl(), GL_UNSIGNED_BYTE, null);
+            cur.glBindTexture(GL_TEXTURE_2D, 0);
+
+            CLTextureUtility u = manager.clTextureUtility.get();
+            u.framebuffer1.bind();
+            cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, nid, 0);
+            u.framebuffer1.unbind();
+            u.framebuffer2.bind();
+            cur.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, oid, 0);
+            u.framebuffer2.unbind();
+
+            cur.glBindFramebuffer(GL_READ_FRAMEBUFFER, u.framebuffer2.getId());
+            cur.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, u.framebuffer1.getId());
+            cur.glBlitFramebuffer(0, 0, copyw, copyh, 0, 0, copyw, copyh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            cur.glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            cur.glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+            textureId.set(nid);
+            cur.glDeleteTextures(1, new int[]{oid}, 0);
+            cur.glFlush();
+            cur.glFinish();
+        } finally {
+            lock.writeLock().unlock();
+            profiler.end();
+        }
+    }
+
+    private void safeCreate() {
+        lock.writeLock().lock();
+        if (textureId.get() == 0) {
+            textureId.set(createTexture());
+        }
+        lock.writeLock().unlock();
+    }
+
+    private void allocateCreated(int width, int height) {
+        profiler.begin("render", "allocate_created");
+        lock.writeLock().lock();
+        cwidth = width;
+        cheight = height;
+        GLESTextureFormat format = this.format.get();
+        GLES20 cur = StateRegistry.currentGl();
+        cur.glBindTexture(GL_TEXTURE_2D, textureId.get());
+        cur.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GLESTextureFilter.gl(filters.get(TextureFilter.FilterType.MINIFICATION)));
+        cur.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GLESTextureFilter.gl(filters.get(TextureFilter.FilterType.MAGNIFICATION)));
+        cur.glTexImage2D(GL_TEXTURE_2D, 0, format.glInternal(), cwidth, cheight, 0, format.gl(), GL_UNSIGNED_BYTE, null);
+        cur.glBindTexture(GL_TEXTURE_2D, 0);
+        lock.writeLock().unlock();
+        profiler.end();
+    }
+
+    private int createTexture() {
+        return StateRegistry.currentGl().glGenTextures();
     }
 
 //    public CompletableFuture<Void> uploadAsync(int x, int y, int width, int
