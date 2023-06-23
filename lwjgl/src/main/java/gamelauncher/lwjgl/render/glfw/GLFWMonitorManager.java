@@ -7,10 +7,14 @@
 
 package gamelauncher.lwjgl.render.glfw;
 
+import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.lwjgl.event.AddMonitorEvent;
+import gamelauncher.lwjgl.event.RemoveMonitorEvent;
 import gamelauncher.lwjgl.render.glfw.Monitor.VideoMode;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWMonitorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 
 import java.util.Collection;
@@ -22,15 +26,34 @@ public class GLFWMonitorManager {
 
     private final Logger logger = Logger.logger();
     private final CopyOnWriteArrayList<Monitor> monitors = new CopyOnWriteArrayList<>();
-
-    void init() {
-        GLFW.glfwSetMonitorCallback((monitor, event) -> {
+    private final GameLauncher launcher;
+    private final GLFWMonitorCallback callback = new GLFWMonitorCallback() {
+        @Override public void invoke(long monitor, int event) {
             if (event == GLFW.GLFW_CONNECTED) {
                 GLFWMonitorManager.this.newMonitor(monitor);
             } else if (event == GLFW.GLFW_DISCONNECTED) {
                 GLFWMonitorManager.this.removeMonitor(monitor);
             }
-        });
+        }
+    };
+
+    public GLFWMonitorManager(GameLauncher launcher) {
+        this.launcher = launcher;
+    }
+
+    public Monitor monitor(long glfwId) {
+        for (Monitor monitor : monitors) {
+            if (monitor.glfwId() == glfwId) return monitor;
+        }
+        return null;
+    }
+
+    public Collection<Monitor> monitors() {
+        return Collections.unmodifiableCollection(monitors);
+    }
+
+    void init() {
+        GLFW.glfwSetMonitorCallback(callback);
         PointerBuffer mbuf = GLFW.glfwGetMonitors();
         assert mbuf != null;
         while (mbuf.hasRemaining()) {
@@ -38,19 +61,9 @@ public class GLFWMonitorManager {
         }
     }
 
-    public Monitor getMonitor(long glfwId) {
-        for (Monitor monitor : monitors) {
-            if (monitor.glfwId() == glfwId) return monitor;
-        }
-        return null;
-    }
-
-    public Collection<Monitor> getMonitors() {
-        return Collections.unmodifiableCollection(monitors);
-    }
-
     void cleanup() {
         GLFW.glfwSetMonitorCallback(null);
+        callback.free();
     }
 
     private synchronized void newMonitor(long monitor) {
@@ -68,6 +81,7 @@ public class GLFWMonitorManager {
         Monitor m = new Monitor(name, x[0], y[0], vidMode.width(), vidMode.height(), sx[0], sy[0], monitor, new VideoMode(w[0], h[0], vidMode.refreshRate()));
         logger.infof("New Monitor connected! %s[x=%s, y=%s, width=%s, height=%s, " + "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(), m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());
         this.monitors.add(m);
+        launcher.eventManager().post(new AddMonitorEvent(m));
     }
 
     private synchronized void removeMonitor(long monitor) {
@@ -84,7 +98,8 @@ public class GLFWMonitorManager {
         if (index == -1) {
             throw new IllegalStateException();
         }
-        this.monitors.remove(index);
+        Monitor m = this.monitors.remove(index);
+        launcher.eventManager().post(new RemoveMonitorEvent(m));
     }
 
 }

@@ -18,6 +18,7 @@ import gamelauncher.gles.gl.*;
 import gamelauncher.gles.states.StateRegistry;
 import gamelauncher.lwjgl.render.LWJGLGLES;
 import java8.util.concurrent.CompletableFuture;
+import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengles.GLES;
 import org.lwjgl.system.Callback;
@@ -74,6 +75,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
                 this.owner = null;
             }
             if (glfwId != 0) {
+                Callbacks.glfwFreeCallbacks(glfwId);
                 GLFW.glfwDestroyWindow(this.glfwId);
                 glfwId = 0;
             } else {

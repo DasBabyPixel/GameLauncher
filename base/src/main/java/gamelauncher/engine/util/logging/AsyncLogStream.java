@@ -44,8 +44,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final AnsiProvider ansi;
     private final LogColor C100 = new LogColor(100, 100, 100);
-    private volatile boolean async;
     private final Object asyncLock = new Object();
+    private volatile boolean async;
     //			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
     public AsyncLogStream(GameLauncher launcher) {
@@ -242,19 +242,20 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     }
 
     private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger, String string) {
-        this.setSystemLevel(level);
+        this.setSystemLevel(level == null ? LogLevel.INFO : level);
         for (String object : this.lines(string)) {
             this.printTime(time);
             if (caller == null) {
                 if (logger != null) this.printLoggerName(logger);
                 this.printThread(thread);
-                this.printLevel(level);
+                if (level != null) this.printLevel(level);
             } else {
-                this.printLevel(level);
+                if (level != null) this.printLevel(level);
                 this.printThread(thread);
                 this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
             }
-            this.out.printf(ansi.formatln(), object);
+            assert level != null;
+            this.out.printf(ansi.formatln(), ansi.ansi(level.textColor()) + object);
         }
     }
 

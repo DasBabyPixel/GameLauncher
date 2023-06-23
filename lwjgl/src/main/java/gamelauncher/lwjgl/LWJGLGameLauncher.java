@@ -13,6 +13,7 @@ import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.SimpleResourceLoader;
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.DefaultOperatingSystems;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -20,6 +21,8 @@ import gamelauncher.engine.util.keybind.Keybind;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent;
 import gamelauncher.engine.util.keybind.KeyboardKeybindEvent.Type;
 import gamelauncher.engine.util.logging.AnsiProvider;
+import gamelauncher.engine.util.logging.LogColor;
+import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESThreadGroup;
@@ -57,6 +60,13 @@ public class LWJGLGameLauncher extends GameLauncher {
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() throws GameException {
+        if (Debug.debug) {
+            Configuration.DEBUG_STREAM.set(Logger.logger("LWJGL").createPrintStream(new LogLevel("LWJGL", 0, LogColor.GREEN, new LogColor(20, 80, 20)), Logger.LoggerFlags.DONT_PRINT_SOURCE));
+            Configuration.DEBUG_MEMORY_ALLOCATOR.set(true);
+            Configuration.DEBUG.set(true);
+            Configuration.DEBUG_STACK.set(false);
+            Configuration.DEBUG_FUNCTIONS.set(true);
+        }
         try {
             this.operatingSystem(DefaultOperatingSystems.LWJGL);
             this.memoryManagement = new LWJGLMemoryManagement();
@@ -92,6 +102,40 @@ public class LWJGLGameLauncher extends GameLauncher {
 
     @Override public AnsiProvider ansi() {
         return new LWJGLAnsiProvider();
+    }
+
+    @Override public GLESTextureManager textureManager() {
+        return (GLESTextureManager) super.textureManager();
+    }
+
+    @Override public LWJGLGuiManager guiManager() {
+        return (LWJGLGuiManager) super.guiManager();
+    }
+
+    public LWJGLMemoryManagement memoryManagement() {
+        return memoryManagement;
+    }
+
+    @Override public GLFWFrame frame() {
+        return (GLFWFrame) super.frame();
+    }
+
+    public GLES gles() {
+        return gles;
+    }
+
+    /**
+     * @return the GLFW thread
+     */
+    public GLFWThread getGLFWThread() {
+        return this.glfwThread;
+    }
+
+    /**
+     * @return the {@link GLESThreadGroup}
+     */
+    public GLESThreadGroup glThreadGroup() {
+        return this.glThreadGroup;
     }
 
     @Api @Override protected void tick0() throws GameException {
@@ -149,40 +193,6 @@ public class LWJGLGameLauncher extends GameLauncher {
 
     @Override protected void registerSettingInsertions() {
         new MouseSensivityInsertion().register(this);
-    }
-
-    @Override public GLESTextureManager textureManager() {
-        return (GLESTextureManager) super.textureManager();
-    }
-
-    @Override public LWJGLGuiManager guiManager() {
-        return (LWJGLGuiManager) super.guiManager();
-    }
-
-    public LWJGLMemoryManagement memoryManagement() {
-        return memoryManagement;
-    }
-
-    @Override public GLFWFrame frame() {
-        return (GLFWFrame) super.frame();
-    }
-
-    public GLES gles() {
-        return gles;
-    }
-
-    /**
-     * @return the GLFW thread
-     */
-    public GLFWThread getGLFWThread() {
-        return this.glfwThread;
-    }
-
-    /**
-     * @return the {@link GLESThreadGroup}
-     */
-    public GLESThreadGroup glThreadGroup() {
-        return this.glThreadGroup;
     }
 
 }

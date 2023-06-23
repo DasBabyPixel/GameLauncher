@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LWJGLMemoryManagement implements MemoryManagement {
-    private static final ThreadLocal<LWJGLMemoryStack> TLS = ThreadLocal.withInitial(LWJGLMemoryStack::new);
+    private static final ThreadLocal<LWJGLMemoryStack> TLS = ThreadLocal.withInitial(LWJGLMemoryStack::newStack);
     public final LongList allocBuffers = new LongArrayList();
     public final Long2ObjectMap<Thread> threads = new Long2ObjectOpenHashMap<>();
     public final AtomicInteger count = new AtomicInteger();

@@ -82,9 +82,10 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
             try (LWJGLMemoryStack stack = memoryManagement.stackPush()) {
                 ByteBuffer data = memoryManagement.allocDirect(this.data.length);
                 data.put(this.data);
-                data.position(0);
+                data.flip();
                 STBTTFontinfo finfo = stack.call(STBTTFontinfo::malloc);
                 STBTruetype.stbtt_InitFont(finfo, data);
+//                STBTTFontinfo finfo = null;
                 task.accept(finfo);
                 while ((task = tasks.poll()) != null) {
                     task.accept(finfo);

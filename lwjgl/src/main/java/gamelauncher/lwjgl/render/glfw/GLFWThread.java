@@ -17,11 +17,25 @@ public class GLFWThread extends AbstractExecutorThread {
     private final CompletableFuture<Void> terminateFuture = new CompletableFuture<>();
     private final Collection<GLFWUser> users = ConcurrentHashMap.newKeySet();
     private final Logger logger = Logger.logger();
-    private final GLFWMonitorManager monitorManager = new GLFWMonitorManager();
+    private final GLFWMonitorManager monitorManager;
+    private final GLFWErrorCallback callback = new GLFWErrorCallback() {
+        final Map<Integer, String> ERROR_CODES = APIUtil.apiClassTokens((field, value) -> 0x10000 < value && value < 0x20000, null, GLFW.class);
+
+        @Override public void invoke(int errorcode, long descriptionp) {
+            String description = GLFWErrorCallback.getDescription(descriptionp);
+            String error = ERROR_CODES.get(errorcode);
+            logger.errorf("GLFW Error: %s(%s)\nDescription: %s", error, Integer.toHexString(errorcode), description);
+        }
+    };
 
     public GLFWThread(GameLauncher launcher) {
         super(launcher, null);
+        this.monitorManager = new GLFWMonitorManager(launcher);
         this.setName("GLFW-Thread");
+    }
+
+    public GLFWMonitorManager getMonitorManager() {
+        return this.monitorManager;
     }
 
     @Override protected void startExecuting() {
@@ -29,12 +43,7 @@ public class GLFWThread extends AbstractExecutorThread {
             throw new ExceptionInInitializerError("Couldn't initialize GLFW");
         }
 
-        final Map<Integer, String> ERROR_CODES = APIUtil.apiClassTokens((field, value) -> 0x10000 < value && value < 0x20000, null, GLFW.class);
-        GLFW.glfwSetErrorCallback((errorcode, descriptionp) -> {
-            String description = GLFWErrorCallback.getDescription(descriptionp);
-            String error = ERROR_CODES.get(errorcode);
-            logger.errorf("GLFW Error: %s(%s)\nDescription: %s", error, Integer.toHexString(errorcode), description);
-        });
+        GLFW.glfwSetErrorCallback(callback);
         this.monitorManager.init();
     }
 
@@ -46,20 +55,21 @@ public class GLFWThread extends AbstractExecutorThread {
             this.waitForSignal();
             this.workQueue();
         } while (!this.users.isEmpty());
+        callback.free();
         this.monitorManager.cleanup();
         GLFW.glfwTerminate();
         this.terminateFuture.complete(null);
-    }
-
-    @Override protected void workExecution() {
-        GLFW.glfwWaitEventsTimeout(0.5D);
-        GLFW.glfwPollEvents();
     }
 
     //	@Override
     //	protected boolean useCondition() {
     //		return false;
     //	}
+
+    @Override protected void workExecution() {
+        GLFW.glfwWaitEventsTimeout(0.5D);
+        GLFW.glfwPollEvents();
+    }
 
     @Override protected boolean shouldWaitForSignal() {
         return false;
@@ -70,10 +80,6 @@ public class GLFWThread extends AbstractExecutorThread {
             GLFW.glfwPostEmptyEvent();
         }
         super.signal();
-    }
-
-    public GLFWMonitorManager getMonitorManager() {
-        return this.monitorManager;
     }
 
     void addUser(GLFWUser user) {

@@ -13,6 +13,7 @@ import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.render.FrameCounter;
@@ -25,6 +26,8 @@ import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
+import gamelauncher.lwjgl.event.AddMonitorEvent;
+import gamelauncher.lwjgl.event.RemoveMonitorEvent;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
 import java8.util.concurrent.CompletableFuture;
@@ -58,6 +61,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final NumberValue windowHeight = NumberValue.withValue(0D);
     final BooleanValue fullscreen = BooleanValue.falseValue();
     final Property<Monitor> monitor = Property.empty();
+    final MonitorListener monitorListener = new MonitorListener();
     final ManualQueryFramebuffer manualFramebuffer;
     boolean cleaningUp = false;
     private boolean created;
@@ -84,6 +88,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             this.created = true;
             this.renderThread.start();
         });
+        launcher.eventManager().registerListener(monitorListener);
     }
 
     GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
@@ -102,40 +107,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.context = context;
         this.context.owner = renderThread;
         this.created = true;
-    }
-
-    /**
-     * Called from the default closecallback
-     */
-    private void close0() {
-        new Thread(() -> {
-            try {
-                launcher.stop();
-            } catch (GameException ex) {
-                ex.printStackTrace();
-            }
-        }).start();
-    }
-
-    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
-        cleaningUp = true;
-        this.renderThread.cleanupContextOnExit = true;
-        CompletableFuture<Void> f3 = this.renderThread.exit();
-        List<CompletableFuture<Void>> futs = new ArrayList<>();
-        GLFWGLContext context;
-        while ((context = contexts.poll()) != null) {
-            context.parent = null;
-            futs.add(context.cleanup());
-        }
-        CompletableFuture<Void> f1 = this.manualFramebuffer.cleanup();
-        CompletableFuture<Void> f2 = this.framebuffer.cleanup();
-        futs.add(f1);
-        futs.add(f2);
-        futs.add(f3);
-        this.contexts.clear();
-        CompletableFuture<Void> f = CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
-        f.thenRun(() -> cleaningUp = false);
-        return f;
+        launcher.eventManager().registerListener(monitorListener);
     }
 
     @Override public GLFWFrameRenderThread renderThread() {
@@ -246,6 +218,41 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         return this.closeCallback;
     }
 
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        launcher.eventManager().unregisterListener(monitorListener);
+        cleaningUp = true;
+        this.renderThread.cleanupContextOnExit = true;
+        CompletableFuture<Void> f3 = this.renderThread.exit();
+        List<CompletableFuture<Void>> futs = new ArrayList<>();
+        GLFWGLContext context;
+        while ((context = contexts.poll()) != null) {
+            context.parent = null;
+            futs.add(context.cleanup());
+        }
+        CompletableFuture<Void> f1 = this.manualFramebuffer.cleanup();
+        CompletableFuture<Void> f2 = this.framebuffer.cleanup();
+        futs.add(f1);
+        futs.add(f2);
+        futs.add(f3);
+        this.contexts.clear();
+        CompletableFuture<Void> f = CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
+        f.thenRun(() -> cleaningUp = false);
+        return f;
+    }
+
+    /**
+     * Called from the default closecallback
+     */
+    private void close0() {
+        new Thread(() -> {
+            try {
+                launcher.stop();
+            } catch (GameException ex) {
+                ex.printStackTrace();
+            }
+        }).start();
+    }
+
     static class Creator implements Runnable {
 
         public final NumberValue width = NumberValue.withValue(0);
@@ -280,7 +287,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-            Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().getMonitor(glfwGetPrimaryMonitor());
+            Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().monitor(glfwGetPrimaryMonitor());
 
             this.glfwId = glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, GameLauncher.NAME, 0, shared == null ? 0 : shared.glfwId);
             if (glfwId == 0L) {
@@ -306,6 +313,8 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.frame.windowHeight.bind(this.height);
                 this.monitor.value(primaryMonitor);
             }
+            frame.monitorListener.property = monitor;
+            frame.monitorListener.window = frame.getGLFWId();
             glfwGetFramebufferSize(this.glfwId, a0, a1);
             this.fbwidth.number(a0[0]);
             this.fbheight.number(a1[0]);
@@ -319,7 +328,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     GLFWMonitorManager manager = frame.launcher.getGLFWThread().getMonitorManager();
                     Monitor nearest = null;
                     Rect window = new Rect(xpos.intValue(), ypos.intValue(), width.intValue(), height.intValue());
-                    for (Monitor monitor : manager.getMonitors()) {
+                    for (Monitor monitor : manager.monitors()) {
                         if (nearest != null && new Rect(nearest.x(), nearest.y(), nearest.width(), nearest.height()).contains(window)) {
                             break;
                         }
@@ -388,7 +397,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     ex.printStackTrace();
                 }
             });
-            glfwSetMonitorCallback((monitor, event) -> this.monitor.value(frame.launcher.getGLFWThread().getMonitorManager().getMonitor(monitor)));
+//            glfwSetMonitorCallback((monitor, event) -> this.monitor.value(frame.launcher.getGLFWThread().getMonitorManager().monitor(monitor)));
             glfwSetWindowCloseCallback(this.glfwId, wid -> {
                 GameConsumer<Frame> cs = this.frame.closeCallback.value();
                 if (cs != null) {
@@ -454,7 +463,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 }
             });
         }
-
     }
 
     private static class Rect {
@@ -482,6 +490,21 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             double top = Math.min(y + h, other.y + other.h);
 
             return new Rect(nx, ny, Math.max(0, right - nx), Math.max(top - ny, 0));
+        }
+    }
+
+    private class MonitorListener {
+        private Property<Monitor> property = null;
+        private long window;
+
+        @EventHandler public void handle(AddMonitorEvent event) {
+            Property<Monitor> p = property;
+            if (p != null) p.value(launcher.getGLFWThread().getMonitorManager().monitor(window));
+        }
+
+        @EventHandler public void handle(RemoveMonitorEvent event) {
+            Property<Monitor> p = property;
+            if (p != null) p.value(launcher.getGLFWThread().getMonitorManager().monitor(window));
         }
     }
 }
