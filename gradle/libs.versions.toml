@@ -9,9 +9,10 @@ joml = '1.10.5'
 gson = '2.10'
 disruptor = '3.3.8'
 lwjgl = '3.3.1'
-netty = '4.1.93.Final'
+netty = '4.1.94.Final'
 streamsupport-cfuture = '1.7.4'
 annotations = '0.1'
+netty-tcnative-boringssl-static = '2.0.61.Final'
 
 [libraries]
 jansi = { group = 'org.fusesource.jansi', name = 'jansi', version.ref = 'jansi' }
@@ -21,6 +22,7 @@ property = { group = 'de.dasbabypixel.api', name = 'property', version.ref = 'pr
 joml = { group = 'org.joml', name = 'joml', version.ref = 'joml' }
 gson = { group = 'com.google.code.gson', name = 'gson', version.ref = 'gson' }
 annotations = { group = 'de.dasbabypixel', name = 'annotations', version.ref = 'annotations' }
+netty-tcnative-boringssl-static = { group = 'io.netty', name = 'netty-tcnative-boringssl-static', version.ref = 'netty-tcnative-boringssl-static' }
 netty-buffer = { group = 'io.netty', name = 'netty-buffer', version.ref = 'netty' }
 netty-codec = { group = 'io.netty', name = 'netty-codec', version.ref = 'netty' }
 netty-codec-http = { group = 'io.netty', name = 'netty-codec-http', version.ref = 'netty' }

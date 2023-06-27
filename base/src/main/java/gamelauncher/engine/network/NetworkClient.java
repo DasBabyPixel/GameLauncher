@@ -16,6 +16,7 @@ import gamelauncher.engine.resource.GameResource;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -53,6 +54,8 @@ public interface NetworkClient extends GameResource {
      * @param address
      */
     @Api Connection connect(NetworkAddress address);
+
+    @Api Connection connect(URI uri);
 
     /**
      * @return all current valid connections. Should never contain a connection with state {@link Connection.State#CLOSED} because that is no longer valid

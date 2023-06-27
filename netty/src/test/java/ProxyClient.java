@@ -20,7 +20,7 @@ import java.net.*;
 
 public class ProxyClient {
     public static void main(String[] args) throws IOException, URISyntaxException, NoSuchFieldException, IllegalAccessException {
-
+        System.setProperty("https.protocols", "TLSv1.3");
         System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
         System.setProperty("java.net.useSystemProxies", "true");
         Field field = ProxySelector.getDefault().getClass().getDeclaredField("hasSystemProxies");

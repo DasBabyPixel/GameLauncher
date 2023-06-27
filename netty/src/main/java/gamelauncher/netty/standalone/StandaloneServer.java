@@ -27,11 +27,12 @@ public class StandaloneServer {
     private static final Key KEY_SERVER_ID = new Key("server");
     private static final Map<String, Server> servers = new HashMap<>();
     private static final Logger logger = Logger.logger();
+    private static final int PORT = Integer.getInteger("gamelauncher.standalone.port", 19452);
 
     public static void main(String[] args) throws GameException {
         setup();
         NettyNetworkClient client = new NettyNetworkClient();
-        client.port(19452);
+        client.port(PORT);
         registerPackets(client.packetRegistry());
         client.start();
         client.addHandler(PacketRequestServerId.class, (connection, packet) -> {

@@ -6,24 +6,26 @@
  */
 
 import gamelauncher.engine.network.Connection;
-import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.netty.NettyNetworkClient;
 
-import java.net.UnknownHostException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
     private final NettyNetworkClient client;
 
-    public Client() throws GameException, UnknownHostException {
+    public Client() throws GameException, URISyntaxException, MalformedURLException {
         this.client = new NettyNetworkClient();
         client.port(19452);
         client.packetRegistry().register(TestPacket.class, TestPacket::new);
-        Connection con = client.connect(NetworkAddress.localhost(client.port()));
+//        Connection con = client.connect(new URI("https", null, "localhost", 19452, "/", null, null));
+        Connection con = client.connect(new URI("https://ssh.darkcube.eu/orbits/"));
         try {
-            if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(5, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
+            if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(10, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
                 client.cleanup();
                 throw new GameException("Failed to connect: Connection timed out");
             }

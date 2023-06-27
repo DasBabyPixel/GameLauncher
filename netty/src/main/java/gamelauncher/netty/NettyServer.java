@@ -8,7 +8,6 @@
 package gamelauncher.netty;
 
 import de.dasbabypixel.api.property.Property;
-import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.network.server.ServerListener;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -16,12 +15,13 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.property.PropertyUtil;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.ssl.SslContextBuilder;
 import java8.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -62,23 +62,7 @@ public class NettyServer extends AbstractGameResource implements NetworkServer {
             if (!keyManagment.loaded()) keyManagment.load();
             bossGroup = new NioEventLoopGroup();
             childGroup = new NioEventLoopGroup();
-            ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<>() {
-                @Override public void initChannel(@NotNull Channel ch) throws Exception {
-                    ClientConnection connection = new ClientConnection(client.cached, ch, client);
-                    connection.remoteAddress(NetworkAddress.bySocketAddress(ch.remoteAddress()));
-                    connection.localAddress(NetworkAddress.bySocketAddress(ch.localAddress()));
-                    ch.closeFuture().addListener(f -> {
-                        ServerListener l = serverListener;
-                        if (l != null) l.disconnected(connection);
-                        logger.infof("Client disconnected: %s", ch.remoteAddress().toString());
-                    });
-                    ChannelPipeline p = ch.pipeline();
-                    ServerListener l = serverListener;
-                    if (l != null) l.connected(connection);
-                    logger.infof("Client %s connected on %s", connection.remoteAddress().toString(), connection.localAddress().toString());
-                    client.setupPipeline(p, connection, SslContextBuilder.forServer(keyManagment.privateKey, keyManagment.certificate).build(), logger);
-                }
-            }).childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_KEEPALIVE, true);
+            ServerBootstrap b = new ServerBootstrap().group(bossGroup, childGroup).channel(NioServerSocketChannel.class).childHandler(new ServerInitializer(this, client, logger)).childOption(ChannelOption.TCP_NODELAY, true).childOption(ChannelOption.SO_KEEPALIVE, true);
             CompletableFuture<StartResult> fut = new CompletableFuture<>();
             ChannelFuture chf = b.bind(client.port());
             channel = chf.channel();
@@ -134,7 +118,6 @@ public class NettyServer extends AbstractGameResource implements NetworkServer {
         public ClientConnection(Executor cached, Channel channel, NettyNetworkClient client) {
             super(cached, client);
             init(channel);
-            state.value(State.CONNECTED);
         }
     }
 }

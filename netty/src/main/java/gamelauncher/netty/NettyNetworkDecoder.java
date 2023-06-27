@@ -9,7 +9,6 @@ package gamelauncher.netty;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
-import gamelauncher.engine.util.logging.Logger;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -21,8 +20,6 @@ import java.util.List;
  */
 public class NettyNetworkDecoder extends ByteToMessageDecoder {
 
-    private static final Logger logger = Logger.logger(NettyNetworkDecoder.class);
-
     private final NettyNetworkHandler handler;
 
     public NettyNetworkDecoder(NettyNetworkHandler handler) {
@@ -31,17 +28,21 @@ public class NettyNetworkDecoder extends ByteToMessageDecoder {
 
     @Override protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         DataBuffer buf = handler.prepareBuffer(in);
-        if (buf.readableBytes() < 4) {
-            return;
-        }
+        if (buf.readableBytes() < Integer.BYTES) return;
+
         int startIndex = buf.readerIndex();
         int size = buf.readInt();
-        if (buf.readableBytes() < size) {
-            buf.readerIndex(startIndex);
-            return;
+        try {
+            if (buf.readableBytes() < size) {
+                buf.readerIndex(startIndex);
+                return;
+            }
+            Packet packet = handler.encoder.read(buf);
+            handler.finishBuffer(buf);
+            out.add(packet);
+        } catch (Exception ex) {
+            buf.readerIndex(startIndex + Integer.BYTES + size);
+            throw ex;
         }
-        Packet packet = handler.encoder.read(buf);
-        handler.finishBuffer(buf);
-        out.add(packet);
     }
 }

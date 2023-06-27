@@ -66,6 +66,10 @@ public abstract class AbstractConnection extends AbstractGameResource implements
         return stateUnmodifiable;
     }
 
+    public Channel channel() {
+        return channel;
+    }
+
     @Override public NettyNetworkClient networkClient() {
         return networkClient;
     }

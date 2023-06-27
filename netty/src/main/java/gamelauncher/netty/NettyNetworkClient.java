@@ -10,7 +10,6 @@ package gamelauncher.netty;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.network.*;
 import gamelauncher.engine.network.packet.Packet;
-import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketHandler;
 import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.engine.resource.AbstractGameResource;
@@ -19,16 +18,13 @@ import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService;
 import gamelauncher.engine.util.logging.Logger;
-import io.netty.channel.ChannelPipeline;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslHandler;
 import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import javax.net.ssl.SSLEngine;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,7 +47,6 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
     private final PacketRegistry packetRegistry = new PacketRegistry();
-    private final NettyNetworkHandler handler = new NettyNetworkHandler(new PacketEncoder(packetRegistry));
     private final List<Connection> connections = new ArrayList<>();
     private final @UnmodifiableView List<Connection> connectionsUnmodifiable = Collections.unmodifiableList(connections);
     private final GameLauncher launcher;
@@ -76,39 +71,32 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         customCached = true;
     }
 
-    public void setupPipeline(ChannelPipeline p, AbstractConnection connection, SslContext sslContext, Logger logger) {
-        SSLEngine engine = sslContext.newEngine(p.channel().alloc());
-        p.addLast("ssl", new SslHandler(engine));
-        p.addLast("packet_decoder", new NettyNetworkDecoder(handler));
-        p.addLast("packet_encoder", new NettyNetworkEncoder(handler));
-        p.addLast("packet_acceptor", new NettyNetworkAcceptor(this, connection, logger));
-        p.addLast("exception_handler", new ExceptionHandler(logger));
-    }
-
     @Override public void start() {
         running = true;
-        if (launcher.settings().getSetting(MainSettingSection.PROXY_HOST).getValue() != null) {
-            String host = launcher.settings().<String>getSetting(MainSettingSection.PROXY_HOST).getValue();
-            int port = launcher.settings().<Integer>getSetting(MainSettingSection.PROXY_PORT).getValue();
-            String user = launcher.settings().<String>getSetting(MainSettingSection.PROXY_USERNAME).getValue();
-            String pass = launcher.settings().<String>getSetting(MainSettingSection.PROXY_PASSWORD).getValue();
-            this.proxy = new ProxyConfiguration() {
-                @Override public @NotNull String hostname() {
-                    return host;
-                }
+        if (launcher != null) {
+            if (launcher.settings().getSetting(MainSettingSection.PROXY_HOST).getValue() != null) {
+                String host = launcher.settings().<String>getSetting(MainSettingSection.PROXY_HOST).getValue();
+                int port = launcher.settings().<Integer>getSetting(MainSettingSection.PROXY_PORT).getValue();
+                String user = launcher.settings().<String>getSetting(MainSettingSection.PROXY_USERNAME).getValue();
+                String pass = launcher.settings().<String>getSetting(MainSettingSection.PROXY_PASSWORD).getValue();
+                this.proxy = new ProxyConfiguration() {
+                    @Override public @NotNull String hostname() {
+                        return host;
+                    }
 
-                @Override public int port() {
-                    return port;
-                }
+                    @Override public int port() {
+                        return port;
+                    }
 
-                @Override public @Nullable String username() {
-                    return user;
-                }
+                    @Override public @Nullable String username() {
+                        return user;
+                    }
 
-                @Override public @Nullable String password() {
-                    return pass;
-                }
-            };
+                    @Override public @Nullable String password() {
+                        return pass;
+                    }
+                };
+            }
         }
     }
 
@@ -141,6 +129,17 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         try {
             lock.lock();
             NettyClientToServerConnection connection = new NettyClientToServerConnection(cached, this, address);
+            connections.add(connection);
+            return connection;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override public Connection connect(URI uri) {
+        try {
+            lock.lock();
+            NettyClientToServerConnection connection = new NettyClientToServerConnection(cached, this, uri);
             connections.add(connection);
             return connection;
         } finally {

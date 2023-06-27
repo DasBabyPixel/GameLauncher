@@ -10,6 +10,7 @@ package gamelauncher.netty;
 import gamelauncher.engine.util.logging.Logger;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import org.jetbrains.annotations.NotNull;
 
 public class ExceptionHandler extends ChannelDuplexHandler {
     private final Logger logger;
@@ -20,6 +21,10 @@ public class ExceptionHandler extends ChannelDuplexHandler {
 
     @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.errorf("%s: %s", ctx.channel().remoteAddress(), cause);
+        ctx.close();
+    }
 
+    @Override public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
+        logger.warnf("Didnt read: %s", msg);
     }
 }
