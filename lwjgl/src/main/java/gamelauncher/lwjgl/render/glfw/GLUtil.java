@@ -1,10 +1,15 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.lwjgl.render.glfw;
 
 import de.dasbabypixel.annotations.Api;
-import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.states.ContextLocal;
 import gamelauncher.gles.states.StateRegistry;
-import gamelauncher.lwjgl.LWJGLGameLauncher;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengles.*;
 import org.lwjgl.system.APIUtil;
@@ -21,14 +26,13 @@ import static org.lwjgl.opengles.GLES32.*;
 public final class GLUtil {
 
     private static final int GL_CONTEXT_FLAGS = 0x821E;
-    private static final Logger logger = Logger.logger();
 
     static volatile ContextLocal<Boolean> skip = null;
 
     private GLUtil() {
     }
 
-    public static void clinit(LWJGLGameLauncher launcher) {
+    public static void clinit() {
         GLUtil.skip = ContextLocal.empty();
     }
 

@@ -1,4 +1,14 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.data.embed;
+
+import gamelauncher.engine.util.service.ServiceName;
+import gamelauncher.engine.util.service.ServiceProvider;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -9,7 +19,8 @@ import java.util.regex.Pattern;
 
 public class EmbedFileSystem extends FileSystem {
 
-    private static final Set<String> supportedFileAttributeViews = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("basic", "embed")));
+    public static final ServiceName serviceName = new ServiceName("embed");
+    private static final Set<String> supportedFileAttributeViews = Set.of("basic", "embed");
     private final DataSupplier dataSupplier;
     private final EmbedFileSystemProvider provider;
     private final Path path;

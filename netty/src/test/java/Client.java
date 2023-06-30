@@ -9,6 +9,8 @@ import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.netty.NettyNetworkClient;
+import gamelauncher.netty.standalone.PacketRequestServerId;
+import gamelauncher.netty.standalone.StandaloneServer;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -21,19 +23,19 @@ public class Client {
     public Client() throws GameException, URISyntaxException, MalformedURLException {
         this.client = new NettyNetworkClient();
         client.port(19452);
-        client.packetRegistry().register(TestPacket.class, TestPacket::new);
-//        Connection con = client.connect(new URI("https", null, "localhost", 19452, "/", null, null));
-        Connection con = client.connect(new URI("https://ssh.darkcube.eu/orbits/"));
+        StandaloneServer.registerPackets(client.packetRegistry());
+        Connection con = client.connect(new URI("https", null, "localhost", 19452, "/orbits/", null, null));
+//        Connection con = client.connect(new URI("https://ssh.darkcube.eu/orbits/"));
         try {
             if (con.ensureState(Connection.State.CONNECTED).timeoutAfter(10, TimeUnit.SECONDS).await() != Connection.State.CONNECTED) {
                 client.cleanup();
                 throw new GameException("Failed to connect: Connection timed out");
             }
-            Threads.await(con.sendPacketAsync(new TestPacket("testtad")));
+            Threads.await(con.sendPacketAsync(new PacketRequestServerId()));
         } finally {
-            if (!con.cleanedUp()) Threads.await(con.cleanup());
+//            if (!con.cleanedUp()) Threads.await(con.cleanup());
         }
-        client.cleanup();
+//        client.cleanup();
     }
 
     public static void main(String[] args) throws GameException {

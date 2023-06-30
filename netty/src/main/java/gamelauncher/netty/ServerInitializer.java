@@ -7,19 +7,20 @@
 
 package gamelauncher.netty;
 
+import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkAddress;
 import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.server.ServerListener;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.netty.standalone.WebSocketDecoder;
 import gamelauncher.netty.standalone.WebSocketEncoder;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import org.jetbrains.annotations.NotNull;
+
+import java.net.http.HttpTimeoutException;
 
 public class ServerInitializer extends ChannelInitializer<Channel> {
     private final NettyServer server;
@@ -45,19 +46,47 @@ public class ServerInitializer extends ChannelInitializer<Channel> {
         ServerListener l = server.serverListener();
         if (l != null) l.connected(connection);
         logger.infof("Client %s connected on %s", connection.remoteAddress().toString(), connection.localAddress().toString());
-//                    SslContext sslContext = SslContextBuilder.forServer(keyManagment.privateKey, keyManagment.certificate).protocols("TLSv1.3").build();
-//                    SSLEngine engine = sslContext.newEngine(p.channel().alloc());
-//                    p.addLast("ssl", new SslHandler(engine));
+
+//        SslContext sslContext = SslContextBuilder.forServer(server.keyManagment().privateKey, server.keyManagment().certificate).protocols("TLSv1.3").build();
+//        SSLEngine engine = sslContext.newEngine(p.channel().alloc());
+//        p.addLast("ssl", new SslHandler(engine));
+
+        ServerWebSocketListener listener = new ServerWebSocketListener(ch.newPromise());
+        listener.promise.addListener(f -> {
+            if (f.isSuccess()) {
+                connection.state.value(Connection.State.CONNECTED);
+            } else {
+                connection.state.value(Connection.State.CLOSED);
+            }
+        });
 
         p.addLast("http", new HttpServerCodec());
         p.addLast("aggregator", new HttpObjectAggregator(65536));
         p.addLast("websocket_protocol", new WebSocketServerProtocolHandler("/orbits/", null, true));
         NettyNetworkHandler handler = new NettyNetworkHandler(new PacketEncoder(client.packetRegistry()));
+        p.addLast("websocket_listener", listener);
         p.addLast("websocket_decoder", new WebSocketDecoder());
         p.addLast("packet_decoder", new NettyNetworkDecoder(handler));
         p.addLast("websocket_encoder", new WebSocketEncoder());
         p.addLast("packet_encoder", new NettyNetworkEncoder(handler));
         p.addLast("packet_acceptor", new NettyNetworkAcceptor(client, connection, logger));
         p.addLast("exception_handler", new ExceptionHandler(logger));
+    }
+
+    private static class ServerWebSocketListener extends ChannelInboundHandlerAdapter {
+        private final ChannelPromise promise;
+
+        public ServerWebSocketListener(ChannelPromise promise) {
+            this.promise = promise;
+        }
+
+        @Override public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+            if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
+                promise.setSuccess();
+            } else if (evt == WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_TIMEOUT) {
+                promise.setFailure(new HttpTimeoutException("Failed to upgrade to websocket: handshake timed out"));
+            }
+            super.userEventTriggered(ctx, evt);
+        }
     }
 }

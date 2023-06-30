@@ -1,6 +1,12 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.resource;
 
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameSupplier;
@@ -14,8 +20,8 @@ import java.nio.file.Path;
  */
 public class SimpleResourceLoader extends ResourceLoader {
 
-    public SimpleResourceLoader(GameLauncher launcher) {
-        super(launcher);
+    public SimpleResourceLoader() {
+        super();
     }
 
     @Override protected boolean canLoadResource(Path path) throws GameException {
@@ -46,7 +52,7 @@ public class SimpleResourceLoader extends ResourceLoader {
             return new ResourceStream(path, directory, sup.get(), null);
         }
 
-        @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        @Override protected CompletableFuture<Void> cleanup0() {
             return null;
         }
     }

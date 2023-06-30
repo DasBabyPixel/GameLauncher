@@ -106,6 +106,10 @@ public class NettyServer extends AbstractGameResource implements NetworkServer {
         this.serverListener = serverListener;
     }
 
+    public KeyManagment keyManagment() {
+        return keyManagment;
+    }
+
     @Override public @Nullable ServerListener serverListener() {
         return serverListener;
     }

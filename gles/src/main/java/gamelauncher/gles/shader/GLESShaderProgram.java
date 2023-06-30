@@ -1,7 +1,15 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.gles.shader;
 
 import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.render.shader.Uniform;
+import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.gl.GLES20;
@@ -89,7 +97,7 @@ public class GLESShaderProgram extends ShaderProgram {
             c.glDetachShader(this.programId, this.fragmentShaderId);
         }
 
-        if (this.launcher.debugMode()) {
+        if (Debug.debug) {
             c.glValidateProgram(this.programId);
             c.glGetProgramiv(programId, GLES20.GL_VALIDATE_STATUS, a, 0);
             if (a[0] == 0) {

@@ -10,13 +10,9 @@ package gamelauncher.engine.util;
 import gamelauncher.engine.util.logging.Logger;
 
 public class Debug {
-    public static final boolean debug = Boolean.getBoolean("debug");
-    /**
-     * Wheather or not stack traces should be calculated with causes from other threads when tasks
-     * are submitted
-     */
-    public static final boolean trackResources = debug || Boolean.getBoolean("trackResources");
-    public static final boolean calculateThreadStacks = debug || Boolean.getBoolean("calculateThreadStacks");
+    public static final boolean debug = Config.DEBUG.value();
+    public static final boolean trackResources = Config.TRACK_RESOURCES.value();
+    public static final boolean calculateThreadStacks = Config.CALCULATE_THREAD_STACKS.value();
     private static final Logger logger = Logger.logger();
 
     public static void printInformation() {

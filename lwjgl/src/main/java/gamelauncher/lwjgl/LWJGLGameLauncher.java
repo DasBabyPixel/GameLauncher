@@ -12,6 +12,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
 import gamelauncher.engine.render.RenderMode;
+import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.Debug;
 import gamelauncher.engine.util.DefaultOperatingSystems;
@@ -24,6 +25,7 @@ import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.engine.util.logging.LogColor;
 import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.engine.util.service.ServiceReference;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESThreadGroup;
 import gamelauncher.gles.context.GLESContextProvider;
@@ -56,7 +58,16 @@ public class LWJGLGameLauncher extends GameLauncher {
     private final GLES gles;
     private final GLESThreadGroup glThreadGroup;
     private final LWJGLMemoryManagement memoryManagement;
+    private final SimpleResourceLoader resourceLoader;
+    private final LWJGLGuiManager guiManager;
+    private final BasicFontFactory fontFactory;
+    private final NettyNetworkClient networkClient;
+    private final GLESTextureManager textureManager;
+    private final LWJGLKeybindManager keybindManager;
+    private final GLESShaderLoader shaderLoader;
+    private final GLESModelLoader modelLoader;
     private GLFWFrame mainFrame;
+    private LWJGLGlyphProvider glyphProvider;
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() throws GameException {
@@ -73,15 +84,15 @@ public class LWJGLGameLauncher extends GameLauncher {
             this.gles = new GLES(this, this.memoryManagement, new LWJGLGLFactory(this));
             this.executorThreadHelper(new LWJGLExecutorThreadHelper());
             this.contextProvider(new GLESContextProvider(gles, this));
-            this.keybindManager(new LWJGLKeybindManager(this));
-            this.resourceLoader(new SimpleResourceLoader(this));
-            this.shaderLoader(new GLESShaderLoader(gles));
+            this.serviceProvider().register(ServiceReference.KEYBIND_MANAGER, keybindManager = new LWJGLKeybindManager(this));
+            this.serviceProvider().register(ServiceReference.RESOURCE_LOADER, resourceLoader = new SimpleResourceLoader());
+            this.serviceProvider().register(ServiceReference.SHADER_LOADER, shaderLoader = new GLESShaderLoader(gles));
             this.gameRenderer(new GLESGameRenderer(gles));
-            this.modelLoader(new GLESModelLoader(gles, this));
-            this.guiManager(new LWJGLGuiManager(this));
-            this.fontFactory(new BasicFontFactory(gles, this));
-            this.textureManager(gles.textureManager());
-            this.networkClient(new NettyNetworkClient(this));
+            this.serviceProvider().register(ServiceReference.MODEL_LOADER, modelLoader = new GLESModelLoader(gles, this));
+            this.serviceProvider().register(ServiceReference.GUI_MANAGER, guiManager = new LWJGLGuiManager(this));
+            this.serviceProvider().register(ServiceReference.FONT_FACTORY, fontFactory = new BasicFontFactory(gles, this));
+            this.serviceProvider().register(ServiceReference.TEXTURE_MANAGER, textureManager = gles.textureManager());
+            this.serviceProvider().register(ServiceReference.NETWORK_CLIENT, networkClient = new NettyNetworkClient(this));
             gles.init();
             this.glThreadGroup = new GLESThreadGroup();
         } catch (Throwable t) {
@@ -142,7 +153,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @Override protected void start0() throws GameException {
-        GLUtil.clinit(this);
+        GLUtil.clinit();
 
         this.glfwThread = new GLFWThread(this);
         this.glfwThread.start();
@@ -153,7 +164,7 @@ public class LWJGLGameLauncher extends GameLauncher {
         GL.destroy();
 
         frame(mainFrame = new GLFWFrame(this));
-        glyphProvider(new LWJGLGlyphProvider(this));
+        serviceProvider().register(GlyphProvider.class, glyphProvider = new LWJGLGlyphProvider(this));
         this.networkClient().start();
         mainFrame.renderMode(RenderMode.ON_UPDATE);
         mainFrame.closeCallback().value(frame -> {
@@ -178,13 +189,15 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @Override protected void stop0() throws GameException {
-        Threads.await(this.networkClient().cleanup());
-        Threads.await(this.glyphProvider().cleanup());
-        Threads.await(this.textureManager().cleanup());
+        Threads.await(guiManager.cleanup());
+        Threads.await(networkClient.cleanup());
+        Threads.await(glyphProvider.cleanup());
+        Threads.await(textureManager.cleanup());
 
-        Threads.await(this.mainFrame.cleanup());
-        Threads.await(this.glfwThread.exit());
-        Threads.await(keybindManager().cleanup());
+        Threads.await(mainFrame.cleanup());
+        Threads.await(glfwThread.exit());
+        Threads.await(keybindManager.cleanup());
+        Threads.await(resourceLoader.cleanup());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             int i = memoryManagement.count.get();
             if (i != 0) System.out.println("Memory Alloc Leak Count: " + i);

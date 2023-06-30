@@ -13,17 +13,13 @@ import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketRegistry;
 import gamelauncher.netty.standalone.WebSocketDecoder;
 import gamelauncher.netty.standalone.WebSocketEncoder;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolConfig;
+import io.netty.handler.codec.http.websocketx.WebSocketClientProtocolHandler;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -38,6 +34,7 @@ import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpConnectTimeoutException;
 
 public class NettyClientToServerInitializer extends ChannelInitializer<Channel> {
 
@@ -72,9 +69,10 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
         p.addLast("exception_handler", new ExceptionHandler(NettyNetworkClient.logger));
 
         if (useSsl) addEncryption(p);
-        if (proxy != null) addProxy(p);
 
         addConnectionProtocol(p);
+
+        if (proxy != null) addProxy(p);
     }
 
     public void connected(Channel channel) {
@@ -100,22 +98,51 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
     }
 
     private void addWebSocket(ChannelPipeline pipeline, NettyClientToServerConnection.WebSocket webSocket) throws URISyntaxException {
-        pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+
+        ClientWebSocketListener listener = new ClientWebSocketListener(pipeline.newPromise());
+        initFuture = listener.promise;
 
         pipeline.addBefore("packet_decoder", "http", new HttpClientCodec());
 
         pipeline.addAfter("http", "aggregator", new HttpObjectAggregator(65536));
         URI uri = new URI("ws", null, hostname, port, webSocket.data().path(), null, null);
-        WebSocketClientHandler clientHandler = new WebSocketClientHandler(WebSocketClientHandshakerFactory.newHandshaker(uri, WebSocketVersion.V13, null, true, new DefaultHttpHeaders()));
+        WebSocketClientProtocolConfig clientConfig = WebSocketClientProtocolConfig.newBuilder().webSocketUri(uri).version(WebSocketVersion.V13).allowExtensions(true).subprotocol(null).customHeaders(new DefaultHttpHeaders()).build();
+        WebSocketClientProtocolHandler clientHandler = new WebSocketClientProtocolHandler(clientConfig);
         pipeline.addAfter("aggregator", "websocket_protocol", clientHandler);
+        pipeline.addAfter("websocket_protocol", "websocket_listener", listener);
         pipeline.addBefore("packet_decoder", "websocket_decoder", new WebSocketDecoder());
         pipeline.addBefore("packet_encoder", "websocket_encoder", new WebSocketEncoder());
 
-        initFuture = clientHandler.handshakeFuture();
-        System.out.println("websocket");
-        clientHandler.handshakeFuture().addListener(f -> {
-            System.out.println("handshake done");
-        });
+//        initFuture = clientHandler.handshakeFuture();
+//        System.out.println("websocket");
+//        clientHandler.handshakeFuture().addListener(f -> {
+//            System.out.println("handshake done");
+//        });
+    }
+
+    private static class ClientWebSocketListener extends ChannelInboundHandlerAdapter {
+        private final ChannelPromise promise;
+
+        public ClientWebSocketListener(ChannelPromise promise) {
+            this.promise = promise;
+        }
+
+        @Override public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+            if (evt instanceof WebSocketClientProtocolHandler.ClientHandshakeStateEvent) {
+                WebSocketClientProtocolHandler.ClientHandshakeStateEvent e = (WebSocketClientProtocolHandler.ClientHandshakeStateEvent) evt;
+                switch (e) {
+                    case HANDSHAKE_COMPLETE:
+                        promise.setSuccess();
+                        break;
+                    case HANDSHAKE_ISSUED:
+                        break;
+                    case HANDSHAKE_TIMEOUT:
+                        promise.setFailure(new HttpConnectTimeoutException("Failed to upgrade to websocket: handshake timed out"));
+                        break;
+                }
+            }
+            super.userEventTriggered(ctx, evt);
+        }
     }
 
     private void addEncryption(ChannelPipeline pipeline) throws SSLException {

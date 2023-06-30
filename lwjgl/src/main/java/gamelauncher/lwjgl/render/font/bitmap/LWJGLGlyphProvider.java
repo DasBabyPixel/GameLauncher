@@ -97,116 +97,119 @@ public class LWJGLGlyphProvider extends AbstractGameResource implements GlyphPro
 
     @Override public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
         GlyphModelWrapper wrapper = new GlyphModelWrapper(null, 0, 0, 0, 0);
-        Key fkey = text.style().font();
-        if (fkey == null) fkey = new Key("fonts/calibri.ttf");
-        Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().assets())));
-        font.dataFuture().thenAccept(fontData -> frame.launcher().threads().workStealing.submit(() -> {
-            STBTTFontinfo finfo = STBTTFontinfo.malloc();
-            ByteBuffer fd = frame.launcher().memoryManagement().allocDirect(fontData.length);
-            fd.put(fontData);
-            fd.position(0);
-            if (!STBTruetype.stbtt_InitFont(finfo, fd)) {
+        frame.launcher().threads().workStealing.submit(() -> {
+
+            Key fkey = text.style().font();
+            if (fkey == null) fkey = new Key("fonts/calibri.ttf");
+            Font font = frame.launcher().fontFactory().createFont(frame.launcher().resourceLoader().resource(fkey.toPath(frame.launcher().assets())));
+            font.dataFuture().thenAccept(fontData -> frame.launcher().threads().workStealing.submit(() -> {
+                STBTTFontinfo finfo = STBTTFontinfo.malloc();
+                ByteBuffer fd = frame.launcher().memoryManagement().allocDirect(fontData.length);
+                fd.put(fontData);
+                fd.position(0);
+                if (!STBTruetype.stbtt_InitFont(finfo, fd)) {
+                    font.cleanup();
+                    finfo.free();
+                    throw new GameException("Failed to initialize font");
+                }
+                float scale = STBTruetype.stbtt_ScaleForPixelHeight(finfo, pixelHeight);
+                int[] aascent = new int[1];
+                int[] adescent = new int[1];
+                int[] alinegap = new int[1];
+                STBTruetype.stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
+                float descent = adescent[0] * scale;
+                float ascent = aascent[0] * scale;
+                wrapper.ascent().number(ascent);
+                wrapper.descent().number(descent);
+                char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
+                Queue<Consumer<STBTTFontinfo>> tasks = new ConcurrentLinkedQueue<>();
+
+                List<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
+                for (char ch : ar) {
+                    GlyphKey key = new GlyphKey(scale, ch);
+                    CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(tasks, key, ch, scale);
+                    futures.add(fentry);
+                }
+
+                for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+                    service.submit(new FontLoadRunnable(tasks, fontData));
+                }
+
+                float[] kernAdvances = new float[ar.length];
+                for (int i = 0; i < ar.length; i++) {
+                    int ch = ar[i];
+                    int nex = ar.length - 1 == i ? -1 : ar[i + 1];
+                    if (nex == -1) kernAdvances[i] = 0;
+                    else kernAdvances[i] = STBTruetype.stbtt_GetCodepointKernAdvance(finfo, ch, nex) * scale;
+                }
                 font.cleanup();
+                frame.launcher().memoryManagement().free(fd);
                 finfo.free();
-                throw new GameException("Failed to initialize font");
-            }
-            float scale = STBTruetype.stbtt_ScaleForPixelHeight(finfo, pixelHeight);
-            int[] aascent = new int[1];
-            int[] adescent = new int[1];
-            int[] alinegap = new int[1];
-            STBTruetype.stbtt_GetFontVMetrics(finfo, aascent, adescent, alinegap);
-            float descent = adescent[0] * scale;
-            float ascent = aascent[0] * scale;
-            wrapper.ascent().number(ascent);
-            wrapper.descent().number(descent);
-            char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
-            Queue<Consumer<STBTTFontinfo>> tasks = new ConcurrentLinkedQueue<>();
 
-            List<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
-            for (char ch : ar) {
-                GlyphKey key = new GlyphKey(scale, ch);
-                CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(tasks, key, ch, scale);
-                futures.add(fentry);
-            }
+                GameRunnable r = () -> {
 
-            for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
-                service.submit(new FontLoadRunnable(tasks, fontData));
-            }
-
-            float[] kernAdvances = new float[ar.length];
-            for (int i = 0; i < ar.length; i++) {
-                int ch = ar[i];
-                int nex = ar.length - 1 == i ? -1 : ar[i + 1];
-                if (nex == -1) kernAdvances[i] = 0;
-                else kernAdvances[i] = STBTruetype.stbtt_GetCodepointKernAdvance(finfo, ch, nex) * scale;
-            }
-            font.cleanup();
-            frame.launcher().memoryManagement().free(fd);
-            finfo.free();
-
-            GameRunnable r = () -> {
-
-                Int2ObjectMap<AtlasEntry> entryByIndex = new Int2ObjectOpenHashMap<>();
-                try {
-                    int i = 0;
-                    for (CompletableFuture<AtlasEntry> f : futures) {
-                        entryByIndex.put(i++, f.getNow(null));
+                    Int2ObjectMap<AtlasEntry> entryByIndex = new Int2ObjectOpenHashMap<>();
+                    try {
+                        int i = 0;
+                        for (CompletableFuture<AtlasEntry> f : futures) {
+                            entryByIndex.put(i++, f.getNow(null));
+                        }
+                    } catch (Throwable t) {
+                        logger.error(t);
                     }
-                } catch (Throwable t) {
-                    logger.error(t);
-                }
-                Collection<Model> meshes = new ArrayList<>();
-                float mwidth = 0;
-                float mheight = 0;
-                float xpos = 0;
-                float z = 0;
-                for (int i = 0; i < entryByIndex.size(); i++) {
-                    AtlasEntry e = entryByIndex.get(i);
-                    if (i == 0) xpos = -e.entry.data.bearingX;
+                    Collection<Model> meshes = new ArrayList<>();
+                    float mwidth = 0;
+                    float mheight = 0;
+                    float xpos = 0;
+                    float z = 0;
+                    for (int i = 0; i < entryByIndex.size(); i++) {
+                        AtlasEntry e = entryByIndex.get(i);
+                        if (i == 0) xpos = -e.entry.data.bearingX;
 
-                    Vector4i bd = e.bounds;
+                        Vector4i bd = e.bounds;
 
-                    NumberValue tw = e.texture.width();
-                    NumberValue th = e.texture.height();
-                    NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
-                    NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
-                    NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
-                    NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
+                        NumberValue tw = e.texture.width();
+                        NumberValue th = e.texture.height();
+                        NumberValue tl = NumberValue.constant((float) bd.x + .5F).divide(tw);
+                        NumberValue tb = NumberValue.constant((float) bd.y + .5F).divide(th);
+                        NumberValue tr = NumberValue.constant((float) bd.x + .5F).add(bd.z + .5F).divide(tw);
+                        NumberValue tt = NumberValue.constant((float) bd.y + .5F).add(bd.w + .5F).divide(th);
 
-                    GlyphData data = e.entry.data;
-                    float pb = -data.bearingY - data.height;
-                    float pt = pb + data.height;
-                    float pl = xpos + data.bearingX;
-                    float pr = pl + data.width;
-                    float width = pr - pl;
-                    float height = pt - pb;
-                    float x = pl + width / 2;
-                    float y = pt + height / 2;
+                        GlyphData data = e.entry.data;
+                        float pb = -data.bearingY - data.height;
+                        float pt = pb + data.height;
+                        float pl = xpos + data.bearingX;
+                        float pr = pl + data.width;
+                        float width = pr - pl;
+                        float height = pt - pb;
+                        float x = pl + width / 2;
+                        float y = pt + height / 2;
 
-                    mheight = Math.max(mheight, height);
-                    mwidth = Math.max(mwidth, pl + width);
-                    DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
+                        mheight = Math.max(mheight, height);
+                        mwidth = Math.max(mwidth, pl + width);
+                        DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
-                    GameItem gi = new GameItem(m);
-                    gi.position(x, y, z);
-                    gi.scale(width, height, 1);
-                    meshes.add(gi.createModel());
-                    xpos += e.entry.data.advance + kernAdvances[i];
-                }
+                        GameItem gi = new GameItem(m);
+                        gi.position(x, y, z);
+                        gi.scale(width, height, 1);
+                        meshes.add(gi.createModel());
+                        xpos += e.entry.data.advance + kernAdvances[i];
+                    }
 
-                CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
-                GameItem gi = new GameItem(cmodel);
-                gi.addColor(1, 1, 1, 0);
-                GameItemModel gim = gi.createModel();
-                wrapper.width(mwidth);
-                wrapper.height(mheight);
-                wrapper.handle(gim);
-                frame.launcher().guiManager().redrawAll();
-            };
+                    CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
+                    GameItem gi = new GameItem(cmodel);
+                    gi.addColor(1, 1, 1, 0);
+                    GameItemModel gim = gi.createModel();
+                    wrapper.width(mwidth);
+                    wrapper.height(mheight);
+                    wrapper.handle(gim);
+                    frame.launcher().guiManager().redrawAll();
+                };
 
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(r.toRunnable());
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(r.toRunnable());
 
-        }));
+            }));
+        });
         return wrapper;
     }
 

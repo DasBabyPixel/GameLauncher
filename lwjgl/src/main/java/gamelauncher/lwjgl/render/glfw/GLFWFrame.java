@@ -458,9 +458,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
                 this.fbwidth.number(width);
                 this.fbheight.number(height);
-                if (this.frame.renderMode() != RenderMode.MANUAL) {
-                    this.frame.renderThread.scheduleDrawRefreshWait();
-                }
+                if (this.frame.renderMode() != RenderMode.MANUAL) this.frame.renderThread.scheduleDrawRefreshWait();
             });
         }
     }

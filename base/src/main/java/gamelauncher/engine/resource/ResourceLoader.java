@@ -1,16 +1,20 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.resource;
 
 import de.dasbabypixel.annotations.Api;
-import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.GameException;
 import java8.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,27 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class ResourceLoader extends AbstractGameResource {
 
-    private static ResourceLoader instance = null;
-    private final GameLauncher launcher;
-    private final Map<Path, Resource> resources = new ConcurrentHashMap<>();
-
-    public ResourceLoader(GameLauncher launcher) {
-        this.launcher = launcher;
-    }
-
-    /**
-     * @return the instance
-     */
-    @Contract(pure = true) public static ResourceLoader getInstance() {
-        return instance;
-    }
-
-    /**
-     * Sets this as the {@link ResourceLoader}
-     */
-    @ApiStatus.Internal public final void set() {
-        instance = this;
-    }
+    private final ConcurrentHashMap<Path, Resource> resources = new ConcurrentHashMap<>();
 
     /**
      * @param path the path

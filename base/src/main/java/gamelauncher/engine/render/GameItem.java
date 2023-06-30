@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.engine.render;
 
 import de.dasbabypixel.annotations.Api;
@@ -113,9 +120,7 @@ public class GameItem extends AbstractGameResource {
 
     public void applyToTransformationMatrix(Matrix4f transformationMatrix) {
         transformationMatrix.translate(position.x.floatValue(), position.y.floatValue(), position.z.floatValue());
-        transformationMatrix.rotateX(Math.toRadians(-rotation.x.floatValue()));
-        transformationMatrix.rotateY(Math.toRadians(-rotation.y.floatValue()));
-        transformationMatrix.rotateZ(Math.toRadians(-rotation.z.floatValue()));
+        transformationMatrix.rotateXYZ(Math.toRadians(-rotation.x.floatValue()), Math.toRadians(-rotation.y.floatValue()), Math.toRadians(-rotation.z.floatValue()));
         transformationMatrix.scale(scale.x.floatValue(), scale.y.floatValue(), scale.z.floatValue());
     }
 
