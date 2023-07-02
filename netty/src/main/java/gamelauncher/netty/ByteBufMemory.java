@@ -1,6 +1,14 @@
+/*
+ * Copyright (C) 2023 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package gamelauncher.netty;
 
 import gamelauncher.engine.data.ByteMemory;
+import gamelauncher.engine.data.DataUtil;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -55,30 +63,44 @@ public class ByteBufMemory extends ByteMemory {
     }
 
     @Override public void setByte(int index, byte value) {
+        ensureCapacity(index + DataUtil.BYTES_BYTE);
         buf.setByte(index, value);
     }
 
     @Override public void setShort(int index, short value) {
+        ensureCapacity(index + DataUtil.BYTES_SHORT);
         buf.setShort(index, value);
     }
 
     @Override public void setInt(int index, int value) {
+        ensureCapacity(index + DataUtil.BYTES_INT);
         buf.setInt(index, value);
     }
 
     @Override public void setLong(int index, long value) {
+        ensureCapacity(index + DataUtil.BYTES_LONG);
         buf.setLong(index, value);
     }
 
     @Override public void setFloat(int index, float value) {
+        ensureCapacity(index + DataUtil.BYTES_FLOAT);
         buf.setFloat(index, value);
     }
 
     @Override public void setDouble(int index, double value) {
+        ensureCapacity(index + DataUtil.BYTES_DOUBLE);
         buf.setDouble(index, value);
     }
 
     @Override public void setBytes(int index, byte[] data, int dataOffset, int length) {
+        ensureCapacity(index + length);
         buf.setBytes(index, data, dataOffset, length);
+    }
+
+    private void ensureCapacity(int c) {
+        int cap = buf.capacity();
+        int nc = cap;
+        while (nc < c) nc = nc * 2;
+        if (nc != cap) buf.capacity(nc);
     }
 }
