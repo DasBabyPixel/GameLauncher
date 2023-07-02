@@ -14,7 +14,7 @@ import io.netty.buffer.ByteBuf;
 class NettyNetworkHandler {
 
     // TODO: Check if this is a valid way for ByteBufs. Releasing etc.
-    final ThreadLocal<ByteBufMemory> memory = ThreadLocal.withInitial(ByteBufMemory::new);
+    static final ThreadLocal<ByteBufMemory> memory = ThreadLocal.withInitial(ByteBufMemory::new);
     final PacketEncoder encoder;
 
     public NettyNetworkHandler(PacketEncoder encoder) {
@@ -22,7 +22,7 @@ class NettyNetworkHandler {
     }
 
     DataBuffer prepareBuffer(ByteBuf buf) {
-        ByteBufMemory memory = this.memory.get();
+        ByteBufMemory memory = NettyNetworkHandler.memory.get();
         memory.buf = buf;
         DataBuffer pbuf = new DataBuffer(memory);
         pbuf.writerIndex(memory.buf.writerIndex());

@@ -103,6 +103,7 @@ public class DataMemory extends ByteMemory {
     }
 
     @Override public void setBytes(int index, byte[] data, int dataOffset, int length) {
+        ensureCapacity(index + length);
         for (int i = dataOffset, j = index, k = 0; k < length; i++, j++, k++) array[j] = data[i];
     }
 
