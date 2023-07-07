@@ -8,7 +8,10 @@
 package gamelauncher.lwjgl.util;
 
 import gamelauncher.gles.util.MemoryManagement;
-import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.Buffer;
@@ -18,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class LWJGLMemoryManagement implements MemoryManagement {
     private static final ThreadLocal<LWJGLMemoryStack> TLS = ThreadLocal.withInitial(LWJGLMemoryStack::newStack);
     public final LongList allocBuffers = new LongArrayList();
-    public final Long2ObjectMap<Thread> threads = new Long2ObjectOpenHashMap<>();
+    //    public final Long2ObjectMap<Thread> threads = new Long2ObjectOpenHashMap<>();
     public final AtomicInteger count = new AtomicInteger();
     public final Long2IntMap capacity = new Long2IntOpenHashMap();
 
@@ -65,11 +68,11 @@ public class LWJGLMemoryManagement implements MemoryManagement {
                 System.out.println("DOESNT CONTAIN " + hash(buffer));
                 Thread.dumpStack();
             } else {
-                Thread th = threads.remove(hash(buffer));
-                if (th != Thread.currentThread()) {
-                    System.out.println("Dealloc: Old Thread: " + th.getName());
-                    Thread.dumpStack();
-                }
+//                Thread th = threads.remove(hash(buffer));
+//                if (th != Thread.currentThread()) {
+//                    System.out.println("Dealloc: Old Thread: " + th.getName());
+//                    Thread.dumpStack();
+//                }
 
                 allocBuffers.rem(hash(buffer));
 
@@ -88,7 +91,7 @@ public class LWJGLMemoryManagement implements MemoryManagement {
         synchronized (allocBuffers) {
             capacity.put(hash(buffer), buffer.capacity());
             allocBuffers.add(hash(buffer));
-            threads.put(hash(buffer), Thread.currentThread());
+//            threads.put(hash(buffer), Thread.currentThread());
         }
     }
 

@@ -18,6 +18,7 @@ import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.texture.TextureManager;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.util.i18n.LanguageManager;
+import gamelauncher.engine.util.image.ImageDecoder;
 import gamelauncher.engine.util.keybind.KeybindManager;
 
 import java.nio.file.FileSystem;
@@ -36,6 +37,7 @@ public class ServiceReference<T> {
     public static final ServiceReference<ShaderLoader> SHADER_LOADER = new ServiceReference<>(ShaderLoader.class);
     public static final ServiceReference<FontFactory> FONT_FACTORY = new ServiceReference<>(FontFactory.class);
     public static final ServiceReference<FileSystem> EMBED_FILE_SYSTEM = new ServiceReference<>(EmbedFileSystem.serviceName, FileSystem.class);
+    public static final ServiceReference<ImageDecoder> IMAGE_DECODER = new ServiceReference<>(ImageDecoder.class);
 
     private final ServiceName serviceName;
     private final Class<T> serviceClass;

@@ -8,6 +8,7 @@
 package gamelauncher.engine.network.packet;
 
 import gamelauncher.engine.network.Connection;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @param <T>
@@ -15,6 +16,6 @@ import gamelauncher.engine.network.Connection;
  */
 public interface PacketHandler<T extends Packet> {
 
-    void receivePacket(Connection connection, T packet);
+    void receivePacket(@NotNull Connection connection, @NotNull T packet);
 
 }

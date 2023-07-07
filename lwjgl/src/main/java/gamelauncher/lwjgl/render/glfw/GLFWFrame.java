@@ -12,7 +12,7 @@ import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
-import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.data.DataUtil;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.Frame;
@@ -20,9 +20,11 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.util.Config;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.function.GameConsumer;
+import gamelauncher.engine.util.image.Icon;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
@@ -30,10 +32,14 @@ import gamelauncher.lwjgl.event.AddMonitorEvent;
 import gamelauncher.lwjgl.event.RemoveMonitorEvent;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
+import gamelauncher.lwjgl.util.image.AWTIcon;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.system.MemoryUtil;
 
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
@@ -61,6 +67,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final NumberValue windowHeight = NumberValue.withValue(0D);
     final BooleanValue fullscreen = BooleanValue.falseValue();
     final Property<Monitor> monitor = Property.empty();
+    final Property<Icon> icon = Property.empty();
     final MonitorListener monitorListener = new MonitorListener();
     final ManualQueryFramebuffer manualFramebuffer;
     boolean cleaningUp = false;
@@ -83,11 +90,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.context = new GLFWGLContext(new CopyOnWriteArraySet<>());
         this.context.owner = renderThread;
         this.context.frame = this;
-        this.launcher.getGLFWThread().submit(() -> {
-            this.context.create(null);
-            this.created = true;
-            this.renderThread.start();
-        });
         launcher.eventManager().registerListener(monitorListener);
     }
 
@@ -108,6 +110,14 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.context.owner = renderThread;
         this.created = true;
         launcher.eventManager().registerListener(monitorListener);
+    }
+
+    public void startMainFrame() {
+        this.launcher.getGLFWThread().submit(() -> {
+            this.context.create(null);
+            this.created = true;
+            this.renderThread.start();
+        });
     }
 
     @Override public GLFWFrameRenderThread renderThread() {
@@ -182,6 +192,10 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         return fullscreen;
     }
 
+    @Override public Property<Icon> icon() {
+        return icon;
+    }
+
     @Override public FrameRenderer frameRenderer() {
         return this.frameRenderer.value();
     }
@@ -220,6 +234,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
         launcher.eventManager().unregisterListener(monitorListener);
+        Icon ico = icon.value();
         cleaningUp = true;
         this.renderThread.cleanupContextOnExit = true;
         CompletableFuture<Void> f3 = this.renderThread.exit();
@@ -234,6 +249,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         futs.add(f1);
         futs.add(f2);
         futs.add(f3);
+        if (ico != null) futs.add(ico.cleanup());
         this.contexts.clear();
         CompletableFuture<Void> f = CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
         f.thenRun(() -> cleaningUp = false);
@@ -282,6 +298,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+            glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
             glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -289,7 +306,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
             Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().monitor(glfwGetPrimaryMonitor());
 
-            this.glfwId = glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, GameLauncher.NAME, 0, shared == null ? 0 : shared.glfwId);
+            this.glfwId = glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, Config.NAME.value(), 0, shared == null ? 0 : shared.glfwId);
             if (glfwId == 0L) {
                 PointerBuffer buf = MemoryUtil.memAllocPointer(1);
                 glfwGetError(buf);
@@ -298,6 +315,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 if (shared != null) System.out.println(shared.sharedContexts);
                 throw new RuntimeException("Error creating window: " + error);
             }
+
             glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
             glfwSetWindowPos(glfwId, primaryMonitor.x() + primaryMonitor.width() / 4, primaryMonitor.y() + primaryMonitor.height() / 4);
             int[] a0 = new int[1];
@@ -313,6 +331,24 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.frame.windowHeight.bind(this.height);
                 this.monitor.value(primaryMonitor);
             }
+
+            Icon icon = frame.icon.value();
+            if (icon != null) {
+                applyIcon(icon);
+            } else {
+                try {
+                    icon = frame.launcher.imageDecoder().decodeIcon(frame.launcher.resourceLoader().resource(frame.launcher.assets().resolve("gamelauncher").resolve("default_icon.ico")).newResourceStream());
+                    applyIcon(icon);
+                    icon.cleanup();
+                } catch (GameException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            frame.icon.addListener(property -> {
+                Icon i = (Icon) property.value();
+                frame.launcher.getGLFWThread().submit(() -> applyIcon(i));
+            });
+
             frame.monitorListener.property = monitor;
             frame.monitorListener.window = frame.getGLFWId();
             glfwGetFramebufferSize(this.glfwId, a0, a1);
@@ -460,6 +496,36 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.fbheight.number(height);
                 if (this.frame.renderMode() != RenderMode.MANUAL) this.frame.renderThread.scheduleDrawRefreshWait();
             });
+        }
+
+        private void applyIcon(Icon icon) {
+            AWTIcon awt = (AWTIcon) icon;
+            GLFWImage.Buffer buffer = GLFWImage.malloc(awt.images().size());
+            List<ByteBuffer> pixels = new ArrayList<>();
+            for (int i = 0; i < awt.images().size(); i++) {
+                BufferedImage img = awt.images().get(i);
+                buffer.position(i).width(img.getWidth()).height(img.getHeight());
+                int[] argb = img.getRGB(0, 0, img.getWidth(), img.getHeight(), null, 0, img.getWidth());
+                ByteBuffer buf = frame.launcher.memoryManagement().allocDirect(argb.length * DataUtil.BYTES_INT);
+                for (int h = 0; h < img.getHeight(); h++) {
+                    for (int w = 0; w < img.getWidth(); w++) {
+                        int pixel = argb[h * img.getWidth() + w];
+                        buf.put((byte) ((pixel >> 16) & 0xFF));
+                        buf.put((byte) ((pixel >> 8) & 0xFF));
+                        buf.put((byte) (pixel & 0xFF));
+                        buf.put((byte) ((pixel >> 24) & 0xFF));
+                    }
+                }
+                buf.flip();
+                buffer.pixels(buf);
+                pixels.add(buf);
+            }
+            buffer.position(0);
+            glfwSetWindowIcon(glfwId, buffer);
+            buffer.free();
+            for (ByteBuffer pixel : pixels) {
+                frame.launcher.memoryManagement().free(pixel);
+            }
         }
     }
 

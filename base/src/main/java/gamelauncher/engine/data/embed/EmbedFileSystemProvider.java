@@ -19,7 +19,6 @@ import java.nio.file.spi.FileSystemProvider;
 import java.util.Map;
 import java.util.Set;
 
-@SuppressWarnings("NewApi")
 public class EmbedFileSystemProvider extends FileSystemProvider {
 
     public static final EmbedFileSystemProvider instance = new EmbedFileSystemProvider();

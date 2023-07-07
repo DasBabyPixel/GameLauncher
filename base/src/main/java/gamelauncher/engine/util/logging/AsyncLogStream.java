@@ -17,6 +17,8 @@ import gamelauncher.engine.util.i18n.Message;
 import gamelauncher.engine.util.logging.SelectiveStream.Output;
 import java8.util.concurrent.CompletableFuture;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -45,14 +47,15 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     private final AnsiProvider ansi;
     private final LogColor C100 = new LogColor(100, 100, 100);
     private final Object asyncLock = new Object();
+    private final LogFileWriter logFileWriter;
     private volatile boolean async;
-    //			new DateTimeFormatterBuilder().appendPattern("HH:mm:ss.SSS").toFormatter();
 
     public AsyncLogStream(GameLauncher launcher) {
         super(launcher);
-        this.ansi = launcher == null ? new AnsiProvider.Unsupported() : launcher.ansi();
+        this.ansi = launcher == null ? AnsiProvider.Unsupported.instance() : launcher.ansi();
         this.system = Logger.system;
         this.setName("AsyncLogStream");
+        this.logFileWriter = new LogFileWriter(launcher, ansi);
         this.out = new PrintStream(this.system, true);
     }
 
@@ -77,8 +80,14 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         } catch (GameException e) {
             throw new RuntimeException(e);
         }
-        this.log(new LogEntry<>(logger, Thread.currentThread(), message, level));
+        synchronized (asyncLock) {
+            this.log(new LogEntry<>(logger, Thread.currentThread(), message, level));
+        }
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void closeFiles() {
+        logFileWriter.close();
     }
 
     public void offerCalled(LogLevel level, StackTraceElement caller, Object message) {
@@ -89,18 +98,28 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
             }
             return;
         }
-        this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+        synchronized (asyncLock) {
+            this.log(new LogEntry<>(null, Thread.currentThread(), message, level, caller));
+        }
     }
 
     @Override public CompletableFuture<Void> cleanup0() throws GameException {
         return this.exit();
     }
 
+    public void initialize() {
+        try {
+            logFileWriter.init();
+        } catch (GameException e) {
+            e.printStackTrace();
+        }
+    }
+
     @SuppressWarnings("RedundantThrows") @Override protected void handleElement(LogEntry<?> element) throws GameException {
         this.log(element);
     }
 
-    void setSystemLevel(LogLevel level) {
+    private void setSystemLevel(LogLevel level) {
         if (level.level() > LogLevel.ERROR.level()) {
             this.system.setOutput(Output.ERR);
         } else {
@@ -108,7 +127,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         }
     }
 
-    void log(LogEntry<?> entry) {
+    private void log(LogEntry<?> entry) {
         Object message = entry.object;
         if (message == null) {
             message = "null";
@@ -126,19 +145,19 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         }
     }
 
-    void printThread(Thread thread) {
+    private void printThread(Thread thread) {
         this.out.printf(this.ansi0(AsyncLogStream.fgThread), thread.getName());
     }
 
-    void printLoggerName(Logger logger) {
+    private void printLoggerName(Logger logger) {
         this.out.printf(this.ansi0(AsyncLogStream.fgLogger), logger.toString());
     }
 
-    void printTime(TemporalAccessor time) {
+    private void printTime(TemporalAccessor time) {
         this.out.printf(this.ansi0(AsyncLogStream.fgTime), this.formatter.format(time));
     }
 
-    void printLevel(LogLevel level) {
+    private void printLevel(LogLevel level) {
         this.out.printf(this.ansi0(level.displayColor()), level.name());
     }
 
@@ -241,7 +260,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
         return ansi(C100) + "[" + ansi(color) + "%s" + ansi(C100) + "]" + ansi.reset() + " ";
     }
 
-    private void logString(LogLevel level, TemporalAccessor time, StackTraceElement caller, Thread thread, Logger logger, String string) {
+    private void logString(@Nullable LogLevel level, @NotNull TemporalAccessor time, @Nullable StackTraceElement caller, @NotNull Thread thread, @Nullable Logger logger, @NotNull String string) {
         this.setSystemLevel(level == null ? LogLevel.INFO : level);
         for (String object : this.lines(string)) {
             this.printTime(time);
@@ -254,7 +273,8 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
                 this.printThread(thread);
                 this.out.printf("[%s.%s:%s] ", caller.getClassName(), caller.getMethodName(), caller.getLineNumber());
             }
-            assert level != null;
+            logFileWriter.writeToFiles(level, time, caller, thread, logger, object);
+            if (level == null) level = LogLevel.WARN;
             this.out.printf(ansi.formatln(), ansi.ansi(level.textColor()) + object);
         }
     }

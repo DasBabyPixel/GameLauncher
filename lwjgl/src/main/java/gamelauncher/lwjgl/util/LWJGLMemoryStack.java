@@ -10,9 +10,9 @@ package gamelauncher.lwjgl.util;
 import gamelauncher.engine.util.Debug;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.function.Function;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;

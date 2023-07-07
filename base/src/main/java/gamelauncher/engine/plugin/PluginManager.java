@@ -143,6 +143,19 @@ public class PluginManager {
     }
 
     /**
+     * Loads a plugin that is on the classpath
+     */
+    @Api public void loadPlugin(String name) {
+        try {
+            Class<? extends Plugin> clazz = Class.forName(name).asSubclass(Plugin.class);
+            Plugin plugin = clazz.getConstructor().newInstance();
+            loadPlugin(plugin);
+        } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Used to load a plugin that alraedy has an instance.
      */
     @Api public void loadPlugin(Plugin plugin) {

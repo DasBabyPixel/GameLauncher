@@ -2,11 +2,13 @@ package gamelauncher.engine.render;
 
 import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
+import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
+import gamelauncher.engine.util.image.Icon;
 import java8.util.concurrent.CompletableFuture;
 
 /**
@@ -53,6 +55,8 @@ public interface Frame extends GameResource {
      * @return the fullscreen property. Modify this to set fullscreen
      */
     @Api BooleanValue fullscreen();
+
+    @Api Property<Icon> icon();
 
     /**
      * @return the {@link FrameRenderer} for this {@link Frame}

@@ -64,17 +64,17 @@ public interface NetworkClient extends GameResource {
 
     /**
      * @param <T>
-     * @param packetTpye
+     * @param packetType
      * @param handler
      */
-    @Api <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api <T extends Packet> void addHandler(Class<T> packetType, PacketHandler<T> handler);
 
     /**
      * @param <T>
-     * @param packetTpye
+     * @param packetType
      * @param handler
      */
-    @Api <T extends Packet> void removeHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler);
 
     /**
      * @return the {@link PacketRegistry}

@@ -15,22 +15,41 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Api
 public class Config<T> {
-    private static final Map<String, Config<?>> config = new ConcurrentHashMap<>();
+    public static final Config<String> NAME = createString("name", "GameLauncher");
     public static final Config<Boolean> DEBUG = createBoolean("debug", false);
     public static final Config<Boolean> TRACK_RESOURCES = createBoolean("track_resources", DEBUG);
     public static final Config<Boolean> CALCULATE_THREAD_STACKS = createBoolean("calculate_thread_stacks", DEBUG);
+    public static final Config<String> GAME_DIRECTORY = createString("game_directory", "folder");
     private final String name;
     private final T defaultValue;
     private volatile T value;
 
+    private Config(String name, T defaultValue) {
+        this(name, defaultValue, defaultValue);
+    }
+
+    private Config(String name, T defaultValue, T value) {
+        this.name = name;
+        this.defaultValue = defaultValue;
+        this.value = value;
+        if (Holder.config.putIfAbsent(name, this) != null) {
+            throw new GameException.RuntimeGameException("Cannot create multiple configs of the same name: " + name);
+        }
+    }
+
     @Api public static <T> Config<T> named(String name) throws UnknownConfigException {
-        @SuppressWarnings("unchecked") Config<T> c = (Config<T>) config.get(name);
+        @SuppressWarnings("unchecked") Config<T> c = (Config<T>) Holder.config.get(name);
         if (c == null) throw new UnknownConfigException(name);
         return c;
     }
 
-    @Api public static <T> Config<T> create(String name, T defaultValue) throws GameException {
+    @Api public static <T> Config<T> create(String name, T defaultValue) {
         return new Config<>(name, defaultValue);
+    }
+
+    @Api public static Config<String> createString(String name, String defaultValue) {
+        String prop = systemProperty(name);
+        return prop == null ? new Config<>(name, defaultValue) : new Config<>(name, defaultValue, prop);
     }
 
     @Api public static Config<Boolean> createBoolean(String name, Config<Boolean> defaultValue) {
@@ -67,19 +86,6 @@ public class Config<T> {
         return System.getProperty("gamelauncher." + name);
     }
 
-    private Config(String name, T defaultValue) {
-        this(name, defaultValue, defaultValue);
-    }
-
-    private Config(String name, T defaultValue, T value) {
-        this.name = name;
-        this.defaultValue = defaultValue;
-        this.value = value;
-        if (config.putIfAbsent(name, this) != null) {
-            throw new GameException.RuntimeGameException("Cannot create multiple configs of the same name: " + name);
-        }
-    }
-
     @Api public T defaultValue() {
         return defaultValue;
     }
@@ -112,5 +118,9 @@ public class Config<T> {
         @Api public UnknownConfigException(Throwable cause) {
             super(cause);
         }
+    }
+
+    private static class Holder {
+        private static final Map<String, Config<?>> config = new ConcurrentHashMap<>();
     }
 }

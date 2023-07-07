@@ -88,15 +88,12 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
 
     @Override public final CompletableFuture<Void> cleanup() throws GameException {
         CompletableFuture<Void> f = this.cleanup0();
+        stopTracking();
         if (f == null) {
-            stopTracking();
             cleanupFuture.complete(null);
         } else {
-            f.thenRun(() -> {
-                stopTracking();
-                cleanupFuture.complete(null);
-            }).exceptionally(throwable -> {
-                stopTracking();
+            f.thenRun(() -> cleanupFuture.complete(null));
+            f.exceptionally(throwable -> {
                 cleanupFuture.completeExceptionally(throwable);
                 return null;
             });
@@ -112,9 +109,9 @@ public abstract class AbstractGameThread extends Thread implements GameResource 
         return cleanupFuture.isDone();
     }
 
-    protected abstract CompletableFuture<Void> cleanup0() throws GameException;
-
     public GameLauncher launcher() {
         return launcher;
     }
+
+    protected abstract CompletableFuture<Void> cleanup0() throws GameException;
 }

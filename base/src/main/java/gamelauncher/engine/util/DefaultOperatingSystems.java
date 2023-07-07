@@ -8,7 +8,7 @@
 package gamelauncher.engine.util;
 
 public enum DefaultOperatingSystems implements OperatingSystem {
-    LWJGL, ANDROID;
+    WINDOWS, ANDROID, UNKNOWN;
 
     @Override public String osName() {
         return name().toLowerCase();

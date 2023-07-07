@@ -154,39 +154,38 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                 byte[] data = stream.readAllBytes();
                 stream.cleanup();
                 ByteArrayInputStream bin = new ByteArrayInputStream(data);
-
-                owner.submit(() -> {
-                    int width;
-                    int height;
-                    ByteBuffer buff = null;
-                    try {
-                        if (isRaw(data)) {
-                            //noinspection ResultOfMethodCallIgnored
-                            bin.skip(SIGNATURE_RAW.length);
-                            try (MemoryStack stack = memoryManagement.stackPush()) {
-                                ByteBuffer tbbuf = stack.alloc(2 * DataUtil.BYTES_INT);
-                                tbbuf.put(data, SIGNATURE_RAW.length, 2 * DataUtil.BYTES_INT);
-                                tbbuf.flip();
-                                width = tbbuf.getInt();
-                                height = tbbuf.getInt();
-                            }
-                            buff = memoryManagement.allocDirect(width * height * format.get().size());
-                            buff.put(data, SIGNATURE_RAW.length + 2 * DataUtil.BYTES_INT, data.length - SIGNATURE_RAW.length - 2 * DataUtil.BYTES_INT);
-                            buff.flip();
-                        } else {
-                            PNGDecoder dec = new PNGDecoder(bin);
-                            width = dec.getWidth();
-                            height = dec.getHeight();
-                            buff = memoryManagement.allocDirect(4 * width * height);
-                            dec.decode(buff, width * 4, PNGDecoder.Format.RGBA);
-                            buff.flip();
+                int width;
+                int height;
+                ByteBuffer buff = null;
+                try {
+                    if (isRaw(data)) {
+                        //noinspection ResultOfMethodCallIgnored
+                        bin.skip(SIGNATURE_RAW.length);
+                        try (MemoryStack stack = memoryManagement.stackPush()) {
+                            ByteBuffer tbbuf = stack.alloc(2 * DataUtil.BYTES_INT);
+                            tbbuf.put(data, SIGNATURE_RAW.length, 2 * DataUtil.BYTES_INT);
+                            tbbuf.flip();
+                            width = tbbuf.getInt();
+                            height = tbbuf.getInt();
                         }
-                        bin.close();
-                    } catch (IOException e) {
-                        if (buff != null) memoryManagement.free(buff);
-                        throw new RuntimeException(e);
+                        buff = memoryManagement.allocDirect(width * height * format.get().size());
+                        buff.put(data, SIGNATURE_RAW.length + 2 * DataUtil.BYTES_INT, data.length - SIGNATURE_RAW.length - 2 * DataUtil.BYTES_INT);
+                        buff.flip();
+                    } else {
+                        PNGDecoder dec = new PNGDecoder(bin);
+                        width = dec.getWidth();
+                        height = dec.getHeight();
+                        buff = memoryManagement.allocDirect(4 * width * height);
+                        dec.decode(buff, width * 4, PNGDecoder.Format.RGBA);
+                        buff.flip();
                     }
-
+                    bin.close();
+                } catch (IOException e) {
+                    if (buff != null) memoryManagement.free(buff);
+                    throw GameException.wrap(e);
+                }
+                ByteBuffer finalBuff = buff;
+                owner.submit(() -> {
                     if (this.width.intValue() < width) {
                         this.width.number(width);
                     }
@@ -203,8 +202,8 @@ public class GLESTexture extends AbstractGameResource implements Texture {
                         allocateCreated(x + width, y + height);
                     }
 
-                    upload0(buff, x, y, width, height);
-                    memoryManagement.free(buff);
+                    upload0(finalBuff, x, y, width, height);
+                    memoryManagement.free(finalBuff);
                     lock.writeLock().unlock();
                     cur.glFlush();
                     cur.glFinish();

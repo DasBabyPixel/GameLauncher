@@ -7,8 +7,12 @@
 
 package gamelauncher.lwjgl.render;
 
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengles.GLDebugMessageCallback;
+import org.lwjgl.opengles.GLES;
 import org.lwjgl.opengles.GLES32;
+import org.lwjgl.opengles.GLESCapabilities;
+import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.*;
@@ -22,6 +26,22 @@ public class LWJGLGLES implements gamelauncher.gles.gl.GLES32 {
     public static final LWJGLGLES instance = new LWJGLGLES();
 
     private LWJGLGLES() {
+    }
+
+    public static void initialize() {
+        Configuration.OPENGL_EXPLICIT_INIT.set(true);
+        Configuration.OPENGLES_EXPLICIT_INIT.set(true);
+        GL.create();
+        org.lwjgl.opengles.GLES.create(GL.getFunctionProvider());
+        GL.destroy();
+    }
+
+    public static GLESCapabilities createCapabilities() {
+        return GLES.createCapabilities();
+    }
+
+    public static void setCapabilities(GLESCapabilities capabilities) {
+        GLES.setCapabilities(capabilities);
     }
 
     @Override public void glActiveTexture(int texture) {

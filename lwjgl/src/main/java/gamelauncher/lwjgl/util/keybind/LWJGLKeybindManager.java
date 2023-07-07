@@ -79,7 +79,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
         if (!names.containsKey(id)) {
             if (id >= KEYBOARD_ADD && id < SCROLL) {
                 String n1 = glfwGetKeyName(id - KEYBOARD_ADD, 0);
-                if (n1 == null) n1 = Integer.toString(id);
+                if (n1 == null) n1 = Character.toString(id);
                 names.put(id, n1);
             } else if (id == SCROLL) {
                 names.put(id, "MouseWheel");

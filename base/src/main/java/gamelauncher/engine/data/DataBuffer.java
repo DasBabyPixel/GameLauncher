@@ -9,16 +9,18 @@ package gamelauncher.engine.data;
 
 import com.google.common.base.Charsets;
 import de.dasbabypixel.annotations.Api;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Supplier;
 
 public class DataBuffer {
-    private final ByteMemory memory;
+    private final @NotNull ByteMemory memory;
     private int readerIndex;
     private int writerIndex;
 
-    public DataBuffer(ByteMemory memory) {
+    public DataBuffer(@NotNull ByteMemory memory) {
         this.memory = memory;
     }
 
@@ -116,14 +118,14 @@ public class DataBuffer {
         memory.setShort(increaseWriterIndex(DataUtil.BYTES_SHORT), value);
     }
 
-    @Api public <T extends DataSerializable> void writeList(List<T> list) {
+    @Api public <T extends DataSerializable> void writeList(@NotNull List<T> list) {
         writeInt(list.size());
         for (DataSerializable object : list) {
             write(object);
         }
     }
 
-    @Api public <T extends DataSerializable> void readList(List<T> list, Supplier<T> instanceCreator) {
+    @Api public <T extends DataSerializable> void readList(@NotNull List<T> list, @NotNull Supplier<T> instanceCreator) {
         list.clear();
         int size = readInt();
         for (int i = 0; i < size; i++) {
@@ -152,7 +154,7 @@ public class DataBuffer {
     /**
      * Writes the given byte array to this {@link DataBuffer}
      */
-    @Api public void writeBytes(byte[] value) {
+    @Api public void writeBytes(byte @NotNull [] value) {
         writeInt(value.length);
         writeBytes(value, 0, value.length);
     }
@@ -161,14 +163,14 @@ public class DataBuffer {
      * Writes the given byte array to this {@link DataBuffer} from offset
      * {@code offset} with length {@code length}
      */
-    @Api public void writeBytes(byte[] value, int offset, int length) {
+    @Api public void writeBytes(byte @NotNull [] value, int offset, int length) {
         memory.setBytes(increaseWriterIndex(length), value, offset, length);
     }
 
     /**
      * Writes a string to this {@link DataBuffer}
      */
-    @Api public void writeString(String string) {
+    @Api public void writeString(@NotNull String string) {
         byte[] data = string.getBytes(Charsets.UTF_8);
         writeBytes(data);
     }
@@ -176,8 +178,36 @@ public class DataBuffer {
     /**
      * Writes a {@link DataSerializable} at the current {@link #writerIndex()}
      */
-    @Api public void write(DataSerializable object) {
+    @Api public void write(@NotNull DataSerializable object) {
         object.write(this);
+    }
+
+    @Api public void writeNullable(@Nullable DataSerializable object) {
+        writeNull(object);
+        if (object != null) write(object);
+    }
+
+    @Api public <T extends DataSerializable> @Nullable T read(@NotNull Supplier<@NotNull T> instanceCreator) {
+        T instance = instanceCreator.get();
+        read(instance);
+        return instance;
+    }
+
+    @Api public <T extends DataSerializable> @Nullable T readNullable(@NotNull Supplier<@NotNull T> instanceCreator) {
+        if (readNull()) return null;
+        T instance = instanceCreator.get();
+        read(instance);
+        return instance;
+    }
+
+    @Api public void writeNullableString(@Nullable String string) {
+        writeNull(string);
+        if (string != null) writeString(string);
+    }
+
+    @Api public @Nullable String readNullableString() {
+        if (readNull()) return null;
+        return readString();
     }
 
     /**
@@ -225,7 +255,7 @@ public class DataBuffer {
     /**
      * @return a read byte array from this {@link DataBuffer}
      */
-    @Api public byte[] readBytes() {
+    @Api public byte @NotNull [] readBytes() {
         int length = readInt();
         byte[] data = new byte[length];
         readBytes(data, 0, length);
@@ -237,14 +267,14 @@ public class DataBuffer {
      *
      * @return the read string
      */
-    @Api public String readString() {
+    @Api public @NotNull String readString() {
         return new String(readBytes(), Charsets.UTF_8);
     }
 
     /**
      * Reads a {@link DataSerializable} from the current {@link #readerIndex()}
      */
-    @Api public void read(DataSerializable object) {
+    @Api public void read(@NotNull DataSerializable object) {
         object.read(this);
     }
 
@@ -252,14 +282,25 @@ public class DataBuffer {
      * Reads {@code length} bytes from this {@link DataBuffer} into the specified
      * byte array at position {@code offset}
      */
-    @Api public void readBytes(byte[] value, int offset, int length) {
+    @Api public void readBytes(byte @NotNull [] value, int offset, int length) {
         memory.getBytes(increaseReaderIndex(length), value, offset, length);
     }
 
     /**
      * @return the memory of this buffer
      */
-    @Api public ByteMemory memory() {
+    @Api public @NotNull ByteMemory memory() {
         return memory;
+    }
+
+    private void writeNull(@Nullable Object object) {
+        writeByte((byte) (object == null ? 0 : 1));
+    }
+
+    private boolean readNull() {
+        byte b = readByte();
+        if (b == 0) return true;
+        if (b != 1) throw new IllegalStateException("Wrong data at this position");
+        return false;
     }
 }

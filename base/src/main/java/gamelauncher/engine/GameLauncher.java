@@ -13,6 +13,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.data.Files;
+import gamelauncher.engine.data.GameDirectoryResolver;
 import gamelauncher.engine.data.embed.EmbedFileSystemProvider;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.event.events.LauncherInitializedEvent;
@@ -38,14 +39,12 @@ import gamelauncher.engine.resource.ResourceTracker;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
-import gamelauncher.engine.util.Debug;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.*;
 import gamelauncher.engine.util.concurrent.ExecutorThreadHelper;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.i18n.LanguageManager;
+import gamelauncher.engine.util.image.ImageDecoder;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.logging.AnsiProvider;
 import gamelauncher.engine.util.logging.LogLevel;
@@ -61,21 +60,16 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.ProviderNotFoundException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author DasBabyPixel
  */
 public abstract class GameLauncher {
-
-    /**
-     * The GameLauncher name
-     */
-    @Deprecated public static final String NAME = "GameLauncher";
 
     /**
      * The max TPS in the {@link GameThread}
@@ -89,6 +83,7 @@ public abstract class GameLauncher {
     private final Gson settingsGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
     private final GameRegistry gameRegistry;
     private final ServiceProvider serviceProvider;
+    private final long startedMillis = System.currentTimeMillis();
     private Path gameDirectory;
     private Path dataDirectory;
     private Path settingsFile;
@@ -110,14 +105,15 @@ public abstract class GameLauncher {
     /**
      * Creates a new GameLauncher
      */
-    @SuppressWarnings("NewApi") public GameLauncher() {
+    public GameLauncher() {
         try {
+            loadOperatingSystem();
+            this.gameDirectory(GameDirectoryResolver.resolve(this));
             Logger.Initializer.init(this);
             Logger.asyncLogStream().start();
             this.logger = Logger.logger(this.getClass());
             this.serviceProvider = new ServiceProvider();
             this.threads = new Threads();
-            this.gameDirectory(Paths.get(GameLauncher.NAME).toAbsolutePath());
             this.profiler = new Profiler();
             this.gameRegistry = new GameRegistry();
 
@@ -135,9 +131,10 @@ public abstract class GameLauncher {
         }
     }
 
-    @SuppressWarnings("NewApi") public final void start(String[] args) throws GameException {
+    public final void start(String[] args) throws GameException {
         Debug.printInformation();
         LauncherUtils.acquire(logger, gameDirectory);
+        Logger.asyncLogStream().initialize();
         initializeFileSystem();
 
         if (ensureSuccessfulStart()) return;
@@ -160,13 +157,15 @@ public abstract class GameLauncher {
 
         initializeSettings();
 
-        this.gameThread.runLater(() -> {
+        this.gameThread.submit(() -> {
             this.start0();
             if (this.gameRenderer.renderer() != null && !(this.gameRenderer.renderer() instanceof GuiRenderer)) {
                 this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.renderer().getClass().getName());
             }
             this.frame.scheduleDrawWaitForFrame();
             this.eventManager().post(new LauncherInitializedEvent(this));
+            long timeStarted = System.currentTimeMillis();
+            logger.infof("Startup took %sms", timeStarted - this.startedMillis);
         });
         this.gameThread.start();
     }
@@ -178,7 +177,7 @@ public abstract class GameLauncher {
                 this.pluginManager.unloadPlugins();
                 this.stop0();
                 embedFileSystem().close();
-                Threads.await(this.gameThread.exit());
+                Threads.await(this.gameThread.cleanup());
                 Threads.await(this.modelIdRegistry.cleanup());
                 Threads.await(this.threads.cleanup());
                 try {
@@ -201,7 +200,7 @@ public abstract class GameLauncher {
     }
 
     @Api public AnsiProvider ansi() {
-        return new AnsiProvider.Unsupported();
+        return AnsiProvider.Unsupported.instance();
     }
 
     @Api public boolean isOnOperatingSystem(Predicate<OperatingSystem> predicate) {
@@ -302,6 +301,10 @@ public abstract class GameLauncher {
 
     @Api public ModelIdRegistry modelIdRegistry() {
         return modelIdRegistry;
+    }
+
+    @Api public ImageDecoder imageDecoder() {
+        return serviceProvider.service(ServiceReference.IMAGE_DECODER);
     }
 
     @Api public NetworkClient networkClient() {
@@ -406,7 +409,7 @@ public abstract class GameLauncher {
         Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(Charsets.UTF_8));
     }
 
-    @SuppressWarnings("NewApi") protected void gameDirectory(Path path) {
+    protected void gameDirectory(Path path) {
         this.gameDirectory = path;
         this.dataDirectory = this.gameDirectory.resolve("data");
         this.settingsFile = this.gameDirectory.resolve("settings.json");
@@ -439,6 +442,17 @@ public abstract class GameLauncher {
     protected void registerSettingInsertions() {
     }
 
+    protected void loadOperatingSystem() {
+        String osName = System.getProperty("os.name");
+        String vendor = System.getProperty("java.vendor");
+        OperatingSystem os = null;
+        if (osName == null) os = DefaultOperatingSystems.UNKNOWN;
+        else if (osName.toLowerCase(Locale.ROOT).contains("win")) os = DefaultOperatingSystems.WINDOWS;
+        if (os == null && "The Android Project".equals(vendor)) os = DefaultOperatingSystems.ANDROID;
+        if (os == null) os = DefaultOperatingSystems.UNKNOWN;
+        operatingSystem(os);
+    }
+
     protected void operatingSystem(OperatingSystem operatingSystem) {
         this.operatingSystem = operatingSystem;
     }
@@ -459,7 +473,11 @@ public abstract class GameLauncher {
         }
     }
 
-    @SuppressWarnings("NewApi") private void initializeSettings() throws GameException {
+    protected FileSystem createEmbedFileSystem() throws IOException {
+        return EmbedFileSystemProvider.instance.newFileSystem((URI) null, null);
+    }
+
+    private void initializeSettings() throws GameException {
         this.registerSettingInsertions();
         this.settings = new MainSettingSection(eventManager());
         if (!Files.exists(this.settingsFile)) {
@@ -481,7 +499,7 @@ public abstract class GameLauncher {
         }
     }
 
-    @SuppressWarnings("NewApi") private void initializeFileSystem() throws GameException {
+    private void initializeFileSystem() throws GameException {
         FileSystem embedFileSystem = serviceProvider.service(ServiceReference.EMBED_FILE_SYSTEM);
         if (embedFileSystem == null) {
             try {
@@ -498,10 +516,6 @@ public abstract class GameLauncher {
         Files.createDirectories(this.gameDirectory);
         Files.createDirectories(this.dataDirectory);
         Files.createDirectories(this.pluginsDirectory);
-    }
-
-    protected FileSystem createEmbedFileSystem() throws IOException {
-        return EmbedFileSystemProvider.instance.newFileSystem((URI) null, null);
     }
 
     private boolean ensureSuccessfulStart() throws GameException {
@@ -521,6 +535,9 @@ public abstract class GameLauncher {
     }
 
     private void loadPlugins(StartCommandSettings scs) throws GameException {
+        for (String internalPlugin : scs.internalPlugins) {
+            this.pluginManager.loadPlugin(internalPlugin);
+        }
         for (Path externalPlugin : scs.externalPlugins) {
             try {
                 this.pluginManager.loadPlugin(externalPlugin);

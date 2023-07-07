@@ -15,7 +15,7 @@ dependencies {
     api libs.fastutil
     api libs.disruptor
     api libs.annotations
-    api libs.streamsupport.cfuture
+    api libs.streamsupport
     api libs.guava
     api libs.property
     api libs.joml

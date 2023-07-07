@@ -20,7 +20,6 @@ import gamelauncher.lwjgl.render.LWJGLGLES;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES;
 import org.lwjgl.system.Callback;
 
 import java.util.ArrayList;
@@ -93,7 +92,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         if (this.owned) {
             StateRegistry.currentContext(null);
             GLFW.glfwMakeContextCurrent(0L);
-            GLES.setCapabilities(null);
+            LWJGLGLES.setCapabilities(null);
             this.owned = false;
             this.owner = null;
             if (errorCallback != null) errorCallback.free();
@@ -125,7 +124,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
                         Threads.await(mainFut);
                         StateRegistry.currentContext(this);
                         GLFW.glfwMakeContextCurrent(c.glfwId);
-                        GLES.createCapabilities();
+                        LWJGLGLES.createCapabilities();
                     });
                 } else {
                     StateRegistry.currentContext(null);
@@ -146,7 +145,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
                 Threads.await(mainFut);
                 StateRegistry.currentContext(this);
                 GLFW.glfwMakeContextCurrent(glfwId);
-                GLES.createCapabilities();
+                LWJGLGLES.createCapabilities();
             }
             return ctx;
         }
@@ -178,7 +177,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             this.owner = (ExecutorThread) Thread.currentThread();
             StateRegistry.currentContext(this);
             GLFW.glfwMakeContextCurrent(glfwId);
-            GLES.createCapabilities();
+            LWJGLGLES.createCapabilities();
             gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
             errorCallback = GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level, Logger.LoggerFlags.DONT_PRINT_SOURCE));
         }

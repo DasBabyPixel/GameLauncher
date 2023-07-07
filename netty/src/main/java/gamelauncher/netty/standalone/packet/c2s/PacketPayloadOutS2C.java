@@ -5,7 +5,7 @@
  * is strictly prohibited.
  */
 
-package gamelauncher.netty.standalone;
+package gamelauncher.netty.standalone.packet.c2s;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;

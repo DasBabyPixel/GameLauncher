@@ -20,7 +20,7 @@ public class LanguageManager {
 
     private volatile Language selectedLanguage;
 
-    @SuppressWarnings("NewApi") public LanguageManager(GameLauncher launcher) throws GameException {
+    public LanguageManager(GameLauncher launcher) throws GameException {
         this.launcher = launcher;
         language(Locale.ENGLISH).load(launcher.assets().resolve("languages").resolve("gamelauncher").resolve("en.json"));
     }

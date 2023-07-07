@@ -102,7 +102,7 @@ public class GLESShaderLoader implements ShaderLoader {
         throw new GameException("Struct not found: " + type);
     }
 
-    @SuppressWarnings("NewApi") @Override public ShaderProgram loadShader(Path path) throws GameException {
+    @Override public ShaderProgram loadShader(Path path) throws GameException {
         ResourceLoader loader = gles.launcher().resourceLoader();
         Resource resource = loader.resource(path);
         if (this.programs.containsKey(resource)) {

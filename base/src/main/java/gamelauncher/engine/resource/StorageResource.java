@@ -37,7 +37,4 @@ abstract class StorageResource implements GameResource {
         else map.put(key, value);
     }
 
-    protected void clearStorage() {
-        map.clear();
-    }
 }

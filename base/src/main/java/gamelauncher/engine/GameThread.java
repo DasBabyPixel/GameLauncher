@@ -2,6 +2,8 @@ package gamelauncher.engine;
 
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.AbstractGameThread;
+import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameCallable;
 import gamelauncher.engine.util.function.GameRunnable;
@@ -18,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author DasBabyPixel
  */
-public class GameThread extends Thread {
+public class GameThread extends AbstractGameThread implements ExecutorThread {
 
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final CompletableFuture<Void> exitFuture = new CompletableFuture<>();
@@ -34,6 +36,7 @@ public class GameThread extends Thread {
     private long ticksTimeSumCount = 0;
 
     public GameThread(GameLauncher launcher) {
+        super(launcher);
         this.gameLauncher = launcher;
         this.setName("GameThread");
         this.setPriority(MAX_PRIORITY);
@@ -93,9 +96,7 @@ public class GameThread extends Thread {
                         lastTick += (ticksToSkip - 1) * tickTime;
                     }
                 }
-                if (exit.get()) {
-                    break mainLoop;
-                }
+                if (exit.get()) break mainLoop;
             }
 
             if (exit.get()) {
@@ -105,6 +106,98 @@ public class GameThread extends Thread {
         workQueue();
 
         exitFuture.complete(null);
+    }
+
+    /**
+     * @return the current tps
+     */
+    @Api public int tps() {
+        return ticks.size();
+    }
+
+    /**
+     * @return the average tick time over the last second
+     */
+    @Api public double averageTickTime() {
+        return (double) ticksTimeSum / (double) ticksTimeSumCount;
+    }
+
+    @Override public <T> CompletableFuture<T> submit(GameCallable<T> callable) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        if (Threads.currentThread() == this) {
+            try {
+                future.complete(callable.call());
+            } catch (Throwable e) {
+                future.completeExceptionally(e);
+            }
+            return future;
+        }
+        queue.offer(() -> {
+            try {
+                T t = callable.call();
+                future.complete(t);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        return future;
+    }
+
+    @Override public CompletableFuture<Void> submit(GameRunnable runnable) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        if (Threads.currentThread() == this) {
+            try {
+                runnable.run();
+                future.complete(null);
+            } catch (Throwable e) {
+                future.completeExceptionally(e);
+            }
+            return future;
+        }
+        queue.offer(() -> {
+            try {
+                runnable.run();
+                future.complete(null);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        return future;
+    }
+
+    @Override public String name() {
+        return getName();
+    }
+
+    /**
+     * @return the current tick
+     */
+    @Api public int currentTick() {
+        return tick.get();
+    }
+
+    @Override public void workQueue() {
+        GameRunnable runnable;
+        while ((runnable = queue.poll()) != null) {
+            try {
+                runnable.run();
+            } catch (GameException ex) {
+                gameLauncher.handleError(ex);
+            }
+        }
+    }
+
+    @Override protected CompletableFuture<Void> cleanup0() throws GameException {
+        exit.set(true);
+        return exitFuture;
+    }
+
+    protected void launcherTick() {
+        try {
+            gameLauncher.tick();
+        } catch (Throwable ex) {
+            gameLauncher.handleError(ex);
+        }
     }
 
     private void removeOldTicks() {
@@ -131,92 +224,7 @@ public class GameThread extends Thread {
     private void tick(long tickTime) {
         offerTick(tickTime);
         tick.incrementAndGet();
-        try {
-            gameLauncher.tick();
-        } catch (Throwable ex) {
-            gameLauncher.handleError(ex);
-        }
+        launcherTick();
         workQueue();
-    }
-
-    /**
-     * @return the current tps
-     */
-    @Api public int tps() {
-        return ticks.size();
-    }
-
-    /**
-     * @return the average tick time over the last second
-     */
-    @Api public double averageTickTime() {
-        return (double) ticksTimeSum / (double) ticksTimeSumCount;
-    }
-
-    /**
-     * Runs a {@link GameRunnable} on the {@link GameThread}
-     *
-     * @return a completionFuture
-     */
-    @Api public CompletableFuture<Void> runLater(GameRunnable runnable) {
-        return runLater(() -> {
-            runnable.run();
-            return null;
-        });
-    }
-
-    /**
-     * Runs a {@link GameCallable} on the {@link GameThread}
-     *
-     * @return a completionFuture
-     */
-    @Api public <T> CompletableFuture<T> runLater(GameCallable<T> callable) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        runLater(callable, future);
-        return future;
-    }
-
-    private <T> void runLater(GameCallable<T> callable, CompletableFuture<T> future) {
-        queue.offer(() -> {
-            try {
-                T t = callable.call();
-                future.complete(t);
-            } catch (Throwable th) {
-                future.completeExceptionally(th);
-                throw new GameException(th);
-            }
-        });
-    }
-
-    private void workQueue() {
-        GameRunnable runnable;
-        while ((runnable = queue.poll()) != null) {
-            try {
-                runnable.run();
-            } catch (GameException ex) {
-                gameLauncher.handleError(ex);
-            }
-        }
-    }
-
-    /**
-     * @return the current tick
-     */
-    @Api public int currentTick() {
-        return tick.get();
-    }
-
-    /**
-     * Exits the {@link GameLauncher}
-     *
-     * @return a completionFuture
-     */
-    @Api public CompletableFuture<Void> exit() {
-        exit.set(true);
-        return exitFuture;
-    }
-
-    @Api public CompletableFuture<Void> exitFuture() {
-        return exitFuture;
     }
 }

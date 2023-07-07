@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application' version '7.4.2' apply false
     id 'com.android.library' version '7.4.2' apply false
     id 'org.jetbrains.kotlin.android' version '1.8.0' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'edu.sc.seis.launch4j' version "3.0.3" apply false
+}
+tasks.wrapper {
+    distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = '8.2'
 }
 
 tasks.register("generateRunDirectory") {
@@ -38,6 +44,15 @@ allprojects {
         }
     }
 
+    pluginManager.withPlugin('com.github.johnrengelman.shadow') {
+        components.forEach { c ->
+            if (c instanceof AdhocComponentWithVariants) {
+                c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+                    skip()
+                }
+            }
+        }
+    }
 
     tasks.withType(JavaCompile).configureEach {
         options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']

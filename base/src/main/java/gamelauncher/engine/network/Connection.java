@@ -29,17 +29,17 @@ public interface Connection extends GameResource {
 
     /**
      * @param <T>
-     * @param packetTpye
+     * @param packetType
      * @param handler
      */
-    @Api <T extends Packet> void addHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api <T extends Packet> void addHandler(Class<T> packetType, PacketHandler<T> handler);
 
     /**
      * @param <T>
-     * @param packetTpye
+     * @param packetType
      * @param handler
      */
-    @Api <T extends Packet> void removeHandler(Class<T> packetTpye, PacketHandler<T> handler);
+    @Api <T extends Packet> void removeHandler(Class<T> packetType, PacketHandler<T> handler);
 
     /**
      * Ensures that a state is reached. This blocks the current thread until the given {@code state} is reached.
@@ -77,6 +77,8 @@ public interface Connection extends GameResource {
         @Api StateEnsurance timeoutHandler(TimeoutHandler timeoutHandler);
 
         @Api State await();
+
+        @Api CompletableFuture<State> future();
 
         interface TimeoutHandler {
             @Api void timeout(State state);

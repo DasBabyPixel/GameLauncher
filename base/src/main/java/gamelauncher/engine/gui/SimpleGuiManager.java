@@ -60,7 +60,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         Gui gui = this.gui;
         if (gui != null) {
             this.gui = null;
-            return launcher.frame().renderThread().submit(gui::cleanup).thenCombine(launcher.gameThread().runLater(() -> {
+            return launcher.frame().renderThread().submit(gui::cleanup).thenCombine(launcher.gameThread().submit(() -> {
                 gui.unfocus();
                 gui.onClose();
             }), (unused, unused2) -> null);

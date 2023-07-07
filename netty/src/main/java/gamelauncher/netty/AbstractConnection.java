@@ -123,6 +123,7 @@ public abstract class AbstractConnection extends AbstractGameResource implements
         }
         f.exceptionally(t -> null).thenRun(() -> this.state.removeListener(l));
         return new StateEnsurance() {
+            private final CompletableFuture<State> future = new CompletableFuture<>();
             private long time = 5;
             private TimeUnit unit = TimeUnit.SECONDS;
             private TimeoutHandler timeoutHandler;
@@ -141,15 +142,22 @@ public abstract class AbstractConnection extends AbstractGameResource implements
             @Override public State await() {
                 try {
                     f.get(time, unit);
+                    future.complete(state);
                     return state;
                 } catch (InterruptedException | ExecutionException e) {
+                    future.completeExceptionally(e);
                     throw new RuntimeException(e);
                 } catch (TimeoutException e) {
+                    future.completeExceptionally(e);
                     State s = AbstractConnection.this.state.value();
                     if (s == state) return s;
                     if (timeoutHandler != null) timeoutHandler.timeout(s);
                     return s;
                 }
+            }
+
+            @Override public CompletableFuture<State> future() {
+                return future;
             }
         };
     }
@@ -219,6 +227,10 @@ public abstract class AbstractConnection extends AbstractGameResource implements
 
         @Override public State await() {
             return state;
+        }
+
+        @Override public CompletableFuture<State> future() {
+            return CompletableFuture.completedFuture(state);
         }
     }
 }

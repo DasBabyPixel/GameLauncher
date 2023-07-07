@@ -14,7 +14,17 @@ public interface AnsiProvider {
 
     String reset();
 
+    String strip(String input);
+
     class Unsupported implements AnsiProvider {
+        private static final Unsupported instance = new Unsupported();
+
+        private Unsupported() {
+        }
+
+        public static Unsupported instance() {
+            return instance;
+        }
 
         @Override public String ansi(LogColor color) {
             return "";
@@ -26,6 +36,10 @@ public interface AnsiProvider {
 
         @Override public String reset() {
             return "";
+        }
+
+        @Override public String strip(String input) {
+            return input;
         }
     }
 }

@@ -137,7 +137,7 @@ public abstract class AbstractQueueSubmissionThread<T> extends AbstractGameThrea
     }
 
     @Api
-    private static class QueueEntry<T> {
+    protected static class QueueEntry<T> {
         private CompletableFuture<Void> fut;
         private T val;
 

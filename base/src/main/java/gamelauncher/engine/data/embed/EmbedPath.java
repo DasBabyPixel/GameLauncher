@@ -17,7 +17,6 @@ import java.util.NoSuchElementException;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("NewApi")
 public class EmbedPath implements java.nio.file.Path {
 
     final EmbedFileSystem fileSystem;

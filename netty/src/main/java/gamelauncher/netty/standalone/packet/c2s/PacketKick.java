@@ -5,28 +5,32 @@
  * is strictly prohibited.
  */
 
-package gamelauncher.netty.standalone;
+package gamelauncher.netty.standalone.packet.c2s;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
 
-public class PacketClientDisconnected extends Packet {
-    public int id;
+public class PacketKick extends Packet {
+    public String server;
+    public int target;
 
-    public PacketClientDisconnected() {
-        super("client_disconnected");
+    public PacketKick() {
+        super("kick");
     }
 
-    public PacketClientDisconnected(int id) {
+    public PacketKick(String server, int target) {
         this();
-        this.id = id;
+        this.server = server;
+        this.target = target;
     }
 
     @Override protected void write0(DataBuffer buffer) {
-        buffer.writeInt(id);
+        buffer.writeString(server);
+        buffer.writeInt(target);
     }
 
     @Override protected void read0(DataBuffer buffer) {
-        id = buffer.readInt();
+        server = buffer.readString();
+        target = buffer.readInt();
     }
 }

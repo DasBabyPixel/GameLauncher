@@ -11,6 +11,7 @@ import java.util.HashSet;
 public class StartCommandSettings {
 
     public final Collection<Path> externalPlugins = new HashSet<>();
+    public final Collection<String> internalPlugins = new HashSet<>();
 
     private StartCommandSettings() {
     }
@@ -22,6 +23,10 @@ public class StartCommandSettings {
             if (a0[0].equals("externalPlugin")) {
                 Path path = Paths.get(a0[1]);
                 settings.externalPlugins.add(path);
+            }
+            if (a0[0].equals("internalPlugin")) {
+                String className = a0[1];
+                settings.internalPlugins.add(className);
             }
         }
         return settings;

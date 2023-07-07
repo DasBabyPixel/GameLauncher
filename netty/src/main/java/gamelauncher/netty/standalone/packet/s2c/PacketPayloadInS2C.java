@@ -5,32 +5,28 @@
  * is strictly prohibited.
  */
 
-package gamelauncher.netty.standalone;
+package gamelauncher.netty.standalone.packet.s2c;
 
 import gamelauncher.engine.data.DataBuffer;
 import gamelauncher.engine.network.packet.Packet;
 
-public class PacketPayloadOutS2A extends Packet {
-    public String serverId;
+public class PacketPayloadInS2C extends Packet {
     public byte[] data;
 
-    public PacketPayloadOutS2A() {
-        super("payload_out_s2a");
+    public PacketPayloadInS2C() {
+        super("payload_in_s2c");
     }
 
-    public PacketPayloadOutS2A(String serverId, byte[] data) {
+    public PacketPayloadInS2C(byte[] data) {
         this();
-        this.serverId = serverId;
         this.data = data;
     }
 
     @Override protected void write0(DataBuffer buffer) {
-        buffer.writeString(serverId);
         buffer.writeBytes(data);
     }
 
     @Override protected void read0(DataBuffer buffer) {
-        serverId = buffer.readString();
         data = buffer.readBytes();
     }
 }

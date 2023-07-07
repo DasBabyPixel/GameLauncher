@@ -33,7 +33,7 @@ public class Key {
         this("gamelauncher", key);
     }
 
-    @SuppressWarnings("NewApi") public Path toPath(Path root) {
+    public Path toPath(Path root) {
         Path path = root;
         path = path.resolve(namespace);
         path = path.resolve(key);

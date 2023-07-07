@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 /**
  * @author DasBabyPixel
  */
-@SuppressWarnings("NewApi")
 public class Files {
     /**
      * The maximum size of array to allocate.

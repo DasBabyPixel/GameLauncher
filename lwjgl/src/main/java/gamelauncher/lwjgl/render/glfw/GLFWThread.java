@@ -24,9 +24,11 @@ public class GLFWThread extends AbstractExecutorThread {
         @Override public void invoke(int errorcode, long descriptionp) {
             String description = GLFWErrorCallback.getDescription(descriptionp);
             String error = ERROR_CODES.get(errorcode);
+            Thread.dumpStack();
             logger.errorf("GLFW Error: %s(%s)\nDescription: %s", error, Integer.toHexString(errorcode), description);
         }
     };
+    private boolean initialized = false;
 
     public GLFWThread(GameLauncher launcher) {
         super(launcher, null);
@@ -39,11 +41,12 @@ public class GLFWThread extends AbstractExecutorThread {
     }
 
     @Override protected void startExecuting() {
+        GLFW.glfwSetErrorCallback(callback);
         if (!GLFW.glfwInit()) {
             throw new ExceptionInInitializerError("Couldn't initialize GLFW");
         }
+        initialized = true;
 
-        GLFW.glfwSetErrorCallback(callback);
         this.monitorManager.init();
     }
 
@@ -76,7 +79,7 @@ public class GLFWThread extends AbstractExecutorThread {
     }
 
     @Override protected void signal() {
-        if (!this.exit) {
+        if (!this.exit && initialized) {
             GLFW.glfwPostEmptyEvent();
         }
         super.signal();
