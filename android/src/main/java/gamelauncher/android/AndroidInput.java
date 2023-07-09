@@ -1,6 +1,6 @@
 package gamelauncher.android;
 
-import android.annotation.SuppressLint;
+import android.content.res.Resources;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -30,10 +30,12 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
     private final RingBuffer<QueueEntry> ringBuffer;
     private final EventPoller<QueueEntry> poller;
     private final AndroidKeybindManager keybindManager;
+    private final AndroidGameLauncher launcher;
     private boolean hasDeadChar = false;
     private int deadChar;
 
     public AndroidInput(AndroidGameLauncher launcher) {
+        this.launcher = launcher;
         this.keybindManager = launcher.keybindManager();
         this.ringBuffer = RingBuffer.createMultiProducer(new QueueEntry.Factory(), 1024, new SleepingWaitStrategy());
         this.poller = this.ringBuffer.newPoller();
@@ -46,7 +48,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
             keybindManager.post(new AndroidKeyboardKeybindEvent(event.keybind(), KeyboardKeybindEvent.Type.HOLD));
         }
         for (Map.Entry<Integer, PointerEntry> entry : mousePressed.entrySet()) {
-            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.keybind(entry.getKey()), entry.getValue().buttonId, entry.getValue().x, entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
+            keybindManager.post(new AndroidMouse.ButtonEvent(keybindManager.keybind(entry.getKey()), entry.getValue().buttonId, entry.getValue().x, entry.getValue().height - entry.getValue().y, MouseButtonKeybindEvent.Type.HOLD));
         }
         try {
             poller.poll((queueEvent, sequence, endOfBatch) -> {
@@ -54,6 +56,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                     KeybindEvent event = queueEvent.event;
                     if (event instanceof MouseHandle) {
                         MotionEvent e = ((MouseHandle) event).event();
+                        int height = launcher.frame().framebuffer().height().intValue();
                         try {
                             int action = e.getActionMasked();
                             int index = e.getActionIndex();
@@ -76,16 +79,16 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                                     //noinspection DataFlowIssue
                                     if (entry.x == x && entry.y == y) continue;
                                     keybind = keybindManager.keybind(keybindId);
-                                    keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, entry.y, x, y));
+                                    keybindManager.post(new AndroidMouse.MoveEvent(keybind, entry.x, height - entry.y, x, height - y));
                                     entry.x = x;
                                     entry.y = y;
                                     entry.pressure = pressure;
                                 }
                             } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-                                mousePressed.put(keybindId, new PointerEntry(id, x, y, pressure));
-                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.PRESS));
+                                mousePressed.put(keybindId, new PointerEntry(id, x, y, height, pressure));
+                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.PRESS));
                             } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
-                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, y, MouseButtonKeybindEvent.Type.RELEASE));
+                                keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.RELEASE));
                                 mousePressed.remove(keybindId);
                             }
                         } finally {
@@ -151,8 +154,8 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
         return true;
     }
 
-    @SuppressLint("ClickableViewAccessibility") @Override public boolean onTouch(View v, MotionEvent event) {
-        offer(new MouseHandle(MotionEvent.obtain(event)));
+    @Override public boolean onTouch(View v, MotionEvent event) {
+        offer(new MouseHandle(MotionEvent.obtain(event), Resources.getSystem().getDisplayMetrics().heightPixels));
         return true;
     }
 
@@ -172,10 +175,16 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
 
     private static class MouseHandle extends AbstractKeybindEvent {
         private final MotionEvent event;
+        private final int height;
 
-        public MouseHandle(MotionEvent event) {
+        public MouseHandle(MotionEvent event, int height) {
             super(null);
             this.event = event;
+            this.height = height;
+        }
+
+        public int height() {
+            return height;
         }
 
         public MotionEvent event() {
@@ -185,13 +194,15 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
 
     private static class PointerEntry {
         private final int buttonId;
+        private final int height;
         private float x, y;
         @FutureApi private float pressure;
 
-        public PointerEntry(int buttonId, float x, float y, float pressure) {
+        public PointerEntry(int buttonId, float x, float y, final int height, float pressure) {
             this.buttonId = buttonId;
             this.x = x;
             this.y = y;
+            this.height = height;
             this.pressure = pressure;
         }
     }
