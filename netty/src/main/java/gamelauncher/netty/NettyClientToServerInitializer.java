@@ -25,7 +25,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslProvider;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,6 +58,17 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
         this.useSsl = useSsl;
     }
 
+    public void connected(Channel channel) {
+        if (initFuture == null) {
+            connected0(channel);
+        } else {
+            initFuture.addListener(f -> {
+                if (f.isSuccess()) connected0(channel);
+                else connection.cleanup();
+            });
+        }
+    }
+
     @Override protected void initChannel(@NotNull Channel ch) throws Exception {
         ChannelPipeline p = ch.pipeline();
 
@@ -73,17 +83,6 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
         addConnectionProtocol(p);
 
         if (proxy != null) addProxy(p);
-    }
-
-    public void connected(Channel channel) {
-        if (initFuture == null) {
-            connected0(channel);
-        } else {
-            initFuture.addListener(f -> {
-                if (f.isSuccess()) connected0(channel);
-                else connection.cleanup();
-            });
-        }
     }
 
     private void connected0(Channel channel) {
@@ -120,6 +119,24 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
 //        });
     }
 
+    private void addEncryption(ChannelPipeline pipeline) throws SSLException {
+        SslContext ctx = SslContextBuilder.forClient().protocols("TLSv1.3").sslProvider(SslProvider.JDK).build();
+        SSLEngine engine = ctx.newEngine(pipeline.channel().alloc(), hostname, port);
+        pipeline.addFirst("ssl", new SslHandler(engine));
+    }
+
+    private void addProxy(ChannelPipeline pipeline) {
+        String host = proxy.hostname();
+        int port = proxy.port();
+        String user = proxy.username();
+        String pass = proxy.password();
+        if (user == null) {
+            pipeline.addFirst("proxy", new HttpProxyHandler(new InetSocketAddress(host, port)));
+        } else if (pass != null) {
+            pipeline.addFirst("proxy", new HttpProxyHandler(new InetSocketAddress(host, port), user, pass));
+        }
+    }
+
     private static class ClientWebSocketListener extends ChannelInboundHandlerAdapter {
         private final ChannelPromise promise;
 
@@ -142,24 +159,6 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
                 }
             }
             super.userEventTriggered(ctx, evt);
-        }
-    }
-
-    private void addEncryption(ChannelPipeline pipeline) throws SSLException {
-        SslContext ctx = SslContextBuilder.forClient().protocols("TLSv1.3").sslProvider(SslProvider.JDK).trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-        SSLEngine engine = ctx.newEngine(pipeline.channel().alloc(), hostname, port);
-        pipeline.addFirst("ssl", new SslHandler(engine));
-    }
-
-    private void addProxy(ChannelPipeline pipeline) {
-        String host = proxy.hostname();
-        int port = proxy.port();
-        String user = proxy.username();
-        String pass = proxy.password();
-        if (user == null) {
-            pipeline.addFirst("proxy", new HttpProxyHandler(new InetSocketAddress(host, port)));
-        } else if (pass != null) {
-            pipeline.addFirst("proxy", new HttpProxyHandler(new InetSocketAddress(host, port), user, pass));
         }
     }
 }
