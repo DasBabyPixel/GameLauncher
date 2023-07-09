@@ -19,6 +19,7 @@ import gamelauncher.android.gl.LauncherGLSurfaceView;
 import gamelauncher.android.gui.AndroidGuiManager;
 import gamelauncher.android.io.AndroidEmbedFileSystemProvider;
 import gamelauncher.android.util.AndroidExecutorThreadHelper;
+import gamelauncher.android.util.DumbImageDecoder;
 import gamelauncher.android.util.keybind.AndroidKeybindManager;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.GameDirectoryResolver;
@@ -34,6 +35,7 @@ import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.SimpleResourceLoader;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.image.ImageDecoder;
 import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.service.ServiceReference;
 import gamelauncher.gles.GLES;
@@ -63,6 +65,7 @@ public class AndroidGameLauncher extends GameLauncher {
     private final TextureManager textureManager;
     private final FontFactory fontFactory;
     private final NetworkClient networkClient;
+    private final ImageDecoder imageDecoder;
     LauncherGLSurfaceView view;
     private GlyphProvider glyphProvider;
     private volatile boolean keyboardVisible = false;
@@ -86,6 +89,7 @@ public class AndroidGameLauncher extends GameLauncher {
         serviceProvider().register(ServiceReference.FONT_FACTORY, fontFactory = new BasicFontFactory(gles, this));
         serviceProvider().register(ServiceReference.TEXTURE_MANAGER, textureManager = gles.textureManager());
         serviceProvider().register(ServiceReference.NETWORK_CLIENT, networkClient = new NettyNetworkClient(this));
+        serviceProvider().register(ServiceReference.IMAGE_DECODER, imageDecoder = new DumbImageDecoder());
         gles.init();
         this.glThreadGroup = new GLESThreadGroup();
     }
@@ -153,6 +157,7 @@ public class AndroidGameLauncher extends GameLauncher {
 
         Threads.await(keybindManager.cleanup());
         Threads.await(resourceLoader.cleanup());
+        Threads.await(imageDecoder.cleanup());
         super.stop0();
     }
 
