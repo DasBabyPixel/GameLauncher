@@ -11,6 +11,7 @@ import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.lwjgl.event.AddMonitorEvent;
 import gamelauncher.lwjgl.event.RemoveMonitorEvent;
+import gamelauncher.lwjgl.event.UpdateMonitorEvent;
 import gamelauncher.lwjgl.render.glfw.Monitor.VideoMode;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFW;
@@ -33,7 +34,7 @@ public class GLFWMonitorManager {
                 GLFWMonitorManager.this.newMonitor(monitor);
             } else if (event == GLFW.GLFW_DISCONNECTED) {
                 GLFWMonitorManager.this.removeMonitor(monitor);
-            }
+            } else System.out.println(event);
         }
     };
 
@@ -52,6 +53,20 @@ public class GLFWMonitorManager {
         return Collections.unmodifiableCollection(monitors);
     }
 
+    public synchronized void pollAll() {
+        for (Monitor o : monitors) {
+            long monitor = o.glfwId();
+
+            Monitor m = createMonitor(monitor);
+            if (!m.equals(o)) {
+                logger.infof("Monitor Updated! %s[x=%s, y=%s, width=%s, height=%s, " + "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(), m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());
+                this.monitors.add(m);
+                this.monitors.remove(o);
+                launcher.eventManager().post(new UpdateMonitorEvent(m));
+            }
+        }
+    }
+
     void init() {
         GLFW.glfwSetMonitorCallback(callback);
         PointerBuffer mbuf = GLFW.glfwGetMonitors();
@@ -66,19 +81,21 @@ public class GLFWMonitorManager {
         callback.free();
     }
 
-    private synchronized void newMonitor(long monitor) {
-        int[] w = new int[1];
-        int[] h = new int[1];
+    private Monitor createMonitor(long monitor) {
         int[] x = new int[1];
         int[] y = new int[1];
-        GLFW.glfwGetMonitorWorkarea(monitor, x, y, w, h);
+        GLFW.glfwGetMonitorPos(monitor, x, y);
         String name = GLFW.glfwGetMonitorName(monitor);
         float[] sx = new float[1];
         float[] sy = new float[1];
         GLFW.glfwGetMonitorContentScale(monitor, sx, sy);
         GLFWVidMode vidMode = GLFW.glfwGetVideoMode(monitor);
         if (vidMode == null) throw new RuntimeException();
-        Monitor m = new Monitor(name, x[0], y[0], vidMode.width(), vidMode.height(), sx[0], sy[0], monitor, new VideoMode(w[0], h[0], vidMode.refreshRate()));
+        return new Monitor(name, x[0], y[0], vidMode.width(), vidMode.height(), sx[0], sy[0], monitor, new VideoMode(vidMode.width(), vidMode.height(), vidMode.refreshRate()));
+    }
+
+    private synchronized void newMonitor(long monitor) {
+        Monitor m = createMonitor(monitor);
         logger.infof("New Monitor connected! %s[x=%s, y=%s, width=%s, height=%s, " + "refreshRate=%sHz, scaleX=%.2f, scaleY=%.2f]", m.name(), m.x(), m.y(), m.width(), m.height(), m.videoMode().refreshRate(), m.scaleX(), m.scaleY());
         this.monitors.add(m);
         launcher.eventManager().post(new AddMonitorEvent(m));

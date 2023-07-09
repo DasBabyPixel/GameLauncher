@@ -201,15 +201,17 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     }
 
     @Override protected CompletableFuture<Void> cleanup0() {
-        if (!customCached) return launcher.threads().cached.submit(() -> {
+        if (!customCached) {
             stop();
-            try {
-                lock.lock();
-                for (Connection connection : new ArrayList<>(connections)) connection.cleanup();
-            } finally {
-                lock.unlock();
+            List<CompletableFuture<?>> futs = new ArrayList<>();
+            lock.lock();
+            for (Connection connection : connections) {
+                futs.add(connection.cleanupFuture());
             }
-        });
+            lock.unlock();
+
+            return CompletableFuture.allOf(futs.toArray(CompletableFuture[]::new));
+        }
 
         cached.shutdown();
         return null; // Let's be honest if we are using a custom client atm we terminate the process when the client is closed so what's the point in implementing this?

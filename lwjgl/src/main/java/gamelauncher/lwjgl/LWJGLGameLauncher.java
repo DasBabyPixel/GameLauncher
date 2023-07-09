@@ -56,6 +56,7 @@ import org.lwjgl.system.Configuration;
 public class LWJGLGameLauncher extends GameLauncher {
 
     public static final Config<Boolean> REDUCED_LWJGL_LOGGING = Config.createBoolean("reduced_lwjg_logging", true);
+    public static final Config<Boolean> USE_GLES = Config.createBoolean("use_gles", true);
 
     private final GLES gles;
     private final GLESThreadGroup glThreadGroup;

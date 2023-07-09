@@ -7,6 +7,7 @@
 
 package gamelauncher.lwjgl;
 
+import gamelauncher.lwjgl.render.LWJGLGL;
 import gamelauncher.lwjgl.render.LWJGLGLES;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.stb.STBImage;
@@ -19,7 +20,11 @@ public class Libraries {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        LWJGLGLES.initialize();
+        if (LWJGLGameLauncher.USE_GLES.value()) {
+            LWJGLGLES.initialize();
+        } else {
+            LWJGLGL.initialize();
+        }
         GLFW.getLibrary();
     }
 

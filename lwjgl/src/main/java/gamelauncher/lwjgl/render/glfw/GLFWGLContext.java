@@ -16,7 +16,6 @@ import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.gl.*;
 import gamelauncher.gles.states.StateRegistry;
-import gamelauncher.lwjgl.render.LWJGLGLES;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -49,13 +48,91 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         id = newId.incrementAndGet();
     }
 
-    GLFWFrame.Creator create(GLFWGLContext shared) {
-        GLFWFrame.Creator creator = new GLFWFrame.Creator(frame, shared);
-        creator.run();
-        this.gl = LWJGLGLES.instance;
-        this.glfwId = creator.glfwId;
-        StateRegistry.addContext(this);
-        return creator;
+    @Override public synchronized void destroyCurrent() {
+        if (this.owned) {
+            StateRegistry.currentContext(null);
+            GLFW.glfwMakeContextCurrent(0L);
+            GLUtil.setNullCapabilities();
+            this.owned = false;
+            this.owner = null;
+            if (errorCallback != null) errorCallback.free();
+        }
+    }
+
+    @Override public GLFWFrame frame() {
+        return frame;
+    }
+
+    @Override public GLFWGLContext createSharedContext() throws GameException {
+        synchronized (sharedContexts) {
+            GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
+            ctx.parent = this;
+            ctx.owned = false;
+            frame.contexts.add(ctx);
+            List<CompletableFuture<Void>> futs = new ArrayList<>(0);
+            CompletableFuture<Void> selfFut = null;
+            CompletableFuture<Void> mainFut = new CompletableFuture<>();
+            for (GLFWGLContext c : ctx.sharedContexts) {
+                if (c == ctx) continue;
+                if (!c.owned) continue;
+                CompletableFuture<Void> fut = new CompletableFuture<>();
+                if (Thread.currentThread() != c.owner) {
+                    c.owner.submit(() -> {
+                        StateRegistry.currentContext(null);
+                        GLFW.glfwMakeContextCurrent(0L);
+                        fut.complete(null);
+                        Threads.await(mainFut);
+                        StateRegistry.currentContext(this);
+                        GLFW.glfwMakeContextCurrent(c.glfwId);
+                        GLUtil.createCapabilities();
+                    });
+                } else {
+                    StateRegistry.currentContext(null);
+                    GLFW.glfwMakeContextCurrent(0L);
+                    fut.complete(null);
+                    selfFut = fut;
+                }
+                futs.add(fut);
+            }
+            GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
+            ctx.frame = f2;
+            Threads.whenAllComplete(futs, () -> frame.launcher().getGLFWThread().submit(() -> {
+                ctx.create(this);
+                f2.renderThread.start();
+                mainFut.complete(null);
+            }));
+            if (selfFut != null) {
+                Threads.await(mainFut);
+                StateRegistry.currentContext(this);
+                GLFW.glfwMakeContextCurrent(glfwId);
+                GLUtil.createCapabilities();
+            }
+            return ctx;
+        }
+    }
+
+    @Override public GLES20 gl20() {
+        return gl;
+    }
+
+    @Override public GLES30 gl30() {
+        return gl;
+    }
+
+    @Override public GLES31 gl31() {
+        return gl;
+    }
+
+    @Override public GLES32 gl32() {
+        return gl;
+    }
+
+    @Override public synchronized void makeCurrent() {
+        makeCurrent(false);
+    }
+
+    @Override public String toString() {
+        return String.format("GLFWGLContext{id=%s}", id);
     }
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
@@ -88,87 +165,13 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
         }
     }
 
-    @Override public synchronized void destroyCurrent() {
-        if (this.owned) {
-            StateRegistry.currentContext(null);
-            GLFW.glfwMakeContextCurrent(0L);
-            LWJGLGLES.setCapabilities(null);
-            this.owned = false;
-            this.owner = null;
-            if (errorCallback != null) errorCallback.free();
-        }
-    }
-
-    @Override public GLFWFrame frame() {
-        return frame;
-    }
-
-    @Override public GLFWGLContext createSharedContext() throws GameException {
-        synchronized (sharedContexts) {
-            GLFWGLContext ctx = new GLFWGLContext(sharedContexts);
-            ctx.parent = this;
-            ctx.owned = false;
-            frame.contexts.add(ctx);
-            List<CompletableFuture<Void>> futs = new ArrayList<>(0);
-            CompletableFuture<Void> selfFut = null;
-            CompletableFuture<Void> mainFut = new CompletableFuture<>();
-            for (GLFWGLContext c : ctx.sharedContexts) {
-                if (c == ctx) continue;
-                if (!c.owned) continue;
-                CompletableFuture<Void> fut = new CompletableFuture<>();
-                if (Thread.currentThread() != c.owner) {
-                    c.owner.submit(() -> {
-                        StateRegistry.currentContext(null);
-                        GLFW.glfwMakeContextCurrent(0L);
-                        fut.complete(null);
-                        Threads.await(mainFut);
-                        StateRegistry.currentContext(this);
-                        GLFW.glfwMakeContextCurrent(c.glfwId);
-                        LWJGLGLES.createCapabilities();
-                    });
-                } else {
-                    StateRegistry.currentContext(null);
-                    GLFW.glfwMakeContextCurrent(0L);
-                    fut.complete(null);
-                    selfFut = fut;
-                }
-                futs.add(fut);
-            }
-            GLFWFrame f2 = new GLFWFrame(frame.launcher, ctx);
-            ctx.frame = f2;
-            Threads.whenAllComplete(futs, () -> frame.launcher().getGLFWThread().submit(() -> {
-                ctx.create(this);
-                f2.renderThread.start();
-                mainFut.complete(null);
-            }));
-            if (selfFut != null) {
-                Threads.await(mainFut);
-                StateRegistry.currentContext(this);
-                GLFW.glfwMakeContextCurrent(glfwId);
-                LWJGLGLES.createCapabilities();
-            }
-            return ctx;
-        }
-    }
-
-    @Override public GLES20 gl20() {
-        return gl;
-    }
-
-    @Override public GLES30 gl30() {
-        return gl;
-    }
-
-    @Override public GLES31 gl31() {
-        return gl;
-    }
-
-    @Override public GLES32 gl32() {
-        return gl;
-    }
-
-    @Override public synchronized void makeCurrent() {
-        makeCurrent(false);
+    GLFWFrame.Creator create(GLFWGLContext shared) {
+        GLFWFrame.Creator creator = new GLFWFrame.Creator(frame, shared);
+        creator.run();
+        this.gl = GLUtil.getGL();
+        this.glfwId = creator.glfwId;
+        StateRegistry.addContext(this);
+        return creator;
     }
 
     void makeCurrent(boolean force) {
@@ -177,13 +180,9 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             this.owner = (ExecutorThread) Thread.currentThread();
             StateRegistry.currentContext(this);
             GLFW.glfwMakeContextCurrent(glfwId);
-            LWJGLGLES.createCapabilities();
+            GLUtil.createCapabilities();
             gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
             errorCallback = GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level, Logger.LoggerFlags.DONT_PRINT_SOURCE));
         }
-    }
-
-    @Override public String toString() {
-        return String.format("GLFWGLContext{id=%s}", id);
     }
 }

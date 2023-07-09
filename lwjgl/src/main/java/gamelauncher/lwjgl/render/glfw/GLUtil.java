@@ -10,7 +10,14 @@ package gamelauncher.lwjgl.render.glfw;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.gles.states.ContextLocal;
 import gamelauncher.gles.states.StateRegistry;
+import gamelauncher.lwjgl.LWJGLGameLauncher;
+import gamelauncher.lwjgl.render.LWJGLGL;
+import gamelauncher.lwjgl.render.LWJGLGLES;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.opengles.*;
 import org.lwjgl.system.APIUtil;
 import org.lwjgl.system.Callback;
@@ -45,6 +52,10 @@ public final class GLUtil {
      * @return the generated callback function
      */
     @Api @Nullable public static Callback setupDebugMessageCallback(PrintStream stream) {
+        return LWJGLGameLauncher.USE_GLES.value() ? setupDebugMessageCallbackGLES(stream) : setupDebugMessageCallbackGL(stream);
+    }
+
+    @Nullable private static Callback setupDebugMessageCallbackGLES(PrintStream stream) {
         GLESCapabilities caps = GLES.getCapabilities();
 
         if (caps.GLES32) {
@@ -105,6 +116,83 @@ public final class GLUtil {
         }
         APIUtil.apiLog("[GLES] No debug output implementation is available.");
         return null;
+    }
+
+    @Nullable private static Callback setupDebugMessageCallbackGL(PrintStream stream) {
+        GLCapabilities caps = GL.getCapabilities();
+
+        if (caps.OpenGL43) {
+            APIUtil.apiLog("[GL] Using GL 4.3 for error logging.");
+            org.lwjgl.opengl.GLDebugMessageCallback proc = org.lwjgl.opengl.GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
+                if (id == 0x20071) {
+                    // Notification about buffer details
+                    return;
+                }
+                if (StateRegistry.currentContext() != null) {
+                    if (GLUtil.skip.has()) {
+                        return;
+                    }
+                } else {
+                    stream.println("OpenGL Error on Thread without OpenGL context: " + Thread.currentThread().getName());
+                }
+                stream.println("[LWJGL] OpenGL debug message");
+                GLUtil.printDetail(stream, "ID", String.format("0x%X", id));
+                GLUtil.printDetail(stream, "Source", GLUtil.getDebugSource(source));
+                GLUtil.printDetail(stream, "Type", GLUtil.getDebugType(type));
+                GLUtil.printDetail(stream, "Severity", GLUtil.getDebugSeverity(severity));
+                GLUtil.printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
+                new Exception().printStackTrace(stream);
+            });
+            GL43.glDebugMessageCallback(proc, MemoryUtil.NULL);
+            if ((GL11.glGetInteger(GLUtil.GL_CONTEXT_FLAGS) & GLES32.GL_CONTEXT_FLAG_DEBUG_BIT) == 0) {
+                APIUtil.apiLog("[GLES] Warning: A non-debug context may not produce any debug output.");
+            }
+            return proc;
+        } else if (caps.GL_KHR_debug) {
+            APIUtil.apiLog("[GL] Using KHRDebug for error logging.");
+            org.lwjgl.opengl.GLDebugMessageCallback proc = org.lwjgl.opengl.GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) -> {
+                if (id == 0x20071) {
+                    // Notification about buffer details
+                    return;
+                }
+                if (StateRegistry.currentContext() != null) {
+                    if (GLUtil.skip.has()) {
+                        return;
+                    }
+                } else {
+                    stream.println("OpenGL Error on Thread without OpenGL context: " + Thread.currentThread().getName());
+                }
+                stream.println("[LWJGL] OpenGL debug message");
+                GLUtil.printDetail(stream, "ID", String.format("0x%X", id));
+                GLUtil.printDetail(stream, "Source", GLUtil.getDebugSource(source));
+                GLUtil.printDetail(stream, "Type", GLUtil.getDebugType(type));
+                GLUtil.printDetail(stream, "Severity", GLUtil.getDebugSeverity(severity));
+                GLUtil.printDetail(stream, "Message", GLDebugMessageCallback.getMessage(length, message));
+                new Exception().printStackTrace(stream);
+            });
+            org.lwjgl.opengl.KHRDebug.glDebugMessageCallback(proc, MemoryUtil.NULL);
+            GL11.glEnable(KHRDebug.GL_DEBUG_OUTPUT_SYNCHRONOUS_KHR);
+            if ((GL11.glGetInteger(GLUtil.GL_CONTEXT_FLAGS) & KHRDebug.GL_CONTEXT_FLAG_DEBUG_BIT_KHR) == 0) {
+                APIUtil.apiLog("[GL] Warning: A non-debug context may not produce any debug output.");
+            }
+            return proc;
+        }
+        APIUtil.apiLog("[GLES] No debug output implementation is available.");
+        return null;
+    }
+
+    public static void setNullCapabilities() {
+        if (LWJGLGameLauncher.USE_GLES.value()) LWJGLGLES.setCapabilities(null);
+        else LWJGLGL.setCapabilities(null);
+    }
+
+    public static void createCapabilities() {
+        if (LWJGLGameLauncher.USE_GLES.value()) LWJGLGLES.createCapabilities();
+        else LWJGLGL.createCapabilities();
+    }
+
+    public static gamelauncher.gles.gl.GLES32 getGL() {
+        return LWJGLGameLauncher.USE_GLES.value() ? LWJGLGLES.instance : LWJGLGL.instance;
     }
 
     private static void printDetail(PrintStream stream, String type, String message) {

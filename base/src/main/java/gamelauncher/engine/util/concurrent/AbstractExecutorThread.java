@@ -135,7 +135,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
         try {
             run.run();
             fut.complete(null);
-        } catch (GameException ex) {
+        } catch (Throwable ex) {
             GameException ex2 = this.buildStacktrace();
             ex2.initCause(ex);
             AbstractExecutorThread.logger.error(ex2);

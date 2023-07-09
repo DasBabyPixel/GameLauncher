@@ -7,7 +7,6 @@
 
 package gamelauncher.netty;
 
-import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkAddress;
@@ -23,7 +22,9 @@ import java8.util.concurrent.CompletableFuture;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,6 +35,7 @@ public abstract class AbstractConnection extends AbstractGameResource implements
     private final NettyNetworkClient networkClient;
     private final Lock handlerLock = new ReentrantLock(true);
     private final Map<Class<?>, Collection<HandlerEntry<?>>> handlers = new ConcurrentHashMap<>();
+    private final Collection<HandlerEntry<Packet>> genericHandlers = new CopyOnWriteArrayList<>();
     private final GenericFutureListener<ChannelFuture> closeListener = f -> {
         if (!cleanedUp()) cleanup();
     };
@@ -82,7 +84,7 @@ public abstract class AbstractConnection extends AbstractGameResource implements
         } finally {
             handlerLock.unlock();
         }
-        if (col == null) return false;
+        if (!handleGeneric(packet)) if (col == null) return false;
         for (HandlerEntry<?> h : col) {
             h.receivePacket(this, packet);
         }
@@ -110,60 +112,11 @@ public abstract class AbstractConnection extends AbstractGameResource implements
     }
 
     @Override public StateEnsurance ensureState(State state) {
-        CompletableFuture<Void> f = new CompletableFuture<>();
-        InvalidationListener l = p -> {
-            if (p.value() == state) {
-                f.completeAsync(() -> null, cached);
-            }
-        };
-        this.state.addListener(l);
-        if (this.state.value() == state) {
-            this.state.removeListener(l);
-            return new Completed(state);
-        }
-        f.exceptionally(t -> null).thenRun(() -> this.state.removeListener(l));
-        return new StateEnsurance() {
-            private final CompletableFuture<State> future = new CompletableFuture<>();
-            private long time = 5;
-            private TimeUnit unit = TimeUnit.SECONDS;
-            private TimeoutHandler timeoutHandler;
-
-            @Override public StateEnsurance timeoutAfter(long time, TimeUnit unit) {
-                this.time = time;
-                this.unit = unit;
-                return this;
-            }
-
-            @Override public StateEnsurance timeoutHandler(TimeoutHandler timeoutHandler) {
-                this.timeoutHandler = timeoutHandler;
-                return this;
-            }
-
-            @Override public State await() {
-                try {
-                    f.get(time, unit);
-                    future.complete(state);
-                    return state;
-                } catch (InterruptedException | ExecutionException e) {
-                    future.completeExceptionally(e);
-                    throw new RuntimeException(e);
-                } catch (TimeoutException e) {
-                    future.completeExceptionally(e);
-                    State s = AbstractConnection.this.state.value();
-                    if (s == state) return s;
-                    if (timeoutHandler != null) timeoutHandler.timeout(s);
-                    return s;
-                }
-            }
-
-            @Override public CompletableFuture<State> future() {
-                return future;
-            }
-        };
+        return new PropertyStateEnsurance(this.state, state);
     }
 
     @Override public void sendPacket(Packet packet) {
-        if (state.value() != State.CONNECTED) throw new IllegalStateException(state.value().toString());
+        if (state.value() != State.CONNECTED) return;
         channel.writeAndFlush(packet, channel.voidPromise());
     }
 
@@ -192,6 +145,14 @@ public abstract class AbstractConnection extends AbstractGameResource implements
         return f;
     }
 
+    private boolean handleGeneric(Packet packet) {
+        if (genericHandlers.isEmpty()) return false;
+        for (HandlerEntry<Packet> handler : genericHandlers) {
+            handler.receivePacket(this, packet);
+        }
+        return true;
+    }
+
     static class HandlerEntry<T extends Packet> {
         private final Class<T> clazz;
         private final PacketHandler<T> handler;
@@ -207,30 +168,6 @@ public abstract class AbstractConnection extends AbstractGameResource implements
 
         public void receivePacket(Connection connection, Object packet) {
             handler.receivePacket(connection, clazz.cast(packet));
-        }
-    }
-
-    private static class Completed implements StateEnsurance {
-        private final State state;
-
-        public Completed(State state) {
-            this.state = state;
-        }
-
-        @Override public StateEnsurance timeoutAfter(long time, TimeUnit unit) {
-            return this;
-        }
-
-        @Override public StateEnsurance timeoutHandler(TimeoutHandler timeoutHandler) {
-            return this;
-        }
-
-        @Override public State await() {
-            return state;
-        }
-
-        @Override public CompletableFuture<State> future() {
-            return CompletableFuture.completedFuture(state);
         }
     }
 }

@@ -13,7 +13,6 @@ import de.dasbabypixel.api.property.InvalidationListener;
 import de.dasbabypixel.api.property.NumberValue;
 import de.dasbabypixel.api.property.Property;
 import gamelauncher.engine.data.DataUtil;
-import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.Frame;
 import gamelauncher.engine.render.FrameCounter;
@@ -28,8 +27,6 @@ import gamelauncher.engine.util.image.Icon;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
-import gamelauncher.lwjgl.event.AddMonitorEvent;
-import gamelauncher.lwjgl.event.RemoveMonitorEvent;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
 import gamelauncher.lwjgl.util.image.AWTIcon;
@@ -68,7 +65,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final BooleanValue fullscreen = BooleanValue.falseValue();
     final Property<Monitor> monitor = Property.empty();
     final Property<Icon> icon = Property.empty();
-    final MonitorListener monitorListener = new MonitorListener();
     final ManualQueryFramebuffer manualFramebuffer;
     boolean cleaningUp = false;
     private boolean created;
@@ -90,7 +86,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.context = new GLFWGLContext(new CopyOnWriteArraySet<>());
         this.context.owner = renderThread;
         this.context.frame = this;
-        launcher.eventManager().registerListener(monitorListener);
     }
 
     GLFWFrame(LWJGLGameLauncher launcher, GLFWGLContext context) {
@@ -109,7 +104,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         this.context = context;
         this.context.owner = renderThread;
         this.created = true;
-        launcher.eventManager().registerListener(monitorListener);
     }
 
     public void startMainFrame() {
@@ -233,7 +227,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     }
 
     @Override protected CompletableFuture<Void> cleanup0() throws GameException {
-        launcher.eventManager().unregisterListener(monitorListener);
         Icon ico = icon.value();
         cleaningUp = true;
         this.renderThread.cleanupContextOnExit = true;
@@ -281,12 +274,12 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
         public final NumberValue ypos = NumberValue.withValue(0);
         public final Property<Monitor> monitor = Property.empty();
         public final GLFWFrame frame;
-        private final NumberValue fullscreenOldX = NumberValue.withValue(0);
-        private final NumberValue fullscreenOldY = NumberValue.withValue(0);
         private final NumberValue fullscreenOldW = NumberValue.withValue(0);
         private final NumberValue fullscreenOldH = NumberValue.withValue(0);
         private final GLFWGLContext shared;
         public long glfwId;
+        private int fullscreenMonitorOffsetX;
+        private int fullscreenMonitorOffsetY;
 
         public Creator(GLFWFrame frame, GLFWGLContext shared) {
             this.frame = frame;
@@ -349,8 +342,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 frame.launcher.getGLFWThread().submit(() -> applyIcon(i));
             });
 
-            frame.monitorListener.property = monitor;
-            frame.monitorListener.window = frame.getGLFWId();
             glfwGetFramebufferSize(this.glfwId, a0, a1);
             this.fbwidth.number(a0[0]);
             this.fbheight.number(a1[0]);
@@ -395,25 +386,29 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 this.frame.fullscreen.addListener(Property::value);
                 this.frame.fullscreen.value();
                 this.frame.fullscreen.addListener((p, o, n) -> frame.launcher.getGLFWThread().submit(() -> {
+                    frame.launcher.getGLFWThread().getMonitorManager().pollAll();
+                    l.invalidated(null);
                     Monitor monitor = frame.monitor.value();
                     if (n) {
-                        fullscreenOldX.number(xpos.intValue());
-                        fullscreenOldY.number(ypos.intValue());
                         fullscreenOldW.number(width.intValue());
                         fullscreenOldH.number(height.intValue());
+                        fullscreenMonitorOffsetX = xpos.intValue() - monitor.x();
+                        fullscreenMonitorOffsetY = ypos.intValue() - monitor.y();
                         glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
                         glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
                         int[] w = new int[1];
                         int[] h = new int[1];
+                        glfwSetWindowAttrib(glfwId, GLFW_DECORATED, GLFW_FALSE);
                         glfwGetWindowSize(glfwId, w, h);
                         if (w[0] < monitor.width() || h[0] < monitor.height()) {
                             glfwSetWindowSizeLimits(glfwId, 1, 1, monitor.width(), monitor.height());
                             glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
                         }
                     } else {
-                        glfwSetWindowPos(glfwId, fullscreenOldX.intValue(), fullscreenOldY.intValue());
                         glfwSetWindowSizeLimits(glfwId, 1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
                         glfwSetWindowSize(glfwId, fullscreenOldW.intValue(), fullscreenOldH.intValue());
+                        glfwSetWindowAttrib(glfwId, GLFW_DECORATED, GLFW_TRUE);
+                        glfwSetWindowPos(glfwId, monitor.x() + fullscreenMonitorOffsetX, monitor.y() + fullscreenMonitorOffsetY);
                     }
                 }));
             }
@@ -554,21 +549,6 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             double top = Math.min(y + h, other.y + other.h);
 
             return new Rect(nx, ny, Math.max(0, right - nx), Math.max(top - ny, 0));
-        }
-    }
-
-    private class MonitorListener {
-        private Property<Monitor> property = null;
-        private long window;
-
-        @EventHandler public void handle(AddMonitorEvent event) {
-            Property<Monitor> p = property;
-            if (p != null) p.value(launcher.getGLFWThread().getMonitorManager().monitor(window));
-        }
-
-        @EventHandler public void handle(RemoveMonitorEvent event) {
-            Property<Monitor> p = property;
-            if (p != null) p.value(launcher.getGLFWThread().getMonitorManager().monitor(window));
         }
     }
 }

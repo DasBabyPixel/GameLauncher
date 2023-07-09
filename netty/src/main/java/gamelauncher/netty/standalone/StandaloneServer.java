@@ -98,7 +98,8 @@ public class StandaloneServer {
         }
         logger.infof("Server Shutdown: %s", server.id);
         server.clients.clear();
-        server.owner.<Collection<String>>storedValue(KEY_IDS).remove(server.id);
+        Collection<String> ids = server.owner.storedValue(KEY_IDS);
+        if (ids != null) ids.remove(server.id);
     }
 
     public static void registerPackets(PacketRegistry registry) {

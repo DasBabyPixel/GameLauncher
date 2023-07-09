@@ -6,9 +6,9 @@ import gamelauncher.engine.render.Framebuffer;
 import gamelauncher.engine.render.ScissorStack;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.gles.GLESScissorStack;
+import gamelauncher.gles.states.StateRegistry;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengles.GLES20;
 
 public class GLFWFrameFramebuffer extends AbstractGameResource implements Framebuffer {
 
@@ -31,7 +31,7 @@ public class GLFWFrameFramebuffer extends AbstractGameResource implements Frameb
             GLUtil.skip.set(true);
             GLFW.glfwSwapBuffers(this.frame.context.glfwId);
             GLUtil.skip.remove();
-            GLES20.glGetError();
+            StateRegistry.currentGl().glGetError();
         }
     }
 

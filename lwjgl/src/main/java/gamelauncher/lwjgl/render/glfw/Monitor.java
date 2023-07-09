@@ -1,5 +1,7 @@
 package gamelauncher.lwjgl.render.glfw;
 
+import java.util.Objects;
+
 public class Monitor {
 
     private final String name;
@@ -56,14 +58,25 @@ public class Monitor {
         return videoMode;
     }
 
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Monitor monitor = (Monitor) o;
+        return x == monitor.x && y == monitor.y && width == monitor.width && height == monitor.height && Float.compare(monitor.scaleX, scaleX) == 0 && Float.compare(monitor.scaleY, scaleY) == 0 && glfwId == monitor.glfwId && Objects.equals(name, monitor.name) && Objects.equals(videoMode, monitor.videoMode);
+    }
+
+    @Override public int hashCode() {
+        return Objects.hash(name, x, y, width, height, scaleX, scaleY, glfwId, videoMode);
+    }
+
     public static class VideoMode {
+        private final int width, height, refreshRate;
+
         public VideoMode(int width, int height, int refreshRate) {
             this.width = width;
             this.height = height;
             this.refreshRate = refreshRate;
         }
-
-        private final int width, height, refreshRate;
 
         public int width() {
             return width;
@@ -75,6 +88,17 @@ public class Monitor {
 
         public int refreshRate() {
             return refreshRate;
+        }
+
+        @Override public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VideoMode videoMode = (VideoMode) o;
+            return width == videoMode.width && height == videoMode.height && refreshRate == videoMode.refreshRate;
+        }
+
+        @Override public int hashCode() {
+            return Objects.hash(width, height, refreshRate);
         }
     }
 
