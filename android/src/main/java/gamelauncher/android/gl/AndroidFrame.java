@@ -10,12 +10,14 @@ package gamelauncher.android.gl;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 import de.dasbabypixel.api.property.BooleanValue;
+import de.dasbabypixel.api.property.Property;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
 import gamelauncher.engine.input.Input;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.image.Icon;
 import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import java8.util.concurrent.CompletableFuture;
 
@@ -31,6 +33,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
     private final AndroidFrameFramebuffer framebuffer;
     private final IAndroidRenderThread renderThread;
     private final BooleanValue fullscreen;
+    private final Property<Icon> icon = Property.empty();
     private volatile RenderMode renderMode;
     private volatile FrameRenderer frameRenderer = null;
 
@@ -85,6 +88,10 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
 
     @Override public BooleanValue fullscreen() {
         return fullscreen;
+    }
+
+    @Override public Property<Icon> icon() {
+        return icon;
     }
 
     @Override public FrameRenderer frameRenderer() {

@@ -75,15 +75,14 @@ public abstract class GameLauncher {
      * The max TPS in the {@link GameThread}
      */
     public static final float MAX_TPS = 60F;
-
-    private final Logger logger;
-    private final Threads threads;
-    private final PluginManager pluginManager;
-    private final Profiler profiler;
     private final Gson settingsGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-    private final GameRegistry gameRegistry;
-    private final ServiceProvider serviceProvider;
     private final long startedMillis = System.currentTimeMillis();
+    private Logger logger;
+    private Threads threads;
+    private PluginManager pluginManager;
+    private Profiler profiler;
+    private GameRegistry gameRegistry;
+    private final ServiceProvider serviceProvider;
     private Path gameDirectory;
     private Path dataDirectory;
     private Path settingsFile;
@@ -106,29 +105,7 @@ public abstract class GameLauncher {
      * Creates a new GameLauncher
      */
     public GameLauncher() {
-        try {
-            loadOperatingSystem();
-            this.gameDirectory(GameDirectoryResolver.resolve(this));
-            Logger.Initializer.init(this);
-            Logger.asyncLogStream().start();
-            this.logger = Logger.logger(this.getClass());
-            this.serviceProvider = new ServiceProvider();
-            this.threads = new Threads();
-            this.profiler = new Profiler();
-            this.gameRegistry = new GameRegistry();
-
-            serviceProvider.register(ServiceReference.EVENT_MANAGER, new EventManager(this));
-            this.pluginManager = new PluginManager(this);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            try {
-                Logger.asyncLogStream().cleanup();
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            System.exit(-1);
-            throw new RuntimeException();
-        }
+        this.serviceProvider = new ServiceProvider();
     }
 
     public final void start(String[] args) throws GameException {
@@ -407,6 +384,31 @@ public abstract class GameLauncher {
      */
     @Api public void saveSettings() throws GameException {
         Files.write(this.settingsFile, this.settingsGson.toJson(this.settings.serialize()).getBytes(Charsets.UTF_8));
+    }
+
+    protected void init() {
+        try {
+            loadOperatingSystem();
+            this.gameDirectory(GameDirectoryResolver.resolve(this));
+            Logger.Initializer.init(this);
+            Logger.asyncLogStream().start();
+            this.logger = Logger.logger(this.getClass());
+            this.threads = new Threads();
+            this.profiler = new Profiler();
+            this.gameRegistry = new GameRegistry();
+
+            serviceProvider.register(ServiceReference.EVENT_MANAGER, new EventManager(this));
+            this.pluginManager = new PluginManager(this);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            try {
+                Logger.asyncLogStream().cleanup();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+            System.exit(-1);
+            throw new RuntimeException();
+        }
     }
 
     protected void gameDirectory(Path path) {

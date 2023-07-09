@@ -21,10 +21,21 @@ import gamelauncher.android.io.AndroidEmbedFileSystemProvider;
 import gamelauncher.android.util.AndroidExecutorThreadHelper;
 import gamelauncher.android.util.keybind.AndroidKeybindManager;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.data.GameDirectoryResolver;
+import gamelauncher.engine.gui.GuiManager;
+import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.render.Frame;
+import gamelauncher.engine.render.font.FontFactory;
+import gamelauncher.engine.render.font.GlyphProvider;
+import gamelauncher.engine.render.model.ModelLoader;
+import gamelauncher.engine.render.shader.ShaderLoader;
+import gamelauncher.engine.render.texture.TextureManager;
+import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.SimpleResourceLoader;
-import gamelauncher.engine.util.DefaultOperatingSystems;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.keybind.KeybindManager;
+import gamelauncher.engine.util.service.ServiceReference;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESThreadGroup;
 import gamelauncher.gles.context.GLESContextProvider;
@@ -32,51 +43,51 @@ import gamelauncher.gles.font.bitmap.BasicFontFactory;
 import gamelauncher.gles.modelloader.GLESModelLoader;
 import gamelauncher.gles.render.GLESGameRenderer;
 import gamelauncher.gles.shader.GLESShaderLoader;
+import gamelauncher.netty.NettyNetworkClient;
 
 import javax.microedition.khronos.egl.EGL10;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.FileSystem;
 
 public class AndroidGameLauncher extends GameLauncher {
     private final AndroidGLLoader glLoader;
     private final GLESThreadGroup glThreadGroup;
     private final AndroidLauncher activity;
     private final GLES gles;
+    private final KeybindManager keybindManager;
+    private final ResourceLoader resourceLoader;
+    private final ShaderLoader shaderLoader;
+    private final ModelLoader modelLoader;
+    private final GuiManager guiManager;
+    private final TextureManager textureManager;
+    private final FontFactory fontFactory;
+    private final NetworkClient networkClient;
     LauncherGLSurfaceView view;
+    private GlyphProvider glyphProvider;
     private volatile boolean keyboardVisible = false;
     private EGL10 egl;
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
-        this.operatingSystem(DefaultOperatingSystems.ANDROID);
         this.activity = activity;
-        this.gameDirectory(activity.getFilesDir().toPath());
+        serviceProvider().register(GameDirectoryResolver.AndroidProvider.class, () -> activity.getFilesDir().toPath());
+        init();
         this.glLoader = new AndroidGLLoader();
         gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
         this.contextProvider(new GLESContextProvider(gles, this));
-        try {
-            this.embedFileSystem(new AndroidEmbedFileSystemProvider(activity.getAssets()).newFileSystem((URI) null, null));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
         this.executorThreadHelper(new AndroidExecutorThreadHelper(this));
-        this.keybindManager(new AndroidKeybindManager(this));
-        this.resourceLoader(new SimpleResourceLoader(this));
-        this.shaderLoader(new GLESShaderLoader(gles));
+        serviceProvider().register(ServiceReference.KEYBIND_MANAGER, keybindManager = new AndroidKeybindManager(this));
+        serviceProvider().register(ServiceReference.RESOURCE_LOADER, resourceLoader = new SimpleResourceLoader());
+        serviceProvider().register(ServiceReference.SHADER_LOADER, shaderLoader = new GLESShaderLoader(gles));
         this.gameRenderer(new GLESGameRenderer(gles));
-        this.modelLoader(new GLESModelLoader(gles, this));
-        this.guiManager(new AndroidGuiManager(this));
-        this.fontFactory(new BasicFontFactory(gles, this));
-        this.textureManager(gles.textureManager());
+        serviceProvider().register(ServiceReference.MODEL_LOADER, modelLoader = new GLESModelLoader(gles, this));
+        serviceProvider().register(ServiceReference.GUI_MANAGER, guiManager = new AndroidGuiManager(this));
+        serviceProvider().register(ServiceReference.FONT_FACTORY, fontFactory = new BasicFontFactory(gles, this));
+        serviceProvider().register(ServiceReference.TEXTURE_MANAGER, textureManager = gles.textureManager());
+        serviceProvider().register(ServiceReference.NETWORK_CLIENT, networkClient = new NettyNetworkClient(this));
         gles.init();
         this.glThreadGroup = new GLESThreadGroup();
-    }
-
-    @Override protected void start0() throws GameException {
-        this.glyphProvider(new AndroidGlyphProvider(gles));
-    }
-
-    @Override protected void loadCustomPlugins() {
-        activity.init(this);
     }
 
     @Override public void frame(Frame frame) {
@@ -132,5 +143,28 @@ public class AndroidGameLauncher extends GameLauncher {
 
     @Override public boolean keyboardVisible() {
         return keyboardVisible;
+    }
+
+    @Override protected void stop0() throws GameException {
+        Threads.await(guiManager.cleanup());
+        Threads.await(networkClient.cleanup());
+        Threads.await(glyphProvider.cleanup());
+        Threads.await(textureManager.cleanup());
+
+        Threads.await(keybindManager.cleanup());
+        Threads.await(resourceLoader.cleanup());
+        super.stop0();
+    }
+
+    @Override protected FileSystem createEmbedFileSystem() throws IOException {
+        return new AndroidEmbedFileSystemProvider(activity.getAssets()).newFileSystem((URI) null, null);
+    }
+
+    @Override protected void start0() throws GameException {
+        serviceProvider().register(ServiceReference.GLYPH_PROVIDER, glyphProvider = new AndroidGlyphProvider(gles));
+    }
+
+    @Override protected void loadCustomPlugins() {
+        activity.init(this);
     }
 }

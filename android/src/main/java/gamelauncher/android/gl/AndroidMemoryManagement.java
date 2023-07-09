@@ -8,12 +8,15 @@
 package gamelauncher.android.gl;
 
 import gamelauncher.gles.util.MemoryManagement;
+import gamelauncher.gles.util.MemoryStack;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class AndroidMemoryManagement implements MemoryManagement {
+    private final MemoryStack memoryStack = new AndroidMemoryStack(this);
+
     @Override public ByteBuffer alloc(int size) {
         return ByteBuffer.allocate(size);
     }
@@ -28,6 +31,10 @@ public class AndroidMemoryManagement implements MemoryManagement {
 
     @Override public ByteBuffer callocDirect(int size) {
         return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
+    }
+
+    @Override public MemoryStack stackGet() {
+        return memoryStack;
     }
 
     @Override public void free(Buffer buffer) {

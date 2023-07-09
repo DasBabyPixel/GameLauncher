@@ -75,6 +75,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() {
+        super.init();
         if (Debug.debug) {
             Configuration.DEBUG_STREAM.set(Logger.logger("LWJGL").createPrintStream(new LogLevel("LWJGL", 0, LogColor.GREEN, new LogColor(20, 80, 20)), Logger.LoggerFlags.DONT_PRINT_SOURCE));
             Configuration.DEBUG_MEMORY_ALLOCATOR.set(true);

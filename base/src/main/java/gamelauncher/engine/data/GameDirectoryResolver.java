@@ -34,6 +34,7 @@ public class GameDirectoryResolver {
     public enum Type {
         FOLDER("folder") {
             @Override Path resolve(GameLauncher launcher) {
+                if (launcher.operatingSystem() == DefaultOperatingSystems.ANDROID) return launcher.serviceProvider().service(AndroidProvider.class).gameDirectory();
                 return Paths.get(Config.NAME.value()).toAbsolutePath();
             }
         }, APPLICATION("application") {
@@ -62,5 +63,9 @@ public class GameDirectoryResolver {
         }
 
         abstract Path resolve(GameLauncher launcher);
+    }
+
+    public interface AndroidProvider {
+        Path gameDirectory();
     }
 }

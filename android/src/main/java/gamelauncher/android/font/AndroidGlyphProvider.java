@@ -23,7 +23,8 @@ import gamelauncher.engine.render.shader.ShaderProgram;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.util.concurrent.ExecutorThreadService;
+import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.engine.util.text.Component;
 import gamelauncher.engine.util.text.serializer.PlainTextComponentSerializer;
@@ -34,26 +35,26 @@ import gamelauncher.gles.model.Texture2DModel;
 import gamelauncher.gles.texture.GLESTexture;
 import gamelauncher.gles.util.MemoryManagement;
 import java8.util.concurrent.CompletableFuture;
+import java8.util.function.Consumer;
 import org.joml.Math;
 import org.joml.Vector4i;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class AndroidGlyphProvider extends AbstractGameResource implements GlyphProvider {
     private static final Logger logger = Logger.logger();
     private final GLES gles;
     private final AndroidGameLauncher launcher;
+    private final ExecutorThreadService service;
     private Frame frame;
     private DynamicSizeTextureAtlas textureAtlas;
 
     public AndroidGlyphProvider(GLES gles) throws GameException {
         this.gles = gles;
         this.launcher = (AndroidGameLauncher) gles.launcher();
+        this.service = launcher.threads().newWorkStealingPool();
     }
 
     @Override public GlyphStaticModel loadStaticModel(Component text, int pixelHeight) throws GameException {
@@ -77,69 +78,80 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
         float ascent = fm.ascent;
         char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
         Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
+        Queue<Consumer<Void>> tasks = new ConcurrentLinkedQueue<>();
         Map<GLESTexture, Collection<AtlasEntry>> entries = new HashMap<>();
         for (char ch : ar) {
             GlyphKey key = new GlyphKey(scale, ch);
-            CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(key, paint, ch);
+            CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(tasks, key, paint, ch);
             futures.add(fentry);
         }
 
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); i++) {
+            service.submit(new FontLoadRunnable(tasks));
+        }
+
 //        this.textureAtlas.byTexture().keySet().forEach(t -> t.write());
+        GlyphModelWrapper wrapper = new GlyphModelWrapper(null, 0, 0, ascent, descent);
 
-        AtomicInteger countdown = new AtomicInteger(futures.size());
-
-        for (CompletableFuture<AtlasEntry> future : futures) {
-            Threads.await(future);
-        }
-        for (CompletableFuture<AtlasEntry> f : futures) {
-            Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
-            e.add(f.getNow(null));
-        }
-        // TODO cleanup
-        Collection<Model> meshes = new ArrayList<>();
-        int mwidth = 0;
-        float mheight = 0;
-        int xpos = 0;
-        float z = 0;
-        for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
-            for (AtlasEntry e : entry.getValue()) {
-                Vector4i bd = e.bounds;
-
-                NumberValue tw = e.texture.width();
-                NumberValue th = e.texture.height();
-                NumberValue tl = NumberValue.constant(bd.x + 0.5).divide(tw);
-                NumberValue tb = NumberValue.constant(bd.y + 0.5).divide(th);
-                NumberValue tr = NumberValue.constant(bd.x + 0.5).add(bd.z - 0.5).divide(tw);
-                NumberValue tt = NumberValue.constant(bd.y + 0.5).add(bd.w - 0.5).divide(th);
-
-                GlyphData data = e.entry.data;
-                float pb = -data.bearingY - data.height;
-                float pt = pb + data.height;
-                int pl = xpos;
-                int pr = pl + data.width;
-                int width = pr - pl;
-                float height = pt - pb;
-                int x = pl + width / 2;
-                float y = pt + height / 2;
-
-                mheight = Math.max(mheight, height);
-                mwidth = Math.max(mwidth, xpos + width);
-                DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
-
-                GameItem gi = new GameItem(m);
-                gi.position(x, y, z);
-                gi.scale(width, height, 1);
-                meshes.add(gi.createModel());
-                xpos += e.entry.data.advance;
-
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+            for (CompletableFuture<AtlasEntry> f : futures) {
+                Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
+                e.add(f.getNow(null));
             }
-        }
+            // TODO cleanup
+            Collection<Model> meshes = new ArrayList<>();
+            float mwidth = 0;
+            float mheight = 0;
+            float xpos = 0;
+            float z = 0;
+            for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
+                for (AtlasEntry e : entry.getValue()) {
+                    Vector4i bd = e.bounds;
 
-        CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
-        GameItem gi = new GameItem(cmodel);
-        gi.addColor(1, 1, 1, 0);
-        GameItem.GameItemModel gim = gi.createModel();
-        return new GlyphModelWrapper(gim, mwidth, mheight, ascent, descent);
+                    NumberValue tw = e.texture.width();
+                    NumberValue th = e.texture.height();
+                    NumberValue tl = NumberValue.constant(bd.x + 0.5).divide(tw);
+                    NumberValue tb = NumberValue.constant(bd.y + 0.5).divide(th);
+                    NumberValue tr = NumberValue.constant(bd.x + 0.5).add(bd.z - 0.5).divide(tw);
+                    NumberValue tt = NumberValue.constant(bd.y + 0.5).add(bd.w - 0.5).divide(th);
+
+                    GlyphData data = e.entry.data;
+                    float pb = -data.bearingY - data.height;
+                    float pt = pb + data.height;
+                    float pl = xpos + data.bearingX;
+                    float pr = pl + data.width;
+                    float width = pr - pl;
+                    float height = pt - pb;
+                    float x = pl + width / 2;
+                    float y = pt + height / 2;
+
+                    mheight = Math.max(mheight, height);
+                    mwidth = Math.max(mwidth, xpos + width);
+                    DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
+
+                    GameItem gi = new GameItem(m);
+                    gi.position(x, y, z);
+                    gi.scale(width, height, 1);
+                    meshes.add(gi.createModel());
+                    xpos += e.entry.data.advance;
+
+                }
+            }
+
+            CombinedModelsModel cmodel = new GLESCombinedModelsModel(meshes.toArray(new Model[0]));
+            GameItem gi = new GameItem(cmodel);
+            gi.addColor(1, 1, 1, 0);
+            GameItem.GameItemModel gim = gi.createModel();
+            try {
+                wrapper.handle(gim);
+            } catch (GameException e) {
+                throw new RuntimeException(e);
+            }
+            wrapper.width(mwidth);
+            wrapper.height(mheight);
+            frame.launcher().guiManager().redrawAll();
+        });
+        return wrapper;
     }
 
     public CompletableFuture<Void> releaseGlyphKey(GlyphKey key) {
@@ -149,18 +161,19 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
         return CompletableFuture.completedFuture(null);
     }
 
-    public CompletableFuture<AtlasEntry> requireGlyphKey(GlyphKey key, Paint paint, char ch) throws GameException {
+    public CompletableFuture<AtlasEntry> requireGlyphKey(Queue<Consumer<Void>> tasks, GlyphKey key, Paint paint, char ch) throws GameException {
 //        return this.frame.launcher().threads().cached.submit(() -> {
         int id = this.getId(key);
-        DynamicSizeTextureAtlas.AddFuture af = textureAtlas.addGlyph(id, () -> {
+        DynamicSizeTextureAtlas.AddFuture af = textureAtlas.addGlyph(tasks, id, data -> {
 
             char[] ca1 = new char[]{ch};
             Rect bounds = new Rect();
+            float w = paint.measureText(new String(ca1));
             paint.getTextBounds(ca1, 0, 1, bounds);
 
             MemoryManagement memoryManagement = gles.memoryManagement();
             GlyphData gdata = new GlyphData();
-            gdata.advance = bounds.width();
+            gdata.advance = w;
             gdata.bearingX = bounds.left;
             gdata.bearingY = bounds.bottom;
             gdata.width = bounds.width();
@@ -187,8 +200,11 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             }
             buf.flip();
             memoryManagement.free(abuf);
+            byte[] pixels = new byte[buf.capacity()];
+            buf.get(pixels);
+            memoryManagement.free(buf);
 
-            return new GlyphEntry(gdata, key, buf);
+            return new GlyphEntry(gdata, key, pixels);
         });
         af.future().exceptionally(ex -> {
             logger.error(ex);
@@ -207,6 +223,23 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
     public int getId(GlyphKey key) {
         return key.hashCode();
+    }
+
+    class FontLoadRunnable implements GameRunnable {
+        private final Queue<Consumer<Void>> tasks;
+
+        public FontLoadRunnable(Queue<Consumer<Void>> tasks) {
+            this.tasks = tasks;
+        }
+
+        @Override public void run() {
+            Consumer<Void> task = tasks.poll();
+            if (task == null) return;
+            task.accept(null);
+            while ((task = tasks.poll()) != null) {
+                task.accept(null);
+            }
+        }
     }
 
     private class DynamicModel extends AbstractGameResource implements Model {

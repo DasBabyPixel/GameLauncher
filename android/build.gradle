@@ -26,6 +26,10 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+    }
+
     publishing {
         singleVariant('release') {
             withSourcesJar()
@@ -47,6 +51,7 @@ publishing {
 dependencies {
     api parent.project('gles')
     api parent.project('api')
+    api parent.project('netty')
     api 'androidx.appcompat:appcompat:1.6.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.3'
 }
