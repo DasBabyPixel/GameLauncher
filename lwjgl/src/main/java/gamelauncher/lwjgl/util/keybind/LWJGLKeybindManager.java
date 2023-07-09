@@ -79,7 +79,7 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
         if (!names.containsKey(id)) {
             if (id >= KEYBOARD_ADD && id < SCROLL) {
                 String n1 = glfwGetKeyName(id - KEYBOARD_ADD, 0);
-                if (n1 == null) n1 = Character.toString(id);
+                if (n1 == null) n1 = Character.toString(id - KEYBOARD_ADD);
                 names.put(id, n1);
             } else if (id == SCROLL) {
                 names.put(id, "MouseWheel");
@@ -88,7 +88,9 @@ public class LWJGLKeybindManager extends AbstractGameResource implements Keybind
             } else if (id >= KEYBOARD_CODEPOINT_ADD && id < KEYBOARD_SCANCODE_ADD) {
                 names.put(id, Character.toString(id - KEYBOARD_CODEPOINT_ADD));
             } else if (id >= KEYBOARD_SCANCODE_ADD) {
-                names.put(id, glfwGetKeyName(0, id - KEYBOARD_SCANCODE_ADD));
+                String n1 = glfwGetKeyName(0, id - KEYBOARD_SCANCODE_ADD);
+                if (n1 == null) n1 = Character.toString(id - KEYBOARD_SCANCODE_ADD);
+                names.put(id, n1);
             } else {
                 throw new IllegalArgumentException("Key: " + id);
             }
