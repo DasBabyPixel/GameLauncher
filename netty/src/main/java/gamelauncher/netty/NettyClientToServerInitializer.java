@@ -120,7 +120,8 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
     }
 
     private void addEncryption(ChannelPipeline pipeline) throws SSLException {
-        SslContext ctx = SslContextBuilder.forClient().protocols("TLSv1.3").sslProvider(SslProvider.JDK).build();
+        String[] protocols = new String[]{"TLSv1.3"};
+        SslContext ctx = SslContextBuilder.forClient().protocols(protocols).sslProvider(SslProvider.JDK).build();
         SSLEngine engine = ctx.newEngine(pipeline.channel().alloc(), hostname, port);
         pipeline.addFirst("ssl", new SslHandler(engine));
     }
