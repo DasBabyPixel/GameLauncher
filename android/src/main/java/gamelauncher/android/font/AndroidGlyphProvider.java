@@ -98,7 +98,6 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
                 Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
                 e.add(f.getNow(null));
             }
-            // TODO cleanup
             Collection<Model> meshes = new ArrayList<>();
             float mwidth = 0;
             float mheight = 0;
@@ -110,10 +109,10 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
                     NumberValue tw = e.texture.width();
                     NumberValue th = e.texture.height();
-                    NumberValue tl = NumberValue.constant(bd.x + 0.5).divide(tw);
-                    NumberValue tb = NumberValue.constant(bd.y + 0.5).divide(th);
-                    NumberValue tr = NumberValue.constant(bd.x + 0.5).add(bd.z - 0.5).divide(tw);
-                    NumberValue tt = NumberValue.constant(bd.y + 0.5).add(bd.w - 0.5).divide(th);
+                    NumberValue tl = NumberValue.constant(bd.x + 0.5F).divide(tw);
+                    NumberValue tb = NumberValue.constant(bd.y + 0.5F).divide(th);
+                    NumberValue tr = NumberValue.constant(bd.x + 0.5F).add(bd.z + 0.5F).divide(tw);
+                    NumberValue tt = NumberValue.constant(bd.y + 0.5F).add(bd.w + 0.5F).divide(th);
 
                     GlyphData data = e.entry.data;
                     float pb = -data.bearingY - data.height;
@@ -126,7 +125,7 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
                     float y = pt + height / 2;
 
                     mheight = Math.max(mheight, height);
-                    mwidth = Math.max(mwidth, xpos + width);
+                    mwidth = Math.max(mwidth, pl + width);
                     DynamicModel m = new DynamicModel(e, tl, tr, tt, tb);
 
                     GameItem gi = new GameItem(m);
