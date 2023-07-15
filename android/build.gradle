@@ -5,14 +5,18 @@ plugins {
 
 android {
     namespace 'gamelauncher.android'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         multiDexEnabled true
         minSdk 16
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
@@ -24,6 +28,9 @@ android {
 
     compileOptions {
         coreLibraryDesugaringEnabled true
+
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     packagingOptions {

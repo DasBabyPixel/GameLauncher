@@ -79,7 +79,7 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
         char[] ar = PlainTextComponentSerializer.serialize(text).toCharArray();
         Collection<CompletableFuture<AtlasEntry>> futures = new ArrayList<>();
         Queue<Consumer<Void>> tasks = new ConcurrentLinkedQueue<>();
-        Map<GLESTexture, Collection<AtlasEntry>> entries = new HashMap<>();
+        Map<GLESTexture, List<AtlasEntry>> entries = new HashMap<>();
         for (char ch : ar) {
             GlyphKey key = new GlyphKey(scale, ch);
             CompletableFuture<AtlasEntry> fentry = this.requireGlyphKey(tasks, key, paint, ch);
@@ -95,7 +95,7 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
             for (CompletableFuture<AtlasEntry> f : futures) {
-                Collection<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
+                List<AtlasEntry> e = entries.computeIfAbsent(f.getNow(null).texture, k -> new ArrayList<>());
                 e.add(f.getNow(null));
             }
             Collection<Model> meshes = new ArrayList<>();
@@ -103,8 +103,10 @@ public class AndroidGlyphProvider extends AbstractGameResource implements GlyphP
             float mheight = 0;
             float xpos = 0;
             float z = 0;
-            for (Map.Entry<GLESTexture, Collection<AtlasEntry>> entry : entries.entrySet()) {
-                for (AtlasEntry e : entry.getValue()) {
+            for (Map.Entry<GLESTexture, List<AtlasEntry>> entry : entries.entrySet()) {
+                for (int i = 0; i < entry.getValue().size(); i++) {
+                    AtlasEntry e = entry.getValue().get(i);
+                    if (i == 0) xpos = -e.entry.data.bearingX;
                     Vector4i bd = e.bounds;
 
                     NumberValue tw = e.texture.width();

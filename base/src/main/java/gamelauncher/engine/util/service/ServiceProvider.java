@@ -33,16 +33,17 @@ public class ServiceProvider {
         return service(serviceReference.serviceName(), serviceReference.serviceClass());
     }
 
-    @SuppressWarnings("unchecked") @Api public <T> T[] services(Class<T> serviceClass) {
+    @SuppressWarnings({"unchecked", "SuspiciousToArrayCall"})
+    @Api public <T> T[] services(Class<T> serviceClass) {
         if (compiled.containsKey(serviceClass)) return (T[]) compiled.get(serviceClass);
         synchronized (this) {
-            List<T> l = new ArrayList<>();
+            ArrayList<Object> l = new ArrayList<>();
             for (ServiceName serviceName : services.keySet()) {
                 Map<Class<?>, Object[]> m = services.get(serviceName);
                 Object[] o = m.get(serviceClass);
                 if (o != null) for (Object value : o) l.add(serviceClass.cast(value));
             }
-            T[] a = l.toArray(i -> (T[]) Array.newInstance(serviceClass, i));
+            T[] a = l.toArray( (T[]) Array.newInstance(serviceClass, 0));
             compiled.put(serviceClass, a);
             return a;
         }

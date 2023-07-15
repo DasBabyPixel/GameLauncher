@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace 'gamelauncher.android.app'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         multiDexEnabled true
         applicationId "gamelauncher.android.app"
         minSdk 16
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
     }
@@ -29,6 +29,9 @@ android {
 
     compileOptions {
         coreLibraryDesugaringEnabled true
+
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 

@@ -40,6 +40,7 @@ public class GameThread extends AbstractGameThread implements ExecutorThread {
         this.gameLauncher = launcher;
         this.setName("GameThread");
         this.setPriority(MAX_PRIORITY);
+        
     }
 
     /**
