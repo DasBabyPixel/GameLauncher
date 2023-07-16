@@ -87,7 +87,6 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                                 }
                             } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
                                 mousePressed.put(keybindId, new PointerEntry(id, x, y, height, pressure));
-                                System.out.println(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.PRESS));
                                 keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.PRESS));
                             } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
                                 keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.RELEASE));
