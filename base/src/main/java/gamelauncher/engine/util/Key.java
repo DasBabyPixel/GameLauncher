@@ -10,6 +10,7 @@ import java.util.Objects;
 /**
  * @author DasBabyPixel
  */
+@SuppressWarnings("NewApi")
 public class Key {
 
     private final String namespace;
@@ -67,6 +68,10 @@ public class Key {
         if (this.getClass() != obj.getClass()) return false;
         Key other = (Key) obj;
         return Objects.equals(this.key, other.key) && Objects.equals(this.namespace, other.namespace);
+    }
+
+    @Override public int hashCode() {
+        return Objects.hash(namespace, key);
     }
 
     @Override public String toString() {

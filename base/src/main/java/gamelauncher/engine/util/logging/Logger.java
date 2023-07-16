@@ -2,6 +2,7 @@ package gamelauncher.engine.util.logging;
 
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.GameLauncher;
+import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.i18n.Message;
 
@@ -167,7 +168,7 @@ public abstract class Logger {
     }
 
     public static class Initializer {
-        public static void init(GameLauncher launcher) {
+        public static void init(GameLauncher launcher) throws GameException {
             Logger.system.addEntry(System.out, SelectiveStream.Output.OUT);
 //            Logger.system.addEntry(System.err, SelectiveStream.Output.ERR);
             asyncLogStream = new AsyncLogStream(launcher);

@@ -33,7 +33,7 @@ public class ServiceProvider {
         return service(serviceReference.serviceName(), serviceReference.serviceClass());
     }
 
-    @SuppressWarnings({"unchecked", "SuspiciousToArrayCall"})
+    @SuppressWarnings({"unchecked"})
     @Api public <T> T[] services(Class<T> serviceClass) {
         if (compiled.containsKey(serviceClass)) return (T[]) compiled.get(serviceClass);
         synchronized (this) {

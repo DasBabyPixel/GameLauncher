@@ -8,6 +8,7 @@
 package gamelauncher.lwjgl.render.glfw;
 
 import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -16,10 +17,10 @@ import gamelauncher.engine.util.logging.LogLevel;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.gl.*;
 import gamelauncher.gles.states.StateRegistry;
+import gamelauncher.gles.util.GLDebugUtil;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.system.Callback;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,7 +38,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
     GLFWGLContext parent;
     ExecutorThread owner = null;
     GLFWFrame frame;
-    private Callback errorCallback = null;
+    private GameResource errorCallback = null;
     private boolean owned = true;
     private GLES32 gl;
 
@@ -55,7 +56,13 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             GLUtil.setNullCapabilities();
             this.owned = false;
             this.owner = null;
-            if (errorCallback != null) errorCallback.free();
+            if (errorCallback != null) {
+                try {
+                    errorCallback.cleanup();
+                } catch (GameException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
@@ -182,7 +189,7 @@ public class GLFWGLContext extends AbstractGameResource implements GLContext {
             GLFW.glfwMakeContextCurrent(glfwId);
             GLUtil.createCapabilities();
             gl32().glEnable(GLES32.GL_DEBUG_OUTPUT);
-            errorCallback = GLUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level, Logger.LoggerFlags.DONT_PRINT_SOURCE));
+            errorCallback = GLDebugUtil.setupDebugMessageCallback(GLFWGLContext.logger.createPrintStream(GLFWGLContext.level, Logger.LoggerFlags.DONT_PRINT_SOURCE));
         }
     }
 }

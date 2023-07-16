@@ -1,6 +1,7 @@
 package gamelauncher.gles.gl;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.resource.GameResource;
 
 public interface GLES32 extends GLES31 {
 
@@ -2056,7 +2057,7 @@ public interface GLES32 extends GLES31 {
      *  </div>
      * </div>
      */
-    @Api void glDebugMessageCallback(DebugProc callback);
+    @Api GameResource glDebugMessageCallback(DebugProc callback);
 
     /**
      * glGetDebugMessageLog

@@ -37,13 +37,12 @@ public class ModelIdRegistry extends AbstractGameResource {
 
     @Api public int id(Model model) {
         synchronized (lock) {
-            int id = model.storedValue(idKey, random::nextInt);
-            if (!i2o.containsKey(id)) {
-                WeakReference<Model> ref = new WeakReference<>(model, referenceQueue);
-                i2o.put(id, ref);
-                o2i.put(ref, id);
-            }
-            return id;
+//            if (!i2o.containsKey(id)) {
+//                WeakReference<Model> ref = new WeakReference<>(model, referenceQueue);
+//                i2o.put(id, ref);
+//                o2i.put(ref, id);
+//            }
+            return 0;
         }
     }
 
@@ -76,7 +75,9 @@ public class ModelIdRegistry extends AbstractGameResource {
         @SuppressWarnings("InfiniteLoopStatement") @Override public void run() {
             while (true) {
                 try {
+                    System.out.println("run");
                     Reference<? extends Model> ref = referenceQueue.remove();
+                    System.out.println("ref: " + ref);
                     synchronized (lock) {
                         int id = o2i.removeInt(ref);
                         i2o.remove(id);

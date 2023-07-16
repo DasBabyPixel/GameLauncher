@@ -43,13 +43,14 @@ public class AndroidRenderThread extends AbstractExecutorThread implements Rende
         this.refreshPhaser = new Phaser(1);
 
         this.frame = frame;
-        this.setName("GLFWFrameRenderThread-" + ids.incrementAndGet());
+        this.setName("AndroidRenderThread-" + ids.incrementAndGet());
     }
 
     @Override protected void startExecuting() {
         this.fb = new ManualQueryFramebuffer(this.frame.framebuffer(), this);
         this.fb.query();
         this.frame.context().makeCurrent();
+        AndroidGLContext.setupDebugMessage();
 
         GLESStates states = new GLESStates();
         states.depth.enabled.value.set(true);

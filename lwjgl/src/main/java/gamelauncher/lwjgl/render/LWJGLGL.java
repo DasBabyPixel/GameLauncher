@@ -7,11 +7,11 @@
 
 package gamelauncher.lwjgl.render;
 
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.logging.Logger;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL46;
-import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.opengles.GLDebugMessageCallback;
+import java8.util.concurrent.CompletableFuture;
+import org.lwjgl.opengl.*;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 
@@ -94,14 +94,6 @@ public class LWJGLGL implements gamelauncher.gles.gl.GLES32 {
 
     @Override public void glBufferData(int target, long size, Buffer data, int usage) {
         GL46.nglBufferData(target, size, memAddress(data), usage);
-    }
-
-    @Override public void glBufferData(int target, IntBuffer buffer, int usage) {
-        GL46.glBufferData(target, buffer, usage);
-    }
-
-    @Override public void glBufferData(int target, FloatBuffer buffer, int usage) {
-        GL46.glBufferData(target, buffer, usage);
     }
 
     @Override public void glBufferSubData(int target, int offset, long size, Buffer data) {
@@ -1958,8 +1950,16 @@ public class LWJGLGL implements gamelauncher.gles.gl.GLES32 {
         throw new LWJGLGL.LazyException();
     }
 
-    @Override public void glDebugMessageCallback(gamelauncher.gles.gl.GLES32.DebugProc callback) {
-        GL46.glDebugMessageCallback((source, type, id, severity, length, message, userParam) -> callback.onMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message)), NULL);
+    @Override public GameResource glDebugMessageCallback(gamelauncher.gles.gl.GLES32.DebugProc callback) {
+        GLDebugMessageCallbackI i = (source, type, id, severity, length, message, userParam) -> callback.onMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message));
+        GLDebugMessageCallback cb = GLDebugMessageCallback.create(i);
+        GL46.glDebugMessageCallback(cb, NULL);
+        return new AbstractGameResource() {
+            @Override protected CompletableFuture<Void> cleanup0() {
+                cb.free();
+                return null;
+            }
+        };
     }
 
     @Override public int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset) {

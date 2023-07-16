@@ -39,10 +39,10 @@ import gamelauncher.lwjgl.render.LWJGLGLFactory;
 import gamelauncher.lwjgl.render.font.bitmap.LWJGLGlyphProvider;
 import gamelauncher.lwjgl.render.glfw.GLFWFrame;
 import gamelauncher.lwjgl.render.glfw.GLFWThread;
-import gamelauncher.lwjgl.render.glfw.GLUtil;
-import gamelauncher.lwjgl.settings.controls.MouseSensivityInsertion;
+import gamelauncher.lwjgl.settings.DisplayInsertion;
 import gamelauncher.lwjgl.util.LWJGLAnsiProvider;
 import gamelauncher.lwjgl.util.LWJGLExecutorThreadHelper;
+import gamelauncher.lwjgl.util.LWJGLLoggingProvider;
 import gamelauncher.lwjgl.util.LWJGLMemoryManagement;
 import gamelauncher.lwjgl.util.image.AWTImageDecoder;
 import gamelauncher.lwjgl.util.keybind.LWJGLKeybindManager;
@@ -75,6 +75,8 @@ public class LWJGLGameLauncher extends GameLauncher {
     private GLFWThread glfwThread;
 
     public LWJGLGameLauncher() {
+        super();
+        this.serviceProvider().register(ServiceReference.LOGGING_PROVIDER, new LWJGLLoggingProvider());
         super.init();
         if (Debug.debug) {
             Configuration.DEBUG_STREAM.set(Logger.logger("LWJGL").createPrintStream(new LogLevel("LWJGL", 0, LogColor.GREEN, new LogColor(20, 80, 20)), Logger.LoggerFlags.DONT_PRINT_SOURCE));
@@ -165,8 +167,6 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @Override protected void start0() throws GameException {
-        GLUtil.clinit();
-
         this.glfwThread = new GLFWThread(this);
         this.glfwThread.start();
         Threads.await(glfwThread.submit(() -> null));
@@ -214,7 +214,7 @@ public class LWJGLGameLauncher extends GameLauncher {
     }
 
     @Override protected void registerSettingInsertions() {
-        new MouseSensivityInsertion().register(this);
+        new DisplayInsertion().register(this);
     }
 
 }

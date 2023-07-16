@@ -10,19 +10,20 @@ package gamelauncher.engine.util.logging;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.util.GameException;
+import gamelauncher.engine.util.service.ServiceReference;
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 
+@SuppressWarnings("NewApi")
 public class LogFileWriter {
+    private final GameLauncher launcher;
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
     private final Path logs;
     private final Path latest;
@@ -30,16 +31,17 @@ public class LogFileWriter {
     private final FastByteArrayOutputStream preInitStream = new FastByteArrayOutputStream();
     private PrintStream latestOut;
 
-    public LogFileWriter(@Nullable GameLauncher launcher, @NotNull AnsiProvider ansi) {
+    public LogFileWriter(GameLauncher launcher, @NotNull AnsiProvider ansi) throws GameException {
+        this.launcher = launcher;
         this.ansi = ansi;
-        this.logs = launcher == null ? Paths.get("logs") : launcher.gameDirectory().resolve("logs");
+        this.logs = launcher.gameDirectory().resolve("logs");
         this.latest = logs.resolve("latest.log");
-        this.latestOut = new PrintStream(preInitStream, false, StandardCharsets.UTF_8);
+        this.latestOut = launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(preInitStream);
     }
 
     public void init() throws GameException {
         Files.createDirectories(logs);
-        latestOut = new PrintStream(Files.newOutputStream(latest, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE), false, StandardCharsets.UTF_8);
+        latestOut = launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(Files.newOutputStream(latest, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
         latestOut.write(preInitStream.array, 0, preInitStream.length);
     }
 

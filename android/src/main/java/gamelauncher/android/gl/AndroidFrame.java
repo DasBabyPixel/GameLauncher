@@ -34,7 +34,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
     private final IAndroidRenderThread renderThread;
     private final BooleanValue fullscreen;
     private final Property<Icon> icon = Property.empty();
-    private volatile RenderMode renderMode;
+    private volatile RenderMode renderMode = RenderMode.ON_UPDATE;
     private volatile FrameRenderer frameRenderer = null;
 
     public AndroidFrame(AndroidGameLauncher launcher) {
@@ -77,6 +77,7 @@ public class AndroidFrame extends AbstractGameResource implements Frame {
 
     @Override public void renderMode(RenderMode renderMode) {
         this.renderMode = renderMode;
+        launcher.view().updateRenderMode();
     }
 
     @Override public void frameRenderer(FrameRenderer renderer) {

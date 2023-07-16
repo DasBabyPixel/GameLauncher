@@ -11,25 +11,28 @@ import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.Key;
 import gamelauncher.engine.util.function.GameSupplier;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 abstract class StorageResource implements GameResource {
 
-    protected final Map<Key, Object> map = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<Key, Object> map = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key) {
         return (T) map.get(key);
     }
 
     @SuppressWarnings("unchecked") @Override public <T> T storedValue(Key key, GameSupplier<T> defaultSupplier) {
-        return (T) map.computeIfAbsent(key, key1 -> {
-            try {
-                return defaultSupplier.get();
-            } catch (GameException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        if (map.containsKey(key)) {
+            return (T) map.get(key);
+        }
+        T val = null;
+        try {
+            val = defaultSupplier.get();
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
+        map.put(key, val);
+        return val;
     }
 
     @Override public void storeValue(Key key, Object value) {

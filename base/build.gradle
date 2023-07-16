@@ -25,6 +25,10 @@ dependencies {
 publishing {
     publications {
         maven(MavenPublication) {
+            artifactId project.name
+            groupId = project.group
+            version = project.version
+
             from components.java
         }
     }

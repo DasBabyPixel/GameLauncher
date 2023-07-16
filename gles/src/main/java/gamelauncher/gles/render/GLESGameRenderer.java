@@ -172,7 +172,7 @@ public class GLESGameRenderer implements GameRenderer {
         }
 
         public void renderFrame(Renderer renderer) throws GameException {
-            GLES31 cur = StateRegistry.currentGl();
+            GLES20 cur = StateRegistry.currentGl();
             this.frame.framebuffer().beginFrame();
             cur.glViewport(0, 0, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             cur.glClearColor(0, 0, 0, 0);

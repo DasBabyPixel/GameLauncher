@@ -1,6 +1,5 @@
 package gamelauncher.android.gl;
 
-import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
@@ -9,6 +8,7 @@ import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.ThreadSpecificExecutor;
 import gamelauncher.engine.util.logging.Logger;
+import gamelauncher.gles.gl.GLES20;
 import gamelauncher.gles.states.StateRegistry;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -23,7 +23,6 @@ public class GLRenderer implements GLSurfaceView.Renderer {
     private final AndroidFrame frame;
     private final Queue<Runnable> queue = new ConcurrentLinkedQueue<>();
     private FrameRenderer renderer;
-    private ThreadSpecificExecutor executor;
 
     public GLRenderer(AndroidGameLauncher launcher) {
         this.launcher = launcher;
@@ -32,7 +31,7 @@ public class GLRenderer implements GLSurfaceView.Renderer {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1) @Override public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Thread thread = Thread.currentThread();
-        executor = new ThreadSpecificExecutor() {
+        ThreadSpecificExecutor executor = new ThreadSpecificExecutor() {
             @Override public Thread thread() {
                 return thread;
             }
@@ -43,22 +42,17 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             }
         };
         StateRegistry.currentContext(frame.context());
-        System.out.println(StateRegistry.currentGl() + "sasadlhjkasdöfl");
-        logger.info("OpenGL: " + GLES20.glGetString(GLES20.GL_VERSION));
-        logger.info("GLSL: " + GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION));
-        logger.info("Extensions: " + GLES20.glGetString(GLES20.GL_EXTENSIONS));
+
         AndroidNativeRenderThread rt = ((AndroidNativeRenderThread) frame.renderThread());
         rt.executor(executor);
         rt.frame().context().recreate(launcher.egl().eglGetCurrentDisplay(), launcher.egl().eglGetCurrentSurface(EGL10.EGL_DRAW), launcher.egl().eglGetCurrentContext());
-        if (renderer == null) {
-            logger.warn("Fallback render");
-            GLES20.glClearColor(0.4f, 0.0f, 0.0f, 1.0f);
-        }
+        AndroidGLContext.setupDebugMessage();
     }
 
     @Override public void onSurfaceChanged(GL10 gl, int width, int height) {
         frame.framebuffer().width().number(width);
         frame.framebuffer().height().number(height);
+        updateRenderer();
         if (renderer != null) {
             try {
                 renderer.windowSizeChanged(frame);
@@ -68,11 +62,25 @@ public class GLRenderer implements GLSurfaceView.Renderer {
             return;
         }
         logger.warn("Fallback render");
-        GLES20.glViewport(0, 0, width, height);
+        frame.context().gl20().glViewport(0, 0, width, height);
     }
 
     @Override public void onDrawFrame(GL10 gl) {
         loop();
+        updateRenderer();
+        if (renderer != null) {
+            try {
+                renderer.renderFrame(frame);
+            } catch (GameException e) {
+                launcher.handleError(e);
+            }
+            return;
+        }
+        logger.warn("Fallback render");
+        frame.context().gl20().glClear(GLES20.GL_COLOR_BUFFER_BIT);
+    }
+
+    private void updateRenderer() {
         FrameRenderer cfr = frame.frameRenderer();
         if (renderer != cfr) {
             if (renderer != null) {
@@ -91,16 +99,6 @@ public class GLRenderer implements GLSurfaceView.Renderer {
                 }
             }
         }
-        if (renderer != null) {
-            try {
-                renderer.renderFrame(frame);
-            } catch (GameException e) {
-                launcher.handleError(e);
-            }
-            return;
-        }
-        logger.warn("Fallback render");
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
     }
 
     private void loop() {

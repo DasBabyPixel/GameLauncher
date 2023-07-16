@@ -1,5 +1,6 @@
 package gamelauncher.android;
 
+import android.annotation.SuppressLint;
 import android.content.res.Resources;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -86,6 +87,7 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
                                 }
                             } else if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
                                 mousePressed.put(keybindId, new PointerEntry(id, x, y, height, pressure));
+                                System.out.println(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.PRESS));
                                 keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.PRESS));
                             } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
                                 keybindManager.post(new AndroidMouse.ButtonEvent(keybind, id, x, height - y, MouseButtonKeybindEvent.Type.RELEASE));
@@ -151,11 +153,11 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
             default:
                 break;
         }
-        return true;
+        return false;
     }
 
-    @Override public boolean onTouch(View v, MotionEvent event) {
-        offer(new MouseHandle(MotionEvent.obtain(event), Resources.getSystem().getDisplayMetrics().heightPixels));
+    @SuppressLint("ClickableViewAccessibility") @Override public boolean onTouch(View v, MotionEvent event) {
+        offer(new MouseHandle(MotionEvent.obtain(event)));
         return true;
     }
 
@@ -175,16 +177,10 @@ public class AndroidInput implements Input, View.OnKeyListener, View.OnTouchList
 
     private static class MouseHandle extends AbstractKeybindEvent {
         private final MotionEvent event;
-        private final int height;
 
-        public MouseHandle(MotionEvent event, int height) {
+        public MouseHandle(MotionEvent event) {
             super(null);
             this.event = event;
-            this.height = height;
-        }
-
-        public int height() {
-            return height;
         }
 
         public MotionEvent event() {

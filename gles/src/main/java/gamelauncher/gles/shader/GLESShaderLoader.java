@@ -129,7 +129,7 @@ public class GLESShaderLoader implements ShaderLoader {
             String vscode = loader.resource(vspath).newResourceStream().readUTF8FullyClose();
             String fscode = loader.resource(fspath).newResourceStream().readUTF8FullyClose();
 
-            GLESShaderProgram program = new GLESShaderProgram(gles, path);
+            GLESShaderProgram program = new GLESShaderProgram(gles);
             this.programs.put(resource, program);
             program.cleanupFuture().thenRun(() -> this.programs.remove(resource));
             program.createVertexShader(vscode);

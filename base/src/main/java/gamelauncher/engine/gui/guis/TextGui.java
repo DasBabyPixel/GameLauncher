@@ -64,6 +64,20 @@ public interface TextGui extends Gui {
             this.color.w.addListener((NumberValue p) -> this.redraw());
         }
 
+        /**
+         * @return text
+         */
+        @Override public Property<Component> text() {
+            return this.text;
+        }
+
+        /**
+         * @return the color property vector
+         */
+        @Override public PropertyVector4f color() {
+            return this.color;
+        }
+
         @Override protected void doCleanup() throws GameException {
             if (this.itemModel != null) {
                 this.itemModel.cleanup();
@@ -98,20 +112,6 @@ public interface TextGui extends Gui {
 
         @Override protected String additionalToStringData() {
             return "text=" + text.value();
-        }
-
-        /**
-         * @return text
-         */
-        @Override public Property<Component> text() {
-            return this.text;
-        }
-
-        /**
-         * @return the color property vector
-         */
-        @Override public PropertyVector4f color() {
-            return this.color;
         }
 
         private void ensureModel() throws GameException {

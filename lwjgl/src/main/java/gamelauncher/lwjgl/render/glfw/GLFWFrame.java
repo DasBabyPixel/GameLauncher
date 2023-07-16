@@ -19,9 +19,11 @@ import gamelauncher.engine.render.FrameCounter;
 import gamelauncher.engine.render.FrameRenderer;
 import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.util.Config;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.collections.Collections;
+import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.image.Icon;
 import gamelauncher.engine.util.logging.Logger;
@@ -29,6 +31,7 @@ import gamelauncher.gles.framebuffer.ManualQueryFramebuffer;
 import gamelauncher.lwjgl.LWJGLGameLauncher;
 import gamelauncher.lwjgl.input.LWJGLInput;
 import gamelauncher.lwjgl.input.LWJGLMouse;
+import gamelauncher.lwjgl.settings.DisplayInsertion;
 import gamelauncher.lwjgl.util.image.AWTIcon;
 import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.PointerBuffer;
@@ -67,6 +70,9 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     final Property<Icon> icon = Property.empty();
     final ManualQueryFramebuffer manualFramebuffer;
     boolean cleaningUp = false;
+    boolean mainFrame = false;
+    Creator creator;
+    boolean showing = false;
     private boolean created;
 
     public GLFWFrame(LWJGLGameLauncher launcher) throws GameException {
@@ -107,6 +113,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     }
 
     public void startMainFrame() {
+        mainFrame = true;
         this.launcher.getGLFWThread().submit(() -> {
             this.context.create(null);
             this.created = true;
@@ -121,7 +128,13 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     public CompletableFuture<Void> showWindow() {
         return this.launcher.getGLFWThread().submit(() -> {
             this.framebuffer.swapBuffers().value(true);
+            showing = true;
             glfwShowWindow(this.context.glfwId);
+            glfwFocusWindow(context.glfwId);
+            if (fullscreen.value()) {
+                creator.fullscreenEnabled(monitor.value());
+            }
+            showing = false;
             this.renderThread.scheduleDrawRefreshWait();
         });
     }
@@ -283,6 +296,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
 
         public Creator(GLFWFrame frame, GLFWGLContext shared) {
             this.frame = frame;
+            frame.creator = this;
             this.shared = shared;
         }
 
@@ -295,22 +309,24 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
             glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_FALSE);
             glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-            Monitor primaryMonitor = frame.launcher.getGLFWThread().getMonitorManager().monitor(glfwGetPrimaryMonitor());
+            Monitor startMonitor = findRequestedMonitor();
+            int startWidth = (int) (startMonitor.width() / 2 / startMonitor.scaleX());
+            int startHeight = (int) (startMonitor.height() / 2 / startMonitor.scaleY());
 
-            this.glfwId = glfwCreateWindow(primaryMonitor.width() / 2, primaryMonitor.height() / 2, Config.NAME.value(), 0, shared == null ? 0 : shared.glfwId);
+            this.glfwId = glfwCreateWindow(startWidth, startHeight, Config.NAME.value(), 0, shared == null ? 0 : shared.glfwId);
             if (glfwId == 0L) {
                 PointerBuffer buf = MemoryUtil.memAllocPointer(1);
                 glfwGetError(buf);
                 String error = buf.getStringUTF8();
                 MemoryUtil.memFree(buf);
-                if (shared != null) System.out.println(shared.sharedContexts);
                 throw new RuntimeException("Error creating window: " + error);
             }
 
             glfwSetWindowSizeLimits(this.glfwId, 1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
-            glfwSetWindowPos(glfwId, primaryMonitor.x() + primaryMonitor.width() / 4, primaryMonitor.y() + primaryMonitor.height() / 4);
+            glfwSetWindowPos(glfwId, startMonitor.x() + startMonitor.width() / 4, startMonitor.y() + startMonitor.height() / 4);
             int[] a0 = new int[1];
             int[] a1 = new int[1];
             glfwGetWindowSize(this.glfwId, a0, a1);
@@ -319,10 +335,26 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
             glfwGetWindowPos(glfwId, a0, a1);
             this.xpos.number(a0[0]);
             this.ypos.number(a1[0]);
+
             if (!this.frame.created) {
                 this.frame.windowWidth.bind(this.width);
                 this.frame.windowHeight.bind(this.height);
-                this.monitor.value(primaryMonitor);
+                this.monitor.value(startMonitor);
+            }
+
+            if (frame.mainFrame) {
+                if (DisplayInsertion.fullscreen(frame.launcher.settings())) {
+                    frame.fullscreen.value(true);
+                }
+                frame.monitor.addListener((p, o, n) -> {
+                    logger.debug("Changed monitor: " + n);
+                    DisplayInsertion.monitor(frame.launcher.settings(), new DisplayInsertion.MonitorInfo(n.name(), n.width(), n.height(), n.videoMode().refreshRate()));
+                    try {
+                        frame.launcher.saveSettings();
+                    } catch (GameException e) {
+                        frame.launcher.handleError(e);
+                    }
+                });
             }
 
             Icon icon = frame.icon.value();
@@ -389,26 +421,16 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                     frame.launcher.getGLFWThread().getMonitorManager().pollAll();
                     l.invalidated(null);
                     Monitor monitor = frame.monitor.value();
+                    SettingSection root = frame.launcher.settings();
                     if (n) {
-                        fullscreenOldW.number(width.intValue());
-                        fullscreenOldH.number(height.intValue());
-                        fullscreenMonitorOffsetX = xpos.intValue() - monitor.x();
-                        fullscreenMonitorOffsetY = ypos.intValue() - monitor.y();
-                        glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
-                        glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
-                        int[] w = new int[1];
-                        int[] h = new int[1];
-                        glfwSetWindowAttrib(glfwId, GLFW_DECORATED, GLFW_FALSE);
-                        glfwGetWindowSize(glfwId, w, h);
-                        if (w[0] < monitor.width() || h[0] < monitor.height()) {
-                            glfwSetWindowSizeLimits(glfwId, 1, 1, monitor.width(), monitor.height());
-                            glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
-                        }
+                        fullscreenEnabled(monitor);
                     } else {
+                        DisplayInsertion.fullscreen(root, false);
                         glfwSetWindowSizeLimits(glfwId, 1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
                         glfwSetWindowSize(glfwId, fullscreenOldW.intValue(), fullscreenOldH.intValue());
                         glfwSetWindowAttrib(glfwId, GLFW_DECORATED, GLFW_TRUE);
                         glfwSetWindowPos(glfwId, monitor.x() + fullscreenMonitorOffsetX, monitor.y() + fullscreenMonitorOffsetY);
+                        frame.launcher.saveSettings();
                     }
                 }));
             }
@@ -489,8 +511,46 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
                 GLFWFrame.logger.debugf("Viewport changed: (%4d, %4d)", width, height);
                 this.fbwidth.number(width);
                 this.fbheight.number(height);
-                if (this.frame.renderMode() != RenderMode.MANUAL) this.frame.renderThread.scheduleDrawRefreshWait();
+                if (this.frame.renderMode() != RenderMode.MANUAL && !frame.showing) this.frame.renderThread.scheduleDrawRefreshWait();
             });
+        }
+
+        private Monitor findRequestedMonitor() {
+            DisplayInsertion.MonitorInfo monitor = DisplayInsertion.monitor(frame.launcher.settings());
+            GLFWMonitorManager monitorManager = frame.launcher.getGLFWThread().getMonitorManager();
+            Monitor res = null;
+            if (monitor != null) {
+                for (Monitor mon : monitorManager.monitors()) {
+                    if (!mon.name().equals(monitor.name)) continue;
+                    if (mon.width() != monitor.width) continue;
+                    if (mon.height() != monitor.height) continue;
+                    if (mon.videoMode().refreshRate() != monitor.refreshRate) continue;
+                    res = mon;
+                    break;
+                }
+            }
+            if (res == null) res = monitorManager.monitor(glfwGetPrimaryMonitor());
+            return res;
+        }
+
+        private void fullscreenEnabled(Monitor monitor) throws GameException {
+            DisplayInsertion.fullscreen(frame.launcher.settings(), true);
+            DisplayInsertion.monitor(frame.launcher.settings(), new DisplayInsertion.MonitorInfo(monitor.name(), monitor.width(), monitor.height(), monitor.videoMode().refreshRate()));
+            frame.launcher.saveSettings();
+            fullscreenOldW.number(width.intValue());
+            fullscreenOldH.number(height.intValue());
+            fullscreenMonitorOffsetX = xpos.intValue() - monitor.x();
+            fullscreenMonitorOffsetY = ypos.intValue() - monitor.y();
+            glfwSetWindowPos(glfwId, monitor.x(), monitor.y());
+            glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
+            int[] w = new int[1];
+            int[] h = new int[1];
+            glfwSetWindowAttrib(glfwId, GLFW_DECORATED, GLFW_FALSE);
+            glfwGetWindowSize(glfwId, w, h);
+            if (w[0] < monitor.width() || h[0] < monitor.height()) {
+                glfwSetWindowSizeLimits(glfwId, 1, 1, monitor.width(), monitor.height());
+                glfwSetWindowSize(glfwId, monitor.width(), monitor.height());
+            }
         }
 
         private void applyIcon(Icon icon) {

@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace 'gamelauncher.android.app'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         multiDexEnabled true
         applicationId "gamelauncher.android.app"
         minSdk 16
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
     }

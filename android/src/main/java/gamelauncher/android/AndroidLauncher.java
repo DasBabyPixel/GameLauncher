@@ -11,6 +11,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.android.gl.AndroidFrame;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
+import gamelauncher.engine.render.RenderMode;
+import gamelauncher.engine.util.Config;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.logging.Logger;
@@ -19,7 +21,11 @@ public class AndroidLauncher extends Activity {
 
     private Logger logger;
 
+    @Api public void init(AndroidGameLauncher launcher) {
+    }
+
     @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
+        Config.DEBUG.value(true);
         logger = Logger.logger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, error) -> {
@@ -31,7 +37,6 @@ public class AndroidLauncher extends Activity {
         });
 
         super.onCreate(savedInstanceState);
-
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -54,9 +59,5 @@ public class AndroidLauncher extends Activity {
 
     @Override protected void onDestroy() {
         super.onDestroy();
-        System.exit(0);
-    }
-
-    @Api public void init(AndroidGameLauncher launcher) {
     }
 }

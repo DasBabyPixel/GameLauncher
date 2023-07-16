@@ -15,6 +15,7 @@ public class StateRegistry {
 
     private static final Logger logger = Logger.logger();
     private static final ThreadLocal<GLContext> currentContext = new ThreadLocal<>();
+    private static final ThreadLocal<GLContext> storage = new ThreadLocal<>();
     private static final Set<GLContext> contexts = ConcurrentHashMap.newKeySet();
     private static final Key CONTEXT = new Key("state_registry_context");
 
@@ -30,7 +31,10 @@ public class StateRegistry {
 
     public static ContextDependant context(GLContext context) {
         if (context == null) return null;
-        return context.storedValue(CONTEXT, () -> new ContextDependant(context));
+        storage.set(context);
+        ContextDependant dep = context.storedValue(CONTEXT, () -> new ContextDependant(storage.get()));
+        storage.remove();
+        return dep;
     }
 
     public static GLES32 currentGl() {

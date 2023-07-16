@@ -7,10 +7,9 @@
 
 package gamelauncher.android;
 
+import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.os.Build;
 import android.view.inputmethod.InputMethodManager;
-import androidx.annotation.RequiresApi;
 import gamelauncher.android.font.AndroidGlyphProvider;
 import gamelauncher.android.gl.AndroidGLFactory;
 import gamelauncher.android.gl.AndroidGLLoader;
@@ -19,6 +18,7 @@ import gamelauncher.android.gl.LauncherGLSurfaceView;
 import gamelauncher.android.gui.AndroidGuiManager;
 import gamelauncher.android.io.AndroidEmbedFileSystemProvider;
 import gamelauncher.android.util.AndroidExecutorThreadHelper;
+import gamelauncher.android.util.AndroidLoggingProvider;
 import gamelauncher.android.util.DumbImageDecoder;
 import gamelauncher.android.util.keybind.AndroidKeybindManager;
 import gamelauncher.engine.GameLauncher;
@@ -73,6 +73,7 @@ public class AndroidGameLauncher extends GameLauncher {
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
         this.activity = activity;
+        serviceProvider().register(ServiceReference.LOGGING_PROVIDER, new AndroidLoggingProvider());
         serviceProvider().register(GameDirectoryResolver.AndroidProvider.class, () -> activity.getFilesDir().toPath());
         init();
         this.glLoader = new AndroidGLLoader();
@@ -102,7 +103,7 @@ public class AndroidGameLauncher extends GameLauncher {
         return activity;
     }
 
-    public GLSurfaceView view() {
+    public LauncherGLSurfaceView view() {
         return view;
     }
 
@@ -114,14 +115,15 @@ public class AndroidGameLauncher extends GameLauncher {
         return glThreadGroup;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M) @Override public void keyboardVisible(boolean visible) {
+    @Override public void keyboardVisible(boolean visible) {
         Runnable r = () -> {
-            InputMethodManager manager = activity.getApplicationContext().getSystemService(InputMethodManager.class);
+            InputMethodManager manager = (InputMethodManager) activity.getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             this.keyboardVisible = visible;
             if (visible) {
                 view.setFocusable(true);
-                view.setFocusableInTouchMode(true);
-                manager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+                view.setFocusableInTouchMode(false);
+
+                manager.showSoftInput(view, 0);
             } else {
                 manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }

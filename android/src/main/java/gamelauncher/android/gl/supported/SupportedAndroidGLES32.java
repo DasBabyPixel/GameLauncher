@@ -11,6 +11,11 @@ import android.opengl.GLES32;
 import android.os.Build;
 import androidx.annotation.RequiresApi;
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.DummyGameResource;
+import gamelauncher.engine.resource.GameResource;
+import gamelauncher.engine.util.GameException;
+import java8.util.concurrent.CompletableFuture;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -41,8 +46,9 @@ public class SupportedAndroidGLES32 extends SupportedAndroidGLES31 implements ga
         GLES32.glDebugMessageInsert(source, type, id, severity, length, buf);
     }
 
-    @Override public void glDebugMessageCallback(DebugProc callback) {
+    @Override public GameResource glDebugMessageCallback(DebugProc callback) {
         GLES32.glDebugMessageCallback(callback::onMessage);
+        return new DummyGameResource();
     }
 
     @Override public int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset) {

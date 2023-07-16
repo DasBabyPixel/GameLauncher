@@ -18,11 +18,11 @@ public class AndroidMemoryManagement implements MemoryManagement {
     private final MemoryStack memoryStack = new AndroidMemoryStack(this);
 
     @Override public ByteBuffer alloc(int size) {
-        return ByteBuffer.allocate(size);
+        return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
     @Override public ByteBuffer calloc(int size) {
-        return ByteBuffer.allocate(size);
+        return ByteBuffer.allocateDirect(size).order(ByteOrder.nativeOrder());
     }
 
     @Override public ByteBuffer allocDirect(int size) {

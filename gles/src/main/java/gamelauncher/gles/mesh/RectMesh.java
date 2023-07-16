@@ -20,11 +20,6 @@ public class RectMesh extends Mesh {
                 0, 0,
                 0, 0,
                 0, 0,
-        }, new float[] {
-                0, 0, 0,
-                0, 0, 0,
-                0, 0, 0,
-                0, 0, 0,
         }, new int[] {
                 0, 3, 2,
                 0, 2, 1,

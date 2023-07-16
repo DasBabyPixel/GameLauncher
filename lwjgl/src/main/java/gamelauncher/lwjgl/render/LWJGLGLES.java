@@ -7,12 +7,12 @@
 
 package gamelauncher.lwjgl.render;
 
+import gamelauncher.engine.resource.AbstractGameResource;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.engine.util.logging.Logger;
+import java8.util.concurrent.CompletableFuture;
 import org.lwjgl.opengl.GL;
-import org.lwjgl.opengles.GLDebugMessageCallback;
-import org.lwjgl.opengles.GLES;
-import org.lwjgl.opengles.GLES32;
-import org.lwjgl.opengles.GLESCapabilities;
+import org.lwjgl.opengles.*;
 import org.lwjgl.system.Configuration;
 import org.lwjgl.system.MemoryStack;
 
@@ -1959,8 +1959,16 @@ public class LWJGLGLES implements gamelauncher.gles.gl.GLES32 {
         throw new LazyException();
     }
 
-    @Override public void glDebugMessageCallback(DebugProc callback) {
-        GLES32.glDebugMessageCallback((source, type, id, severity, length, message, userParam) -> callback.onMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message)), NULL);
+    @Override public GameResource glDebugMessageCallback(DebugProc callback) {
+        GLDebugMessageCallbackI i = (source, type, id, severity, length, message, userParam) -> callback.onMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message));
+        GLDebugMessageCallback cb = GLDebugMessageCallback.create(i);
+        GLES32.glDebugMessageCallback(cb, NULL);
+        return new AbstractGameResource() {
+            @Override protected CompletableFuture<Void> cleanup0() {
+                cb.free();
+                return null;
+            }
+        };
     }
 
     @Override public int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset) {

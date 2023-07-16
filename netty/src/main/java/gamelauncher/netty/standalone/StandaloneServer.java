@@ -124,7 +124,11 @@ public class StandaloneServer {
             AnsiConsole.systemInstall();
             Runtime.getRuntime().addShutdownHook(new Thread(AnsiConsole::systemUninstall));
         }
-        Logger.Initializer.init(null);
+        try {
+            Logger.Initializer.init(null);
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
         Logger.asyncLogStream().start();
     }
 

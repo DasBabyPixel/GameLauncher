@@ -9,6 +9,7 @@ open module gamelauncher.api {
     requires transitive de.dasbabypixel.property;
     requires transitive jdk.unsupported;
     requires com.google.common;
+
     exports gamelauncher.engine.util.image;
     exports gamelauncher.engine.plugin;
     exports gamelauncher.engine.util.i18n;

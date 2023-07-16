@@ -1,6 +1,7 @@
 package gamelauncher.gles.gl.redirect;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.gles.gl.GLES32;
 
 import java.nio.Buffer;
@@ -37,8 +38,8 @@ public class RedirectGLES32 extends RedirectGLES31 implements GLES32 {
         wrapper.glDebugMessageInsert(source, type, id, severity, length, buf);
     }
 
-    @Override public void glDebugMessageCallback(DebugProc callback) {
-        wrapper.glDebugMessageCallback(callback);
+    @Override public GameResource glDebugMessageCallback(DebugProc callback) {
+        return wrapper.glDebugMessageCallback(callback);
     }
 
     @Override public int glGetDebugMessageLog(int count, int bufSize, int[] sources, int sourcesOffset, int[] types, int typesOffset, int[] ids, int idsOffset, int[] severities, int severitiesOffset, int[] lengths, int lengthsOffset, byte[] messageLog, int messageLogOffset) {

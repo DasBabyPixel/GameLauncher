@@ -11,18 +11,6 @@ import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
-import java.nio.file.ProviderNotFoundException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.engine.data.Files;
 import gamelauncher.engine.data.GameDirectoryResolver;
@@ -51,11 +39,7 @@ import gamelauncher.engine.resource.ResourceTracker;
 import gamelauncher.engine.settings.MainSettingSection;
 import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.settings.StartCommandSettings;
-import gamelauncher.engine.util.Debug;
-import gamelauncher.engine.util.DefaultOperatingSystems;
-import gamelauncher.engine.util.GameException;
-import gamelauncher.engine.util.Key;
-import gamelauncher.engine.util.OperatingSystem;
+import gamelauncher.engine.util.*;
 import gamelauncher.engine.util.concurrent.ExecutorThreadHelper;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameRunnable;
@@ -71,9 +55,21 @@ import gamelauncher.engine.util.service.ServiceProvider;
 import gamelauncher.engine.util.service.ServiceReference;
 import java8.util.function.Predicate;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+import java.nio.file.ProviderNotFoundException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
  * @author DasBabyPixel
  */
+@SuppressWarnings("NewApi")
 public abstract class GameLauncher {
 
     /**
@@ -82,12 +78,12 @@ public abstract class GameLauncher {
     public static final float MAX_TPS = 60F;
     private final Gson settingsGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
     private final long startedMillis = System.currentTimeMillis();
+    private final ServiceProvider serviceProvider;
     private Logger logger;
     private Threads threads;
     private PluginManager pluginManager;
     private Profiler profiler;
     private GameRegistry gameRegistry;
-    private final ServiceProvider serviceProvider;
     private Path gameDirectory;
     private Path dataDirectory;
     private Path settingsFile;

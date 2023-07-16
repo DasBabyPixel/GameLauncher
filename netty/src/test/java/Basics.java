@@ -12,7 +12,11 @@ import gamelauncher.engine.util.logging.Logger;
 public class Basics {
 
     public static void setup() {
-        Logger.Initializer.init(null);
+        try {
+            Logger.Initializer.init(null);
+        } catch (GameException e) {
+            throw new RuntimeException(e);
+        }
         Logger.asyncLogStream().start();
     }
 

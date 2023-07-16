@@ -65,6 +65,10 @@ public class Monitor {
         return x == monitor.x && y == monitor.y && width == monitor.width && height == monitor.height && Float.compare(monitor.scaleX, scaleX) == 0 && Float.compare(monitor.scaleY, scaleY) == 0 && glfwId == monitor.glfwId && Objects.equals(name, monitor.name) && Objects.equals(videoMode, monitor.videoMode);
     }
 
+    @Override public String toString() {
+        return "Monitor{" + "name='" + name + '\'' + ", x=" + x + ", y=" + y + ", width=" + width + ", height=" + height + ", scaleX=" + scaleX + ", scaleY=" + scaleY + ", glfwId=" + glfwId + ", videoMode=" + videoMode + '}';
+    }
+
     @Override public int hashCode() {
         return Objects.hash(name, x, y, width, height, scaleX, scaleY, glfwId, videoMode);
     }

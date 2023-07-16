@@ -20,16 +20,14 @@ import java.nio.file.Path;
 
 public class GLESShaderProgram extends ShaderProgram {
 
-    final Path path;
     private final int programId;
     private final GLES gles;
     private int vertexShaderId;
     private int fragmentShaderId;
 
-    public GLESShaderProgram(GLES gles, Path path) throws GameException {
+    public GLESShaderProgram(GLES gles) throws GameException {
         super(gles.launcher());
         this.gles = gles;
-        this.path = path;
         this.programId = StateRegistry.currentGl().glCreateProgram();
         if (this.programId == 0) {
             throw new GameException("Could not create Shader");

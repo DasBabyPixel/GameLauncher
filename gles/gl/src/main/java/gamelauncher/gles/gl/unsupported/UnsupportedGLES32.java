@@ -1,6 +1,7 @@
 package gamelauncher.gles.gl.unsupported;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.resource.GameResource;
 import gamelauncher.gles.gl.GLES31;
 import gamelauncher.gles.gl.GLES32;
 import gamelauncher.gles.gl.redirect.RedirectGLES31;
@@ -38,7 +39,7 @@ public class UnsupportedGLES32 extends RedirectGLES31 implements GLES32 {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void glDebugMessageCallback(DebugProc callback) {
+    @Override public GameResource glDebugMessageCallback(DebugProc callback) {
         throw new UnsupportedOperationException();
     }
 

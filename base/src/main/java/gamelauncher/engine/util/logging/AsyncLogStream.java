@@ -48,11 +48,11 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
     private final LogColor C100 = new LogColor(100, 100, 100);
     private final Object asyncLock = new Object();
     private final LogFileWriter logFileWriter;
-    private volatile boolean async;
+    private volatile boolean async = false;
 
-    public AsyncLogStream(GameLauncher launcher) {
+    public AsyncLogStream(GameLauncher launcher) throws GameException {
         super(launcher);
-        this.ansi = launcher == null ? AnsiProvider.Unsupported.instance() : launcher.ansi();
+        this.ansi = launcher.ansi();
         this.system = Logger.system;
         this.setName("AsyncLogStream");
         this.logFileWriter = new LogFileWriter(launcher, ansi);

@@ -53,6 +53,10 @@ public interface MainScreenGui extends Gui {
             button.onButtonPressed(event -> launcher.guiManager().openGui(new Simple2(launcher)));
             addGUI(button);
         }
+
+        @Override protected void doInit() throws GameException {
+            launcher().keyboardVisible(true);
+        }
     }
 
     class Simple2 extends ParentableAbstractGui implements MainScreenGui {

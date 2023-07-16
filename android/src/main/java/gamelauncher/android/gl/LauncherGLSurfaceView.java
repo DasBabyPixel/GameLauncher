@@ -10,6 +10,8 @@ package gamelauncher.android.gl;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidInput;
 import gamelauncher.engine.util.logging.Logger;
@@ -22,9 +24,11 @@ import javax.microedition.khronos.egl.EGLDisplay;
 @SuppressLint("ViewConstructor")
 public class LauncherGLSurfaceView extends GLSurfaceView {
     private static final Logger logger = Logger.logger();
+    private final AndroidGameLauncher launcher;
 
     @SuppressLint("ClickableViewAccessibility") public LauncherGLSurfaceView(AndroidGameLauncher launcher, Context context) {
         super(context);
+        this.launcher = launcher;
         AndroidInput input = (AndroidInput) launcher.frame().input();
         setEGLContextFactory(new EGLContextFactory() {
             public static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
@@ -33,6 +37,7 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
                 launcher.egl(egl);
                 AndroidFrame frame = (AndroidFrame) launcher.frame();
                 frame.context().recreate(egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY), egl.eglGetCurrentSurface(EGL10.EGL_DRAW), egl.eglGetCurrentContext());
+
                 int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE};
                 return egl.eglCreateContext(display, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
             }
@@ -46,12 +51,32 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
 //        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         setEGLConfigChooser(new ConfigChooser(8, 8, 8, 8, 24, 0));
         setRenderer(new GLRenderer(launcher));
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+        launcher.frame().renderMode();
+        updateRenderMode();
         setFocusable(true);
         setFocusableInTouchMode(true);
         setOnKeyListener(input);
         setOnTouchListener(input);
         requestFocus();
+    }
+
+    @Override public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN;
+        return super.onCreateInputConnection(outAttrs);
+    }
+
+    public void updateRenderMode() {
+        int rm = -1;
+        switch (launcher.frame().renderMode()) {
+            case MANUAL:
+            case CONTINUOUSLY:
+                rm = RENDERMODE_CONTINUOUSLY;
+                break;
+            case ON_UPDATE:
+                rm = RENDERMODE_WHEN_DIRTY;
+                break;
+        }
+        setRenderMode(rm);
     }
 
     private static class ConfigChooser implements GLSurfaceView.EGLConfigChooser {
@@ -102,9 +127,8 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
             /*
              * Now return the "best" one
              */
-            EGLConfig cfg = chooseConfig(egl, display, configs);
-            printConfig(egl, display, cfg);
-            return cfg;
+            //            printConfig(egl, display, cfg);
+            return chooseConfig(egl, display, configs);
         }
 
         private EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs) {
@@ -134,27 +158,27 @@ public class LauncherGLSurfaceView extends GLSurfaceView {
             return 0;
         }
 
-        private void printConfig(EGL10 egl, EGLDisplay display, EGLConfig config) {
-            int[] attributes = {EGL10.EGL_BUFFER_SIZE, EGL10.EGL_ALPHA_SIZE, EGL10.EGL_BLUE_SIZE, EGL10.EGL_GREEN_SIZE, EGL10.EGL_RED_SIZE, EGL10.EGL_DEPTH_SIZE, EGL10.EGL_STENCIL_SIZE, EGL10.EGL_CONFIG_CAVEAT, EGL10.EGL_CONFIG_ID, EGL10.EGL_LEVEL, EGL10.EGL_MAX_PBUFFER_HEIGHT, EGL10.EGL_MAX_PBUFFER_PIXELS, EGL10.EGL_MAX_PBUFFER_WIDTH, EGL10.EGL_NATIVE_RENDERABLE, EGL10.EGL_NATIVE_VISUAL_ID, EGL10.EGL_NATIVE_VISUAL_TYPE, 0x3030, // EGL10.EGL_PRESERVED_RESOURCES,
-                    EGL10.EGL_SAMPLES, EGL10.EGL_SAMPLE_BUFFERS, EGL10.EGL_SURFACE_TYPE, EGL10.EGL_TRANSPARENT_TYPE, EGL10.EGL_TRANSPARENT_RED_VALUE, EGL10.EGL_TRANSPARENT_GREEN_VALUE, EGL10.EGL_TRANSPARENT_BLUE_VALUE, 0x3039, // EGL10.EGL_BIND_TO_TEXTURE_RGB,
-                    0x303A, // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
-                    0x303B, // EGL10.EGL_MIN_SWAP_INTERVAL,
-                    0x303C, // EGL10.EGL_MAX_SWAP_INTERVAL,
-                    EGL10.EGL_LUMINANCE_SIZE, EGL10.EGL_ALPHA_MASK_SIZE, EGL10.EGL_COLOR_BUFFER_TYPE, EGL10.EGL_RENDERABLE_TYPE, 0x3042 // EGL10.EGL_CONFORMANT
-            };
-            String[] names = {"EGL_BUFFER_SIZE", "EGL_ALPHA_SIZE", "EGL_BLUE_SIZE", "EGL_GREEN_SIZE", "EGL_RED_SIZE", "EGL_DEPTH_SIZE", "EGL_STENCIL_SIZE", "EGL_CONFIG_CAVEAT", "EGL_CONFIG_ID", "EGL_LEVEL", "EGL_MAX_PBUFFER_HEIGHT", "EGL_MAX_PBUFFER_PIXELS", "EGL_MAX_PBUFFER_WIDTH", "EGL_NATIVE_RENDERABLE", "EGL_NATIVE_VISUAL_ID", "EGL_NATIVE_VISUAL_TYPE", "EGL_PRESERVED_RESOURCES", "EGL_SAMPLES", "EGL_SAMPLE_BUFFERS", "EGL_SURFACE_TYPE", "EGL_TRANSPARENT_TYPE", "EGL_TRANSPARENT_RED_VALUE", "EGL_TRANSPARENT_GREEN_VALUE", "EGL_TRANSPARENT_BLUE_VALUE", "EGL_BIND_TO_TEXTURE_RGB", "EGL_BIND_TO_TEXTURE_RGBA", "EGL_MIN_SWAP_INTERVAL", "EGL_MAX_SWAP_INTERVAL", "EGL_LUMINANCE_SIZE", "EGL_ALPHA_MASK_SIZE", "EGL_COLOR_BUFFER_TYPE", "EGL_RENDERABLE_TYPE", "EGL_CONFORMANT"};
-            int[] value = new int[1];
-            for (int i = 0; i < attributes.length; i++) {
-                int attribute = attributes[i];
-                String name = names[i];
-                if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
-                    logger.debugf("  %s: %d\n", name, value[0]);
-                } else {
-                    // Log.w(TAG, String.format("  %s: failed\n", name));
-                    //noinspection StatementWithEmptyBody
-                    while (egl.eglGetError() != EGL10.EGL_SUCCESS) ;
-                }
-            }
-        }
+//        private void printConfig(EGL10 egl, EGLDisplay display, EGLConfig config) {
+//            int[] attributes = {EGL10.EGL_BUFFER_SIZE, EGL10.EGL_ALPHA_SIZE, EGL10.EGL_BLUE_SIZE, EGL10.EGL_GREEN_SIZE, EGL10.EGL_RED_SIZE, EGL10.EGL_DEPTH_SIZE, EGL10.EGL_STENCIL_SIZE, EGL10.EGL_CONFIG_CAVEAT, EGL10.EGL_CONFIG_ID, EGL10.EGL_LEVEL, EGL10.EGL_MAX_PBUFFER_HEIGHT, EGL10.EGL_MAX_PBUFFER_PIXELS, EGL10.EGL_MAX_PBUFFER_WIDTH, EGL10.EGL_NATIVE_RENDERABLE, EGL10.EGL_NATIVE_VISUAL_ID, EGL10.EGL_NATIVE_VISUAL_TYPE, 0x3030, // EGL10.EGL_PRESERVED_RESOURCES,
+//                    EGL10.EGL_SAMPLES, EGL10.EGL_SAMPLE_BUFFERS, EGL10.EGL_SURFACE_TYPE, EGL10.EGL_TRANSPARENT_TYPE, EGL10.EGL_TRANSPARENT_RED_VALUE, EGL10.EGL_TRANSPARENT_GREEN_VALUE, EGL10.EGL_TRANSPARENT_BLUE_VALUE, 0x3039, // EGL10.EGL_BIND_TO_TEXTURE_RGB,
+//                    0x303A, // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
+//                    0x303B, // EGL10.EGL_MIN_SWAP_INTERVAL,
+//                    0x303C, // EGL10.EGL_MAX_SWAP_INTERVAL,
+//                    EGL10.EGL_LUMINANCE_SIZE, EGL10.EGL_ALPHA_MASK_SIZE, EGL10.EGL_COLOR_BUFFER_TYPE, EGL10.EGL_RENDERABLE_TYPE, 0x3042 // EGL10.EGL_CONFORMANT
+//            };
+//            String[] names = {"EGL_BUFFER_SIZE", "EGL_ALPHA_SIZE", "EGL_BLUE_SIZE", "EGL_GREEN_SIZE", "EGL_RED_SIZE", "EGL_DEPTH_SIZE", "EGL_STENCIL_SIZE", "EGL_CONFIG_CAVEAT", "EGL_CONFIG_ID", "EGL_LEVEL", "EGL_MAX_PBUFFER_HEIGHT", "EGL_MAX_PBUFFER_PIXELS", "EGL_MAX_PBUFFER_WIDTH", "EGL_NATIVE_RENDERABLE", "EGL_NATIVE_VISUAL_ID", "EGL_NATIVE_VISUAL_TYPE", "EGL_PRESERVED_RESOURCES", "EGL_SAMPLES", "EGL_SAMPLE_BUFFERS", "EGL_SURFACE_TYPE", "EGL_TRANSPARENT_TYPE", "EGL_TRANSPARENT_RED_VALUE", "EGL_TRANSPARENT_GREEN_VALUE", "EGL_TRANSPARENT_BLUE_VALUE", "EGL_BIND_TO_TEXTURE_RGB", "EGL_BIND_TO_TEXTURE_RGBA", "EGL_MIN_SWAP_INTERVAL", "EGL_MAX_SWAP_INTERVAL", "EGL_LUMINANCE_SIZE", "EGL_ALPHA_MASK_SIZE", "EGL_COLOR_BUFFER_TYPE", "EGL_RENDERABLE_TYPE", "EGL_CONFORMANT"};
+//            int[] value = new int[1];
+//            for (int i = 0; i < attributes.length; i++) {
+//                int attribute = attributes[i];
+//                String name = names[i];
+//                if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
+//                    logger.debugf("  %s: %d\n", name, value[0]);
+//                } else {
+//                    // Log.w(TAG, String.format("  %s: failed\n", name));
+//                    //noinspection StatementWithEmptyBody
+//                    while (egl.eglGetError() != EGL10.EGL_SUCCESS) ;
+//                }
+//            }
+//        }
     }
 }

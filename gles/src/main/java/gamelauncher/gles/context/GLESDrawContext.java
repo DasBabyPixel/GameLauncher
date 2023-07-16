@@ -29,8 +29,8 @@ public class GLESDrawContext extends AbstractGameResource implements DrawContext
     protected static final Vector3f Y_AXIS = new Vector3f(0, 1, 0);
     protected static final Vector3f Z_AXIS = new Vector3f(0, 0, 1);
     private static final Key GLES_COMBINED_MODELS_MODELMATRIX = new Key("gles_combined_models_modelmatrix");
-    private static final Key GLES_COMBINED_MODELS_COLORMULTIPLIER = new Key("gles_combined_models_modelmatrix");
-    private static final Key GLES_COMBINED_MODELS_COLORADD = new Key("gles_combined_models_modelmatrix");
+    private static final Key GLES_COMBINED_MODELS_COLORMULTIPLIER = new Key("gles_combined_models_colormultiplier");
+    private static final Key GLES_COMBINED_MODELS_COLORADD = new Key("gles_combined_models_coloradd");
     protected final Framebuffer framebuffer;
     protected final double tx, ty, tz;
     protected final double sx, sy, sz;
