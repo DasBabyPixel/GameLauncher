@@ -25,7 +25,7 @@ abstract class StorageResource implements GameResource {
         if (map.containsKey(key)) {
             return (T) map.get(key);
         }
-        T val = null;
+        T val;
         try {
             val = defaultSupplier.get();
         } catch (GameException e) {

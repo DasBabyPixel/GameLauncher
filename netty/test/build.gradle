@@ -1,0 +1,22 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(6))
+    }
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_6
+}
+
+dependencies {
+    implementation 'org.bouncycastle:bctls-jdk15on:1.70'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
+    api libs.netty.common
+    api libs.netty.transport
+    api libs.netty.codec
+    api libs.netty.codec.http
+    api libs.netty.handler
+    api libs.netty.handler.proxy
+    api libs.netty.buffer
+}

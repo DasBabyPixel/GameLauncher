@@ -25,7 +25,8 @@ shadowJar {
 
 dependencies {
     api parent.project('api')
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
+    api 'org.bouncycastle:bctls-jdk15on:1.70'
+    api 'org.bouncycastle:bcpkix-jdk15on:1.70'
     implementation libs.jansi
     api libs.netty.common
     api libs.netty.transport

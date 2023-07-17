@@ -34,15 +34,17 @@ public class LogFileWriter {
     public LogFileWriter(GameLauncher launcher, @NotNull AnsiProvider ansi) throws GameException {
         this.launcher = launcher;
         this.ansi = ansi;
-        this.logs = launcher.gameDirectory().resolve("logs");
-        this.latest = logs.resolve("latest.log");
-        this.latestOut = launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(preInitStream);
+        this.logs = launcher == null ? null : launcher.gameDirectory().resolve("logs");
+        this.latest = launcher == null ? null : logs.resolve("latest.log");
+        this.latestOut = launcher == null ? null : launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(preInitStream);
     }
 
     public void init() throws GameException {
-        Files.createDirectories(logs);
-        latestOut = launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(Files.newOutputStream(latest, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
-        latestOut.write(preInitStream.array, 0, preInitStream.length);
+        if (launcher != null) {
+            Files.createDirectories(logs);
+            latestOut = launcher.serviceProvider().service(ServiceReference.LOGGING_PROVIDER).createFileWriterPrintStream(Files.newOutputStream(latest, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
+            latestOut.write(preInitStream.array, 0, preInitStream.length);
+        }
     }
 
     public void writeToFiles(@Nullable LogLevel level, @NotNull TemporalAccessor time, @Nullable StackTraceElement caller, @NotNull Thread thread, @Nullable Logger logger, @NotNull String string) {
@@ -61,8 +63,10 @@ public class LogFileWriter {
     }
 
     public void close() {
-        latestOut.flush();
-        latestOut.close();
-        latestOut = null;
+        if (latestOut != null) {
+            latestOut.flush();
+            latestOut.close();
+            latestOut = null;
+        }
     }
 }

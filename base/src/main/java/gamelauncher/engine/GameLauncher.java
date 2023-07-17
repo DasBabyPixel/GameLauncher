@@ -23,6 +23,7 @@ import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiConstructorTemplates;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
+import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.ContextProvider;
@@ -58,6 +59,7 @@ import java8.util.function.Predicate;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
@@ -65,6 +67,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author DasBabyPixel
@@ -143,6 +146,7 @@ public abstract class GameLauncher {
             this.frame.scheduleDrawWaitForFrame();
             this.eventManager().post(new LauncherInitializedEvent(this));
             long timeStarted = System.currentTimeMillis();
+
             logger.infof("Startup took %sms", timeStarted - this.startedMillis);
         });
         this.gameThread.start();

@@ -18,9 +18,14 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SslHandler;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLEngine;
 import java.net.http.HttpTimeoutException;
+import java.security.cert.X509Certificate;
 
 public class ServerInitializer extends ChannelInitializer<Channel> {
     private final NettyServer server;
@@ -47,9 +52,11 @@ public class ServerInitializer extends ChannelInitializer<Channel> {
         if (l != null) l.connected(connection);
         logger.infof("Client %s connected on %s", connection.remoteAddress().toString(), connection.localAddress().toString());
 
-//        SslContext sslContext = SslContextBuilder.forServer(server.keyManagment().privateKey, server.keyManagment().certificate).protocols("TLSv1.3").build();
-//        SSLEngine engine = sslContext.newEngine(p.channel().alloc());
-//        p.addLast("ssl", new SslHandler(engine));
+        X509Certificate[] certs = new X509Certificate[]{server.keyManagment().certificate};
+        String[] protocols = new String[]{"TLSv1.3"};
+        SslContext sslContext = SslContextBuilder.forServer(server.keyManagment().privateKey, certs).protocols(protocols).build();
+        SSLEngine engine = sslContext.newEngine(p.channel().alloc());
+        p.addLast("ssl", new SslHandler(engine));
 
         ServerWebSocketListener listener = new ServerWebSocketListener(ch.newPromise());
         listener.promise.addListener(f -> {

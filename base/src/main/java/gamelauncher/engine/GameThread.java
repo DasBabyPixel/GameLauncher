@@ -1,6 +1,8 @@
 package gamelauncher.engine;
 
 import de.dasbabypixel.annotations.Api;
+import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.AbstractGameThread;
 import gamelauncher.engine.util.concurrent.ExecutorThread;
@@ -10,6 +12,8 @@ import gamelauncher.engine.util.function.GameRunnable;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import java8.util.concurrent.CompletableFuture;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;

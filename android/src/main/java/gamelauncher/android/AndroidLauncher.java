@@ -1,9 +1,7 @@
 package gamelauncher.android;
 
 import android.app.Activity;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.WindowInsetsController;
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -11,7 +9,6 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import de.dasbabypixel.annotations.Api;
 import gamelauncher.android.gl.AndroidFrame;
 import gamelauncher.android.gl.LauncherGLSurfaceView;
-import gamelauncher.engine.render.RenderMode;
 import gamelauncher.engine.util.Config;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
@@ -39,9 +36,7 @@ public class AndroidLauncher extends Activity {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         WindowInsetsControllerCompat windowInsetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            getWindow().getDecorView().getWindowInsetsController().setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        }
+        windowInsetsController.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
         Activity activity = this;
         try {

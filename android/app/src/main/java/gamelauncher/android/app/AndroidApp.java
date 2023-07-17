@@ -7,17 +7,23 @@
 
 package gamelauncher.android.app;
 
-import android.annotation.TargetApi;
 import gamelauncher.android.AndroidGameLauncher;
 import gamelauncher.android.AndroidLauncher;
 import gamelauncher.engine.event.EventHandler;
 import gamelauncher.engine.event.events.gui.GuiOpenEvent;
-import gamelauncher.engine.gui.guis.MainScreenGui;
-import gamelauncher.engine.util.concurrent.Threads;
+import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.network.NetworkClient;
+import gamelauncher.engine.util.GameException;
+import gamelauncher.netty.NettyNetworkClient;
+import gamelauncher.netty.standalone.StandaloneServer;
 
-@TargetApi(1)
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
+
 public class AndroidApp extends AndroidLauncher {
     private AndroidGameLauncher launcher;
+
     @Override public void init(AndroidGameLauncher launcher) {
         this.launcher = launcher;
         launcher.eventManager().registerListener(this);

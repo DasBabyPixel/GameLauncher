@@ -11,6 +11,7 @@ import gamelauncher.engine.network.Connection;
 import gamelauncher.engine.network.ProxyConfiguration;
 import gamelauncher.engine.network.packet.PacketEncoder;
 import gamelauncher.engine.network.packet.PacketRegistry;
+import gamelauncher.engine.util.Arrays;
 import gamelauncher.netty.standalone.WebSocketDecoder;
 import gamelauncher.netty.standalone.WebSocketEncoder;
 import io.netty.channel.*;
@@ -25,15 +26,21 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpConnectTimeoutException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NettyClientToServerInitializer extends ChannelInitializer<Channel> {
 
@@ -120,8 +127,26 @@ public class NettyClientToServerInitializer extends ChannelInitializer<Channel> 
     }
 
     private void addEncryption(ChannelPipeline pipeline) throws SSLException {
-        String[] protocols = new String[]{"TLSv1.3"};
-        SslContext ctx = SslContextBuilder.forClient().protocols(protocols).sslProvider(SslProvider.JDK).build();
+        String[] protocols;
+        try {
+            SSLContext context = SSLContext.getInstance("TLS", client.provider());
+            context.init(null, null, null);
+            SSLEngine engine = context.createSSLEngine();
+            String[] allowed = new String[]{"TLSv1.3", "TLSv1.2"};
+            List<String> l = new ArrayList<>(Arrays.asList(allowed));
+            l.retainAll(java.util.Arrays.asList(engine.getEnabledProtocols()));
+            protocols = l.isEmpty() ? null : l.toArray(new String[0]);
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            throw new RuntimeException(e);
+        }
+        SslContextBuilder builder = SslContextBuilder.forClient();
+        builder.trustManager(InsecureTrustManagerFactory.INSTANCE);
+        builder.sslContextProvider(client.provider());
+        builder.sslProvider(SslProvider.JDK);
+        NettyNetworkClient.logger.infof("Supported protocols: %s", java.util.Arrays.toString(protocols));
+        builder.protocols(protocols);
+
+        SslContext ctx = builder.build();
         SSLEngine engine = ctx.newEngine(pipeline.channel().alloc(), hostname, port);
         pipeline.addFirst("ssl", new SslHandler(engine));
     }

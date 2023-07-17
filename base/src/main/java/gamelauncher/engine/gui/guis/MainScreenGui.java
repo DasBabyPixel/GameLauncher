@@ -55,7 +55,6 @@ public interface MainScreenGui extends Gui {
         }
 
         @Override protected void doInit() throws GameException {
-            launcher().keyboardVisible(true);
         }
     }
 

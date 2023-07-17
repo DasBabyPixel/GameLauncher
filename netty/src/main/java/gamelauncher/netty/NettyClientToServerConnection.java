@@ -108,7 +108,7 @@ public class NettyClientToServerConnection extends AbstractConnection {
         return f.channel();
     }
 
-    interface ConnectionType<T> {
+    public interface ConnectionType<T> {
         T data();
     }
 

@@ -18,25 +18,30 @@ import gamelauncher.engine.util.collections.Collections;
 import gamelauncher.engine.util.concurrent.ExecutorThreadService;
 import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService;
 import gamelauncher.engine.util.logging.Logger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.JdkLoggerFactory;
 import java8.util.concurrent.CompletableFuture;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.security.SecureRandom;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@SuppressWarnings("NewApi")
 public class NettyNetworkClient extends AbstractGameResource implements NetworkClient {
 
     static final Logger logger = Logger.logger();
@@ -52,26 +57,34 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     private final GameLauncher launcher;
     private final Path sslDirectory;
     private final boolean customCached;
+    private final NettySecurityProviderHandler securityProviderHandler = new NettySecurityProviderHandler(logger);
+    private BouncyCastleJsseProvider jsseProvider;
     private ProxyConfiguration proxy;
     private int port = PORT;
     private volatile boolean running = false;
 
     public NettyNetworkClient(GameLauncher launcher) {
+        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
         this.launcher = launcher;
         this.sslDirectory = launcher.dataDirectory().resolve("ssl");
         this.cached = (ExecutorService) (cachedService = launcher.threads().cached).executor();
         this.customCached = false;
+        initProvider();
     }
 
     @ApiStatus.Experimental public NettyNetworkClient() {
+        InternalLoggerFactory.setDefaultFactory(JdkLoggerFactory.INSTANCE);
         this.launcher = null;
         this.sslDirectory = Paths.get("ssl");
         cached = Executors.newCachedThreadPool();
         cachedService = new WrapperExecutorThreadService(cached);
         customCached = true;
+        initProvider();
     }
 
     @Override public void start() {
+        securityProviderHandler.load();
+
         running = true;
         if (launcher != null) {
             if (launcher.settings().getSetting(MainSettingSection.PROXY_HOST).getValue() != null) {
@@ -101,8 +114,13 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
     }
 
     @Override public void stop() {
+        securityProviderHandler.unload();
         running = false;
         // Also nothing to do
+    }
+
+    public BouncyCastleJsseProvider provider() {
+        return jsseProvider;
     }
 
     @Override public boolean running() {
@@ -210,7 +228,7 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
             }
             lock.unlock();
 
-            return CompletableFuture.allOf(futs.toArray(CompletableFuture[]::new));
+            return CompletableFuture.allOf(futs.toArray(new CompletableFuture[0]));
         }
 
         cached.shutdown();
@@ -224,6 +242,11 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
         } finally {
             lock.unlock();
         }
+    }
+
+    private void initProvider() {
+        this.securityProviderHandler.addProvider(new BouncyCastleProvider());
+        this.securityProviderHandler.addProvider(jsseProvider = new BouncyCastleJsseProvider());
     }
 
     static class HandlerEntry<T extends Packet> {
@@ -245,3 +268,4 @@ public class NettyNetworkClient extends AbstractGameResource implements NetworkC
 
     }
 }
+

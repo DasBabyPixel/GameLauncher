@@ -1,5 +1,7 @@
 package gamelauncher.engine.util.logging;
 
+import java.util.Arrays;
+
 public class Formatted {
 
     private final String format;
@@ -19,4 +21,7 @@ public class Formatted {
         return this.objects;
     }
 
+    @Override public String toString() {
+        return String.format(format,objects);
+    }
 }

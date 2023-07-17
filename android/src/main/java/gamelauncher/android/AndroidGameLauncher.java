@@ -169,6 +169,7 @@ public class AndroidGameLauncher extends GameLauncher {
 
     @Override protected void start0() throws GameException {
         serviceProvider().register(ServiceReference.GLYPH_PROVIDER, glyphProvider = new AndroidGlyphProvider(gles));
+        networkClient.start();
     }
 
     @Override protected void loadCustomPlugins() {

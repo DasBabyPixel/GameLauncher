@@ -52,7 +52,7 @@ public class AsyncLogStream extends AbstractQueueSubmissionThread<AsyncLogStream
 
     public AsyncLogStream(GameLauncher launcher) throws GameException {
         super(launcher);
-        this.ansi = launcher.ansi();
+        this.ansi = launcher == null ? AnsiProvider.Unsupported.instance() : launcher.ansi();
         this.system = Logger.system;
         this.setName("AsyncLogStream");
         this.logFileWriter = new LogFileWriter(launcher, ansi);

@@ -5,24 +5,34 @@
  * is strictly prohibited.
  */
 
-import gamelauncher.engine.network.server.NetworkServer;
 import gamelauncher.engine.util.GameException;
-import gamelauncher.netty.NettyNetworkClient;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.security.*;
+import java.util.Arrays;
 
 public class Server {
-    private final NettyNetworkClient client;
+//    private final NettyNetworkClient client;
 
-    public Server() {
-        this.client = new NettyNetworkClient();
-        client.packetRegistry().register(TestPacket.class, TestPacket::new);
-        client.start();
-        NetworkServer server = client.newServer();
-        server.start();
+    public Server() throws NoSuchAlgorithmException, NoSuchProviderException, KeyManagementException, UnrecoverableKeyException, KeyStoreException {
+        BouncyCastleJsseProvider provider = new BouncyCastleJsseProvider();
+        SSLContext context = SSLContext.getInstance("TLSv1", provider);
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(null, null);
+        context.init(kmf.getKeyManagers(), null, new SecureRandom());
+        System.out.println(Arrays.toString(context.createSSLEngine().getSupportedProtocols()));
+//        this.client = new NettyNetworkClient();
+//        client.packetRegistry().register(TestPacket.class, TestPacket::new);
+//        client.start();
+//        NetworkServer server = client.newServer();
+//        server.start();
     }
 
-    public static void main(String[] args) throws GameException {
-        Basics.setup();
+    public static void main(String[] args) throws GameException, NoSuchAlgorithmException, NoSuchProviderException, KeyManagementException, UnrecoverableKeyException, KeyStoreException {
+//        Basics.setup();
         new Server();
-        Basics.cleanup();
+//        Basics.cleanup();
     }
 }

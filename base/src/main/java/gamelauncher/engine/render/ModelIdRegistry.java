@@ -75,9 +75,7 @@ public class ModelIdRegistry extends AbstractGameResource {
         @SuppressWarnings("InfiniteLoopStatement") @Override public void run() {
             while (true) {
                 try {
-                    System.out.println("run");
                     Reference<? extends Model> ref = referenceQueue.remove();
-                    System.out.println("ref: " + ref);
                     synchronized (lock) {
                         int id = o2i.removeInt(ref);
                         i2o.remove(id);
