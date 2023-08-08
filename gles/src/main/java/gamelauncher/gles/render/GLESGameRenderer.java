@@ -9,13 +9,12 @@ package gamelauncher.gles.render;
 
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.gui.GuiRenderer;
-import gamelauncher.engine.gui.guis.MainScreenGui;
 import gamelauncher.engine.render.*;
 import gamelauncher.engine.render.ContextProvider.ContextType;
 import gamelauncher.engine.resource.AbstractGameResource;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.GLESCompat;
+import gamelauncher.gles.compat.GLESData;
 import gamelauncher.gles.context.GLESDrawContext;
 import gamelauncher.gles.context.GLESStates;
 import gamelauncher.gles.framebuffer.BasicFramebuffer;
@@ -31,8 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GLESGameRenderer implements GameRenderer {
-
-    //	public static final boolean WIREFRAMES = false;
 
     private final AtomicReference<Renderer> renderer = new AtomicReference<>();
     private final Map<Frame, Entry> map = new ConcurrentHashMap<>();
@@ -105,21 +102,22 @@ public class GLESGameRenderer implements GameRenderer {
         }
 
         public void init() throws GameException {
+            frame.launcher().profiler().begin("render", "init_gl");
             states.depth.enabled.value.set(true);
             states.depth.depthFunc.set(GLES20.GL_LEQUAL);
             states.blend.enabled.value.set(true);
             states.blend.separate.set(true);
             states.replace(null);
-            GLES31 gl = StateRegistry.currentGl();
-            GLESCompat.VERSION = gl.glGetString(GLES20.GL_VERSION);
-            GLESCompat.SHADING_VERSION = gl.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION);
-            GLESCompat.VERSION_MAJOR = gl.glGetInteger(GLES30.GL_MAJOR_VERSION);
-            GLESCompat.VERSION_MINOR = gl.glGetInteger(GLES30.GL_MINOR_VERSION);
-            GLESCompat.MAX_TEXTURE_SIZE = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_SIZE);
-            GLESCompat.MAX_TEXTURE_IMAGE_UNITS = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_IMAGE_UNITS);
-            GLESCompat.MAX_DRAW_BUFFERS = gl.glGetInteger(GLES30.GL_MAX_DRAW_BUFFERS);
+            GLES20 gl = StateRegistry.currentGl();
+            GLESData.VERSION = gl.glGetString(GLES20.GL_VERSION);
+            GLESData.SHADING_VERSION = gl.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION);
+            GLESData.VERSION_MAJOR = gl.glGetInteger(GLES30.GL_MAJOR_VERSION);
+            GLESData.VERSION_MINOR = gl.glGetInteger(GLES30.GL_MINOR_VERSION);
+            GLESData.MAX_TEXTURE_SIZE = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_SIZE);
+            GLESData.MAX_TEXTURE_IMAGE_UNITS = gl.glGetInteger(GLES20.GL_MAX_TEXTURE_IMAGE_UNITS);
+            if (GLESData.VERSION_MAJOR >= 3) GLESData.MAX_DRAW_BUFFERS = gl.glGetInteger(GLES30.GL_MAX_DRAW_BUFFERS);
 
-            GLESCompat.printDebugInfos(gles.launcher().logger());
+            GLESData.printDebugInfos(gles.launcher().logger());
 
             this.mainFramebuffer = new BasicFramebuffer(gles, this.frame.framebuffer().width().intValue(), this.frame.framebuffer().height().intValue());
             this.mainScreenItem = new GameItem(new Texture2DModel(this.mainFramebuffer.colorTexture()));
@@ -133,10 +131,7 @@ public class GLESGameRenderer implements GameRenderer {
             this.contexthud = launcher.contextProvider().loadContext(this.mainFramebuffer, ContextType.HUD);
             ((GLESDrawContext) this.contexthud).swapTopBottom = true;
 
-            launcher.guiManager().openGuiByClass(MainScreenGui.class);
-
-            //			updateScreenItems();
-
+            frame.launcher().profiler().end();
         }
 
         @Override public CompletableFuture<Void> cleanup0() throws GameException {

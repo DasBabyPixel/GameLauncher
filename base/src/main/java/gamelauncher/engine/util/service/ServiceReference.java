@@ -11,12 +11,14 @@ import gamelauncher.engine.data.embed.EmbedFileSystem;
 import gamelauncher.engine.event.EventManager;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.network.NetworkClient;
+import gamelauncher.engine.render.ContextProvider;
 import gamelauncher.engine.render.font.FontFactory;
 import gamelauncher.engine.render.font.GlyphProvider;
 import gamelauncher.engine.render.model.ModelLoader;
 import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.texture.TextureManager;
 import gamelauncher.engine.resource.ResourceLoader;
+import gamelauncher.engine.util.concurrent.ExecutorThreadHelper;
 import gamelauncher.engine.util.i18n.LanguageManager;
 import gamelauncher.engine.util.image.ImageDecoder;
 import gamelauncher.engine.util.keybind.KeybindManager;
@@ -39,8 +41,10 @@ public class ServiceReference<T> {
     public static final ServiceReference<ShaderLoader> SHADER_LOADER = new ServiceReference<>(ShaderLoader.class);
     public static final ServiceReference<FontFactory> FONT_FACTORY = new ServiceReference<>(FontFactory.class);
     public static final ServiceReference<FileSystem> EMBED_FILE_SYSTEM = new ServiceReference<>(EmbedFileSystem.serviceName, FileSystem.class);
+    public static final ServiceReference<ContextProvider> CONTEXT_PROVIDER = new ServiceReference<>(ContextProvider.class);
     public static final ServiceReference<ImageDecoder> IMAGE_DECODER = new ServiceReference<>(ImageDecoder.class);
     public static final ServiceReference<LoggingProvider> LOGGING_PROVIDER = new ServiceReference<>(LoggingProvider.class);
+    public static final ServiceReference<ExecutorThreadHelper> EXECUTOR_THREAD_HELPER = new ServiceReference<>(ExecutorThreadHelper.class);
 
     private final ServiceName serviceName;
     private final Class<T> serviceClass;

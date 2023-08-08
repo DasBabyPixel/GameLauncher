@@ -46,6 +46,7 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
         this.launcher = launcher;
         this.launcher.eventManager().registerListener(this);
         registerGuiCreator(null, MainScreenGui.class);
+        registerGuiCreator(null, MainScreenGui.Second.class);
         registerGuiCreator(null, ScrollGui.class);
         registerGuiCreator(null, ButtonGui.class);
         registerGuiCreator(null, TextGui.class);
@@ -69,24 +70,14 @@ public class SimpleGuiManager extends AbstractGameResource implements GuiManager
     }
 
     @Override public void openGui(@NotNull Gui gui) throws GameException {
+        launcher.gameThread().ensureOnThread();
         Gui currentGui = this.gui;
         if (currentGui != null) {
             currentGui.unfocus();
             currentGui.onClose();
             launcher.frame().renderThread().submit(currentGui::cleanup);
         }
-        Gui oldGui = gui;
         gui = launcher.eventManager().post(new GuiOpenEvent(gui)).gui();
-        if (oldGui != gui) {
-            oldGui.onOpen();
-            oldGui.update();
-            launcher.frame().renderThread().submit(() -> {
-                oldGui.init();
-                oldGui.cleanup();
-            });
-            oldGui.unfocus();
-            oldGui.onClose();
-        }
         gui.widthProperty().bind(launcher.frame().framebuffer().width());
         gui.heightProperty().bind(launcher.frame().framebuffer().height());
         this.gui = gui;

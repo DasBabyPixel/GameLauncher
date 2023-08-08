@@ -170,7 +170,7 @@ public abstract class AbstractExecutorThread extends AbstractGameThread implemen
     @Override public CompletableFuture<Void> submit(GameRunnable runnable) {
         if (runnable == null) throw new IllegalArgumentException("Null runnable");
         CompletableFuture<Void> fut = new CompletableFuture<>();
-        if (Thread.currentThread() == this) {
+        if (Threads.currentThread() == this) {
             this.work(runnable, fut);
         } else {
             ringBuffer.publishEvent((event, sequence, arg0, arg1, arg2) -> event.set(arg1, arg0, arg2), fut, WrapperEntry.newEntry(), runnable);

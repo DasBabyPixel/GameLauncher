@@ -63,7 +63,6 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 
     @Override public int threadCount() {
         if (service instanceof ForkJoinPool) return ((ForkJoinPool) service).getRunningThreadCount();
-        if (service instanceof java.util.concurrent.ForkJoinPool) return ((java.util.concurrent.ForkJoinPool) service).getRunningThreadCount();
         if (service instanceof ThreadPoolExecutor) return ((ThreadPoolExecutor) service).getActiveCount();
         return -1;
     }
@@ -125,7 +124,7 @@ public class WrapperExecutorThreadService implements ExecutorThreadService {
 
     }
 
-    class Waiter extends Thread {
+    class Waiter extends java.lang.Thread {
 
         public Waiter() {
             super("Waiter-" + id.incrementAndGet());

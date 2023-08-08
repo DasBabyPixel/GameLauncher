@@ -13,7 +13,7 @@ import java.util.concurrent.Executor;
 
 public interface ThreadSpecificExecutor extends Executor {
 
-    Thread thread();
+    java.lang.Thread thread();
 
     @Override default void execute(@NotNull Runnable command) {
         post(command);
@@ -26,6 +26,6 @@ public interface ThreadSpecificExecutor extends Executor {
     boolean post(Runnable runnable);
 
     default boolean isCurrentThread() {
-        return thread() == Thread.currentThread();
+        return thread() == Threads.currentThread();
     }
 }

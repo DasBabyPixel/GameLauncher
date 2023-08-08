@@ -23,7 +23,7 @@ import gamelauncher.engine.game.GameRegistry;
 import gamelauncher.engine.gui.GuiConstructorTemplates;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.gui.GuiRenderer;
-import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.gui.guis.MainScreenGui;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.plugin.PluginManager;
 import gamelauncher.engine.render.ContextProvider;
@@ -59,7 +59,6 @@ import java8.util.function.Predicate;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
@@ -67,7 +66,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author DasBabyPixel
@@ -76,7 +74,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class GameLauncher {
 
     /**
-     * The max TPS in the {@link GameThread}
+     * The max TPS in the {@link TickerThread}
      */
     public static final float MAX_TPS = 60F;
     private final Gson settingsGson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
@@ -92,13 +90,11 @@ public abstract class GameLauncher {
     private Path settingsFile;
     private Path pluginsDirectory;
     private Path assets;
-    private GameThread gameThread;
+    private TickerThread gameThread;
     private Frame frame;
     private OperatingSystem operatingSystem;
     private SettingSection settings;
     private GameRenderer gameRenderer;
-    private ExecutorThreadHelper executorThreadHelper;
-    private ContextProvider contextProvider;
     private ModelIdRegistry modelIdRegistry;
 
     private Game currentGame;
@@ -130,7 +126,7 @@ public abstract class GameLauncher {
 
         StartCommandSettings scs = StartCommandSettings.parse(args);
 
-        this.gameThread = new GameThread(this);
+        this.gameThread = new TickerThread(this);
 
         GuiConstructorTemplates.init(this);
 
@@ -140,6 +136,7 @@ public abstract class GameLauncher {
 
         this.gameThread.submit(() -> {
             this.start0();
+            guiManager().openGuiByClass(MainScreenGui.class);
             if (this.gameRenderer.renderer() != null && !(this.gameRenderer.renderer() instanceof GuiRenderer)) {
                 this.logger.warn("Not using GuiRenderer: " + this.gameRenderer.renderer().getClass().getName());
             }
@@ -148,6 +145,9 @@ public abstract class GameLauncher {
             long timeStarted = System.currentTimeMillis();
 
             logger.infof("Startup took %sms", timeStarted - this.startedMillis);
+        }).exceptionally(t->{
+            t.printStackTrace();
+            return null;
         });
         this.gameThread.start();
     }
@@ -346,7 +346,7 @@ public abstract class GameLauncher {
     }
 
     @Api public ExecutorThreadHelper executorThreadHelper() {
-        return executorThreadHelper;
+        return serviceProvider.service(ServiceReference.EXECUTOR_THREAD_HELPER);
     }
 
     @Api public Path pluginsDirectory() {
@@ -358,9 +358,9 @@ public abstract class GameLauncher {
     }
 
     /**
-     * @return the {@link GameThread}
+     * @return the {@link TickerThread}
      */
-    @Api public GameThread gameThread() {
+    @Api public TickerThread gameThread() {
         return this.gameThread;
     }
 
@@ -368,13 +368,13 @@ public abstract class GameLauncher {
      * @return the {@link ContextProvider} to use for creating contexts.
      */
     @Api public ContextProvider contextProvider() {
-        return this.contextProvider;
+        return serviceProvider.service(ServiceReference.CONTEXT_PROVIDER);
     }
 
     /**
      * @return the {@link GameRenderer}
      */
-    @Api public GameRenderer gameRenderer() {
+    @Api public GameRenderer renderer() {
         return this.gameRenderer;
     }
 
@@ -423,10 +423,6 @@ public abstract class GameLauncher {
         this.pluginsDirectory = this.gameDirectory.resolve("plugins");
     }
 
-    protected void contextProvider(ContextProvider contextProvider) {
-        this.contextProvider = contextProvider;
-    }
-
     protected void loadCustomPlugins() {
     }
 
@@ -469,11 +465,7 @@ public abstract class GameLauncher {
         this.frame.frameRenderer(this.gameRenderer);
     }
 
-    protected void executorThreadHelper(ExecutorThreadHelper executorThreadHelper) {
-        this.executorThreadHelper = executorThreadHelper;
-    }
-
-    protected void gameRenderer(GameRenderer renderer) {
+    protected void renderer(GameRenderer renderer) {
         this.gameRenderer = renderer;
         if (this.frame != null) {
             this.frame.frameRenderer(renderer);

@@ -84,96 +84,15 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         }
     }
 
-    private void mouseClicked(MouseButtonKeybindEvent entry) throws GameException {
-        int id = entry.keybind().uniqueId();
-        if (this.mouseButtons.contains(id)) {
-            this.handle(entry.withType(MouseButtonKeybindEvent.Type.RELEASE));
+    @Override public final void onOpen() throws GameException {
+        if (!GUIs.isEmpty()) {
+            logger.warn("Gui initialized child components before opening. This may cause memory leaks! Initialize your components in #onOpen0");
         }
-        this.mouseButtons.add(id);
-        Collection<Gui> guis = new ArrayList<>();
-        boolean hasFoundFocusedGui = false;
-        float mouseX = entry.mouseX();
-        float mouseY = entry.mouseY();
-        Iterator<Gui> it = GUIs.descendingIterator();
-        while (it.hasNext()) {
-            Gui gui = it.next();
-            if (!hasFoundFocusedGui) {
-                if (gui.hovering(mouseX, mouseY)) {
-                    if (gui == this.focusedGui.get()) {
-                        if (!gui.focused()) {
-                            gui.focus();
-                        }
-                        if (!gui.focused()) {
-                            return;
-                        }
-                        hasFoundFocusedGui = true;
-                        gui.handle(entry);
-                        guis.add(gui);
-                    } else if (!gui.focused()) {
-                        if (this.focusedGui.get() != null) {
-                            this.focusedGui.get().unfocus();
-                            if (this.focusedGui.get().focused()) {
-                                return;
-                            }
-                        }
-                        gui.focus();
-                        if (gui.focused()) {
-                            hasFoundFocusedGui = true;
-                            this.focusedGui.set(gui);
-                            gui.handle(entry);
-                            guis.add(gui);
-                        }
-                    }
-                }
-            }
-        }
-        if (!hasFoundFocusedGui && this.focusedGui.get() != null) {
-            this.focusedGui.get().unfocus();
-            if (!this.focusedGui.get().focused()) {
-                this.focusedGui.set(null);
-            }
-        }
-        this.mouseDownGuis.put(id, guis);
+        onOpen0();
     }
 
-    private void forFocused(KeybindEvent e) throws GameException {
-        Iterator<Gui> it = GUIs.descendingIterator();
-        while (it.hasNext()) {
-            Gui gui = it.next();
-            if (!gui.focused()) continue;
-            gui.handle(e);
-            if (e.consumed()) break;
-        }
-    }
-
-    @Api protected boolean doHandle(KeybindEvent entry) throws GameException {
-        return true;
-    }
-
-    @Api protected void postDoHandle(KeybindEvent entry) throws GameException {
-    }
-
-    @Api protected void doUpdate() throws GameException {
-    }
-
-    @Api protected void doCleanup() throws GameException {
-    }
-
-    @Api protected void doInit() throws GameException {
-    }
-
-    @Api protected void preRender(float mouseX, float mouseY, float partialTick) throws GameException {
-    }
-
-    @Api protected void postRender(float mouseX, float mouseY, float partialTick) throws GameException {
-    }
-
-    @Api protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
-        return true;
-    }
-
-    @Api protected void redraw() {
-        this.launcher().frame().framebuffer().scheduleRedraw();
+    @Override public final void onClose() throws GameException {
+        onClose0();
     }
 
     @Override public BooleanValue hovering() {
@@ -302,8 +221,106 @@ public abstract class ParentableAbstractGui extends AbstractGui {
         return String.format(Locale.getDefault(), "%s[x=%.0f, y=%.0f, w=%.0f, h=%.0f%s]", this.getClass().getSimpleName(), this.x(), this.y(), this.width(), this.height(), additional == null ? "" : " " + additional);
     }
 
+    @Api protected boolean doHandle(KeybindEvent entry) throws GameException {
+        return true;
+    }
+
+    @Api protected void postDoHandle(KeybindEvent entry) throws GameException {
+    }
+
+    @Api protected void doUpdate() throws GameException {
+    }
+
+    @Api protected void doCleanup() throws GameException {
+    }
+
+    @Api protected void doInit() throws GameException {
+    }
+
+    @Api protected void preRender(float mouseX, float mouseY, float partialTick) throws GameException {
+    }
+
+    @Api protected void postRender(float mouseX, float mouseY, float partialTick) throws GameException {
+    }
+
+    @Api protected boolean doRender(float mouseX, float mouseY, float partialTick) throws GameException {
+        return true;
+    }
+
+    @Api protected void redraw() {
+        this.launcher().frame().framebuffer().scheduleRedraw();
+    }
+
+    @Api protected void onOpen0() throws GameException {
+    }
+
+    @Api protected void onClose0() throws GameException {
+    }
+
     protected String additionalToStringData() {
         return null;
+    }
+
+    private void mouseClicked(MouseButtonKeybindEvent entry) throws GameException {
+        int id = entry.keybind().uniqueId();
+        if (this.mouseButtons.contains(id)) {
+            this.handle(entry.withType(MouseButtonKeybindEvent.Type.RELEASE));
+        }
+        this.mouseButtons.add(id);
+        Collection<Gui> guis = new ArrayList<>();
+        boolean hasFoundFocusedGui = false;
+        float mouseX = entry.mouseX();
+        float mouseY = entry.mouseY();
+        Iterator<Gui> it = GUIs.descendingIterator();
+        while (it.hasNext()) {
+            Gui gui = it.next();
+            if (!hasFoundFocusedGui) {
+                if (gui.hovering(mouseX, mouseY)) {
+                    if (gui == this.focusedGui.get()) {
+                        if (!gui.focused()) {
+                            gui.focus();
+                        }
+                        if (!gui.focused()) {
+                            return;
+                        }
+                        hasFoundFocusedGui = true;
+                        gui.handle(entry);
+                        guis.add(gui);
+                    } else if (!gui.focused()) {
+                        if (this.focusedGui.get() != null) {
+                            this.focusedGui.get().unfocus();
+                            if (this.focusedGui.get().focused()) {
+                                return;
+                            }
+                        }
+                        gui.focus();
+                        if (gui.focused()) {
+                            hasFoundFocusedGui = true;
+                            this.focusedGui.set(gui);
+                            gui.handle(entry);
+                            guis.add(gui);
+                        }
+                    }
+                }
+            }
+        }
+        if (!hasFoundFocusedGui && this.focusedGui.get() != null) {
+            this.focusedGui.get().unfocus();
+            if (!this.focusedGui.get().focused()) {
+                this.focusedGui.set(null);
+            }
+        }
+        this.mouseDownGuis.put(id, guis);
+    }
+
+    private void forFocused(KeybindEvent e) throws GameException {
+        Iterator<Gui> it = GUIs.descendingIterator();
+        while (it.hasNext()) {
+            Gui gui = it.next();
+            if (!gui.focused()) continue;
+            gui.handle(e);
+            if (e.consumed()) break;
+        }
     }
 
 }

@@ -18,7 +18,7 @@ import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameFunction;
 import gamelauncher.engine.util.logging.Logger;
 import gamelauncher.gles.GLES;
-import gamelauncher.gles.GLESCompat;
+import gamelauncher.gles.compat.GLESData;
 import gamelauncher.gles.texture.GLESTexture;
 import java8.util.concurrent.CompletableFuture;
 import java8.util.function.Consumer;
@@ -200,7 +200,7 @@ public class DynamicSizeTextureAtlas extends AbstractGameResource {
     private Vector4i scaledBounds(Vector4i textureBounds) {
         boolean same = textureBounds.z == textureBounds.w;
         int newWidth = same ? textureBounds.z * 2 : textureBounds.z;
-        if (newWidth > GLESCompat.MAX_TEXTURE_SIZE) {
+        if (newWidth > GLESData.MAX_TEXTURE_SIZE) {
             return textureBounds;
         }
         int newHeight = same ? textureBounds.w : textureBounds.w * 2;

@@ -4,7 +4,7 @@ import de.dasbabypixel.annotations.Api;
 import de.dasbabypixel.api.property.BooleanValue;
 import de.dasbabypixel.api.property.NumberValue;
 import gamelauncher.engine.GameLauncher;
-import gamelauncher.engine.GameThread;
+import gamelauncher.engine.TickerThread;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.keybind.KeybindEvent;
@@ -126,7 +126,7 @@ public interface Gui {
     @Api void unfocus() throws GameException;
 
     /**
-     * Called when this {@link Gui} is updated in the {@link GameThread}
+     * Called when this {@link Gui} is updated in the {@link TickerThread}
      *
      * @throws GameException an exception
      */

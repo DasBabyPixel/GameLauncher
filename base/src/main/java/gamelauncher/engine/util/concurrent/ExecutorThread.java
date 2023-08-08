@@ -19,7 +19,7 @@ import java8.util.concurrent.CompletableFuture;
  * @author DasBabyPixel
  */
 @Api
-public interface ExecutorThread {
+public interface ExecutorThread extends Thread {
 
     @Api CompletableFuture<Void> submit(GameRunnable runnable);
 
@@ -27,14 +27,6 @@ public interface ExecutorThread {
         FuturisticGameRunnable<T> fut = callable.toRunnable();
         submit(fut);
         return fut.getFuture();
-    }
-
-    @Deprecated(forRemoval = true) @Api default CompletableFuture<Void> submitLast(GameRunnable runnable) {
-        return submit(runnable);
-    }
-
-    @Deprecated(forRemoval = true) @Api default <T> CompletableFuture<T> submitLast(GameCallable<T> callable) {
-        return submit(callable);
     }
 
     /**

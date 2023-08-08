@@ -19,4 +19,5 @@ open module gamelauncher.gles {
     exports gamelauncher.gles.shader.struct;
     exports gamelauncher.gles.states;
     exports gamelauncher.gles;
+    exports gamelauncher.gles.compat;
 }

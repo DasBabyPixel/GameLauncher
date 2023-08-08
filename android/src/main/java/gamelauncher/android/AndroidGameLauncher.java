@@ -7,29 +7,21 @@
 
 package gamelauncher.android;
 
-import android.content.Context;
-import android.opengl.GLSurfaceView;
-import android.view.inputmethod.InputMethodManager;
-import gamelauncher.android.font.AndroidGlyphProvider;
-import gamelauncher.android.gl.AndroidGLFactory;
-import gamelauncher.android.gl.AndroidGLLoader;
-import gamelauncher.android.gl.AndroidMemoryManagement;
-import gamelauncher.android.gl.LauncherGLSurfaceView;
-import gamelauncher.android.gui.AndroidGuiManager;
-import gamelauncher.android.io.AndroidEmbedFileSystemProvider;
-import gamelauncher.android.util.AndroidExecutorThreadHelper;
-import gamelauncher.android.util.AndroidLoggingProvider;
-import gamelauncher.android.util.DumbImageDecoder;
-import gamelauncher.android.util.keybind.AndroidKeybindManager;
+import gamelauncher.android.internal.font.AndroidGlyphProvider;
+import gamelauncher.android.internal.gl.AndroidGLFactory;
+import gamelauncher.android.internal.gl.AndroidGLLoader;
+import gamelauncher.android.internal.gl.AndroidMemoryManagement;
+import gamelauncher.android.internal.gl.LauncherGLSurfaceView;
+import gamelauncher.android.internal.gui.AndroidGuiManager;
+import gamelauncher.android.internal.io.AndroidEmbedFileSystemProvider;
+import gamelauncher.android.internal.util.*;
+import gamelauncher.android.internal.util.keybind.AndroidKeybindManager;
 import gamelauncher.engine.GameLauncher;
 import gamelauncher.engine.data.GameDirectoryResolver;
 import gamelauncher.engine.gui.GuiManager;
 import gamelauncher.engine.network.NetworkClient;
 import gamelauncher.engine.render.Frame;
-import gamelauncher.engine.render.font.FontFactory;
 import gamelauncher.engine.render.font.GlyphProvider;
-import gamelauncher.engine.render.model.ModelLoader;
-import gamelauncher.engine.render.shader.ShaderLoader;
 import gamelauncher.engine.render.texture.TextureManager;
 import gamelauncher.engine.resource.ResourceLoader;
 import gamelauncher.engine.resource.SimpleResourceLoader;
@@ -40,7 +32,6 @@ import gamelauncher.engine.util.keybind.KeybindManager;
 import gamelauncher.engine.util.service.ServiceReference;
 import gamelauncher.gles.GLES;
 import gamelauncher.gles.GLESThreadGroup;
-import gamelauncher.gles.context.GLESContextProvider;
 import gamelauncher.gles.font.bitmap.BasicFontFactory;
 import gamelauncher.gles.modelloader.GLESModelLoader;
 import gamelauncher.gles.render.GLESGameRenderer;
@@ -53,46 +44,48 @@ import java.net.URI;
 import java.nio.file.FileSystem;
 
 public class AndroidGameLauncher extends GameLauncher {
-    private final AndroidGLLoader glLoader;
+    public static final ServiceReference<AndroidGameLauncher> ANDROID_GAME_LAUNCHER = new ServiceReference<>(AndroidGameLauncher.class);
+    public static final ServiceReference<EGL10> EGL10 = new ServiceReference<>(EGL10.class);
     private final GLESThreadGroup glThreadGroup;
     private final AndroidLauncher activity;
     private final GLES gles;
     private final KeybindManager keybindManager;
     private final ResourceLoader resourceLoader;
-    private final ShaderLoader shaderLoader;
-    private final ModelLoader modelLoader;
     private final GuiManager guiManager;
     private final TextureManager textureManager;
-    private final FontFactory fontFactory;
     private final NetworkClient networkClient;
     private final ImageDecoder imageDecoder;
+    private final KeyboardUtils keyboardUtils;
     LauncherGLSurfaceView view;
     private GlyphProvider glyphProvider;
     private volatile boolean keyboardVisible = false;
-    private EGL10 egl;
 
     public AndroidGameLauncher(AndroidLauncher activity) throws GameException {
+        serviceProvider().register(ANDROID_GAME_LAUNCHER, this);
         this.activity = activity;
         serviceProvider().register(ServiceReference.LOGGING_PROVIDER, new AndroidLoggingProvider());
         serviceProvider().register(GameDirectoryResolver.AndroidProvider.class, () -> activity.getFilesDir().toPath());
         init();
-        this.glLoader = new AndroidGLLoader();
+        serviceProvider().register(AndroidGLLoader.ANDROID_GL_LOADER, new AndroidGLLoader(activity));
         gles = new GLES(this, new AndroidMemoryManagement(), new AndroidGLFactory(this));
-        this.contextProvider(new GLESContextProvider(gles, this));
 
-        this.executorThreadHelper(new AndroidExecutorThreadHelper(this));
+        serviceProvider().register(ServiceReference.EXECUTOR_THREAD_HELPER, new AndroidExecutorThreadHelper(this));
         serviceProvider().register(ServiceReference.KEYBIND_MANAGER, keybindManager = new AndroidKeybindManager(this));
         serviceProvider().register(ServiceReference.RESOURCE_LOADER, resourceLoader = new SimpleResourceLoader());
-        serviceProvider().register(ServiceReference.SHADER_LOADER, shaderLoader = new GLESShaderLoader(gles));
-        this.gameRenderer(new GLESGameRenderer(gles));
-        serviceProvider().register(ServiceReference.MODEL_LOADER, modelLoader = new GLESModelLoader(gles, this));
+        serviceProvider().register(ServiceReference.SHADER_LOADER, new GLESShaderLoader(gles));
+        renderer(new GLESGameRenderer(gles));
+        serviceProvider().register(ServiceReference.MODEL_LOADER, new GLESModelLoader(gles, this));
         serviceProvider().register(ServiceReference.GUI_MANAGER, guiManager = new AndroidGuiManager(this));
-        serviceProvider().register(ServiceReference.FONT_FACTORY, fontFactory = new BasicFontFactory(gles, this));
+        serviceProvider().register(ServiceReference.FONT_FACTORY, new BasicFontFactory(gles, this));
         serviceProvider().register(ServiceReference.TEXTURE_MANAGER, textureManager = gles.textureManager());
         serviceProvider().register(ServiceReference.NETWORK_CLIENT, networkClient = new NettyNetworkClient(this));
         serviceProvider().register(ServiceReference.IMAGE_DECODER, imageDecoder = new DumbImageDecoder());
         gles.init();
         this.glThreadGroup = new GLESThreadGroup();
+        this.keyboardUtils = new KeyboardUtils(activity, isVisible -> {
+            keyboardVisible = isVisible;
+            if (!keyboardVisible) threads().cached.submit(() -> activity.runOnUiThread(() -> immersiveMode().update()));
+        });
     }
 
     @Override public void frame(Frame frame) {
@@ -111,44 +104,32 @@ public class AndroidGameLauncher extends GameLauncher {
         return (AndroidKeybindManager) super.keybindManager();
     }
 
+    /**
+     * @return the threadgroup other threads are started on
+     */
     public GLESThreadGroup glThreadGroup() {
         return glThreadGroup;
     }
 
     @Override public void keyboardVisible(boolean visible) {
-        Runnable r = () -> {
-            InputMethodManager manager = (InputMethodManager) activity.getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            this.keyboardVisible = visible;
+        activity.runOnUiThread(() -> {
             if (visible) {
-                view.setFocusable(true);
-                view.setFocusableInTouchMode(false);
-
-                manager.showSoftInput(view, 0);
-            } else {
-                manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-        };
-        if (view.getHandler().getLooper().isCurrentThread()) {
-            r.run();
-        } else {
-            view.getHandler().post(r);
-        }
-    }
-
-    public void egl(EGL10 egl) {
-        this.egl = egl;
+                view.setFocusableInTouchMode(true);
+                KeyboardUtils.forceShowKeyboard(view);
+            } else KeyboardUtils.forceCloseKeyboard(view);
+        });
     }
 
     public EGL10 egl() {
-        return egl;
-    }
-
-    public AndroidGLLoader glLoader() {
-        return glLoader;
+        return serviceProvider().service(EGL10);
     }
 
     @Override public boolean keyboardVisible() {
         return keyboardVisible;
+    }
+
+    public ImmersiveMode immersiveMode() {
+        return serviceProvider().service(ImmersiveMode.IMMERSIVE_MODE);
     }
 
     @Override protected void stop0() throws GameException {
@@ -168,8 +149,11 @@ public class AndroidGameLauncher extends GameLauncher {
     }
 
     @Override protected void start0() throws GameException {
+        serviceProvider().register(ImmersiveMode.IMMERSIVE_MODE, new ImmersiveMode(this));
         serviceProvider().register(ServiceReference.GLYPH_PROVIDER, glyphProvider = new AndroidGlyphProvider(gles));
         networkClient.start();
+        Threads.await(view.initialized);
+        Threads.await(view.glRenderer.surfaceCreated);
     }
 
     @Override protected void loadCustomPlugins() {

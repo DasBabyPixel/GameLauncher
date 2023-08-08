@@ -75,6 +75,42 @@ public class LWJGLInput implements Input {
         }
     }
 
+    public void scroll(float xoffset, float yoffset) throws GameException {
+        enqueue(this.newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL);
+    }
+
+    public void mouseMove(float omx, float omy, float mx, float my) {
+        enqueue(this.newEntry(ALL_MOUSE_PRESSED, omx, omy, mx, my), InputType.MOVE);
+    }
+
+    public void mousePress(int key, float mx, float my) {
+        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.PRESSED);
+    }
+
+    public void mouseRelease(int key, float mx, float my) {
+        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.RELEASED);
+    }
+
+    public void keyRepeat(int key, int scancode, char ch) {
+        enqueue(this.newEntry(key, scancode, ch), InputType.REPEAT);
+    }
+
+    public void keyPress(int key, int scancode, char ch) {
+        enqueue(this.newEntry(key, scancode, ch), InputType.PRESSED);
+    }
+
+    public void keyRelease(int key, int scancode, char ch) {
+        enqueue(this.newEntry(key, scancode, ch), InputType.RELEASED);
+    }
+
+    public void character(char ch) {
+        enqueue(this.newEntry(GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, ch), InputType.CHARACTER);
+    }
+
+    public void enqueue(Entry entry, InputType type) {
+        ringBuffer.publishEvent((event, sequence, arg0, arg1) -> event.set(arg0, arg1), entry, type);
+    }
+
     private void event(Entry entry, InputType input) throws GameException {
         switch (entry.type) {
             case KEYBOARD:
@@ -134,6 +170,8 @@ public class LWJGLInput implements Input {
                 keyEvent(InputType.CHARACTER, GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, '\b');
             } else if (key == GLFW.GLFW_KEY_ENTER) {
                 keyEvent(InputType.CHARACTER, GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, '\n');
+            } else if (key == GLFW.GLFW_KEY_DELETE) {
+                keyEvent(InputType.CHARACTER, GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, (char) 0x7F);
             }
         }
         int id = key == GLFW.GLFW_KEY_UNKNOWN ? scancode == GLFW.GLFW_KEY_UNKNOWN ? LWJGLKeybindManager.KEYBOARD_CODEPOINT_ADD + c : LWJGLKeybindManager.KEYBOARD_SCANCODE_ADD + scancode : LWJGLKeybindManager.KEYBOARD_ADD + key;
@@ -164,42 +202,6 @@ public class LWJGLInput implements Input {
                 throw new UnsupportedOperationException();
         }
         keybindManager.post(event);
-    }
-
-    public void scroll(float xoffset, float yoffset) throws GameException {
-        enqueue(this.newEntry(0, 0, 0, xoffset, yoffset), InputType.SCROLL);
-    }
-
-    public void mouseMove(float omx, float omy, float mx, float my) {
-        enqueue(this.newEntry(ALL_MOUSE_PRESSED, omx, omy, mx, my), InputType.MOVE);
-    }
-
-    public void mousePress(int key, float mx, float my) {
-        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.PRESSED);
-    }
-
-    public void mouseRelease(int key, float mx, float my) {
-        enqueue(this.newEntry(key, 0, 0, mx, my), InputType.RELEASED);
-    }
-
-    public void keyRepeat(int key, int scancode, char ch) {
-        enqueue(this.newEntry(key, scancode, ch), InputType.REPEAT);
-    }
-
-    public void keyPress(int key, int scancode, char ch) {
-        enqueue(this.newEntry(key, scancode, ch), InputType.PRESSED);
-    }
-
-    public void keyRelease(int key, int scancode, char ch) {
-        enqueue(this.newEntry(key, scancode, ch), InputType.RELEASED);
-    }
-
-    public void character(char ch) {
-        enqueue(this.newEntry(GLFW.GLFW_KEY_UNKNOWN, GLFW.GLFW_KEY_UNKNOWN, ch), InputType.CHARACTER);
-    }
-
-    public void enqueue(Entry entry, InputType type) {
-        ringBuffer.publishEvent((event, sequence, arg0, arg1) -> event.set(arg0, arg1), entry, type);
     }
 
     private Entry newEntry(int key, int scancode, char ch) {

@@ -30,9 +30,9 @@ public class WrapperEntry {
     /**
      * the thread for this entry
      */
-    public final Thread thread;
+    public final java.lang.Thread thread;
 
-    public WrapperEntry(StackTraceElement[] stacktrace, WrapperEntry cause, Thread thread) {
+    public WrapperEntry(StackTraceElement[] stacktrace, WrapperEntry cause, java.lang.Thread thread) {
         this.stacktrace = stacktrace;
         this.cause = cause;
         this.thread = thread;
@@ -45,14 +45,14 @@ public class WrapperEntry {
         if (Debug.calculateThreadStacks) {
             StackTraceElement[] stack = new Exception().getStackTrace();
             stack = Arrays.copyOfRange(stack, 2, stack.length);
-            return new WrapperEntry(stack, WrapperEntry.cause(), Thread.currentThread());
+            return new WrapperEntry(stack, WrapperEntry.cause(), Threads.currentThread());
         }
-        return new WrapperEntry(null, WrapperEntry.cause(), Thread.currentThread());
+        return new WrapperEntry(null, WrapperEntry.cause(), Threads.currentThread());
     }
 
     private static WrapperEntry cause() {
-        if (Thread.currentThread() instanceof AbstractExecutorThread) {
-            AbstractExecutorThread aet = (AbstractExecutorThread) Thread.currentThread();
+        if (Threads.currentThread() instanceof AbstractExecutorThread) {
+            AbstractExecutorThread aet = (AbstractExecutorThread) Threads.currentThread();
             return aet.currentEntry;
         }
         WrapperExecutorThreadService.WrapperCallable<?> callable = WrapperExecutorThreadService.WrapperCallable.threadLocal.get();

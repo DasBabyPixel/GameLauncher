@@ -23,7 +23,6 @@ import gamelauncher.engine.settings.SettingSection;
 import gamelauncher.engine.util.Config;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.collections.Collections;
-import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.engine.util.function.GameConsumer;
 import gamelauncher.engine.util.image.Icon;
 import gamelauncher.engine.util.logging.Logger;
@@ -189,7 +188,7 @@ public class GLFWFrame extends AbstractGameResource implements Frame {
     }
 
     @Override public void frameRenderer(FrameRenderer renderer) {
-        if (this == launcher.frame() && renderer != launcher.gameRenderer()) {
+        if (this == launcher.frame() && renderer != launcher.renderer()) {
             throw new UnsupportedOperationException("Please set the renderer via GameLauncher#gameRenderer to preserve a consistent state");
         }
         this.frameRenderer.value(renderer);

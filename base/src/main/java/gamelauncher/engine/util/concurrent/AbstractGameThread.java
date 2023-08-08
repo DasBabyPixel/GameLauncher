@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author DasBabyPixel
  */
-public abstract class AbstractGameThread extends Thread implements GameResource {
+public abstract class AbstractGameThread extends java.lang.Thread implements GameResource, Thread {
 
     protected final CompletableFuture<Void> cleanupFuture = new CompletableFuture<>();
     private final GameLauncher launcher;

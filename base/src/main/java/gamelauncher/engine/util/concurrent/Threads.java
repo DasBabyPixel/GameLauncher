@@ -14,6 +14,7 @@ import gamelauncher.engine.util.concurrent.WrapperExecutorThreadService.WrapperC
 import gamelauncher.engine.util.function.GameRunnable;
 import gamelauncher.engine.util.logging.Logger;
 import java8.util.concurrent.CompletableFuture;
+import java8.util.concurrent.ForkJoinPool;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,7 +65,7 @@ public class Threads extends AbstractGameResource {
      * CURRENT THREAD!!!
      */
     public static GameException buildStacktrace() {
-        Thread cur = Thread.currentThread();
+        java.lang.Thread cur = currentThread();
         if (cur instanceof AbstractExecutorThread) {
             return ((AbstractExecutorThread) cur).buildStacktrace();
         }
@@ -142,16 +143,16 @@ public class Threads extends AbstractGameResource {
      *
      * @param thread the thread to unpark
      */
-    public static void unpark(Thread thread) {
+    public static void unpark(java.lang.Thread thread) {
         LockSupport.unpark(thread);
     }
 
     /**
      * @return the current thread
-     * @see Thread#currentThread()
+     * @see java.lang.Thread#currentThread()
      */
-    public static Thread currentThread() {
-        return Thread.currentThread();
+    public static java.lang.Thread currentThread() {
+        return java.lang.Thread.currentThread();
     }
 
     /**

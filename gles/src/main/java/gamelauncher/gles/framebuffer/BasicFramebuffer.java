@@ -9,8 +9,6 @@ import gamelauncher.gles.texture.GLESTexture;
 import java8.util.concurrent.CompletableFuture;
 
 import static gamelauncher.gles.gl.GLES20.*;
-import static gamelauncher.gles.gl.GLES30.GL_DEPTH24_STENCIL8;
-import static gamelauncher.gles.gl.GLES30.GL_DEPTH_STENCIL_ATTACHMENT;
 
 /**
  * An extension of the {@link GLESFramebuffer} for the {@link GLESGameRenderer}
@@ -22,19 +20,20 @@ public class BasicFramebuffer extends GLESFramebuffer {
 
     public BasicFramebuffer(GLES gles, int width, int height) throws GameException {
         super(gles.mainFrame());
+        gles.launcher().profiler().begin("render", "framebuffer_create");
         this.width().number(width);
         this.height().number(height);
 
         GLES20 c = StateRegistry.currentGl();
         this.colorTexture = gles.textureManager().createTexture(gles.launcher().executorThreadHelper().currentThread());
         this.colorTexture.allocate(this.width().intValue(), this.height().intValue()); // This will execute immediately, we do not have to wait for the future
-        this.depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH24_STENCIL8, this.width().intValue(), this.height().intValue());
-
+        this.depthStencilRenderbuffer = new Renderbuffer(GL_DEPTH_COMPONENT16, this.width().intValue(), this.height().intValue());
         this.bind();
         c.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.getTextureId(), 0);
-        c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRenderbuffer.getId());
+        c.glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthStencilRenderbuffer.getId());
         this.checkComplete();
         this.unbind();
+        gles.launcher().profiler().end();
     }
 
     public void resize(int width, int height) throws GameException {
@@ -60,18 +59,18 @@ public class BasicFramebuffer extends GLESFramebuffer {
         return this.depthStencilRenderbuffer;
     }
 
+    @Override public CompletableFuture<Void> cleanup0() throws GameException {
+        this.colorTexture.cleanup();
+        this.depthStencilRenderbuffer.cleanup();
+        super.cleanup0();
+        return null;
+    }
+
     private void resizeDepthStencilRenderbuffer() {
         this.depthStencilRenderbuffer.resize(this.width().intValue(), this.height().intValue());
     }
 
     private CompletableFuture<Void> resizeColorTexture() {
         return this.colorTexture.allocate(this.width().intValue(), this.height().intValue());
-    }
-
-    @Override public CompletableFuture<Void> cleanup0() throws GameException {
-        this.colorTexture.cleanup();
-        this.depthStencilRenderbuffer.cleanup();
-        super.cleanup0();
-        return null;
     }
 }
