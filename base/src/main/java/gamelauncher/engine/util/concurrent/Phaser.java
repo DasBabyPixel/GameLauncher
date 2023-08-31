@@ -42,6 +42,7 @@ package gamelauncher.engine.util.concurrent;
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+import java.lang.Thread;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -433,129 +434,6 @@ public class Phaser {
     }
 
     /**
-     * Returns message string for bounds exceptions on arrival.
-     */
-    private String badArrive(long s) {
-        return "Attempted arrival of unregistered party for " + stateToString(s);
-    }
-
-    /**
-     * Returns message string for bounds exceptions on registration.
-     */
-    private String badRegister(long s) {
-        return "Attempt to register more than " + MAX_PARTIES + " parties for " + stateToString(s);
-    }
-
-    /**
-     * Main implementation for methods arrive and arriveAndDeregister.
-     * Manually tuned to speed up and minimize race windows for the
-     * common case of just decrementing unarrived field.
-     *
-     * @param adjust value to subtract from state;
-     *               ONE_ARRIVAL for arrive,
-     *               ONE_DEREGISTER for arriveAndDeregister
-     */
-    private int doArrive(int adjust) {
-        final Phaser root = this.root;
-        for (; ; ) {
-            long s = (root == this) ? STATE.get() : reconcileState();
-            int phase = (int) (s >>> PHASE_SHIFT);
-            if (phase < 0) return phase;
-            int counts = (int) s;
-            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
-            if (unarrived <= 0) throw new IllegalStateException(badArrive(s));
-            if (STATE.compareAndSet(s, s -= adjust)) {
-                if (unarrived == 1) {
-                    long n = s & PARTIES_MASK;  // base of next state
-                    int nextUnarrived = (int) n >>> PARTIES_SHIFT;
-                    if (root == this) {
-                        if (onAdvance(phase, nextUnarrived)) n |= TERMINATION_BIT;
-                        else if (nextUnarrived == 0) n |= EMPTY;
-                        else n |= nextUnarrived;
-                        int nextPhase = (phase + 1) & MAX_PHASE;
-                        n |= (long) nextPhase << PHASE_SHIFT;
-                        STATE.compareAndSet(s, n);
-                        releaseWaiters(phase);
-                    } else if (nextUnarrived == 0) { // propagate deregistration
-                        phase = parent.doArrive(ONE_DEREGISTER);
-                        STATE.compareAndSet(s, s | EMPTY);
-                    } else phase = parent.doArrive(ONE_ARRIVAL);
-                }
-                return phase;
-            }
-        }
-    }
-
-    /**
-     * Implementation of register, bulkRegister.
-     *
-     * @param registrations number to add to both parties and
-     *                      unarrived fields. Must be greater than zero.
-     */
-    private int doRegister(int registrations) {
-        // adjustment to state
-        long adjust = ((long) registrations << PARTIES_SHIFT) | registrations;
-        final Phaser parent = this.parent;
-        int phase;
-        for (; ; ) {
-            long s = (parent == null) ? STATE.get() : reconcileState();
-            int counts = (int) s;
-            int parties = counts >>> PARTIES_SHIFT;
-            int unarrived = counts & UNARRIVED_MASK;
-            if (registrations > MAX_PARTIES - parties) throw new IllegalStateException(badRegister(s));
-            phase = (int) (s >>> PHASE_SHIFT);
-            if (phase < 0) break;
-            if (counts != EMPTY) {                  // not 1st registration
-                if (parent == null || reconcileState() == s) {
-                    if (unarrived == 0)             // wait out advance
-                        root.internalAwaitAdvance(phase, null);
-                    else if (STATE.compareAndSet(s, s + adjust)) break;
-                }
-            } else if (parent == null) {              // 1st root registration
-                long next = ((long) phase << PHASE_SHIFT) | adjust;
-                if (STATE.compareAndSet(s, next)) break;
-            } else {
-                synchronized (this) {               // 1st sub registration
-                    if (STATE.get() == s) {               // recheck under lock
-                        phase = parent.doRegister(1);
-                        if (phase < 0) break;
-                        // finish registration whenever parent registration
-                        // succeeded, even when racing with termination,
-                        // since these are part of the same "transaction".
-                        while (!STATE.compareAndSet(s, ((long) phase << PHASE_SHIFT) | adjust)) {
-                            s = STATE.get();
-                            phase = (int) (root.STATE.get() >>> PHASE_SHIFT);
-                            // assert (int)s == EMPTY;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        return phase;
-    }
-
-    /**
-     * Resolves lagged phase propagation from root if necessary.
-     * Reconciliation normally occurs when root has advanced but
-     * subphasers have not yet done so, in which case they must finish
-     * their own advance by setting unarrived to parties (or if
-     * parties is zero, resetting to unregistered EMPTY state).
-     *
-     * @return reconciled state
-     */
-    private long reconcileState() {
-        final Phaser root = this.root;
-        long s = STATE.get();
-        if (root != this) {
-            int phase, p;
-            // CAS to root phase with current parties, tripping unarrived
-            while ((phase = (int) (root.STATE.get() >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) && !STATE.compareAndSet(s, s = (((long) phase << PHASE_SHIFT) | ((phase < 0) ? (s & COUNTS_MASK) : (((p = (int) s >>> PARTIES_SHIFT) == 0) ? EMPTY : ((s & PARTIES_MASK) | p)))))) s = STATE.get();
-        }
-        return s;
-    }
-
-    /**
      * Adds a new unarrived party to this phaser.  If an ongoing
      * invocation of {@link #onAdvance} is in progress, this method
      * may await its completion before returning.  If this phaser has
@@ -850,8 +728,6 @@ public class Phaser {
         return root;
     }
 
-    // Waiting mechanics
-
     /**
      * Returns {@code true} if this phaser has been terminated.
      *
@@ -859,6 +735,19 @@ public class Phaser {
      */
     public boolean isTerminated() {
         return root.STATE.get() < 0L;
+    }
+
+    /**
+     * Returns a string identifying this phaser, as well as its
+     * state.  The state, in brackets, includes the String {@code
+     * "phase = "} followed by the phase number, {@code "parties = "}
+     * followed by the number of registered parties, and {@code
+     * "arrived = "} followed by the number of arrived parties.
+     *
+     * @return a string identifying this phaser, as well as its state
+     */
+    public String toString() {
+        return stateToString(reconcileState());
     }
 
     /**
@@ -906,16 +795,128 @@ public class Phaser {
     }
 
     /**
-     * Returns a string identifying this phaser, as well as its
-     * state.  The state, in brackets, includes the String {@code
-     * "phase = "} followed by the phase number, {@code "parties = "}
-     * followed by the number of registered parties, and {@code
-     * "arrived = "} followed by the number of arrived parties.
-     *
-     * @return a string identifying this phaser, as well as its state
+     * Returns message string for bounds exceptions on arrival.
      */
-    public String toString() {
-        return stateToString(reconcileState());
+    private String badArrive(long s) {
+        return "Attempted arrival of unregistered party for " + stateToString(s);
+    }
+
+    /**
+     * Returns message string for bounds exceptions on registration.
+     */
+    private String badRegister(long s) {
+        return "Attempt to register more than " + MAX_PARTIES + " parties for " + stateToString(s);
+    }
+
+    // Waiting mechanics
+
+    /**
+     * Main implementation for methods arrive and arriveAndDeregister.
+     * Manually tuned to speed up and minimize race windows for the
+     * common case of just decrementing unarrived field.
+     *
+     * @param adjust value to subtract from state;
+     *               ONE_ARRIVAL for arrive,
+     *               ONE_DEREGISTER for arriveAndDeregister
+     */
+    private int doArrive(int adjust) {
+        final Phaser root = this.root;
+        for (; ; ) {
+            long s = (root == this) ? STATE.get() : reconcileState();
+            int phase = (int) (s >>> PHASE_SHIFT);
+            if (phase < 0) return phase;
+            int counts = (int) s;
+            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
+            if (unarrived <= 0) throw new IllegalStateException(badArrive(s));
+            if (STATE.compareAndSet(s, s -= adjust)) {
+                if (unarrived == 1) {
+                    long n = s & PARTIES_MASK;  // base of next state
+                    int nextUnarrived = (int) n >>> PARTIES_SHIFT;
+                    if (root == this) {
+                        if (onAdvance(phase, nextUnarrived)) n |= TERMINATION_BIT;
+                        else if (nextUnarrived == 0) n |= EMPTY;
+                        else n |= nextUnarrived;
+                        int nextPhase = (phase + 1) & MAX_PHASE;
+                        n |= (long) nextPhase << PHASE_SHIFT;
+                        STATE.compareAndSet(s, n);
+                        releaseWaiters(phase);
+                    } else if (nextUnarrived == 0) { // propagate deregistration
+                        phase = parent.doArrive(ONE_DEREGISTER);
+                        STATE.compareAndSet(s, s | EMPTY);
+                    } else phase = parent.doArrive(ONE_ARRIVAL);
+                }
+                return phase;
+            }
+        }
+    }
+
+    /**
+     * Implementation of register, bulkRegister.
+     *
+     * @param registrations number to add to both parties and
+     *                      unarrived fields. Must be greater than zero.
+     */
+    private int doRegister(int registrations) {
+        // adjustment to state
+        long adjust = ((long) registrations << PARTIES_SHIFT) | registrations;
+        final Phaser parent = this.parent;
+        int phase;
+        for (; ; ) {
+            long s = (parent == null) ? STATE.get() : reconcileState();
+            int counts = (int) s;
+            int parties = counts >>> PARTIES_SHIFT;
+            int unarrived = counts & UNARRIVED_MASK;
+            if (registrations > MAX_PARTIES - parties) throw new IllegalStateException(badRegister(s));
+            phase = (int) (s >>> PHASE_SHIFT);
+            if (phase < 0) break;
+            if (counts != EMPTY) {                  // not 1st registration
+                if (parent == null || reconcileState() == s) {
+                    if (unarrived == 0)             // wait out advance
+                        root.internalAwaitAdvance(phase, null);
+                    else if (STATE.compareAndSet(s, s + adjust)) break;
+                }
+            } else if (parent == null) {              // 1st root registration
+                long next = ((long) phase << PHASE_SHIFT) | adjust;
+                if (STATE.compareAndSet(s, next)) break;
+            } else {
+                synchronized (this) {               // 1st sub registration
+                    if (STATE.get() == s) {               // recheck under lock
+                        phase = parent.doRegister(1);
+                        if (phase < 0) break;
+                        // finish registration whenever parent registration
+                        // succeeded, even when racing with termination,
+                        // since these are part of the same "transaction".
+                        while (!STATE.compareAndSet(s, ((long) phase << PHASE_SHIFT) | adjust)) {
+                            s = STATE.get();
+                            phase = (int) (root.STATE.get() >>> PHASE_SHIFT);
+                            // assert (int)s == EMPTY;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return phase;
+    }
+
+    /**
+     * Resolves lagged phase propagation from root if necessary.
+     * Reconciliation normally occurs when root has advanced but
+     * subphasers have not yet done so, in which case they must finish
+     * their own advance by setting unarrived to parties (or if
+     * parties is zero, resetting to unregistered EMPTY state).
+     *
+     * @return reconciled state
+     */
+    private long reconcileState() {
+        final Phaser root = this.root;
+        long s = STATE.get();
+        if (root != this) {
+            int phase, p;
+            // CAS to root phase with current parties, tripping unarrived
+            while ((phase = (int) (root.STATE.get() >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) && !STATE.compareAndSet(s, s = (((long) phase << PHASE_SHIFT) | ((phase < 0) ? (s & COUNTS_MASK) : (((p = (int) s >>> PARTIES_SHIFT) == 0) ? EMPTY : ((s & PARTIES_MASK) | p)))))) s = STATE.get();
+        }
+        return s;
     }
 
     /**

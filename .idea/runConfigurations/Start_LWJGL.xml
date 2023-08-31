@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Start LWJGL" type="Application" factoryName="Application" singleton="true">
+    <envs>
+      <env name="-Dorg.gradle.configuration-cache.problems" value="warn" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="gamelauncher.lwjgl.Start" />
     <module name="gamelauncher.lwjgl.main" />
-    <selectedOptions>
-      <option name="environmentVariables" visible="false" />
-    </selectedOptions>
     <option name="VM_PARAMETERS" value="-Dgamelauncher.debug=true -Dgamelauncher.name=GameLauncherTest -Djansi.passthrough=true -ea -Xmx1024M -Dgamelauncher.use_gles=false" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <extension name="coverage">
