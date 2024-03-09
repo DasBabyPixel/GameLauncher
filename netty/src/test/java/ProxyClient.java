@@ -20,13 +20,13 @@ import java.net.*;
 
 public class ProxyClient {
     public static void main(String[] args) throws IOException, URISyntaxException, NoSuchFieldException, IllegalAccessException {
-        System.setProperty("https.protocols", "TLSv1.3");
+//        System.setProperty("https.protocols", "TLSv1.3");
         System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
         System.setProperty("java.net.useSystemProxies", "true");
-        Field field = ProxySelector.getDefault().getClass().getDeclaredField("hasSystemProxies");
-        field.setAccessible(true);
+//        Field field = ProxySelector.getDefault().getClass().getDeclaredField("hasSystemProxies");
+//        field.setAccessible(true);
         System.out.println(ProxySelector.getDefault());
-        System.out.println(field.get(ProxySelector.getDefault()));
+//        System.out.println(field.get(ProxySelector.getDefault()));
         System.getProperties().forEach((key, val) -> {
             System.out.println(key + ": " + val);
         });
@@ -36,13 +36,13 @@ public class ProxyClient {
             });
         });
 
-        final String authUser = "lorenz";
-        final String authPassword = "IbdL8ibwt!";
-        Authenticator.setDefault(new Authenticator() {
-            @Override public PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(authUser, authPassword.toCharArray());
-            }
-        });
+//        final String authUser = "";
+//        final String authPassword = "";
+//        Authenticator.setDefault(new Authenticator() {
+//            @Override public PasswordAuthentication getPasswordAuthentication() {
+//                return new PasswordAuthentication(authUser, authPassword.toCharArray());
+//            }
+//        });
         Proxy proxy = print(ProxySelector.getDefault());
         InetSocketAddress address = (InetSocketAddress) proxy.address();
         if (proxy.address() != null) System.out.println(proxy.address().getClass());
@@ -51,7 +51,9 @@ public class ProxyClient {
         b.option(ChannelOption.TCP_NODELAY, true);
         b.handler(new ChannelInitializer<>() {
             @Override protected void initChannel(@NotNull Channel ch) throws Exception {
-                ch.pipeline().addLast(new HttpProxyHandler(new InetSocketAddress("192.168.3.13", 8080), authUser, authPassword));
+                ch.pipeline().addLast(
+//                        new HttpProxyHandler(new InetSocketAddress("43.157.10.238", 8888), authUser, authPassword)
+                        new HttpProxyHandler(new InetSocketAddress("161.97.93.204", 39811)));
                 ch.pipeline().addLast(new HttpClientCodec(), new HttpObjectAggregator(Integer.MAX_VALUE), new ChannelInboundHandlerAdapter() {
                     @Override public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
                         System.out.println("INCOMING: " + msg);
@@ -66,14 +68,14 @@ public class ProxyClient {
             }
         });
         b.group(new NioEventLoopGroup());
-        ChannelFuture cf = b.connect("37.114.47.76", 80);
+        ChannelFuture cf = b.connect("37.114.47.76", 443);
         cf.addListener(f -> {
             System.out.println(f.isSuccess());
             if (!f.isSuccess()) f.cause().printStackTrace();
             else {
                 System.out.println(cf.channel().remoteAddress());
 
-                URL url = new URL("http://37.114.47.76/orbitsgame.zip");
+                URL url = new URL("https://37.114.47.76/orbitsgame.zip");
                 FullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, url.toString());
                 request.headers().set(HttpHeaderNames.HOST, "");
                 request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);

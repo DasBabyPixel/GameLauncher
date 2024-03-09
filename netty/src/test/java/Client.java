@@ -6,11 +6,14 @@
  */
 
 import gamelauncher.engine.network.Connection;
+import gamelauncher.engine.network.ProxyConfiguration;
 import gamelauncher.engine.util.GameException;
 import gamelauncher.engine.util.concurrent.Threads;
 import gamelauncher.netty.NettyNetworkClient;
 import gamelauncher.netty.standalone.StandaloneServer;
 import gamelauncher.netty.standalone.packet.c2s.PacketRequestServerId;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -23,6 +26,23 @@ public class Client {
     public Client() throws GameException, URISyntaxException, MalformedURLException {
         this.client = new NettyNetworkClient();
         client.port(19452);
+        client.proxy(new ProxyConfiguration() {
+            @Override public @NotNull String hostname() {
+                return null;
+            }
+
+            @Override public int port() {
+                return 0;
+            }
+
+            @Override public @Nullable String username() {
+                return null;
+            }
+
+            @Override public @Nullable String password() {
+                return null;
+            }
+        });
         StandaloneServer.registerPackets(client.packetRegistry());
         Connection con = client.connect(new URI("https", null, "localhost", 19452, "/orbits/", null, null));
 //        Connection con = client.connect(new URI("https://ssh.darkcube.eu/orbits/"));
