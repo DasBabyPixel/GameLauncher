@@ -1,22 +1,22 @@
 open module gamelauncher.api {
     requires transitive com.google.gson;
-    requires transitive streamsupport;
-    requires transitive it.unimi.dsi.fastutil;
-    requires transitive de.dasbabypixel.annotations;
+    requires streamsupport;
+    requires it.unimi.dsi.fastutil;
+    requires de.dasbabypixel.annotations;
     requires transitive org.joml;
     requires transitive org.jetbrains.annotations;
-    requires transitive disruptor;
-    requires transitive de.dasbabypixel.property;
+    requires disruptor;
+    requires de.dasbabypixel.property;
     requires transitive jdk.unsupported;
     requires com.google.common;
 
-    exports gamelauncher.engine.util.image;
     exports gamelauncher.engine.plugin;
-    exports gamelauncher.engine.util.i18n;
     exports gamelauncher.engine.game;
     exports gamelauncher.engine.data;
     exports gamelauncher.engine.network.packet;
     exports gamelauncher.engine.resource;
+    exports gamelauncher.engine.util.i18n;
+    exports gamelauncher.engine.util.image;
     exports gamelauncher.engine.util.logging;
     exports gamelauncher.engine.util;
     exports gamelauncher.engine.util.service;
