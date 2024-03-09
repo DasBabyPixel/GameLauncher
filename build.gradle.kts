@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2024 Lorenz Wrobel. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
@@ -14,7 +21,7 @@ tasks.register("generateRunDirectory") {
 
 allprojects {
     group = "de.dasbabypixel.gamelauncher"
-    version = "0.0.2-SNAPSHOT"
+    version = "0.0.2"
     pluginManager.withPlugin("java") {
         tasks.withType<Javadoc>().configureEach {
             options.encoding = "UTF-8"
