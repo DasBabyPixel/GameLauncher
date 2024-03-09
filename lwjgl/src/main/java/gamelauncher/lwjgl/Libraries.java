@@ -12,7 +12,7 @@ import gamelauncher.lwjgl.render.LWJGLGLES;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.stb.STBImage;
 
-public class Libraries {
+class Libraries {
 
     public static void init() {
         try {

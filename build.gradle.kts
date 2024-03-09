@@ -21,7 +21,7 @@ allprojects {
         }
         extensions.getByType<JavaPluginExtension>().apply {
             toolchain.languageVersion = JavaLanguageVersion.of(11)
-            if (pluginManager.hasPlugin("maven-publish")) {
+            pluginManager.withPlugin("maven-publish") {
                 withSourcesJar()
                 withJavadocJar()
             }
